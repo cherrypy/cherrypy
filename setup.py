@@ -71,7 +71,7 @@ extras_require = {
     'docs': [
         'sphinx',
         'docutils',
-        'sphinx_rtd_theme',
+        'alabaster',
         'rst.linker>=1.9',
         'jaraco.packaging>=3.2',
     ],
