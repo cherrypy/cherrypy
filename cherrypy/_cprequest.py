@@ -718,10 +718,7 @@ class Request(object):
             name = name.title()
             value = value.strip()
 
-            if '=?' in value:
-                dict.__setitem__(headers, name, httputil.decode_TEXT(value))
-            else:
-                dict.__setitem__(headers, name, value)
+            dict.__setitem__(headers, name, httputil.decode_TEXT_maybe(value))
 
             # Some clients, notably Konquoror, supply multiple
             # cookies on different lines with the same key. To

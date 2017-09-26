@@ -254,6 +254,13 @@ def decode_TEXT(value):
     return decodedvalue
 
 
+def decode_TEXT_maybe(value):
+    """
+    Decode the text but only if '=?' appears in it.
+    """
+    return decode_TEXT(value) if '=?' in value else value
+
+
 def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
 
