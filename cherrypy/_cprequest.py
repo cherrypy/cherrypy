@@ -718,17 +718,14 @@ class Request(object):
             name = name.title()
             value = value.strip()
 
-            # Warning: if there is more than one header entry for cookies
-            # (AFAIK, only Konqueror does that), only the last one will
-            # remain in headers (but they will be correctly stored in
-            # request.cookie).
             if '=?' in value:
                 dict.__setitem__(headers, name, httputil.decode_TEXT(value))
             else:
                 dict.__setitem__(headers, name, value)
 
-            # Handle cookies differently because on Konqueror, multiple
-            # cookies come on different lines with the same key
+            # Some clients, notably Konquoror, supply multiple
+            # cookies on different lines with the same key. To
+            # handle this case, store all cookies in self.cookie.
             if name == 'Cookie':
                 try:
                     self.cookie.load(value)
