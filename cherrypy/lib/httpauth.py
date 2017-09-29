@@ -24,9 +24,10 @@ SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 import time
 from hashlib import md5
 
+from six.moves.urllib.request import parse_http_list, parse_keqv_list
+
 from cherrypy._cpcompat import (
     base64_decode, ntob,
-    parse_http_list, parse_keqv_list
 )
 
 
