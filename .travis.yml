@@ -1,19 +1,19 @@
 language: python
+os: linux
+dist: trusty
+sudo: false
+group: edge
 _base_envs:
 - &stage_lint
-  stage: lint
+  stage: &stage_lint_name lint
 - &stage_test
-  stage: test
+  stage: &stage_test_name test
 - &stage_test_priority
-  stage: test against latest Python versions first (under GNU/Linux)
+  stage: &stage_test_priority_name test against latest Python versions first (under GNU/Linux)
 - &stage_test_osx
-  stage: test under OS X (last chance to fail before deploy available)
+  stage: &stage_test_osx_name test under OS X (last chance to fail before deploy available)
 - &stage_deploy
-  stage: upload new version of python package to PYPI (only for tagged commits)
-- &linux_base
-  os: linux
-  dist: trusty
-  sudo: false
+  stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
 - &pyenv_base
   <<: *stage_test
   language: generic
@@ -22,23 +22,6 @@ _base_envs:
   - PYTHON_VERSION=pypy2.7-5.8.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
-  addons:
-    apt:
-      packages:
-      - make
-      - build-essential
-      - libssl-dev
-      - zlib1g-dev
-      - libbz2-dev
-      - libreadline-dev
-      - libsqlite3-dev
-      - wget
-      - curl
-      - llvm
-      - libncurses5-dev
-      - libncursesw5-dev
-      - xz-utils
-      - tk-dev
   before_install:
   - &ensure_pyenv_installed |
     if [ ! -f "$PYENV_ROOT/bin/pyenv" ]
@@ -54,9 +37,6 @@ _base_envs:
   - &install_python pyenv install --skip-existing --keep --verbose "$PYTHON_VERSION"
   - &switch_python pyenv shell "$PYTHON_VERSION"
   - &python_version python --version
-- &linux_python_base
-  <<: *linux_base
-  <<: *pyenv_base
 - &osx_python_base
   <<: *pyenv_base
   <<: *stage_test_osx
@@ -75,7 +55,6 @@ _base_envs:
   - travis_retry tox
 - &pure_python_base
   <<: *stage_test
-  sudo: false
   python: &mainstream_python 3.6
 - &pure_python_base_priority
   <<: *pure_python_base
@@ -84,13 +63,21 @@ _base_envs:
   <<: *stage_lint
   python: *mainstream_python
   after_failure: skip
+python:
+- 2.7
+- 3.3
+- 3.4
+- 3.5
+- 3.7-dev
+- *pypy2
+- &pypy3 pypy3.5-5.8.0
 jobs:
   fast_finish: true
   allow_failures:
   # TODO: check what causes testing stuck
   - python: *pypy2
   # TODO: fix tests
-  - python: &pypy3 pypy3.5-5.8.0
+  - python: *pypy3
   - env: TOXENV=pre-commit-pep257
   include:
   - <<: *lint_python_base
@@ -107,28 +94,6 @@ jobs:
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
     python: nightly
-  - <<: *pure_python_base
-    python: 2.7
-  - <<: *pure_python_base
-    python: 3.3
-  - <<: *pure_python_base
-    python: 3.4
-  - <<: *pure_python_base
-    python: 3.5
-  - <<: *pure_python_base
-    python: 3.7-dev
-  - <<: *linux_python_base
-    python: *pypy2
-    env:
-    - PYTHON_VERSION=pypy2.7-5.8.0
-    - *env_pyenv
-    - *env_path
-  - <<: *linux_python_base
-    python: *pypy3
-    env:
-    - PYTHON_VERSION=pypy3.5-5.8.0
-    - *env_pyenv
-    - *env_path
   - <<: *osx_python_base
     python: 2.7
     env:
@@ -188,8 +153,9 @@ jobs:
     - *env_path
   # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
-    if: tag IS present
     python: *mainstream_python
+    install: skip
+    script: skip
     deploy:
       provider: pypi
       skip_cleanup: true
@@ -199,7 +165,6 @@ jobs:
         python: *mainstream_python
       user: jaraco
       distributions: release
-      skip_upload_docs: true
       password:
         secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
 cache:
@@ -222,5 +187,13 @@ after_failure:
       cat $log
     done
 - py_log=/home/travis/build/cherrypy/cherrypy/.tox/python/log/python-0.log
-- echo Outputting python invokation log from $py_log
+- echo Outputting python invocation log from $py_log
 - cat $py_log
+stages:
+- *stage_lint_name
+- *stage_test_priority_name
+- *stage_test_name
+- name: *stage_test_osx_name
+  if: type IN (api, cron) OR tag IS present
+- name: *stage_deploy_name
+  if: tag IS present
