@@ -86,6 +86,8 @@ jobs:
     env: TOXENV=pre-commit-pep257
   - <<: *lint_python_base
     env: TOXENV=dist-check
+  - <<: *lint_python_base
+    env: TOXENV=setup-check
   - <<: *pure_python_base_priority
     # mainstream here (3.6)
   - <<: *pure_python_base_priority
