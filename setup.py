@@ -82,8 +82,6 @@ extras_require = {
         'coverage',  # inspects tests coverage
         'codecov',   # sends tests coverage to codecov.io
 
-        'docutils',   # needed for ``setup.py check -r``
-
         # cherrypy.lib.gctools
         'objgraph',
 
