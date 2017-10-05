@@ -6,9 +6,10 @@ import sys
 import time
 import types
 import unittest
+import operator
 
 import six
-from six.moves import range
+from six.moves import range, map
 from six.moves.http_client import IncompleteRead
 
 import cherrypy
@@ -448,3 +449,20 @@ class SessionAuthTest(unittest.TestCase):
         res = sa.login_screen(None, username=six.text_type('nobody'),
                               password=six.text_type('anypass'))
         self.assertTrue(isinstance(res, bytes))
+
+
+class TestHooks:
+    def test_priorities(self):
+        """
+        Hooks should sort by priority order.
+        """
+        Hook = cherrypy._cprequest.Hook
+        hooks = [
+            Hook(None, priority=48),
+            Hook(None),
+            Hook(None, priority=49),
+        ]
+        hooks.sort()
+        by_priority = operator.attrgetter('priority')
+        priorities = list(map(by_priority, hooks))
+        assert priorities == [48, 49, 50]
