@@ -91,14 +91,14 @@ except ImportError:
     engine = process.bus
 
 
-__all__ = [
+__all__ = (
     'HTTPError', 'HTTPRedirect', 'InternalRedirect',
     'NotFound', 'CherryPyException', 'TimeoutError',
     'dispatch', 'tools', 'Tool', 'Application',
     'wsgi', 'process', 'tree', 'engine',
     'quickstart', 'serving', 'request', 'response', 'thread_data',
     'log', 'expose', 'popargs', 'url', 'config',
-]
+)
 
 
 __import__('cherrypy._cptools')
