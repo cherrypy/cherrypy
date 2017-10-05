@@ -64,25 +64,26 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import (
+from ._cperror import (
     HTTPError, HTTPRedirect, InternalRedirect,
     NotFound, CherryPyException, TimeoutError,
 )
 
-from cherrypy import _cpdispatch as dispatch
+from . import _cpdispatch as dispatch
 
-from cherrypy._cptools import default_toolbox as tools, Tool
+from ._cptools import default_toolbox as tools, Tool
+from ._helper import expose, popargs, url
 
-from cherrypy import _cprequest, _cpserver, _cptree
+from . import _cprequest, _cpserver, _cptree
 
 import cherrypy.lib.httputil as _httputil
 
-from cherrypy._cptree import Application
-from cherrypy import _cpwsgi as wsgi
+from ._cptree import Application
+from . import _cpwsgi as wsgi
 
-from cherrypy import process
+from . import process
 try:
-    from cherrypy.process import win32
+    from .process import win32
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
@@ -364,8 +365,6 @@ log.access_file = ''
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)  # noqa: E305
-
-from ._helper import expose, popargs, url  # noqa: F401
 
 # import _cpconfig last so it can reference other top-level objects
 from . import _cpconfig  # noqa: F401
