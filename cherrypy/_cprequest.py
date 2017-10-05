@@ -51,12 +51,11 @@ class Hook(object):
         self.kwargs = kwargs
 
     def __lt__(self, other):
-        # Python 3
+        """
+        Hooks sort by priority, ascending, such that
+        hooks of lower priority are run first.
+        """
         return self.priority < other.priority
-
-    def __cmp__(self, other):
-        # Python 2
-        return cmp(self.priority, other.priority)  # noqa: F821
 
     def __call__(self):
         """Run self.callback(**self.kwargs)."""
