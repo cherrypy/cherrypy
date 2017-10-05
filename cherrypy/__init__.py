@@ -53,7 +53,8 @@ with customized or extended components. The core API's are:
  * Server API
  * WSGI API
 
-These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
+These API's are described in the `CherryPy specification
+<https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
 try:
@@ -63,8 +64,10 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa: F401
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa: F401
+from cherrypy._cperror import (  # noqa: F401
+    HTTPError, HTTPRedirect, InternalRedirect,
+    NotFound, CherryPyException, TimeoutError,
+)
 
 from cherrypy import _cplogging
 
