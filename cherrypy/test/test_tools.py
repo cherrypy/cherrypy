@@ -111,7 +111,8 @@ class ToolTests(helper.CPWebCase):
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
-            assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+            actual = cherrypy.request.config.get('tools.streamer.arg')
+            assert actual == 'arg value'
             cherrypy.response.output = o = io.BytesIO()
             try:
                 next_handler(*args, **kwargs)
@@ -130,9 +131,13 @@ class ToolTests(helper.CPWebCase):
                 return 'Howdy earth!'
 
             @cherrypy.expose
-            @cherrypy.config(**{'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'})
+            @cherrypy.config(**{
+                'tools.streamer.on': True,
+                'tools.streamer.arg': 'arg value',
+            })
             def tarfile(self):
-                assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+                actual = cherrypy.request.config.get('tools.streamer.arg')
+                assert actual == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
 
@@ -420,7 +425,9 @@ class ToolTests(helper.CPWebCase):
         self.assertTrue(isinstance(cherrypy.tools.example, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.example._point, 'on_start_resource')
 
-        @cherrypy.tools.register('before_finalize', name='renamed', priority=60)  # noqa: F811
+        @cherrypy.tools.register(  # noqa: F811
+            'before_finalize', name='renamed', priority=60,
+        )
         def example():
             pass
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
