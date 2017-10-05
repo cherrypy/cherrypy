@@ -74,7 +74,7 @@ from . import _cpdispatch as dispatch
 from ._cptools import default_toolbox as tools, Tool
 from ._helper import expose, popargs, url
 
-from . import _cprequest, _cpserver, _cptree
+from . import _cprequest, _cpserver, _cptree, _cplogging
 
 import cherrypy.lib.httputil as _httputil
 
@@ -101,7 +101,6 @@ __all__ = [
 ]
 
 
-__import__('cherrypy._cplogging')
 __import__('cherrypy._cptools')
 __import__('cherrypy._cprequest')
 
