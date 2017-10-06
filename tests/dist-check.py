@@ -17,8 +17,6 @@ import sys
 
 import pytest
 
-import cherrypy
-
 
 @pytest.fixture(params=[
     'favicon.ico',
@@ -44,6 +42,7 @@ def test_data_files_installed(data_file_path):
     Ensure that data file paths are available in the
     installed package as expected.
     """
+    import cherrypy
     root = os.path.dirname(cherrypy.__file__)
     fn = os.path.join(root, data_file_path)
     assert os.path.exists(fn), fn
