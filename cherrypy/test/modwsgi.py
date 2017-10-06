@@ -39,6 +39,7 @@ import time
 
 import portend
 
+import cherrypy
 from cherrypy.test import helper, webtest
 
 curdir = os.path.abspath(os.path.dirname(__file__))
@@ -134,7 +135,6 @@ loaded = False
 
 
 def application(environ, start_response):
-    import cherrypy
     global loaded
     if not loaded:
         loaded = True

@@ -125,6 +125,7 @@ from xml.sax import saxutils
 import six
 from six.moves import urllib
 
+import cherrypy
 from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy._cpcompat import tonative
@@ -154,7 +155,6 @@ class InternalRedirect(CherryPyException):
     """
 
     def __init__(self, path, query_string=''):
-        import cherrypy
         self.request = cherrypy.serving.request
 
         self.query_string = query_string
@@ -211,7 +211,6 @@ class HTTPRedirect(CherryPyException):
     """The encoding when passed urls are not native strings"""
 
     def __init__(self, urls, status=None, encoding=None):
-        import cherrypy
         request = cherrypy.serving.request
 
         if isinstance(urls, text_or_bytes):
@@ -253,7 +252,6 @@ class HTTPRedirect(CherryPyException):
         CherryPy uses this internally, but you can also use it to create an
         HTTPRedirect object and set its output without *raising* the exception.
         """
-        import cherrypy
         response = cherrypy.serving.response
         response.status = status = self.status
 
@@ -317,8 +315,6 @@ class HTTPRedirect(CherryPyException):
 
 def clean_headers(status):
     """Remove any headers which should not apply to an error response."""
-    import cherrypy
-
     response = cherrypy.serving.response
 
     # Remove headers which applied to the original content,
@@ -392,8 +388,6 @@ class HTTPError(CherryPyException):
         CherryPy uses this internally, but you can also use it to create an
         HTTPError object and set its output without *raising* the exception.
         """
-        import cherrypy
-
         response = cherrypy.serving.response
 
         clean_headers(self.code)
@@ -440,7 +434,6 @@ class NotFound(HTTPError):
 
     def __init__(self, path=None):
         if path is None:
-            import cherrypy
             request = cherrypy.serving.request
             path = request.script_name + request.path_info
         self.args = (path,)
@@ -486,8 +479,6 @@ def get_error_page(status, **kwargs):
     status should be an int or a str.
     kwargs will be interpolated into the page template.
     """
-    import cherrypy
-
     try:
         code, reason, message = _httputil.valid_status(status)
     except ValueError:
@@ -563,7 +554,6 @@ _ie_friendly_error_sizes = {
 
 
 def _be_ie_unfriendly(status):
-    import cherrypy
     response = cherrypy.serving.response
 
     # For some statuses, Internet Explorer 5+ shows "friendly error
