@@ -644,53 +644,52 @@ class Request(object):
 
     def _do_respond(self, path_info):
         response = cherrypy.serving.response
-        if True:
-                    if self.app is None:
-                        raise cherrypy.NotFound()
 
-                    # Get the 'Host' header, so we can HTTPRedirect properly.
-                    self.stage = 'process_headers'
-                    self.process_headers()
+        if self.app is None:
+            raise cherrypy.NotFound()
 
-                    self.hooks = self.__class__.hooks.copy()
-                    self.toolmaps = {}
+        # Get the 'Host' header, so we can HTTPRedirect properly.
+        self.stage = 'process_headers'
+        self.process_headers()
 
-                    self.stage = 'get_resource'
-                    self.get_resource(path_info)
+        self.hooks = self.__class__.hooks.copy()
+        self.toolmaps = {}
 
-                    self.body = _cpreqbody.RequestBody(
-                        self.rfile, self.headers, request_params=self.params)
+        self.stage = 'get_resource'
+        self.get_resource(path_info)
 
-                    self.namespaces(self.config)
+        self.body = _cpreqbody.RequestBody(
+            self.rfile, self.headers, request_params=self.params)
 
-                    self.stage = 'on_start_resource'
-                    self.hooks.run('on_start_resource')
+        self.namespaces(self.config)
 
-                    # Parse the querystring
-                    self.stage = 'process_query_string'
-                    self.process_query_string()
+        self.stage = 'on_start_resource'
+        self.hooks.run('on_start_resource')
 
-                    # Process the body
-                    if self.process_request_body:
-                        if self.method not in self.methods_with_bodies:
-                            self.process_request_body = False
-                    self.stage = 'before_request_body'
-                    self.hooks.run('before_request_body')
-                    if self.process_request_body:
-                        self.body.process()
+        # Parse the querystring
+        self.stage = 'process_query_string'
+        self.process_query_string()
 
-                    # Run the handler
-                    self.stage = 'before_handler'
-                    self.hooks.run('before_handler')
-                    if self.handler:
-                        self.stage = 'handler'
-                        response.body = self.handler()
+        # Process the body
+        if self.process_request_body:
+            if self.method not in self.methods_with_bodies:
+                self.process_request_body = False
+        self.stage = 'before_request_body'
+        self.hooks.run('before_request_body')
+        if self.process_request_body:
+            self.body.process()
 
-                    # Finalize
-                    self.stage = 'before_finalize'
-                    self.hooks.run('before_finalize')
-                    response.finalize()
+        # Run the handler
+        self.stage = 'before_handler'
+        self.hooks.run('before_handler')
+        if self.handler:
+            self.stage = 'handler'
+            response.body = self.handler()
 
+        # Finalize
+        self.stage = 'before_finalize'
+        self.hooks.run('before_finalize')
+        response.finalize()
 
     def process_query_string(self):
         """Parse the query string into Python structures. (Core)"""
