@@ -622,10 +622,29 @@ class Request(object):
 
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info. (Core)"""
-        response = cherrypy.serving.response
         try:
             try:
                 try:
+                    self._do_respond(path_info)
+                except (cherrypy.HTTPRedirect, cherrypy.HTTPError):
+                    inst = sys.exc_info()[1]
+                    inst.set_response()
+                    self.stage = 'before_finalize (HTTPError)'
+                    self.hooks.run('before_finalize')
+                    cherrypy.serving.response.finalize()
+            finally:
+                self.stage = 'on_end_resource'
+                self.hooks.run('on_end_resource')
+        except self.throws:
+            raise
+        except:
+            if self.throw_errors:
+                raise
+            self.handle_error()
+
+    def _do_respond(self, path_info):
+        response = cherrypy.serving.response
+        if True:
                     if self.app is None:
                         raise cherrypy.NotFound()
 
@@ -671,21 +690,7 @@ class Request(object):
                     self.stage = 'before_finalize'
                     self.hooks.run('before_finalize')
                     response.finalize()
-                except (cherrypy.HTTPRedirect, cherrypy.HTTPError):
-                    inst = sys.exc_info()[1]
-                    inst.set_response()
-                    self.stage = 'before_finalize (HTTPError)'
-                    self.hooks.run('before_finalize')
-                    response.finalize()
-            finally:
-                self.stage = 'on_end_resource'
-                self.hooks.run('on_end_resource')
-        except self.throws:
-            raise
-        except:
-            if self.throw_errors:
-                raise
-            self.handle_error()
+
 
     def process_query_string(self):
         """Parse the query string into Python structures. (Core)"""
