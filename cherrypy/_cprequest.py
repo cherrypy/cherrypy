@@ -633,7 +633,6 @@ class Request(object):
                     self.stage = 'process_headers'
                     self.process_headers()
 
-                    # Make a copy of the class hooks
                     self.hooks = self.__class__.hooks.copy()
                     self.toolmaps = {}
 
