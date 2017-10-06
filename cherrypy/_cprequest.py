@@ -7,9 +7,9 @@ from six.moves.http_cookies import SimpleCookie, CookieError
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob
-from cherrypy import _cpreqbody, _cpconfig
+from cherrypy import _cpreqbody
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httputil, file_generator
+from cherrypy.lib import httputil, file_generator, reprconf
 
 
 class Hook(object):
@@ -466,7 +466,7 @@ class Request(object):
     A string containing the stage reached in the request-handling process.
     This is useful when debugging a live server with hung requests."""
 
-    namespaces = _cpconfig.NamespaceSet(
+    namespaces = reprconf.NamespaceSet(
         **{'hooks': hooks_namespace,
            'request': request_namespace,
            'response': response_namespace,
