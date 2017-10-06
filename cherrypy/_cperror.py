@@ -29,9 +29,9 @@ user:
 300      Multiple Choices                     Confirm with the user
 301      Moved Permanently                    Confirm with the user
 302      Found (Object moved temporarily)     Confirm with the user
-303      See Other                            GET the new URI--no confirmation
+303      See Other                            GET the new URI; no confirmation
 304      Not modified                         for conditional GET only;
-                                              POST should not raise this error)
+                                              POST should not raise this error
 305      Use Proxy                            Confirm with the user
 307      Temporary Redirect                   Confirm with the user
 =====    =================================    ===========
