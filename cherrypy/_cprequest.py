@@ -648,12 +648,12 @@ class Request(object):
         if self.app is None:
             raise cherrypy.NotFound()
 
+        self.hooks = self.__class__.hooks.copy()
+        self.toolmaps = {}
+
         # Get the 'Host' header, so we can HTTPRedirect properly.
         self.stage = 'process_headers'
         self.process_headers()
-
-        self.hooks = self.__class__.hooks.copy()
-        self.toolmaps = {}
 
         self.stage = 'get_resource'
         self.get_resource(path_info)
