@@ -74,7 +74,7 @@ from . import _cpdispatch as dispatch
 from ._cptools import default_toolbox as tools, Tool
 from ._helper import expose, popargs, url
 
-from . import _cprequest, _cpserver, _cptree, _cplogging
+from . import _cprequest, _cpserver, _cptree, _cplogging, _cpconfig
 
 import cherrypy.lib.httputil as _httputil
 
@@ -364,9 +364,6 @@ log.access_file = ''
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)  # noqa: E305
-
-# import _cpconfig last so it can reference other top-level objects
-from . import _cpconfig  # noqa: F401
 
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
