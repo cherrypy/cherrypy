@@ -7,10 +7,6 @@ import io
 import setuptools
 
 
-needs_pytest = set(['pytest', 'test']).intersection(sys.argv)
-pytest_runner = ['pytest_runner'] if needs_pytest else []
-
-
 ###############################################################################
 # arguments for the setup command
 ###############################################################################
@@ -121,7 +117,7 @@ setup_params = dict(
     tests_require=extras_require['testing'],
     setup_requires=[
         'setuptools_scm',
-    ] + pytest_runner,
+    ],
     python_requires='>=2.7,!=3.0.*',
 )
 
