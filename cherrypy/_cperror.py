@@ -30,7 +30,8 @@ user:
 301      Moved Permanently                    Confirm with the user
 302      Found (Object moved temporarily)     Confirm with the user
 303      See Other                            GET the new URI--no confirmation
-304      Not modified                         (for conditional GET only--POST should not raise this error)
+304      Not modified                         for conditional GET only;
+                                              POST should not raise this error)
 305      Use Proxy                            Confirm with the user
 307      Temporary Redirect                   Confirm with the user
 =====    =================================    ===========
@@ -58,7 +59,8 @@ The 'error_page' config namespace can be used to provide custom HTML output for
 expected responses (like 404 Not Found). Supply a filename from which the
 output will be read. The contents will be interpolated with the values
 %(status)s, %(message)s, %(traceback)s, and %(version)s using plain old Python
-`string formatting <http://docs.python.org/2/library/stdtypes.html#string-formatting-operations>`_.
+`string formatting
+<http://docs.python.org/2/library/stdtypes.html#string-formatting-operations>`_.
 
 ::
 
@@ -272,7 +274,10 @@ class HTTPRedirect(CherryPyException):
                 307: 'This resource has moved temporarily to ',
             }[status]
             msg += '<a href=%s>%s</a>.'
-            msgs = [msg % (saxutils.quoteattr(u), escape_html(u)) for u in self.urls]
+            msgs = [
+                msg % (saxutils.quoteattr(u), escape_html(u))
+                for u in self.urls
+            ]
             response.body = ntob('<br />\n'.join(msgs), 'utf-8')
             # Previous code may have set C-L, so we have to reset it
             # (allow finalize to set it).
