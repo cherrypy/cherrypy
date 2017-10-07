@@ -1,9 +1,10 @@
 import os
+import unittest
 
 import cherrypy
 from cherrypy import tools
 from cherrypy.test import helper
-
+from cherrypy.lib import cptools
 
 localDir = os.path.dirname(__file__)
 logfile = os.path.join(localDir, 'test_misc_tools.log')
@@ -213,3 +214,9 @@ class AutoVaryTest(helper.CPWebCase):
             'Accept, Accept-Charset, Accept-Encoding, '
             'Host, If-Modified-Since, Range'
         )
+
+
+class MonitoredHeaderMapTest(unittest.TestCase):
+    def test_creation(self):
+        header_map = cptools.MonitoredHeaderMap()
+        self.assertDictEqual(header_map, {})

@@ -380,6 +380,10 @@ class CaseInsensitiveDict(dict):
 
     Each key is changed on entry to str(key).title().
     """
+    def __init__(self, *args, **kwargs):
+        kvs = dict(*args, **kwargs)
+        processed = ((str(key).title(), value) for key, value in kvs.items())
+        super(CaseInsensitiveDict, self).__init__(processed)
 
     def __getitem__(self, key):
         return dict.__getitem__(self, str(key).title())
