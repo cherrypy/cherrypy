@@ -239,7 +239,12 @@ def header_elements(fieldname, fieldvalue):  # noqa: E302
 
 
 def decode_TEXT(value):
-    r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
+    r"""
+    Decode :rfc:`2047` TEXT
+
+    >>> decode_TEXT("=?utf-8?q?f=C3=BCr?=") == b'f\xfcr'.decode('latin-1')
+    True
+    """
     atoms = decode_header(value)
     decodedvalue = ''
     for atom, charset in atoms:
@@ -247,6 +252,13 @@ def decode_TEXT(value):
             atom = atom.decode(charset)
         decodedvalue += atom
     return decodedvalue
+
+
+def decode_TEXT_maybe(value):
+    """
+    Decode the text but only if '=?' appears in it.
+    """
+    return decode_TEXT(value) if '=?' in value else value
 
 
 def valid_status(status):

@@ -7,7 +7,7 @@ import six
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
-from cherrypy.lib import httputil
+from cherrypy.lib import httputil, reprconf
 
 
 class Application(object):
@@ -32,7 +32,7 @@ class Application(object):
     """A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
     of {key: value} pairs."""
 
-    namespaces = _cpconfig.NamespaceSet()
+    namespaces = reprconf.NamespaceSet()
     toolboxes = {'tools': cherrypy.tools}
 
     log = None

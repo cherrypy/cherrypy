@@ -661,7 +661,7 @@ to a lower-case page handler.
         }
         cherrypy.quickstart(StringGenerator(), '/', conf)
 
-Once you run this snipper, go to:
+Once you run this snippet, go to:
 
 - http://localhost:8080/generate?length=8
 - http://localhost:8080/GENerAte?length=8

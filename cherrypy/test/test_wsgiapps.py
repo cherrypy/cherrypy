@@ -97,7 +97,6 @@ This is a wsgi app running within CherryPy!'''
         self.assertBody("I'm a regular CherryPy page handler!")
 
     def test_04_pure_wsgi(self):
-        import cherrypy
         if not cherrypy.server.using_wsgi:
             return self.skip('skipped (not using WSGI)... ')
         self.getPage('/hosted/app1')
@@ -105,7 +104,6 @@ This is a wsgi app running within CherryPy!'''
         self.assertInBody(self.wsgi_output)
 
     def test_05_wrapped_cp_app(self):
-        import cherrypy
         if not cherrypy.server.using_wsgi:
             return self.skip('skipped (not using WSGI)... ')
         self.getPage('/hosted/app2/')
@@ -115,7 +113,6 @@ This is a wsgi app running within CherryPy!'''
         self.assertInBody(body)
 
     def test_06_empty_string_app(self):
-        import cherrypy
         if not cherrypy.server.using_wsgi:
             return self.skip('skipped (not using WSGI)... ')
         self.getPage('/hosted/app3')

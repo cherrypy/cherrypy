@@ -36,6 +36,8 @@ http://stackoverflow.com/questions/tagged/cherrypy
 
 * **Please tell us about your environment:**
 
+- Cheroot version: X.X.X
+- CherryPy version: X.X.X
 - Python version: 3.6.X
 - OS: XXX
 - Browser: [all | Chrome XX | Firefox XX | IE XX | Safari XX | Mobile Chrome XX | Android X.X Web Browser | iOS XX Safari | iOS XX UIWebView | iOS XX WKWebView ]

@@ -122,9 +122,6 @@ import cherrypy
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import reprconf
 
-# Deprecated in  CherryPy 3.2--remove in 3.3
-NamespaceSet = reprconf.NamespaceSet
-
 
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.

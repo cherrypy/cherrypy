@@ -53,7 +53,8 @@ with customized or extended components. The core API's are:
  * Server API
  * WSGI API
 
-These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
+These API's are described in the `CherryPy specification
+<https://github.com/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
 try:
@@ -63,32 +64,45 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa: F401
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa: F401
+from ._cperror import (
+    HTTPError, HTTPRedirect, InternalRedirect,
+    NotFound, CherryPyException, TimeoutError,
+)
 
-from cherrypy import _cplogging
+from . import _cpdispatch as dispatch
 
-from cherrypy import _cpdispatch as dispatch  # noqa: F401
+from ._cptools import default_toolbox as tools, Tool
+from ._helper import expose, popargs, url
 
-from cherrypy import _cptools  # noqa: F401
-from cherrypy._cptools import default_toolbox as tools, Tool  # noqa: F401
+from . import _cprequest, _cpserver, _cptree, _cplogging, _cpconfig
 
-from cherrypy import _cprequest
-from cherrypy.lib import httputil as _httputil
+import cherrypy.lib.httputil as _httputil
 
-from cherrypy import _cptree
-from cherrypy._cptree import Application  # noqa
-from cherrypy import _cpwsgi as wsgi  # noqa
+from ._cptree import Application
+from . import _cpwsgi as wsgi
 
-from cherrypy import _cpserver
-from cherrypy import process
+from . import process
 try:
-    from cherrypy.process import win32
+    from .process import win32
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
 except ImportError:
     engine = process.bus
+
+
+__all__ = (
+    'HTTPError', 'HTTPRedirect', 'InternalRedirect',
+    'NotFound', 'CherryPyException', 'TimeoutError',
+    'dispatch', 'tools', 'Tool', 'Application',
+    'wsgi', 'process', 'tree', 'engine',
+    'quickstart', 'serving', 'request', 'response', 'thread_data',
+    'log', 'expose', 'popargs', 'url', 'config',
+)
+
+
+__import__('cherrypy._cptools')
+__import__('cherrypy._cprequest')
 
 
 tree = _cptree.Tree()
@@ -351,10 +365,6 @@ def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)  # noqa: E305
 
-from cherrypy._helper import expose, popargs, url  # noqa: F401
-
-# import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig  # noqa: F401
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
@@ -369,6 +379,6 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from cherrypy import _cpchecker  # noqa: F401
+from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)

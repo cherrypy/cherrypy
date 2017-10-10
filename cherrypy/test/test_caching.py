@@ -129,9 +129,20 @@ class CacheTest(helper.CPWebCase):
                     'Etag'] = 'need_this_to_make_me_cacheable'
                 return 'Woops'
 
+        @cherrypy.config(**{
+            'tools.gzip.mime_types': ['text/*', 'image/*'],
+            'tools.caching.on': True,
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.root': curdir
+        })
+        class GzipStaticCache(object):
+            pass
+
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), '/expires')
         cherrypy.tree.mount(VaryHeaderCachingServer(), '/varying_headers')
+        cherrypy.tree.mount(GzipStaticCache(), '/gzip_static_cache')
         cherrypy.config.update({'tools.gzip.on': True})
 
     def testCaching(self):
@@ -272,6 +283,39 @@ class CacheTest(helper.CPWebCase):
         if cherrypy.server.protocol_version == 'HTTP/1.1':
             self.assertHeader('Cache-Control', 'no-cache, must-revalidate')
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
+
+    def _assert_resp_len_and_enc_for_gzip(self, uri):
+        """Test that after querying gzipped content it's remains valid in cache and available non-gzipped as well."""
+        ACCEPT_GZIP_HEADERS = [('Accept-Encoding', 'gzip')]
+        content_len = None
+
+        for _ in range(3):
+            self.getPage(uri, method='GET', headers=ACCEPT_GZIP_HEADERS)
+
+            if content_len is not None:
+                # all requests should get the same length
+                self.assertHeader('Content-Length', content_len)
+                self.assertHeader('Content-Encoding', 'gzip')
+
+            content_len = dict(self.headers)['Content-Length']
+
+        # check that we can still get non-gzipped version
+        self.getPage(uri, method='GET')
+        self.assertNoHeader('Content-Encoding')
+        # non-gzipped version should have a different content length
+        self.assertNoHeaderItemValue('Content-Length', content_len)
+
+    def testGzipStaticCache(self):
+        """Test that cache and gzip tools play well together when both enabled.
+
+        Ref GitHub issue #1190.
+        """
+        GZIP_STATIC_CACHE_TMPL = '/gzip_static_cache/{}'
+        resource_files = ('index.html', 'dirback.jpg')
+
+        for f in resource_files:
+            uri = GZIP_STATIC_CACHE_TMPL.format(f)
+            self._assert_resp_len_and_enc_for_gzip(uri)
 
     def testLastModified(self):
         self.getPage('/a.gif')

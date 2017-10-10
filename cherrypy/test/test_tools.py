@@ -6,9 +6,10 @@ import sys
 import time
 import types
 import unittest
+import operator
 
 import six
-from six.moves import range
+from six.moves import range, map
 from six.moves.http_client import IncompleteRead
 
 import cherrypy
@@ -111,7 +112,8 @@ class ToolTests(helper.CPWebCase):
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
-            assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+            actual = cherrypy.request.config.get('tools.streamer.arg')
+            assert actual == 'arg value'
             cherrypy.response.output = o = io.BytesIO()
             try:
                 next_handler(*args, **kwargs)
@@ -130,9 +132,13 @@ class ToolTests(helper.CPWebCase):
                 return 'Howdy earth!'
 
             @cherrypy.expose
-            @cherrypy.config(**{'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'})
+            @cherrypy.config(**{
+                'tools.streamer.on': True,
+                'tools.streamer.arg': 'arg value',
+            })
             def tarfile(self):
-                assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+                actual = cherrypy.request.config.get('tools.streamer.arg')
+                assert actual == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
 
@@ -420,7 +426,9 @@ class ToolTests(helper.CPWebCase):
         self.assertTrue(isinstance(cherrypy.tools.example, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.example._point, 'on_start_resource')
 
-        @cherrypy.tools.register('before_finalize', name='renamed', priority=60)  # noqa: F811
+        @cherrypy.tools.register(  # noqa: F811
+            'before_finalize', name='renamed', priority=60,
+        )
         def example():
             pass
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
@@ -441,3 +449,20 @@ class SessionAuthTest(unittest.TestCase):
         res = sa.login_screen(None, username=six.text_type('nobody'),
                               password=six.text_type('anypass'))
         self.assertTrue(isinstance(res, bytes))
+
+
+class TestHooks:
+    def test_priorities(self):
+        """
+        Hooks should sort by priority order.
+        """
+        Hook = cherrypy._cprequest.Hook
+        hooks = [
+            Hook(None, priority=48),
+            Hook(None),
+            Hook(None, priority=49),
+        ]
+        hooks.sort()
+        by_priority = operator.attrgetter('priority')
+        priorities = list(map(by_priority, hooks))
+        assert priorities == [48, 49, 50]
