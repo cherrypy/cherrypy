@@ -1,8 +1,10 @@
 import os
 import warnings
 
+import six
+from six.moves import builtins
+
 import cherrypy
-from cherrypy._cpcompat import iteritems, copykeys, builtins
 
 
 class Checker(object):
@@ -68,14 +70,14 @@ class Checker(object):
 
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
-        for sn, app in iteritems(cherrypy.tree.apps):
+        for sn, app in six.iteritems(cherrypy.tree.apps):
             if not isinstance(app, cherrypy.Application):
                 continue
 
             msg = []
-            for section, entries in iteritems(app.config):
+            for section, entries in six.iteritems(app.config):
                 if section.startswith('/'):
-                    for key, value in iteritems(entries):
+                    for key, value in six.iteritems(entries):
                         for n in ('engine.', 'server.', 'tree.', 'checker.'):
                             if key.startswith(n):
                                 msg.append('[%s] %s = %s' %
@@ -226,10 +228,10 @@ class Checker(object):
 
     def _known_ns(self, app):
         ns = ['wsgi']
-        ns.extend(copykeys(app.toolboxes))
-        ns.extend(copykeys(app.namespaces))
-        ns.extend(copykeys(app.request_class.namespaces))
-        ns.extend(copykeys(cherrypy.config.namespaces))
+        ns.extend(app.toolboxes)
+        ns.extend(app.namespaces)
+        ns.extend(app.request_class.namespaces)
+        ns.extend(cherrypy.config.namespaces)
         ns += self.extra_config_namespaces
 
         for section, conf in app.config.items():

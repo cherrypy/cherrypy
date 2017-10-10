@@ -1,41 +1,49 @@
-- repo: git://github.com/pre-commit/pre-commit-hooks
-  sha: master
-  hooks:
-  - id: trailing-whitespace
-    exclude: cherrypy/test/static/index.html
-  - id: flake8
-  - id: check-merge-conflict
-  - id: double-quote-string-fixer
-  - id: end-of-file-fixer
-  - id: name-tests-test
-    include: cherrypy/test/
-    args: 
-    - '--django'
-  - id: debug-statements
-  - id: check-added-large-files
-  - id: check-ast
-  - id: check-byte-order-marker
-  - id: check-case-conflict
-  - id: check-docstring-first
-  - id: check-json
-  - id: pretty-format-json
-  - id: check-symlinks
-  - id: check-yaml
-  - id: detect-private-key
-    exclude: cherrypy/test/test.pem
-  - id: requirements-txt-fixer
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: 5bf6c09
+    hooks:
+    -   id: trailing-whitespace
+        exclude: cherrypy/test/static/index.html
+    -   id: flake8
+        args:
+        # 79 chars is too strict and we don't have 80-char terminals nowadays,
+        # 160 chars is too much since it doesn't let us use split view efficiently:
+        - --max-line-length=120
+        - --ignore=E731
+    -   id: check-merge-conflict
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: name-tests-test
+        include: cherrypy/test/
+        args:
+        - --django
+        exclude: tests/dist-check.py
+    -   id: debug-statements
+    -   id: check-added-large-files
+    -   id: check-ast
+    -   id: check-byte-order-marker
+    -   id: check-case-conflict
+    # disabled due to pre-commit/pre-commit-hooks#159
+    #-   id: check-docstring-first
+    -   id: check-json
+    -   id: pretty-format-json
+    -   id: check-symlinks
+    -   id: check-yaml
+    -   id: detect-private-key
+        exclude: cherrypy/test/test.pem
+    -   id: requirements-txt-fixer
 
-- repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
-  sha: master
-  hooks:
-  - id: pep257
+-   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+    sha: f464d46
+    hooks:
+    -   id: pep257
+        exclude: tests/dist|cherrypy/(_cp|__init__|__main__|daemon|_helper|(lib/(__init__|auth|auth_basic|auth_digest|caching|covercp|cpstats|cptools|encoding|gctools|httpauth|httputil|jsontools|lockfile|locking|profiler|reprconf|sessions)|process/(plugins|servers|win32)|scaffold/__init__).py|test|tutorial)
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks
-  sha: master
-  hooks:
-  - id: remove-tabs
+-   repo: git://github.com/Lucas-C/pre-commit-hooks
+    sha: 1e30aa4
+    hooks:
+    -   id: remove-tabs
 
-- repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
-  sha: master
-  hooks:
-  - id: forbid-html-img-without-alt-text
+-   repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
+    sha: 44f1a42
+    hooks:
+    -   id: forbid-html-img-without-alt-text

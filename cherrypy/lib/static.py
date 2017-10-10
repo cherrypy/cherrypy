@@ -1,15 +1,17 @@
+"""Module with helpers for serving static files."""
+
 import os
 import re
 import stat
 import mimetypes
 
-try:
-    from io import UnsupportedOperation
-except ImportError:
-    UnsupportedOperation = object()
+from email.generator import _make_boundary as make_boundary
+from io import UnsupportedOperation
+
+from six.moves import urllib
 
 import cherrypy
-from cherrypy._cpcompat import ntob, unquote
+from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
@@ -33,7 +35,6 @@ def serve_file(path, content_type=None, disposition=None, name=None,
     to the basename of path. If disposition is None, no Content-Disposition
     header will be written.
     """
-
     response = cherrypy.serving.response
 
     # If path is relative, users should fix it by making path absolute.
@@ -115,7 +116,6 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
     serve_fileobj(), expecting that the data would be served starting from that
     position.
     """
-
     response = cherrypy.serving.response
 
     try:
@@ -188,12 +188,6 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             else:
                 # Return a multipart/byteranges response.
                 response.status = '206 Partial Content'
-                try:
-                    # Python 3
-                    from email.generator import _make_boundary as make_boundary
-                except ImportError:
-                    # Python 2
-                    from mimetools import choose_boundary as make_boundary
                 boundary = make_boundary()
                 ct = 'multipart/byteranges; boundary=%s' % boundary
                 response.headers['Content-Type'] = ct
@@ -318,7 +312,7 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
         section = '/'
     section = section.rstrip(r'\/')
     branch = request.path_info[len(section) + 1:]
-    branch = unquote(branch.lstrip(r'\/'))
+    branch = urllib.parse.unquote(branch.lstrip(r'\/'))
 
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)

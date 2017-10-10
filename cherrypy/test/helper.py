@@ -11,53 +11,19 @@ import time
 import unittest
 import warnings
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-import nose
+import portend
+import pytest
 import six
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, copyitems, HTTPSConnection, ntob
+from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
-from cherrypy.lib.reprconf import unrepr
 from cherrypy.test import webtest
 
-_testconfig = None
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
 serverpem = os.path.join(os.getcwd(), thisdir, 'test.pem')
-
-
-def get_tst_config(overconf={}):
-    global _testconfig
-    if _testconfig is None:
-        conf = {
-            'scheme': 'http',
-            'protocol': 'HTTP/1.1',
-            'port': 54583,
-            'host': '127.0.0.1',
-            'validate': False,
-            'server': 'wsgi',
-        }
-        try:
-            import testconfig
-            _conf = testconfig.config.get('supervisor', None)
-            if _conf is not None:
-                for k, v in _conf.items():
-                    if isinstance(v, text_or_bytes):
-                        _conf[k] = unrepr(v)
-                conf.update(_conf)
-        except ImportError:
-            pass
-        _testconfig = conf
-    conf = _testconfig.copy()
-    conf.update(overconf)
-
-    return conf
 
 
 class Supervisor(object):
@@ -125,7 +91,8 @@ class LocalSupervisor(Supervisor):
 
         cherrypy.engine.exit()
 
-        for name, server in copyitems(getattr(cherrypy, 'servers', {})):
+        servers_copy = list(six.iteritems(getattr(cherrypy, 'servers', {})))
+        for name, server in servers_copy:
             server.unsubscribe()
             del cherrypy.servers[name]
 
@@ -274,7 +241,14 @@ class CPWebCase(webtest.WebCase):
     def setup_class(cls):
         ''
         # Creates a server
-        conf = get_tst_config()
+        conf = {
+            'scheme': 'http',
+            'protocol': 'HTTP/1.1',
+            'port': 54583,
+            'host': '127.0.0.1',
+            'validate': False,
+            'server': 'wsgi',
+        }
         supervisor_factory = cls.available_servers.get(
             conf.get('server', 'wsgi'))
         if supervisor_factory is None:
@@ -350,7 +324,7 @@ class CPWebCase(webtest.WebCase):
                                        protocol, raise_subcls)
 
     def skip(self, msg='skipped '):
-        raise nose.SkipTest(msg)
+        pytest.skip(msg)
 
     def assertErrorPage(self, status, message=None, pattern=''):
         """Compare the response body with a built in error page.
@@ -414,7 +388,7 @@ def _test_method_sorter(_, x, y):
     if x < y:
         return -1
     return 0
-unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter
+unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter  # noqa: E305
 
 
 def setup_client():
@@ -475,13 +449,32 @@ server.ssl_private_key: r'%s'
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""
-        cherrypy._cpserver.wait_for_free_port(self.host, self.port)
+        portend.free(self.host, self.port, timeout=1)
 
         args = [
-            os.path.join(thisdir, '..', 'cherryd'),
+            '-m',
+            'cherrypy',
             '-c', self.config_file,
             '-p', self.pid_file,
         ]
+        r"""
+        Command for running cherryd server with autoreload enabled
+
+        Using
+
+        ```
+        ['-c',
+         "__requires__ = 'CherryPy'; \
+         import pkg_resources, re, sys; \
+         sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0]); \
+         sys.exit(\
+            pkg_resources.load_entry_point(\
+                'CherryPy', 'console_scripts', 'cherryd')())"]
+        ```
+
+        doesn't work as it's impossible to reconstruct the `-c`'s contents.
+        Ref: https://github.com/cherrypy/cherrypy/issues/1545
+        """
 
         if not isinstance(imports, (list, tuple)):
             imports = [imports]
@@ -506,7 +499,7 @@ server.ssl_private_key: r'%s'
         if self.wait:
             self.exit_code = self._proc.wait()
         else:
-            cherrypy._cpserver.wait_for_occupied_port(self.host, self.port)
+            portend.occupied(self.host, self.port, timeout=5)
 
         # Give the engine a wee bit more time to finish STARTING
         if self.daemonize:

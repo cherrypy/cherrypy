@@ -147,13 +147,13 @@ class ConfigTests(helper.CPWebCase):
 
     def testConfig(self):
         tests = [
-            ('/',        'nex', 'None'),
-            ('/',        'foo', 'this'),
-            ('/',        'bar', 'that'),
-            ('/xyz',     'foo', 'this'),
-            ('/foo/',    'foo', 'this2'),
-            ('/foo/',    'bar', 'that'),
-            ('/foo/',    'bax', 'None'),
+            ('/',        'nex', 'None'),  # noqa: E241
+            ('/',        'foo', 'this'),  # noqa: E241
+            ('/',        'bar', 'that'),  # noqa: E241
+            ('/xyz',     'foo', 'this'),  # noqa: E241
+            ('/foo/',    'foo', 'this2'),  # noqa: E241
+            ('/foo/',    'bar', 'that'),  # noqa: E241
+            ('/foo/',    'bax', 'None'),  # noqa: E241
             ('/foo/bar', 'baz', "'that2'"),
             ('/foo/nex', 'baz', 'that2'),
             # If 'foo' == 'this', then the mount point '/another' leaks into
@@ -205,7 +205,7 @@ class ConfigTests(helper.CPWebCase):
 
         if not six.PY3:
             self.getPage('/repr?key=thing3')
-            self.assertBody(repr(unicode('test')))
+            self.assertBody(repr(six.text_type('test')))
 
         self.getPage('/repr?key=complex')
         self.assertBody('(3+2j)')
@@ -272,7 +272,6 @@ class VariableSubstitutionTests(unittest.TestCase):
 
 class CallablesInConfigTest(unittest.TestCase):
     setup_server = staticmethod(setup_server)
-
 
     def test_call_with_literal_dict(self):
         from textwrap import dedent

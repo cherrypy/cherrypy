@@ -1,5 +1,0 @@
-pytest
-routes
-nose
-mock
-cherrypy[test_tools,routes_dispatcher]

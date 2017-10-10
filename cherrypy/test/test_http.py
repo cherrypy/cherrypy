@@ -4,14 +4,15 @@ import errno
 import mimetypes
 import socket
 import sys
+from unittest import mock
 
 import six
+from six.moves.http_client import HTTPConnection
 
 import cherrypy
-from cherrypy._cpcompat import HTTPConnection, HTTPSConnection, ntob
+from cherrypy._cpcompat import HTTPSConnection, ntob
 
 from cherrypy.test import helper
-from cherrypy.test.helper import mock
 
 
 def encode_multipart_formdata(files):
@@ -147,7 +148,7 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))
+        self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))  # noqa: F812
 
     def test_post_filename_with_special_characters(self):
         '''Testing that we can handle filenames with special characters. This
@@ -156,7 +157,7 @@ class HTTPTests(helper.CPWebCase):
            https://github.com/cherrypy/cherrypy/issues/1397'''
         # We'll upload a bunch of files with differing names.
         fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-                'file;name.csv', 'file; name.csv']
+                  'file;name.csv', 'file; name.csv']
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)

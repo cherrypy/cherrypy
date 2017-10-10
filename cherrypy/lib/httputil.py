@@ -19,10 +19,12 @@ except ImportError:
     from email.Header import decode_header
 
 import six
+from six.moves import range
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
-from cherrypy._cpcompat import BaseHTTPRequestHandler, ntob, ntou
-from cherrypy._cpcompat import text_or_bytes, iteritems
-from cherrypy._cpcompat import reversed, sorted, unquote_qs
+from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import text_or_bytes
+from cherrypy._cpcompat import unquote_qs
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -40,7 +42,7 @@ HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
 
 
 def urljoin(*atoms):
-    """Return the given path \*atoms, joined into a single URL.
+    r"""Return the given path \*atoms, joined into a single URL.
 
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
@@ -53,7 +55,7 @@ def urljoin(*atoms):
 
 
 def urljoin_bytes(*atoms):
-    """Return the given path *atoms, joined into a single URL.
+    """Return the given path `*atoms`, joined into a single URL.
 
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
@@ -121,9 +123,9 @@ def get_ranges(headervalue, content_length):
             #   If the entity is shorter than the specified suffix-length,
             #   the entire entity-body is used.
             if int(stop) > content_length:
-              result.append((0, content_length))
+                result.append((0, content_length))
             else:
-              result.append((content_length - int(stop), content_length))
+                result.append((content_length - int(stop), content_length))
 
     return result
 
@@ -139,13 +141,13 @@ class HeaderElement(object):
         self.params = params
 
     def __cmp__(self, other):
-        return cmp(self.value, other.value)
+        return cmp(self.value, other.value)  # noqa: F821
 
     def __lt__(self, other):
         return self.value < other.value
 
     def __str__(self):
-        p = [';%s=%s' % (k, v) for k, v in iteritems(self.params)]
+        p = [';%s=%s' % (k, v) for k, v in six.iteritems(self.params)]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
@@ -207,9 +209,9 @@ class AcceptElement(HeaderElement):
         return float(val)
 
     def __cmp__(self, other):
-        diff = cmp(self.qvalue, other.qvalue)
+        diff = cmp(self.qvalue, other.qvalue)  # noqa: F821
         if diff == 0:
-            diff = cmp(str(self), str(other))
+            diff = cmp(str(self), str(other))  # noqa: F821
         return diff
 
     def __lt__(self, other):
@@ -218,8 +220,8 @@ class AcceptElement(HeaderElement):
         else:
             return self.qvalue < other.qvalue
 
-RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
-def header_elements(fieldname, fieldvalue):
+RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')  # noqa: E305
+def header_elements(fieldname, fieldvalue):  # noqa: E302
     """Return a sorted HeaderElement list from a comma-separated header string.
     """
     if not fieldvalue:
@@ -237,7 +239,12 @@ def header_elements(fieldname, fieldvalue):
 
 
 def decode_TEXT(value):
-    r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
+    r"""
+    Decode :rfc:`2047` TEXT
+
+    >>> decode_TEXT("=?utf-8?q?f=C3=BCr?=") == b'f\xfcr'.decode('latin-1')
+    True
+    """
     atoms = decode_header(value)
     decodedvalue = ''
     for atom, charset in atoms:
@@ -245,6 +252,13 @@ def decode_TEXT(value):
             atom = atom.decode(charset)
         decodedvalue += atom
     return decodedvalue
+
+
+def decode_TEXT_maybe(value):
+    """
+    Decode the text but only if '=?' appears in it.
+    """
+    return decode_TEXT(value) if '=?' in value else value
 
 
 def valid_status(status):
@@ -415,9 +429,9 @@ class CaseInsensitiveDict(dict):
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
 if str == bytes:
-    header_translate_table = ''.join([chr(i) for i in xrange(256)])
+    header_translate_table = ''.join([chr(i) for i in range(256)])
     header_translate_deletechars = ''.join(
-        [chr(i) for i in xrange(32)]) + chr(127)
+        [chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])

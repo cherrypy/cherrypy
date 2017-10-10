@@ -307,7 +307,7 @@ example on setting it up.
         cherrypy.config.update({'log.screen': False,
                                 'log.access_file': '',
                                 'log.error_file': ''})
-	cherrypy.engine.unsubscribe('graceful', cherrypy.log.reopen_files)
+    cherrypy.engine.unsubscribe('graceful', cherrypy.log.reopen_files)
         logging.config.dictConfig(LOG_CONF)
         cherrypy.quickstart(Root())
 

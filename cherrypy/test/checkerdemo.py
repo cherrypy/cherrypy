@@ -13,6 +13,7 @@ thisdir = os.path.dirname(os.path.abspath(__file__))
 class Root:
     pass
 
+
 if __name__ == '__main__':
     conf = {'/base': {'tools.staticdir.root': thisdir,
                       # Obsolete key.

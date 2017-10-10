@@ -85,7 +85,7 @@ provide a 'pidfile' argument, preferably an absolute path:
    PIDFile(cherrypy.engine, '/var/run/myapp.pid').subscribe()
 
 Systemd socket activation
-#######################
+#########################
 
 Socket Activation is a systemd feature that allows to setup a system so that
 the systemd will sit on a port and start services 'on demand' (a little bit
@@ -192,7 +192,7 @@ CherryPy can encrypt connections using SSL to create an https connection. This k
 
 You can create either a key that requires a password to use, or one without a password. Protecting your private key with a password is much more secure, but requires that you enter the password every time you use the key. For example, you may have to enter the password when you start or restart your CherryPy server. This may or may not be feasible, depending on your setup.
 
-If you want to require a password, add one of the ``-aes128``, ``-aes192`` or ``-aes256`` switches to the command above. You should not use any of the DES, 3DES, or SEED algoritms to protect your password, as they are insecure.
+If you want to require a password, add one of the ``-aes128``, ``-aes192`` or ``-aes256`` switches to the command above. You should not use any of the DES, 3DES, or SEED algorithms to protect your password, as they are insecure.
 
 SSL Labs recommends using 2048-bit RSA keys for security (see references section at the end).
 
@@ -595,7 +595,7 @@ Now, let's see our application:
 
     if __name__ == '__main__':
         cherrypy.config.update({
-	    'server.socket_port': 8080,
+            'server.socket_port': 8080,
             'tools.proxy.on': True,
             'tools.proxy.base': 'http://www.example.com'
         })

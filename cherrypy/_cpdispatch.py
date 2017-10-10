@@ -209,7 +209,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
 try:
     import inspect
 except ImportError:
-    test_callable_spec = lambda callable, args, kwargs: None
+    test_callable_spec = lambda callable, args, kwargs: None  # noqa: F811
 else:
     getargspec = inspect.getargspec
     # Python 3 requires using getfullargspec if keyword-only arguments are present
@@ -368,8 +368,8 @@ class Dispatcher(object):
                 # No path segment was removed.  Raise an error.
                 raise cherrypy.CherryPyException(
                     'A vpath segment was added.  Custom dispatchers may only '
-                    + 'remove elements.  While trying to process '
-                    + '{0} in {1}'.format(name, fullpath)
+                    'remove elements.  While trying to process '
+                    '{0} in {1}'.format(name, fullpath)
                 )
             elif segleft == pre_len:
                 # Assume that the handler used the current path segment, but

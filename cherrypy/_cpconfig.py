@@ -122,9 +122,6 @@ import cherrypy
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import reprconf
 
-# Deprecated in  CherryPy 3.2--remove in 3.3
-NamespaceSet = reprconf.NamespaceSet
-
 
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.
@@ -260,7 +257,7 @@ def _server_namespace_handler(k, v):
             setattr(cherrypy.servers[servername], k, v)
     else:
         setattr(cherrypy.server, k, v)
-Config.namespaces['server'] = _server_namespace_handler
+Config.namespaces['server'] = _server_namespace_handler  # noqa: E305
 
 
 def _engine_namespace_handler(k, v):
@@ -287,7 +284,7 @@ def _engine_namespace_handler(k, v):
         setattr(plugin, attrname, v)
     else:
         setattr(engine, k, v)
-Config.namespaces['engine'] = _engine_namespace_handler
+Config.namespaces['engine'] = _engine_namespace_handler  # noqa: E305
 
 
 def _tree_namespace_handler(k, v):
@@ -300,4 +297,4 @@ def _tree_namespace_handler(k, v):
     else:
         cherrypy.tree.graft(v, v.script_name)
         cherrypy.engine.log('Mounted: %s on %s' % (v, v.script_name or '/'))
-Config.namespaces['tree'] = _tree_namespace_handler
+Config.namespaces['tree'] = _tree_namespace_handler  # noqa: E305

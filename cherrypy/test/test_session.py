@@ -3,8 +3,15 @@ import threading
 import time
 import socket
 
+from six.moves.http_client import HTTPConnection
+
+import pytest
+
 import cherrypy
-from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import (
+    json_decode,
+    HTTPSConnection,
+)
 from cherrypy.lib import sessions
 from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
@@ -19,7 +26,7 @@ def http_methods_allowed(methods=['GET', 'HEAD']):
         cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
 
-cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
+cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)  # noqa: E305
 
 
 def setup_server():
@@ -138,6 +145,7 @@ class SessionTest(helper.CPWebCase):
             if fname.startswith(sessions.FileSession.SESSION_PREFIX):
                 os.unlink(os.path.join(localDir, fname))
 
+    @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
@@ -162,7 +170,8 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        assert eval(self.body) == {'counter': 3, 'aha': 'foo'}
+        self.assertDictEqual(json_decode(self.body),
+                             {'counter': 3, 'aha': 'foo'})
         self.getPage('/length', self.cookies)
         self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
@@ -216,6 +225,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self._test_Concurrency()
 
+    @pytest.mark.xfail(reason='#1306')
     def test_2_File_Concurrency(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self._test_Concurrency()
@@ -249,7 +259,7 @@ class SessionTest(helper.CPWebCase):
                 else:
                     data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
-##                sys.stdout.write("%d " % index)
+                # sys.stdout.write("%d " % index)
 
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -276,6 +286,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/iredir', self.cookies)
         self.assertBody('FileSession')
 
+    @pytest.mark.xfail(reason='#1540')
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
@@ -285,6 +296,7 @@ class SessionTest(helper.CPWebCase):
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
+    @pytest.mark.xfail(reason='#1557')
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
         self.assertErrorPage(404, "The path '/unknown/page' was not found.")
@@ -328,7 +340,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
@@ -337,7 +349,7 @@ class SessionTest(helper.CPWebCase):
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
@@ -354,7 +366,7 @@ class SessionTest(helper.CPWebCase):
 
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
-        cache = copykeys(sessions.RamSession.cache)
+        cache = list(sessions.RamSession.cache)
         if cache:
             if cache == [id2]:
                 self.fail('The second session did not time out.')
@@ -453,7 +465,7 @@ else:
                 for i in range(request_count):
                     self.getPage('/', cookies)
                     # Uncomment the following line to prove threads overlap.
-##                    sys.stdout.write("%d " % index)
+                    # sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
                 data_dict[index] = int(self.body)

@@ -6,8 +6,10 @@ import os
 import sys
 import types
 
+import six
+
 import cherrypy
-from cherrypy._cpcompat import itervalues, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 
@@ -55,7 +57,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in itervalues(dct):
+                for value in six.itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
@@ -73,6 +75,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 if relative != 'server':
                     relative = bool(relative)
                 return cherrypy.url(path_info, relative=relative)
+
+            def qs(self, qs):
+                return cherrypy.url(qs=qs)
 
         def log_status():
             Status.statuses.append(cherrypy.response.status)
@@ -149,6 +154,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def url_with_quote(self):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
+
+            def url_with_xss(self):
+                raise cherrypy.HTTPRedirect("/some<script>alert(1);</script>url/that'we/want")
 
             def url_with_unicode(self):
                 raise cherrypy.HTTPRedirect(ntou('тест', 'utf-8'))
@@ -317,7 +325,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect?id=3')
         self.assertStatus(301)
         self.assertMatchesBody('<a href=([\'"])%s/redirect/[?]id=3\\1>'
-                          '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
+                               '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
 
         if self.prefix():
             # Corner case: the "trailing slash" redirect could be tricky if
@@ -325,7 +333,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.getPage('')
             self.assertStatus(301)
             self.assertMatchesBody("<a href=(['\"])%s/\\1>%s/</a>" %
-                              (self.base(), self.base()))
+                                   (self.base(), self.base()))
 
         # Test that requests for NON-index methods WITH a trailing slash
         # get redirected to the same URI path WITHOUT a trailing slash.
@@ -333,8 +341,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect/by_code/?code=307')
         self.assertStatus(301)
         self.assertMatchesBody("<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
-                          '%s/redirect/by_code[?]code=307</a>'
-                          % (self.base(), self.base()))
+                               '%s/redirect/by_code[?]code=307</a>'
+                               % (self.base(), self.base()))
 
         # If the trailing_slash tool is off, CP should just continue
         # as if the slashes were correct. But it needs some help
@@ -421,9 +429,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             from xml.etree import ElementTree
             try:
                 ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
-            except ElementTree.ParseError as e:
-                self._handlewebError('automatically generated redirect '
-                    'did not generate well-formed html')
+            except ElementTree.ParseError as e:  # noqa: F841
+                self._handlewebError('automatically generated redirect did not generate well-formed html')
 
         # check redirects to URLs generated valid HTML - we check this
         # by seeing if it appears as valid XHTML.
@@ -435,6 +442,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/redirect/url_with_quote')
         self.assertStatus(303)
         assertValidXHTML()
+
+    def test_redirect_with_xss(self):
+        """A redirect to a URL with HTML injected should result in page contents escaped."""
+        self.getPage('/redirect/url_with_xss')
+        self.assertStatus(303)
+        assert b'<script>' not in self.body
+        assert b'&lt;script&gt;' in self.body
 
     def test_redirect_with_unicode(self):
         """
@@ -638,6 +652,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('%s/url/other/page1' % self.base())
         self.getPage('/url/?path_info=/other/./page1')
         self.assertBody('%s/other/page1' % self.base())
+        self.getPage('/url/?path_info=/other/././././page1')
+        self.assertBody('%s/other/page1' % self.base())
 
         # Double dots
         self.getPage('/url/leaf?path_info=../page1')
@@ -646,6 +662,20 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('%s/url/page1' % self.base())
         self.getPage('/url/leaf?path_info=/other/../page1')
         self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/leaf?path_info=/other/../../../page1')
+        self.assertBody('%s/page1' % self.base())
+        self.getPage('/url/leaf?path_info=/other/../../../../../page1')
+        self.assertBody('%s/page1' % self.base())
+
+        # qs param is not normalized as a path
+        self.getPage('/url/qs?qs=/other')
+        self.assertBody('%s/url/qs?/other' % self.base())
+        self.getPage('/url/qs?qs=/other/../page1')
+        self.assertBody('%s/url/qs?/other/../page1' % self.base())
+        self.getPage('/url/qs?qs=../page1')
+        self.assertBody('%s/url/qs?../page1' % self.base())
+        self.getPage('/url/qs?qs=../../page1')
+        self.assertBody('%s/url/qs?../../page1' % self.base())
 
         # Output relative to current path or script_name
         self.getPage('/url/?path_info=page1&relative=True')
@@ -741,7 +771,7 @@ class ErrorTests(helper.CPWebCase):
             @cherrypy.expose
             def stat(self, path):
                 with cherrypy.HTTPError.handle(OSError, 404):
-                    st = os.stat(path)
+                    os.stat(path)
 
         root = Root()
 
@@ -756,4 +786,27 @@ class ErrorTests(helper.CPWebCase):
     def test_contextmanager(self):
         self.getPage('/stat/missing')
         self.assertStatus(404)
-        self.assertInBody('No such file or directory')
+        body_text = self.body.decode('utf-8')
+        assert (
+            'No such file or directory' in body_text or
+            'cannot find the file specified' in body_text
+        )
+
+
+class TestBinding:
+    def test_bind_ephemeral_port(self):
+        """
+        A server configured to bind to port 0 will bind to an ephemeral
+        port and indicate that port number on startup.
+        """
+        cherrypy.config.reset()
+        bind_ephemeral_conf = {
+            'server.socket_port': 0,
+        }
+        cherrypy.config.update(bind_ephemeral_conf)
+        cherrypy.engine.start()
+        assert cherrypy.server.bound_addr != cherrypy.server.bind_addr
+        _host, port = cherrypy.server.bound_addr
+        assert port > 0
+        cherrypy.engine.stop()
+        assert cherrypy.server.bind_addr == cherrypy.server.bound_addr

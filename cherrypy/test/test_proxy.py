@@ -58,6 +58,13 @@ class ProxyTest(helper.CPWebCase):
                 return ("Browse to <a href='%s'>this page</a>."
                         % cherrypy.url('/this/new/page'))
 
+            @cherrypy.expose
+            @cherrypy.config(**{
+                'tools.proxy.base': None,
+            })
+            def base_no_base(self):
+                return cherrypy.request.base
+
         for sn in script_names:
             cherrypy.tree.mount(Root(sn), sn)
 
@@ -109,12 +116,12 @@ class ProxyTest(helper.CPWebCase):
             # Test the value inside requests
             self.getPage(sn + '/newurl')
             self.assertBody(
-                "Browse to <a href='%s://www.mydomain.test" % self.scheme
-                + sn + "/this/new/page'>this page</a>.")
+                "Browse to <a href='%s://www.mydomain.test" % self.scheme +
+                sn + "/this/new/page'>this page</a>.")
             self.getPage(sn + '/newurl', headers=[('X-Forwarded-Host',
                                                    'http://www.example.test')])
-            self.assertBody("Browse to <a href='http://www.example.test"
-                            + sn + "/this/new/page'>this page</a>.")
+            self.assertBody("Browse to <a href='http://www.example.test" +
+                            sn + "/this/new/page'>this page</a>.")
 
             # Test the value outside requests
             port = ''
@@ -136,3 +143,12 @@ class ProxyTest(helper.CPWebCase):
         self.getPage('/xhost/', headers=[('X-Host', 'www.example.test')])
         self.assertHeader('Location', '%s://www.example.test/xhost'
                           % self.scheme)
+
+    def test_no_base_port_in_host(self):
+        """
+        If no base is indicated, and the host header is used to resolve
+        the base, it should rely on the host header for the port also.
+        """
+        headers = {'Host': 'localhost:8080'}.items()
+        self.getPage('/base_no_base', headers=headers)
+        self.assertBody('http://localhost:8080')

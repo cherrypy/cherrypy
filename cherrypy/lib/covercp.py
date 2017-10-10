@@ -26,8 +26,9 @@ import cgi
 import os
 import os.path
 
+from six.moves import urllib
+
 import cherrypy
-from cherrypy._cpcompat import quote_plus
 
 
 localFile = os.path.join(os.path.dirname(__file__), 'coverage.cache')
@@ -212,7 +213,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude='',
             yield (
                 "<a class='directory' "
                 "href='menu?base=%s&exclude=%s'>%s</a>\n" %
-                (newpath, quote_plus(exclude), name)
+                (newpath, urllib.parse.quote_plus(exclude), name)
             )
 
         for chunk in _show_branch(
@@ -290,7 +291,6 @@ class CoverStats(object):
         if root is None:
             # Guess initial depth. Files outside this path will not be
             # reachable from the web interface.
-            import cherrypy
             root = os.path.dirname(cherrypy.__file__)
         self.root = root
 
@@ -316,7 +316,7 @@ class CoverStats(object):
         for atom in atoms:
             path += atom + os.sep
             yield ("<a href='menu?base=%s&exclude=%s'>%s</a> %s"
-                   % (path, quote_plus(exclude), atom, os.sep))
+                   % (path, urllib.parse.quote_plus(exclude), atom, os.sep))
         yield '</div>'
 
         yield "<div id='tree'>"
@@ -380,12 +380,12 @@ def serve(path=localFile, port=8080, root=None):
     cov = coverage(data_file=path)
     cov.load()
 
-    import cherrypy
     cherrypy.config.update({'server.socket_port': int(port),
                             'server.thread_pool': 10,
                             'environment': 'production',
                             })
     cherrypy.quickstart(CoverStats(cov, root))
+
 
 if __name__ == '__main__':
     serve(*tuple(sys.argv[1:]))

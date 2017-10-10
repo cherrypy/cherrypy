@@ -6,14 +6,13 @@ import sys
 import time
 
 import six
+from six.moves import urllib
+from six.moves.http_client import BadStatusLine, HTTPConnection, NotConnected
+
+import pytest
 
 import cherrypy
-from cherrypy._cpcompat import (
-    HTTPConnection, HTTPSConnection,
-    NotConnected, BadStatusLine,
-    ntob, tonative,
-    urlopen,
-)
+from cherrypy._cpcompat import HTTPSConnection, ntob, tonative
 from cherrypy.test import helper, webtest
 
 
@@ -254,7 +253,7 @@ class ConnectionCloseTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody(pov)
         # Apache, for example, may emit a Connection header even for HTTP/1.0
-# self.assertNoHeader("Connection")
+        # self.assertNoHeader("Connection")
 
         # Test a keep-alive HTTP/1.0 request.
         self.persistent = True
@@ -269,7 +268,7 @@ class ConnectionCloseTests(helper.CPWebCase):
         self.assertStatus('200 OK')
         self.assertBody(pov)
         # Apache, for example, may emit a Connection header even for HTTP/1.0
-# self.assertNoHeader("Connection")
+        # self.assertNoHeader("Connection")
 
 
 class PipelineTests(helper.CPWebCase):
@@ -438,7 +437,7 @@ class PipelineTests(helper.CPWebCase):
             response = conn.response_class(conn.sock, method='GET')
             # there is a bug in python3 regarding the buffering of
             # ``conn.sock``. Until that bug get's fixed we will
-            # monkey patch the ``reponse`` instance.
+            # monkey patch the ``response`` instance.
             # https://bugs.python.org/issue23377
             if six.PY3:
                 response.fp = conn.sock.makefile('rb', 0)
@@ -663,7 +662,7 @@ class ConnectionTests(helper.CPWebCase):
         conn.putheader('Transfer-Encoding', 'chunked')
         conn.putheader('Content-Type', 'text/plain')
         # Chunked requests don't need a content-length
-##        conn.putheader("Content-Length", len(body))
+        # #        conn.putheader("Content-Length", len(body))
         conn.endheaders()
         conn.send(body)
         response = conn.getresponse()
@@ -722,8 +721,13 @@ class ConnectionTests(helper.CPWebCase):
         conn.close()
 
     def test_598(self):
-        remote_data_conn = urlopen('%s://%s:%s/one_megabyte_of_a/' %
-                                   (self.scheme, self.HOST, self.PORT,))
+        tmpl = '{scheme}://{host}:{port}/one_megabyte_of_a/'
+        url = tmpl.format(
+            scheme=self.scheme,
+            host=self.HOST,
+            port=self.PORT,
+        )
+        remote_data_conn = urllib.request.urlopen(url)
         buf = remote_data_conn.read(512)
         time.sleep(timeout * 0.6)
         remaining = (1024 * 1024) - 512
@@ -759,6 +763,7 @@ def setup_upload_server():
         'server.accepted_queue_timeout': 0.1,
     })
 
+
 reset_names = 'ECONNRESET', 'WSAECONNRESET'
 socket_reset_errors = [
     getattr(errno, name)
@@ -777,6 +782,7 @@ socket_reset_errors += [
 class LimitedRequestQueueTests(helper.CPWebCase):
     setup_server = staticmethod(setup_upload_server)
 
+    @pytest.mark.xfail(reason='#1535')
     def test_queue_full(self):
         conns = []
         overflow_conn = None
@@ -812,7 +818,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 response.begin()
             except socket.error as exc:
                 if exc.args[0] in socket_reset_errors:
-                    pass # Expected.
+                    pass  # Expected.
                 else:
                     tmpl = (
                         'Overflow conn did not get RST. '
@@ -836,6 +842,7 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 conn.close()
             if overflow_conn:
                 overflow_conn.close()
+
 
 class BadRequestTests(helper.CPWebCase):
     setup_server = staticmethod(setup_server)

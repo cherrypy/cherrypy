@@ -5,6 +5,7 @@ import re
 from hashlib import md5
 
 import six
+from six.moves import urllib
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes
@@ -195,10 +196,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
         if lbase is not None:
             base = lbase.split(',')[0]
     if not base:
-        base = request.headers.get('Host', '127.0.0.1')
-        port = request.local.port
-        if port != 80:
-            base += ':%s' % port
+        default = urllib.parse.urlparse(request.base).netloc
+        base = request.headers.get('Host', default)
 
     if base.find('://') == -1:
         # add http:// or https:// if needed
@@ -240,7 +239,7 @@ def response_headers(headers=None, debug=False):
                      'TOOLS.RESPONSE_HEADERS')
     for name, value in (headers or []):
         cherrypy.serving.response.headers[name] = value
-response_headers.failsafe = True
+response_headers.failsafe = True  # noqa: E305
 
 
 def referer(pattern, accept=True, accept_missing=False, error=403,
@@ -409,13 +408,15 @@ def session_auth(**kwargs):
     for k, v in kwargs.items():
         setattr(sa, k, v)
     return sa.run()
-session_auth.__doc__ = """Session authentication hook.
+session_auth.__doc__ = (  # noqa: E305
+    """Session authentication hook.
 
-Any attribute of the SessionAuth class may be overridden via a keyword arg
-to this function:
+    Any attribute of the SessionAuth class may be overridden via a keyword arg
+    to this function:
 
-""" + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
-                 for k in dir(SessionAuth) if not k.startswith('__')])
+    """ + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
+                     for k in dir(SessionAuth) if not k.startswith('__')])
+)
 
 
 def log_traceback(severity=logging.ERROR, debug=False):
@@ -603,7 +604,7 @@ class MonitoredHeaderMap(_httputil.HeaderMap):
         # Python 2
         def has_key(self, key):
             self.accessed_headers.add(key)
-            return _httputil.HeaderMap.has_key(self, key)
+            return _httputil.HeaderMap.has_key(self, key)  # noqa: W601
 
 
 def autovary(ignore=None, debug=False):

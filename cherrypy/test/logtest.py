@@ -126,7 +126,7 @@ class LogCase(object):
         in_region = False
         for line in open(logfile, 'rb'):
             if in_region:
-                if (line.startswith(self.markerPrefix) and not marker in line):
+                if line.startswith(self.markerPrefix) and marker not in line:
                     break
                 else:
                     data.append(line)

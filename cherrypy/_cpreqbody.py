@@ -61,7 +61,7 @@ Here's the built-in JSON tool for an example::
     def json_in(force=True, debug=False):
         request = cherrypy.serving.request
         def json_processor(entity):
-            \"""Read application/json data into request.json.\"""
+            '''Read application/json data into request.json.'''
             if not entity.headers.get("Content-Length", ""):
                 raise cherrypy.HTTPError(411)
 
@@ -120,8 +120,8 @@ try:
 except ImportError:
     def unquote_plus(bs):
         """Bytes version of urllib.parse.unquote_plus."""
-        bs = bs.replace(ntob('+'), ntob(' '))
-        atoms = bs.split(ntob('%'))
+        bs = bs.replace(b'+', b' ')
+        atoms = bs.split(b'%')
         for i in range(1, len(atoms)):
             item = atoms[i]
             try:
@@ -129,7 +129,10 @@ except ImportError:
                 atoms[i] = bytes([pct]) + item[2:]
             except ValueError:
                 pass
-        return ntob('').join(atoms)
+        return b''.join(atoms)
+
+import six
+import cheroot.server
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob, ntou
@@ -325,7 +328,7 @@ class Entity(object):
     # absence of a charset parameter, is US-ASCII."
     # However, many browsers send data in utf-8 with no charset.
     attempt_charsets = ['utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
@@ -523,7 +526,7 @@ class Entity(object):
         value = self.decode_entity(value)
         return value
 
-    def decode_entity(self , value):
+    def decode_entity(self, value):
         """Return a given byte encoded value as a string"""
         for charset in self.attempt_charsets:
             try:
@@ -574,7 +577,7 @@ class Part(Entity):
     # "The default character set, which must be assumed in the absence of a
     # charset parameter, is US-ASCII."
     attempt_charsets = ['us-ascii', 'utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
@@ -730,19 +733,9 @@ class Part(Entity):
         self.read_lines_to_boundary(fp_out=fp_out)
         return fp_out
 
-Entity.part_class = Part
+Entity.part_class = Part  # noqa: E305
 
 inf = float('inf')
-
-comma_separated_headers = [
-    'Accept', 'Accept-Charset', 'Accept-Encoding',
-    'Accept-Language', 'Accept-Ranges', 'Allow',
-    'Cache-Control', 'Connection', 'Content-Encoding',
-    'Content-Language', 'Expect', 'If-Match',
-    'If-None-Match', 'Pragma', 'Proxy-Authenticate',
-    'Te', 'Trailer', 'Transfer-Encoding', 'Upgrade',
-    'Vary', 'Via', 'Warning', 'Www-Authenticate'
-]
 
 
 class SizedReader:
@@ -909,8 +902,8 @@ class SizedReader:
                         k = k.strip().title()
                         v = v.strip()
 
-                    if k in comma_separated_headers:
-                        existing = self.trailers.get(envname)
+                    if k in cheroot.server.comma_separated_headers:
+                        existing = self.trailers.get(k)
                         if existing:
                             v = ntob(', ').join((existing, v))
                     self.trailers[k] = v
@@ -995,7 +988,7 @@ class RequestBody(Entity):
             # Python 2 only: keyword arguments must be byte strings (type
             # 'str').
             if sys.version_info < (3, 0):
-                if isinstance(key, unicode):
+                if isinstance(key, six.text_type):
                     key = key.encode('ISO-8859-1')
 
             if key in request_params:

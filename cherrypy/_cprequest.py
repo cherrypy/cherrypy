@@ -3,13 +3,13 @@ import time
 import warnings
 
 import six
+from six.moves.http_cookies import SimpleCookie, CookieError
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, copykeys, ntob
-from cherrypy._cpcompat import SimpleCookie, CookieError
-from cherrypy import _cpreqbody, _cpconfig
+from cherrypy._cpcompat import text_or_bytes, ntob
+from cherrypy import _cpreqbody
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httputil, file_generator
+from cherrypy.lib import httputil, file_generator, reprconf
 
 
 class Hook(object):
@@ -51,12 +51,11 @@ class Hook(object):
         self.kwargs = kwargs
 
     def __lt__(self, other):
-        # Python 3
+        """
+        Hooks sort by priority, ascending, such that
+        hooks of lower priority are run first.
+        """
         return self.priority < other.priority
-
-    def __cmp__(self, other):
-        # Python 2
-        return cmp(self.priority, other.priority)
 
     def __call__(self):
         """Run self.callback(**self.kwargs)."""
@@ -127,7 +126,7 @@ class HookMap(dict):
         return '%s.%s(points=%r)' % (
             cls.__module__,
             cls.__name__,
-            copykeys(self)
+            list(self)
         )
 
 
@@ -467,7 +466,7 @@ class Request(object):
     A string containing the stage reached in the request-handling process.
     This is useful when debugging a live server with hung requests."""
 
-    namespaces = _cpconfig.NamespaceSet(
+    namespaces = reprconf.NamespaceSet(
         **{'hooks': hooks_namespace,
            'request': request_namespace,
            'response': response_namespace,
@@ -623,62 +622,16 @@ class Request(object):
 
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info. (Core)"""
-        response = cherrypy.serving.response
         try:
             try:
                 try:
-                    if self.app is None:
-                        raise cherrypy.NotFound()
-
-                    # Get the 'Host' header, so we can HTTPRedirect properly.
-                    self.stage = 'process_headers'
-                    self.process_headers()
-
-                    # Make a copy of the class hooks
-                    self.hooks = self.__class__.hooks.copy()
-                    self.toolmaps = {}
-
-                    self.stage = 'get_resource'
-                    self.get_resource(path_info)
-
-                    self.body = _cpreqbody.RequestBody(
-                        self.rfile, self.headers, request_params=self.params)
-
-                    self.namespaces(self.config)
-
-                    self.stage = 'on_start_resource'
-                    self.hooks.run('on_start_resource')
-
-                    # Parse the querystring
-                    self.stage = 'process_query_string'
-                    self.process_query_string()
-
-                    # Process the body
-                    if self.process_request_body:
-                        if self.method not in self.methods_with_bodies:
-                            self.process_request_body = False
-                    self.stage = 'before_request_body'
-                    self.hooks.run('before_request_body')
-                    if self.process_request_body:
-                        self.body.process()
-
-                    # Run the handler
-                    self.stage = 'before_handler'
-                    self.hooks.run('before_handler')
-                    if self.handler:
-                        self.stage = 'handler'
-                        response.body = self.handler()
-
-                    # Finalize
-                    self.stage = 'before_finalize'
-                    self.hooks.run('before_finalize')
-                    response.finalize()
+                    self._do_respond(path_info)
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError):
                     inst = sys.exc_info()[1]
                     inst.set_response()
                     self.stage = 'before_finalize (HTTPError)'
                     self.hooks.run('before_finalize')
-                    response.finalize()
+                    cherrypy.serving.response.finalize()
             finally:
                 self.stage = 'on_end_resource'
                 self.hooks.run('on_end_resource')
@@ -688,6 +641,55 @@ class Request(object):
             if self.throw_errors:
                 raise
             self.handle_error()
+
+    def _do_respond(self, path_info):
+        response = cherrypy.serving.response
+
+        if self.app is None:
+            raise cherrypy.NotFound()
+
+        self.hooks = self.__class__.hooks.copy()
+        self.toolmaps = {}
+
+        # Get the 'Host' header, so we can HTTPRedirect properly.
+        self.stage = 'process_headers'
+        self.process_headers()
+
+        self.stage = 'get_resource'
+        self.get_resource(path_info)
+
+        self.body = _cpreqbody.RequestBody(
+            self.rfile, self.headers, request_params=self.params)
+
+        self.namespaces(self.config)
+
+        self.stage = 'on_start_resource'
+        self.hooks.run('on_start_resource')
+
+        # Parse the querystring
+        self.stage = 'process_query_string'
+        self.process_query_string()
+
+        # Process the body
+        if self.process_request_body:
+            if self.method not in self.methods_with_bodies:
+                self.process_request_body = False
+        self.stage = 'before_request_body'
+        self.hooks.run('before_request_body')
+        if self.process_request_body:
+            self.body.process()
+
+        # Run the handler
+        self.stage = 'before_handler'
+        self.hooks.run('before_handler')
+        if self.handler:
+            self.stage = 'handler'
+            response.body = self.handler()
+
+        # Finalize
+        self.stage = 'before_finalize'
+        self.hooks.run('before_finalize')
+        response.finalize()
 
     def process_query_string(self):
         """Parse the query string into Python structures. (Core)"""
@@ -718,17 +720,11 @@ class Request(object):
             name = name.title()
             value = value.strip()
 
-            # Warning: if there is more than one header entry for cookies
-            # (AFAIK, only Konqueror does that), only the last one will
-            # remain in headers (but they will be correctly stored in
-            # request.cookie).
-            if '=?' in value:
-                dict.__setitem__(headers, name, httputil.decode_TEXT(value))
-            else:
-                dict.__setitem__(headers, name, value)
+            headers[name] = httputil.decode_TEXT_maybe(value)
 
-            # Handle cookies differently because on Konqueror, multiple
-            # cookies come on different lines with the same key
+            # Some clients, notably Konquoror, supply multiple
+            # cookies on different lines with the same key. To
+            # handle this case, store all cookies in self.cookie.
             if name == 'Cookie':
                 try:
                     self.cookie.load(value)

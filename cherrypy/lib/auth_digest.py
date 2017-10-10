@@ -5,8 +5,10 @@
 import time
 from hashlib import md5
 
+from six.moves.urllib.request import parse_http_list, parse_keqv_list
+
 import cherrypy
-from cherrypy._cpcompat import ntob, parse_http_list, parse_keqv_list
+from cherrypy._cpcompat import ntob
 
 
 __doc__ = """An implementation of the server-side of HTTP Digest Access
@@ -352,8 +354,8 @@ def digest_auth(realm, get_ha1, key, debug=False):
     auth_header = request.headers.get('authorization')
     nonce_is_stale = False
     if auth_header is not None:
-        with cherrypy.HTTPError.handle(ValueError, 400,
-                'The Authorization header could not be parsed.'):
+        with cherrypy.HTTPError.handle(
+                ValueError, 400, 'The Authorization header could not be parsed.'):
             auth = HttpDigestAuthorization(
                 auth_header, request.method, debug=debug)
 

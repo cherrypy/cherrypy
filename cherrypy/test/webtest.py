@@ -25,13 +25,12 @@ import traceback
 import types
 import os
 import json
-
 import unittest
 
 import six
+from six.moves.http_client import HTTPConnection
 
-from cherrypy._cpcompat import text_or_bytes, HTTPConnection
-from cherrypy._cpcompat import HTTPSConnection
+from cherrypy._cpcompat import text_or_bytes, HTTPSConnection
 
 
 def interface(host):
@@ -106,7 +105,7 @@ class ReloadingTestLoader(unittest.TestLoader):
                 while parts_copy:
                     target = '.'.join(parts_copy)
                     if target in sys.modules:
-                        module = reload(sys.modules[target])
+                        module = six.moves.reload_module(sys.modules[target])
                         parts = unused_parts
                         break
                     else:
@@ -126,9 +125,12 @@ class ReloadingTestLoader(unittest.TestLoader):
 
         if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
-        elif (((six.PY3 and isinstance(obj, type))
-               or isinstance(obj, (type, types.ClassType)))
-              and issubclass(obj, unittest.TestCase)):
+        elif (
+                (
+                    (six.PY3 and isinstance(obj, type)) or
+                    isinstance(obj, (type, types.ClassType))
+                ) and
+                issubclass(obj, unittest.TestCase)):
             return self.loadTestsFromTestCase(obj)
         elif isinstance(obj, types.UnboundMethodType):
             if six.PY3:
@@ -424,6 +426,16 @@ class WebCase(unittest.TestCase):
                 msg = '%r in headers' % key
             self._handlewebError(msg)
 
+    def assertNoHeaderItemValue(self, key, value, msg=None):
+        """Fail if the header contains the specified value"""
+        lowkey = key.lower()
+        hdrs = self.headers
+        matches = [k for k, v in hdrs if k.lower() == lowkey and v == value]
+        if matches:
+            if msg is None:
+                msg = '%r:%r in %r' % (key, value, hdrs)
+            self._handlewebError(msg)
+
     def assertBody(self, value, msg=None):
         """Fail if value != self.body."""
         if isinstance(value, six.text_type):
@@ -462,7 +474,7 @@ class WebCase(unittest.TestCase):
             self._handlewebError(msg)
 
 
-methods_with_bodies = ('POST', 'PUT')
+methods_with_bodies = ('POST', 'PUT', 'PATCH')
 
 
 def cleanHeaders(headers, method, body, host, port):
@@ -576,8 +588,6 @@ def openURL(url, headers=None, method='GET', body=None,
                 time.sleep(0.5)
                 if trial == 9:
                     raise
-
-
 
 
 # Add any exceptions which your web framework handles

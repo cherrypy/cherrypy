@@ -37,6 +37,7 @@ def decode(encoding=None, default_encoding='utf-8'):
             default_encoding = [default_encoding]
         body.attempt_charsets = body.attempt_charsets + default_encoding
 
+
 class UTF8StreamEncoder:
     def __init__(self, iterator):
         self._iterator = iterator
@@ -321,9 +322,9 @@ def gzip(compress_level=5, mime_types=['text/html', 'text/plain'],
     values in the mime_types arg before calling this function.
 
     The provided list of mime-types must be of one of the following form:
-        * type/subtype
-        * type/*
-        * type/*+subtype
+        * `type/subtype`
+        * `type/*`
+        * `type/*+subtype`
 
     No compression is performed if any of the following hold:
         * The client sends no Accept-Encoding request header

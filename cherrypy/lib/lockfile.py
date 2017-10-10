@@ -123,8 +123,8 @@ class WindowsLockFile(SystemLockFile):
         except IOError:
             raise UnlockError(self.fp.name)
 
-if 'msvcrt' in globals():
-    LockFile = WindowsLockFile
+if 'msvcrt' in globals():  # noqa: E305
+    LockFile = WindowsLockFile  # noqa: F811
 
 
 class UnixLockFile(SystemLockFile):
@@ -138,5 +138,5 @@ class UnixLockFile(SystemLockFile):
 
     # no need to implement _unlock_file, it will be unlocked on close()
 
-if 'fcntl' in globals():
+if 'fcntl' in globals():  # noqa: E305
     LockFile = UnixLockFile

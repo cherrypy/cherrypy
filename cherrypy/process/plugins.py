@@ -7,7 +7,9 @@ import sys
 import time
 import threading
 
-from cherrypy._cpcompat import text_or_bytes, get_thread_ident
+from six.moves import _thread
+
+from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import ntob, Timer
 
 # _module__file__base is used by Autoreload to make
@@ -112,7 +114,6 @@ class SignalHandler(object):
         # used to determine is the process is a daemon in `self._is_daemonized`
         self._original_pid = os.getpid()
 
-
     def _jython_SIGINT_handler(self, signum=None, frame=None):
         # See http://bugs.jython.org/issue1313
         self.bus.log('Keyboard Interrupt: shutting down bus')
@@ -131,12 +132,10 @@ class SignalHandler(object):
         is executing inside other process like in a CI tool
         (Buildbot, Jenkins).
         """
-        if (self._original_pid != os.getpid() and
-            not os.isatty(sys.stdin.fileno())):
-            return True
-        else:
-            return False
-
+        return (
+            self._original_pid != os.getpid() and
+            not os.isatty(sys.stdin.fileno())
+        )
 
     def subscribe(self):
         """Subscribe self.handlers to signals."""
@@ -347,7 +346,7 @@ class Daemonizer(SimplePlugin):
     process still return proper exit codes. Therefore, if you use this
     plugin to daemonize, don't use the return code as an accurate indicator
     of whether the process fully started. In fact, that return code only
-    indicates if the process succesfully finished the first fork.
+    indicates if the process successfully finished the first fork.
     """
 
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
@@ -409,7 +408,6 @@ class Daemonizer(SimplePlugin):
             sys.exit('%s: fork #2 failed: (%d) %s\n'
                      % (sys.argv[0], exc.errno, exc.strerror))
 
-        os.chdir('/')
         os.umask(0)
 
         si = open(self.stdin, 'r')
@@ -717,7 +715,7 @@ class ThreadManager(SimplePlugin):
         If the current thread has already been seen, any 'start_thread'
         listeners will not be run again.
         """
-        thread_ident = get_thread_ident()
+        thread_ident = _thread.get_ident()
         if thread_ident not in self.threads:
             # We can't just use get_ident as the thread ID
             # because some platforms reuse thread ID's.
@@ -727,7 +725,7 @@ class ThreadManager(SimplePlugin):
 
     def release_thread(self):
         """Release the current thread and run 'stop_thread' listeners."""
-        thread_ident = get_thread_ident()
+        thread_ident = _thread.get_ident()
         i = self.threads.pop(thread_ident, None)
         if i is not None:
             self.bus.publish('stop_thread', i)

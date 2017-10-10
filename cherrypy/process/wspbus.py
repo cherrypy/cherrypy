@@ -1,4 +1,4 @@
-"""An implementation of the Web Site Process Bus.
+r"""An implementation of the Web Site Process Bus.
 
 This module is completely standalone, depending only on the stdlib.
 
@@ -73,16 +73,14 @@ except ImportError:
 
 import operator
 import os
-import subprocess
 import sys
 import threading
 import time
 import traceback as _traceback
 import warnings
+import subprocess
 
 import six
-
-from cherrypy._cpcompat import _args_from_interpreter_flags
 
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
@@ -95,13 +93,13 @@ _startup_cwd = os.getcwd()
 
 
 class ChannelFailures(Exception):
+    """Exception raised when errors occur in a listener during Bus.publish()."""
 
-    """Exception raised when errors occur in a listener during Bus.publish().
-    """
     delimiter = '\n'
 
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(*args, **kwargs)
+        """Initialize ChannelFailures errors wrapper."""
+        super(ChannelFailures, self).__init__(*args, **kwargs)
         self._exceptions = list()
 
     def handle_exception(self):
@@ -113,12 +111,14 @@ class ChannelFailures(Exception):
         return self._exceptions[:]
 
     def __str__(self):
+        """Render the list of errors, which happened in channel."""
         exception_strings = map(repr, self.get_instances())
         return self.delimiter.join(exception_strings)
 
     __repr__ = __str__
 
     def __bool__(self):
+        """Determine whether any error happened in channel."""
         return bool(self._exceptions)
     __nonzero__ = __bool__
 
@@ -137,7 +137,7 @@ class _StateEnum(object):
         if isinstance(value, self.State):
             value.name = key
         object.__setattr__(self, key, value)
-states = _StateEnum()
+states = _StateEnum()  # noqa: E305
 states.STOPPED = states.State()
 states.STARTING = states.State()
 states.STARTED = states.State()
@@ -157,7 +157,6 @@ else:
 
 
 class Bus(object):
-
     """Process state-machine and messenger for HTTP site deployment.
 
     All listeners for a given channel are guaranteed to be called even
@@ -173,6 +172,7 @@ class Bus(object):
     max_cloexec_files = max_files
 
     def __init__(self):
+        """Initialize pub/sub bus."""
         self.execv = False
         self.state = states.STOPPED
         channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
@@ -271,6 +271,7 @@ class Bus(object):
     def exit(self):
         """Stop all services and prepare to exit the process."""
         exitstate = self.state
+        EX_SOFTWARE = 70
         try:
             self.stop()
 
@@ -285,14 +286,14 @@ class Bus(object):
             # signal handler, console handler, or atexit handler), so we
             # can't just let exceptions propagate out unhandled.
             # Assume it's been logged and just die.
-            os._exit(70)  # EX_SOFTWARE
+            os._exit(EX_SOFTWARE)
 
         if exitstate == states.STARTING:
             # exit() was called before start() finished, possibly due to
             # Ctrl-C because a start listener got stuck. In this case,
             # we could get stuck in a loop where Ctrl-C never exits the
             # process, so we just call os.exit here.
-            os._exit(70)  # EX_SOFTWARE
+            os._exit(EX_SOFTWARE)
 
     def restart(self):
         """Restart the process (may close connections).
@@ -342,18 +343,12 @@ class Bus(object):
             # that another thread executes cherrypy.engine.exit()
             if (
                     t != threading.currentThread() and
-                    t.isAlive() and
-                    not isinstance(t, threading._MainThread)
+                    not isinstance(t, threading._MainThread) and
+                    # Note that any dummy (external) threads are always daemonic.
+                    not t.daemon
             ):
-                # Note that any dummy (external) threads are always daemonic.
-                if hasattr(threading.Thread, 'daemon'):
-                    # Python 2.6+
-                    d = t.daemon
-                else:
-                    d = t.isDaemon()
-                if not d:
-                    self.log('Waiting for thread %s.' % t.getName())
-                    t.join()
+                self.log('Waiting for thread %s.' % t.getName())
+                t.join()
 
         if self.execv:
             self._do_execv()
@@ -413,7 +408,7 @@ class Bus(object):
 
     @staticmethod
     def _get_interpreter_argv():
-        """Retrieve current Python interpreter's arguments
+        """Retrieve current Python interpreter's arguments.
 
         Returns empty tuple in case of frozen mode, uses built-in arguments
         reproduction function otherwise.
@@ -427,11 +422,11 @@ class Bus(object):
         """
         return ([]
                 if getattr(sys, 'frozen', False)
-                else _args_from_interpreter_flags())
+                else subprocess._args_from_interpreter_flags())
 
     @staticmethod
     def _get_true_argv():
-        """Retrieves all real arguments of the python interpreter
+        """Retrieve all real arguments of the python interpreter.
 
         ...even those not listed in ``sys.argv``
 
@@ -439,7 +434,6 @@ class Bus(object):
         :seealso: http://stackoverflow.com/a/6683222/595220
         :seealso: http://stackoverflow.com/a/28414807/595220
         """
-
         try:
             char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
 
@@ -447,6 +441,57 @@ class Bus(object):
             argc = ctypes.c_int()
 
             ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+
+            _argv = argv[:argc.value]
+
+            # The code below is trying to correctly handle special cases.
+            # `-c`'s argument interpreted by Python itself becomes `-c` as
+            # well. Same applies to `-m`. This snippet is trying to survive
+            # at least the case with `-m`
+            # Ref: https://github.com/cherrypy/cherrypy/issues/1545
+            # Ref: python/cpython@418baf9
+            argv_len, is_command, is_module = len(_argv), False, False
+
+            try:
+                m_ind = _argv.index('-m')
+                if m_ind < argv_len - 1 and _argv[m_ind + 1] in ('-c', '-m'):
+                    """
+                    In some older Python versions `-m`'s argument may be
+                    substituted with `-c`, not `-m`
+                    """
+                    is_module = True
+            except (IndexError, ValueError):
+                m_ind = None
+
+            try:
+                c_ind = _argv.index('-c')
+                if m_ind < argv_len - 1 and _argv[c_ind + 1] == '-c':
+                    is_command = True
+            except (IndexError, ValueError):
+                c_ind = None
+
+            if is_module:
+                """It's containing `-m -m` sequence of arguments"""
+                if is_command and c_ind < m_ind:
+                    """There's `-c -c` before `-m`"""
+                    raise RuntimeError(
+                        "Cannot reconstruct command from '-c'. Ref: "
+                        'https://github.com/cherrypy/cherrypy/issues/1545')
+                # Survive module argument here
+                original_module = sys.argv[0]
+                if not os.access(original_module, os.R_OK):
+                    """There's no such module exist"""
+                    raise AttributeError(
+                        "{} doesn't seem to be a module "
+                        'accessible by current user'.format(original_module))
+                del _argv[m_ind:m_ind + 2]  # remove `-m -m`
+                # ... and substitute it with the original module path:
+                _argv.insert(m_ind, original_module)
+            elif is_command:
+                """It's containing just `-c -c` sequence of arguments"""
+                raise RuntimeError(
+                    "Cannot reconstruct command from '-c'. "
+                    'Ref: https://github.com/cherrypy/cherrypy/issues/1545')
         except AttributeError:
             """It looks Py_GetArgcArgv is completely absent in some environments
 
@@ -459,11 +504,12 @@ class Bus(object):
             """
             raise NotImplementedError
         else:
-            return argv[:argc.value]
+            return _argv
 
     @staticmethod
     def _extend_pythonpath(env):
-        """
+        """Prepend current working dir to PATH environment variable if needed.
+
         If sys.path[0] is an empty string, the interpreter was likely
         invoked with -m and the effective path is about to change on
         re-exec.  Add the current directory to $PYTHONPATH to ensure
@@ -536,4 +582,4 @@ class Bus(object):
             msg += '\n' + ''.join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
-bus = Bus()
+bus = Bus()  # noqa: E305

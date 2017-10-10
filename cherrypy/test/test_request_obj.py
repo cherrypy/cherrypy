@@ -6,9 +6,10 @@ import sys
 import types
 
 import six
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy.lib import httputil
 from cherrypy.test import helper
 
@@ -34,6 +35,16 @@ class RequestObjectTests(helper.CPWebCase):
             @cherrypy.expose
             def scheme(self):
                 return cherrypy.request.scheme
+
+            @cherrypy.expose
+            def created_example_com_3128(self):
+                """Handle CONNECT method."""
+                cherrypy.response.status = 204
+
+            @cherrypy.expose
+            def body_example_com_3128(self):
+                """Handle CONNECT method."""
+                return cherrypy.request.method + 'ed to ' + cherrypy.request.path_info
 
         root = Root()
 
@@ -290,7 +301,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         appconf = {
             '/method': {
-                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND', 
+                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND',
                                                 'PATCH')
             },
         }
@@ -720,7 +731,7 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertBody('application/json')
 
     def test_basic_HTTPMethods(self):
-        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND', 
+        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND',
                                               'PATCH')
 
         # Test that all defined HTTP methods work.
@@ -847,11 +858,43 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertStatus(200)
 
     def test_CONNECT_method(self):
-        if getattr(cherrypy.server, 'using_apache', False):
-            return self.skip('skipped due to known Apache differences... ')
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.request('CONNECT', 'created.example.com:3128')
+            response = conn.response_class(conn.sock, method='CONNECT')
+            response.begin()
+            self.assertEqual(response.status, 204)
+        finally:
+            self.persistent = False
 
-        self.getPage('/method/', method='CONNECT')
-        self.assertBody('CONNECT')
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.request('CONNECT', 'body.example.com:3128')
+            response = conn.response_class(conn.sock, method='CONNECT')
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b'CONNECTed to /body.example.com:3128')
+        finally:
+            self.persistent = False
+
+    def test_CONNECT_method_invalid_authority(self):
+        for request_target in ['example.com', 'http://example.com:33',
+                               '/path/', 'path/', '/?q=f', '#f']:
+            self.persistent = True
+            try:
+                conn = self.HTTP_CONN
+                conn.request('CONNECT', request_target)
+                response = conn.response_class(conn.sock, method='CONNECT')
+                response.begin()
+                self.assertEqual(response.status, 400)
+                self.body = response.read()
+                self.assertBody(b'Invalid path in Request-URI: request-target '
+                                b'must match authority-form.')
+            finally:
+                self.persistent = False
 
     def testEmptyThreadlocals(self):
         results = []

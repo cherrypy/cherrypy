@@ -2,14 +2,15 @@
 
 import gzip
 import io
+from unittest import mock
 
-import six
+from six.moves.http_client import IncompleteRead
+from six.moves.urllib.parse import quote as url_quote
 
 import cherrypy
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou
+from cherrypy._cpcompat import ntob, ntou
 
 from cherrypy.test import helper
-from cherrypy.test.helper import mock
 
 
 europoundUnicode = ntou('£', encoding='utf-8')
@@ -119,22 +120,22 @@ class EncodingTests(helper.CPWebCase):
         cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
 
     def test_query_string_decoding(self):
-        if six.PY3:
-            # This test fails on Python 3. See #1443
-            return
-        europoundUtf8 = europoundUnicode.encode('utf-8')
-        self.getPage(ntob('/?param=') + europoundUtf8)
-        self.assertBody(europoundUtf8)
+        URI_TMPL = '/reqparams?q={q}'
+
+        europoundUtf8_2_bytes = europoundUnicode.encode('utf-8')
+        europoundUtf8_2nd_byte = europoundUtf8_2_bytes[1:2]
 
         # Encoded utf8 query strings MUST be parsed correctly.
         # Here, q is the POUND SIGN U+00A3 encoded in utf8 and then %HEX
-        self.getPage('/reqparams?q=%C2%A3')
+        self.getPage(URI_TMPL.format(q=url_quote(europoundUtf8_2_bytes)))
         # The return value will be encoded as utf8.
-        self.assertBody(ntob('q: \xc2\xa3'))
+        self.assertBody(ntob('q: ') + europoundUtf8_2_bytes)
 
         # Query strings that are incorrectly encoded MUST raise 404.
-        # Here, q is the POUND SIGN U+00A3 encoded in latin1 and then %HEX
-        self.getPage('/reqparams?q=%A3')
+        # Here, q is the second byte of POUND SIGN U+A3 encoded in utf8
+        # and then %HEX
+        # TODO: check whether this shouldn't raise 400 Bad Request instead
+        self.getPage(URI_TMPL.format(q=url_quote(europoundUtf8_2nd_byte)))
         self.assertStatus(404)
         self.assertErrorPage(
             404,
@@ -380,6 +381,12 @@ class EncodingTests(helper.CPWebCase):
         self.assertHeader('Vary', 'Accept-Encoding')
         self.assertNoHeader('Content-Encoding')
         self.assertBody('Hello, world')
+
+        # Test that trailing comma doesn't cause IndexError
+        # Ref: https://github.com/cherrypy/cherrypy/issues/988
+        self.getPage('/gzip/', headers=[('Accept-Encoding', 'gzip,deflate,')])
+        self.assertStatus(200)
+        self.assertNotInBody('IndexError')
 
         self.getPage('/gzip/', headers=[('Accept-Encoding', '*;q=0')])
         self.assertStatus(406)

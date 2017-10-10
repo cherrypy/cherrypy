@@ -394,7 +394,7 @@ class XMLRPCController(object):
 class SessionAuthTool(HandlerTool):
 
     def _setargs(self):
-        for name in dir(cptools.SessionAuth):
+        for name in dir(cptools.SessionAuth):  # noqa: F821
             if not name.startswith('__'):
                 setattr(self, name, None)
 
@@ -411,8 +411,8 @@ class CachingTool(Tool):
             if request.cacheable:
                 # Note the devious technique here of adding hooks on the fly
                 request.hooks.attach('before_finalize', _caching.tee_output,
-                                     priority=90)
-    _wrapper.priority = 20
+                                     priority=100)
+    _wrapper.priority = 90
 
     def _setup(self):
         """Hook caching into cherrypy.request."""
@@ -462,9 +462,14 @@ class Toolbox(object):
                     tool._setup()
 
     def register(self, point, **kwargs):
-        """Return a decorator which registers the function at the given hook point."""
+        """
+        Return a decorator which registers the function
+        at the given hook point.
+        """
         def decorator(func):
-            setattr(self, kwargs.get('name', func.__name__), Tool(point, func, **kwargs))
+            attr_name = kwargs.get('name', func.__name__)
+            tool = Tool(point, func, **kwargs)
+            setattr(self, attr_name, tool)
             return func
         return decorator
 

@@ -3,15 +3,43 @@ import contextlib
 import io
 import os
 import sys
+import platform
+import tempfile
 
+from six import text_type as str
 from six.moves import urllib
+from six.moves.http_client import HTTPConnection
+
+import pytest
+import py.path
 
 import cherrypy
 from cherrypy.lib import static
-from cherrypy._cpcompat import (
-    HTTPConnection, HTTPSConnection, ntou, tonative,
-)
+from cherrypy._cpcompat import HTTPSConnection, ntou, tonative
 from cherrypy.test import helper
+
+
+@pytest.fixture
+def unicode_filesystem(tmpdir):
+    filename = tmpdir / ntou('☃', 'utf-8')
+    tmpl = 'File system encoding ({encoding}) cannot support unicode filenames'
+    msg = tmpl.format(encoding=sys.getfilesystemencoding())
+    try:
+        io.open(str(filename), 'w').close()
+    except UnicodeEncodeError:
+        pytest.skip(msg)
+
+
+def ensure_unicode_filesystem():
+    """
+    TODO: replace with simply pytest fixtures once webtest.TestCase
+    no longer implies unittest.
+    """
+    tmpdir = py.path.local(tempfile.mkdtemp())
+    try:
+        unicode_filesystem(tmpdir)
+    finally:
+        tmpdir.remove()
 
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -33,8 +61,8 @@ class StaticTest(helper.CPWebCase):
             with open(has_space_filepath, 'wb') as f:
                 f.write(b'Hello, world\r\n')
         needs_bigfile = (
-            not os.path.exists(bigfile_filepath)
-            or os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
+            not os.path.exists(bigfile_filepath) or
+            os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
         )
         if needs_bigfile:
             with open(bigfile_filepath, 'wb') as f:
@@ -187,13 +215,13 @@ class StaticTest(helper.CPWebCase):
         self.assertErrorPage(500)
         if sys.version_info >= (3, 3):
             errmsg = (
-                'TypeError: staticdir\(\) missing 2 '
+                r'TypeError: staticdir\(\) missing 2 '
                 'required positional arguments'
             )
         else:
             errmsg = (
-                'TypeError: staticdir\(\) takes at least 2 '
-                '(positional )?arguments \(0 given\)'
+                r'TypeError: staticdir\(\) takes at least 2 '
+                r'(positional )?arguments \(0 given\)'
             )
         self.assertMatchesBody(errmsg.encode('ascii'))
 
@@ -238,6 +266,7 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Content-Length', 14)
         self.assertMatchesBody('Fee\nfie\nfo\nfum')
 
+    @pytest.mark.xfail(reason='#1475')
     def test_file_stream(self):
         if cherrypy.server.protocol_version != 'HTTP/1.1':
             return self.skip()
@@ -366,7 +395,13 @@ class StaticTest(helper.CPWebCase):
         finally:
             os.remove(filepath)
 
+    py27_on_windows = (
+        platform.system() == 'Windows' and
+        sys.version_info < (3,)
+    )
+    @pytest.mark.xfail(py27_on_windows, reason='#1544')  # noqa: E301
     def test_unicode(self):
+        ensure_unicode_filesystem()
         with self.unicode_file():
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str

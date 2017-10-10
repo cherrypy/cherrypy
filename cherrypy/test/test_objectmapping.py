@@ -176,7 +176,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def testObjectMapping(self):
         for url in script_names:
-            prefix = self.script_name = url
+            self.script_name = url
 
             self.getPage('/')
             self.assertBody('world')
@@ -252,7 +252,7 @@ class ObjectMappingTest(helper.CPWebCase):
             self.getPage('/dir1/dir2/cherrypy_url')
             self.assertBody('%s/extra' % self.base())
 
-            # Test that configs don't overwrite each other from diferent apps
+            # Test that configs don't overwrite each other from different apps
             self.getPage('/confvalue')
             self.assertBody((url or '/').split('/')[-2])
 
@@ -299,7 +299,7 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def test_redir_using_url(self):
         for url in script_names:
-            prefix = self.script_name = url
+            self.script_name = url
 
             # Test the absolute path to the parent (leading slash)
             self.getPage('/redirect_via_url?path=./')

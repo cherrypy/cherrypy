@@ -57,6 +57,17 @@ However, CherryPy "recognizes" a session id by looking up the saved session
 data for that id. Therefore, if you never save any session data,
 **you will get a new session id for every request**.
 
+A side effect of CherryPy overwriting unrecognised session ids is that if you
+have multiple, separate CherryPy applications running on a single domain (e.g.
+on different ports), each app will overwrite the other's session id because by
+default they use the same cookie name (``"session_id"``) but do not recognise
+each others sessions. It is therefore a good idea to use a different name for
+each, for example::
+
+    [/]
+    ...
+    tools.sessions.name = "my_app_session_id"
+
 ================
 Sharing Sessions
 ================
@@ -94,9 +105,12 @@ import datetime
 import os
 import time
 import threading
+import binascii
+
+import six
+from six.moves import cPickle as pickle
 
 import cherrypy
-from cherrypy._cpcompat import copyitems, pickle, random20
 from cherrypy.lib import httputil
 from cherrypy.lib import lockfile
 from cherrypy.lib import locking
@@ -235,7 +249,7 @@ class Session(object):
 
     def generate_id(self):
         """Return a new session id."""
-        return random20()
+        return binascii.hexlify(os.urandom(20)).decode('ascii')
 
     def save(self):
         """Save session data."""
@@ -394,7 +408,7 @@ class RamSession(Session):
         """Clean up expired sessions."""
 
         now = self.now()
-        for _id, (data, expiration_time) in copyitems(self.cache):
+        for _id, (data, expiration_time) in list(six.iteritems(self.cache)):
             if expiration_time <= now:
                 try:
                     del self.cache[_id]
@@ -470,8 +484,7 @@ class FileSession(Session):
         if isinstance(self.lock_timeout, (int, float)):
             self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
         if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
-            raise ValueError('Lock timeout must be numeric seconds or '
-                'a timedelta instance.')
+            raise ValueError('Lock timeout must be numeric seconds or a timedelta instance.')
 
     @classmethod
     def setup(cls, **kwargs):
@@ -559,8 +572,7 @@ class FileSession(Session):
         now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
-            if (fname.startswith(self.SESSION_PREFIX)
-                    and not fname.endswith(self.LOCK_SUFFIX)):
+            if fname.startswith(self.SESSION_PREFIX) and not fname.endswith(self.LOCK_SUFFIX):
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)
@@ -586,8 +598,8 @@ class FileSession(Session):
     def __len__(self):
         """Return the number of active sessions."""
         return len([fname for fname in os.listdir(self.storage_path)
-                    if (fname.startswith(self.SESSION_PREFIX)
-                        and not fname.endswith(self.LOCK_SUFFIX))])
+                    if (fname.startswith(self.SESSION_PREFIX) and
+                        not fname.endswith(self.LOCK_SUFFIX))])
 
 
 class MemcachedSession(Session):
@@ -596,7 +608,7 @@ class MemcachedSession(Session):
     # Wrap all .get and .set operations in a single lock.
     mc_lock = threading.RLock()
 
-    # This is a seperate set of locks per session id.
+    # This is a separate set of locks per session id.
     locks = {}
 
     servers = ['127.0.0.1:11211']
@@ -684,7 +696,7 @@ def save():
         if is_iterator(response.body):
             response.collapse_body()
         cherrypy.session.save()
-save.failsafe = True
+save.failsafe = True  # noqa: E305
 
 
 def close():
@@ -695,7 +707,7 @@ def close():
         sess.release_lock()
         if sess.debug:
             cherrypy.log('Lock released on close.', 'TOOLS.SESSIONS')
-close.failsafe = True
+close.failsafe = True  # noqa: E305
 close.priority = 90
 
 
@@ -856,14 +868,9 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         '/'
     )
 
-    # We'd like to use the "max-age" param as indicated in
-    # http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
-    # save it to disk and the session is lost if people close
-    # the browser. So we have to use the old "expires" ... sigh ...
-##    cookie[name]['max-age'] = timeout * 60
     if timeout:
-        e = time.time() + (timeout * 60)
-        cookie[name]['expires'] = httputil.HTTPDate(e)
+        cookie[name]['max-age'] = timeout * 60
+        _add_MSIE_max_age_workaround(cookie[name], timeout)
     if domain is not None:
         cookie[name]['domain'] = domain
     if secure:
@@ -872,6 +879,17 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
         if not cookie[name].isReservedKey('httponly'):
             raise ValueError('The httponly cookie token is not supported.')
         cookie[name]['httponly'] = 1
+
+
+def _add_MSIE_max_age_workaround(cookie, timeout):
+    """
+    We'd like to use the "max-age" param as indicated in
+    http://www.faqs.org/rfcs/rfc2109.html but IE doesn't
+    save it to disk and the session is lost if people close
+    the browser. So we have to use the old "expires" ... sigh ...
+    """
+    expires = time.time() + timeout * 60
+    cookie['expires'] = httputil.HTTPDate(expires)
 
 
 def expire():

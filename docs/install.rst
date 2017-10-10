@@ -19,11 +19,12 @@ CherryPy does not have any mandatory requirements. However certain features it c
 will require you install certain packages. To simplify installing additional
 dependencies CherryPy enables you to specify extras in your requirements (e.g.
 ``cherrypy[json,routes_dispatcher,ssl]``):
+
 - doc -- for documentation related stuff
 - json -- for custom `JSON processing library <https://github.com/simplejson/simplejson>`_ 
 - routes_dispatcher -- `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
 - ssl -- for `OpenSSL bindings <https://github.com/pyca/pyopenssl>`_, useful in Python environments not having the builtin :mod:`ssl` module
-- test_tools
+- testing
 - memcached_session -- enables `memcached <https://github.com/linsomniac/python-memcached>`_ backend session
 - xcgi
 

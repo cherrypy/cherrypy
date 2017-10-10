@@ -137,7 +137,7 @@ class _ControlCodes(dict):
                 return key
         raise ValueError('The given object could not be found: %r' % obj)
 
-control_codes = _ControlCodes({'graceful': 138})
+control_codes = _ControlCodes({'graceful': 138})  # noqa: E305
 
 
 def signal_child(service, command):
@@ -173,6 +173,7 @@ class PyWebService(win32serviceutil.ServiceFramework):
         process.bus.exit()
 
     def SvcOther(self, control):
+        from cherrypy import process
         process.bus.publish(control_codes.key_for(control))
 
 

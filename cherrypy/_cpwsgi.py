@@ -18,6 +18,7 @@ from cherrypy import _cperror
 from cherrypy.lib import httputil
 from cherrypy.lib import is_closable_iterator
 
+
 def downgrade_wsgi_ux_to_1x(environ):
     """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ.
     """

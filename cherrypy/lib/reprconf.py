@@ -18,6 +18,8 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
+from cherrypy._cpcompat import text_or_bytes
+
 try:
     # Python 3.0+
     from configparser import ConfigParser
@@ -29,15 +31,10 @@ try:
 except NameError:
     text_or_bytes = str
 
-try:
-    # Python 3
-    import builtins
-except ImportError:
-    # Python 2
-    import __builtin__ as builtins
-
 import operator as _operator
 import sys
+
+from six.moves import builtins
 
 
 def as_dict(config):
@@ -85,9 +82,9 @@ class NamespaceSet(dict):
 
         # I chose __enter__ and __exit__ so someday this could be
         # rewritten using Python 2.5's 'with' statement:
-        # for ns, handler in self.iteritems():
+        # for ns, handler in six.iteritems(self):
         #     with handler as callable:
-        #         for k, v in ns_confs.get(ns, {}).iteritems():
+        #         for k, v in six.iteritems(ns_confs.get(ns, {})):
         #             callable(k, v)
         for ns, handler in self.items():
             exit = getattr(handler, '__exit__', None)
@@ -274,7 +271,7 @@ class _Builder2:
             if class_name == 'Keyword':
                 kwargs.update(self.build(child))
             # Everything else becomes args
-            else :
+            else:
                 args.append(self.build(child))
 
         return callee(*args, **kwargs)
@@ -389,7 +386,7 @@ class _Builder3:
                     args.append(self.build(a))
         kwargs = {}
         for kw in o.keywords:
-            if kw.arg is None: # double asterix `**`
+            if kw.arg is None:  # double asterix `**`
                 rst = self.build(kw.value)
                 if not isinstance(rst, dict):
                     raise TypeError('Invalid argument for call.'
@@ -398,7 +395,7 @@ class _Builder3:
                 for k, v in rst.items():
                     if k not in kwargs:
                         kwargs[k] = v
-            else: # defined on the call as: arg=value
+            else:  # defined on the call as: arg=value
                 kwargs[kw.arg] = self.build(kw.value)
         return callee(*args, **kwargs)
 
@@ -422,7 +419,7 @@ class _Builder3:
             kwargs = {}
         else:
             kwargs = self.build(o.kwargs)
-        if o.keywords is not None: # direct a=b keywords
+        if o.keywords is not None:  # direct a=b keywords
             for kw in o.keywords:
                 # preference because is a direct keyword against **kwargs
                 kwargs[kw.arg] = self.build(kw.value)

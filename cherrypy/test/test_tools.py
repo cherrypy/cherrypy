@@ -6,13 +6,15 @@ import sys
 import time
 import types
 import unittest
+import operator
 
 import six
+from six.moves import range, map
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
-from cherrypy._cpcompat import copyitems, itervalues
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, xrange
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy.test import helper, _test_decorators
 
 
@@ -50,7 +52,7 @@ class ToolTests(helper.CPWebCase):
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get('map', {})
-                    cherrypy.request.numerify_map = copyitems(m)
+                    cherrypy.request.numerify_map = list(six.iteritems(m))
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
 
                 def critical():
@@ -110,10 +112,11 @@ class ToolTests(helper.CPWebCase):
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
-            assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+            actual = cherrypy.request.config.get('tools.streamer.arg')
+            assert actual == 'arg value'
             cherrypy.response.output = o = io.BytesIO()
             try:
-                response = next_handler(*args, **kwargs)
+                next_handler(*args, **kwargs)
                 # Ignore the response and return our accumulated output
                 # instead.
                 return o.getvalue()
@@ -129,9 +132,13 @@ class ToolTests(helper.CPWebCase):
                 return 'Howdy earth!'
 
             @cherrypy.expose
-            @cherrypy.config(**{'tools.streamer.on': True, 'tools.streamer.arg': 'arg value'})
+            @cherrypy.config(**{
+                'tools.streamer.on': True,
+                'tools.streamer.arg': 'arg value',
+            })
             def tarfile(self):
-                assert cherrypy.request.config.get('tools.streamer.arg') == 'arg value'
+                actual = cherrypy.request.config.get('tools.streamer.arg')
+                assert actual == 'arg value'
                 cherrypy.response.output.write(ntob('I am '))
                 cherrypy.response.output.write(ntob('a tarfile'))
 
@@ -172,7 +179,7 @@ class ToolTests(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in itervalues(dct):
+                for value in six.itervalues(dct):
                     if isinstance(value, types.FunctionType):
                         cherrypy.expose(value)
                 setattr(root, name.lower(), cls())
@@ -211,7 +218,7 @@ class ToolTests(helper.CPWebCase):
 
             @cherrypy.config(**{'response.stream': True})
             def stream(self, id=None):
-                for x in xrange(100000000):
+                for x in range(100000000):
                     yield str(x)
 
         conf = {
@@ -338,8 +345,9 @@ class ToolTests(helper.CPWebCase):
         # but our 'critical' hook should run and set the error to 502.
         self.getPage('/demo/err_in_onstart')
         self.assertErrorPage(502)
-        self.assertInBody(
-            "AttributeError: 'str' object has no attribute 'items'")
+        tmpl = "AttributeError: 'str' object has no attribute '{attr}'"
+        expected_msg = tmpl.format(attr='items' if six.PY3 else 'iteritems')
+        self.assertInBody(expected_msg)
 
     def testCombinedTools(self):
         expectedResult = (ntou('Hello,world') +
@@ -418,7 +426,9 @@ class ToolTests(helper.CPWebCase):
         self.assertTrue(isinstance(cherrypy.tools.example, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.example._point, 'on_start_resource')
 
-        @cherrypy.tools.register('before_finalize', name='renamed', priority=60)
+        @cherrypy.tools.register(  # noqa: F811
+            'before_finalize', name='renamed', priority=60,
+        )
         def example():
             pass
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
@@ -439,3 +449,20 @@ class SessionAuthTest(unittest.TestCase):
         res = sa.login_screen(None, username=six.text_type('nobody'),
                               password=six.text_type('anypass'))
         self.assertTrue(isinstance(res, bytes))
+
+
+class TestHooks:
+    def test_priorities(self):
+        """
+        Hooks should sort by priority order.
+        """
+        Hook = cherrypy._cprequest.Hook
+        hooks = [
+            Hook(None, priority=48),
+            Hook(None),
+            Hook(None, priority=49),
+        ]
+        hooks.sort()
+        by_priority = operator.attrgetter('priority')
+        priorities = list(map(by_priority, hooks))
+        assert priorities == [48, 49, 50]

@@ -466,7 +466,7 @@ It only applies to the global config, and only when you use
 entry *imports* other config entries from the following template stored in
 ``cherrypy._cpconfig.environments[environment]``.
 
-.. literalinclude:: ../../../cherrypy/_cpconfig.py
+.. literalinclude:: ../cherrypy/_cpconfig.py
     :start-after: Sphinx begin config.environments
     :end-before: Sphinx end config.environments
 

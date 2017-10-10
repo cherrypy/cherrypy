@@ -24,9 +24,10 @@ SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 import time
 from hashlib import md5
 
+from six.moves.urllib.request import parse_http_list, parse_keqv_list
+
 from cherrypy._cpcompat import (
     base64_decode, ntob,
-    parse_http_list, parse_keqv_list
 )
 
 
@@ -154,13 +155,11 @@ def _parseDigestAuthorization(auth_params):
             return None
 
     # If qop is sent then cnonce and nc MUST be present
-    if 'qop' in params and not ('cnonce' in params
-                                and 'nc' in params):
+    if 'qop' in params and not ('cnonce' in params and 'nc' in params):
         return None
 
     # If qop is not sent, neither cnonce nor nc can be present
-    if ('cnonce' in params or 'nc' in params) and \
-       'qop' not in params:
+    if ('cnonce' in params or 'nc' in params) and 'qop' not in params:
         return None
 
     return params
@@ -170,7 +169,7 @@ def _parseBasicAuthorization(auth_params):
     username, password = base64_decode(auth_params).split(':', 1)
     return {'username': username, 'password': password}
 
-AUTH_SCHEMES = {
+AUTH_SCHEMES = {  # noqa: E305
     'basic': _parseBasicAuthorization,
     'digest': _parseDigestAuthorization,
 }
@@ -350,7 +349,7 @@ def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
         candidate = encrypt(auth_map['password'])
     return candidate == password
 
-AUTH_RESPONSES = {
+AUTH_RESPONSES = {  # noqa: E305
     'basic': _checkBasicResponse,
     'digest': _checkDigestResponse,
 }

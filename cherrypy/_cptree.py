@@ -7,7 +7,7 @@ import six
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
-from cherrypy.lib import httputil
+from cherrypy.lib import httputil, reprconf
 
 
 class Application(object):
@@ -32,7 +32,7 @@ class Application(object):
     """A dict of {path: pathconf} pairs, where 'pathconf' is itself a dict
     of {key: value} pairs."""
 
-    namespaces = _cpconfig.NamespaceSet()
+    namespaces = reprconf.NamespaceSet()
     toolboxes = {'tools': cherrypy.tools}
 
     log = None
@@ -216,10 +216,8 @@ class Tree(object):
             app = Application(root, script_name)
 
             # If mounted at "", add favicon.ico
-            if (script_name == '' and root is not None
-                    and not hasattr(root, 'favicon_ico')):
-                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__),
-                                       'favicon.ico')
+            if script_name == '' and root is not None and not hasattr(root, 'favicon_ico'):
+                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__), 'favicon.ico')
                 root.favicon_ico = tools.staticfile.handler(favicon)
 
         if config:

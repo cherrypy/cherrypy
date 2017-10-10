@@ -22,6 +22,7 @@ class HelloWorld:
         # Here's the important message!
         return 'Hello world!'
 
+
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':

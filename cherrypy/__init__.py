@@ -53,7 +53,8 @@ with customized or extended components. The core API's are:
  * Server API
  * WSGI API
 
-These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
+These API's are described in the `CherryPy specification
+<https://github.com/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
 try:
@@ -63,32 +64,45 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa
+from ._cperror import (
+    HTTPError, HTTPRedirect, InternalRedirect,
+    NotFound, CherryPyException, TimeoutError,
+)
 
-from cherrypy import _cplogging
+from . import _cpdispatch as dispatch
 
-from cherrypy import _cpdispatch as dispatch  # noqa
+from ._cptools import default_toolbox as tools, Tool
+from ._helper import expose, popargs, url
 
-from cherrypy import _cptools
-from cherrypy._cptools import default_toolbox as tools, Tool
+from . import _cprequest, _cpserver, _cptree, _cplogging, _cpconfig
 
-from cherrypy import _cprequest
-from cherrypy.lib import httputil as _httputil
+import cherrypy.lib.httputil as _httputil
 
-from cherrypy import _cptree
-from cherrypy._cptree import Application  # noqa
-from cherrypy import _cpwsgi as wsgi  # noqa
+from ._cptree import Application
+from . import _cpwsgi as wsgi
 
-from cherrypy import _cpserver
-from cherrypy import process
+from . import process
 try:
-    from cherrypy.process import win32
+    from .process import win32
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
 except ImportError:
     engine = process.bus
+
+
+__all__ = (
+    'HTTPError', 'HTTPRedirect', 'InternalRedirect',
+    'NotFound', 'CherryPyException', 'TimeoutError',
+    'dispatch', 'tools', 'Tool', 'Application',
+    'wsgi', 'process', 'tree', 'engine',
+    'quickstart', 'serving', 'request', 'response', 'thread_data',
+    'log', 'expose', 'popargs', 'url', 'config',
+)
+
+
+__import__('cherrypy._cptools')
+__import__('cherrypy._cprequest')
 
 
 tree = _cptree.Tree()
@@ -125,7 +139,7 @@ class _TimeoutMonitor(process.plugins.Monitor):
         """Check timeout on all responses. (Internal)"""
         for req, resp in self.servings:
             resp.check_timeout()
-engine.timeout_monitor = _TimeoutMonitor(engine)
+engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
 engine.timeout_monitor.subscribe()
 
 engine.autoreload = process.plugins.Autoreloader(engine)
@@ -152,7 +166,7 @@ class _HandleSignalsPlugin(object):
         if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
-engine.signals = _HandleSignalsPlugin(engine)
+engine.signals = _HandleSignalsPlugin(engine)  # noqa: E305
 
 
 server = _cpserver.Server()
@@ -217,7 +231,7 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-serving = _Serving()
+serving = _Serving()  # noqa: E305
 
 
 class _ThreadLocalProxy(object):
@@ -278,7 +292,7 @@ class _ThreadLocalProxy(object):
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')
+request = _ThreadLocalProxy('request')  # noqa: E305
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
@@ -287,7 +301,7 @@ response = _ThreadLocalProxy('response')
 class _ThreadData(_local):
 
     """A container for thread-specific data."""
-thread_data = _ThreadData()
+thread_data = _ThreadData()  # noqa: E305
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
@@ -300,7 +314,7 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
         thing = getattr(serving, thing.__attrname__)
     return _pydoc._builtin_resolve(thing, forceload)
 
-try:
+try:  # noqa: E305
     import pydoc as _pydoc
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
@@ -349,12 +363,8 @@ log.access_file = ''
 
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
-engine.subscribe('log', _buslog)
+engine.subscribe('log', _buslog)  # noqa: E305
 
-from cherrypy._helper import expose, popargs, url  # noqa
-
-# import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig  # noqa
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
@@ -369,6 +379,6 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from cherrypy import _cpchecker  # noqa
+from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)
