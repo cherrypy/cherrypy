@@ -314,6 +314,13 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
     branch = request.path_info[len(section) + 1:]
     branch = urllib.parse.unquote(branch.lstrip(r'\/'))
 
+    # On Windows requesting a file in sub-dir of the staticdir results
+    # in mixing of delimiter styles, eg: C:\static\js/script.js
+    # Python normally converts this but not when the staticdir is
+    # supplied in long-path notation, eg: \\?\C:\static\js/script.js
+    if os.name == 'nt':
+        branch = branch.replace('/', '\\')
+
     # If branch is "", filename will end in a slash
     filename = os.path.join(dir, branch)
     if debug:
