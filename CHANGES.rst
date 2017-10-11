@@ -1,3 +1,26 @@
+v9.0.0
+-----
+
+* #1481: Move functionality from cherrypy.wsgiserver to
+  the `cheroot 5.0 <https://pypi.org/project/Cheroot/5.0.1/>`_
+  project.
+
+v8.9.1
+-----
+
+* #1537: Restore dependency on pywin32 for Python 3.6.
+
+v8.9.0
+-----
+
+* #1547: Replaced ``cherryd`` distutils script with a setuptools
+  console entry point.
+
+  When running CherryPy in daemon mode, the forked process no
+  longer changes directory to ``/``. If that behavior is something
+  on which your application relied and should rely, please file
+  a ticket with the project.
+
 v8.8.0
 -----
 

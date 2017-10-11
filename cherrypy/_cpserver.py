@@ -128,14 +128,14 @@ class Server(ServerAdapter):
         the builtin WSGI server. Builtin options are: 'builtin' (to
         use the SSL library built into recent versions of Python).
         You may also register your own classes in the
-        wsgiserver.ssl_adapters dict."""
+        cheroot.server.ssl_adapters dict."""
     else:
         ssl_module = 'pyopenssl'
         """The name of a registered SSL adaptation module to use with the
         builtin WSGI server. Builtin options are 'builtin' (to use the SSL
         library built into recent versions of Python) and 'pyopenssl' (to
         use the PyOpenSSL project, which you must install separately). You
-        may also register your own classes in the wsgiserver.ssl_adapters
+        may also register your own classes in the cheroot.server.ssl_adapters
         dict."""
 
     statistics = False
@@ -150,7 +150,7 @@ class Server(ServerAdapter):
     which declares it covers WSGI version 1.0.1 but still mandates the
     wsgi.version (1, 0)] and ('u', 0), an experimental unicode version.
     You may create and register your own experimental versions of the WSGI
-    protocol by adding custom classes to the wsgiserver.wsgi_gateways dict."""
+    protocol by adding custom classes to the cheroot.server.wsgi_gateways dict."""
 
     def __init__(self):
         self.bus = cherrypy.engine
