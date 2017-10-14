@@ -75,11 +75,17 @@ class VirtualHost(object):
     """
 
     def __init__(self, default, domains=None, use_x_forwarded_host=True):
+        """ Override the Object __init__ function to define custom attributes
+        and parameters.
+        """
         self.default = default
         self.domains = domains or {}
         self.use_x_forwarded_host = use_x_forwarded_host
 
     def __call__(self, environ, start_response):
+        """ Override the default __call__ function to define custom attributes
+        and parameters.
+        """
         domain = environ.get('HTTP_HOST', '')
         if self.use_x_forwarded_host:
             domain = environ.get('HTTP_X_FORWARDED_HOST', domain)
