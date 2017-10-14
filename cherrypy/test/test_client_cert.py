@@ -1,7 +1,6 @@
 """Tests for client certificate validation."""
 
 import itertools
-import socket
 import ssl
 from os.path import abspath, basename, dirname, join
 from six.moves import urllib
@@ -27,8 +26,8 @@ class ClientCertTests(object):
     script_name = '/index'
 
     server_should_reject = False
-    server_host  = 'localhost'
-    client_host  = 'localhost'
+    server_host = 'localhost'
+    client_host = 'localhost'
     ca_chain = CA_CERT
     client_cert = CLIENT_CERT
     verify_mode = 'none'  # none, optional, required
@@ -109,7 +108,7 @@ TESTS = [
 for client_host, server_host in itertools.product(CLIENT_HOSTS, SERVER_HOSTS):
     for tests in TESTS:
         combos = []
-        for attr,vals in tests['settings'].items():
+        for attr, vals in tests['settings'].items():
             combos.append([(attr, val) for val in vals])
 
         for settings in itertools.product(*combos):
