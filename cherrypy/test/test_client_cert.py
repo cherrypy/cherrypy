@@ -55,19 +55,6 @@ class ClientCertTests(object):
 
         cherrypy.tree.mount(Root())
 
-    # @classmethod
-    # def teardown_class(self):
-    #     # cherrypy.config.update({
-    #     #     'server.ssl_private_key': helper.serverpem,
-    #     #     'server.ssl_certificate': helper.serverpem,
-    #     #     'server.ssl_certificate_chain': None,
-    #     #     'server.ssl_verify_mode': None,
-    #     # })
-    #     # cherrypy.engine.exit()
-    #     helper.CPWebCase.teardown_class()
-    #     cherrypy.engine.exit()
-    #     cherrypy.config.reset()
-
     def test_connect(self):
         context = ssl.create_default_context(cafile=self.ca_chain)
         context.load_cert_chain(self.client_cert, keyfile=CLIENT_KEY)
