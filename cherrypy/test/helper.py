@@ -16,7 +16,7 @@ import pytest
 import six
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob
+from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 from cherrypy.test import webtest
@@ -226,6 +226,9 @@ class CPWebCase(webtest.WebCase):
             # baseconf['server.ssl_module'] = 'builtin'
             baseconf['server.ssl_certificate'] = serverpem
             baseconf['server.ssl_private_key'] = serverpem
+        else:
+            baseconf['server.ssl_certificate'] = None
+            baseconf['server.ssl_private_key'] = None
 
         # helper must be imported lazily so the coverage tool
         # can run against module-level statements within cherrypy.
@@ -233,8 +236,6 @@ class CPWebCase(webtest.WebCase):
         # exactly like each test module does, because a relative import
         # would stick a second instance of webtest in sys.modules,
         # and we wouldn't be able to globally override the port anymore.
-        if supervisor.scheme == 'https':
-            webtest.WebCase.HTTP_CONN = HTTPSConnection
         return baseconf
 
     @classmethod
@@ -242,7 +243,7 @@ class CPWebCase(webtest.WebCase):
         ''
         # Creates a server
         conf = {
-            'scheme': 'http',
+            'scheme': cls.scheme,
             'protocol': 'HTTP/1.1',
             'port': 54583,
             'host': '127.0.0.1',
@@ -259,7 +260,6 @@ class CPWebCase(webtest.WebCase):
         cherrypy.config.reset()
         baseconf = cls._setup_server(supervisor, conf)
         cherrypy.config.update(baseconf)
-        setup_client()
 
         if hasattr(cls, 'setup_server'):
             # Clear the cherrypy tree and clear the wsgi server so that
@@ -274,6 +274,12 @@ class CPWebCase(webtest.WebCase):
             supervisor.start(cls.__module__)
 
         cls.supervisor = supervisor
+        cls.setup_client()
+
+    @classmethod
+    def setup_client(cls):
+        cls.PORT = cherrypy.server.socket_port
+        cls.HOST = cherrypy.server.socket_host
 
     @classmethod
     def teardown_class(cls):
@@ -389,14 +395,6 @@ def _test_method_sorter(_, x, y):
         return -1
     return 0
 unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter  # noqa: E305
-
-
-def setup_client():
-    """Set up the WebCase classes to match the server's socket settings."""
-    webtest.WebCase.PORT = cherrypy.server.socket_port
-    webtest.WebCase.HOST = cherrypy.server.socket_host
-    if cherrypy.server.ssl_certificate:
-        CPWebCase.scheme = 'https'
 
 # --------------------------- Spawning helpers --------------------------- #
 

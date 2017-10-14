@@ -116,6 +116,13 @@ class Server(ServerAdapter):
     ssl_ciphers = None
     """The ciphers list of SSL."""
 
+    ssl_verify_mode = None
+    """Whether peer certificates are validated or not:
+        - none: peer cert ignored
+        - optional: peer cert optional, but validated if present
+        - required: peer cert required
+    """
+
     if six.PY3:
         ssl_module = 'builtin'
         """The name of a registered SSL adaptation module to use with
