@@ -29,7 +29,7 @@
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
-        exclude: cherrypy/test/test.pem
+        exclude: cherrypy/test/(test.pem|ssl/.*.key)
     -   id: requirements-txt-fixer
 
 -   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
