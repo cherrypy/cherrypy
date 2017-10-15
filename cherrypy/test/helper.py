@@ -279,6 +279,7 @@ class CPWebCase(webtest.WebCase):
 
     @classmethod
     def setup_client(cls):
+        """Set up WebCase class fields to match the server's socket settings."""
         cls.PORT = cherrypy.server.socket_port
         cls.HOST = cherrypy.server.socket_host
 

@@ -22,6 +22,7 @@ SERVER_CERT = join(SSL_DIR, 'server.cert')
 
 
 class ClientCertTests(object):
+    """Client certificate validation tests."""
     scheme = 'https'
     script_name = '/index'
 
@@ -53,6 +54,9 @@ class ClientCertTests(object):
         cherrypy.tree.mount(Root())
 
     def test_connect(self):
+        """If server_should_reject is false, verify the index can be fetched.
+        Otherwise, verify that a URLError is raised when connecting.
+        """
         context = ssl.create_default_context(cafile=self.ca_chain)
         context.load_cert_chain(self.client_cert, keyfile=CLIENT_KEY)
         context.check_hostname = False
