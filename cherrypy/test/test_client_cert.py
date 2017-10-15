@@ -44,9 +44,6 @@ class ClientCertTests(object):
             'server.ssl_certificate_chain': cls.ca_chain,
             'server.ssl_verify_mode': cls.verify_mode,
         })
-        # helper.setup_client()
-        cls.PORT = cherrypy.server.socket_port
-        cls.HOST = cherrypy.server.socket_host
 
         class Root:
             @cherrypy.expose
