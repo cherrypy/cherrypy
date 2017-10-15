@@ -111,6 +111,10 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.root': curdir,
             },
+            '/static-long': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': r'\\?\%s' % curdir,
+            },
             '/style.css': {
                 'tools.staticfile.on': True,
                 'tools.staticfile.filename': os.path.join(curdir, 'style.css'),
@@ -184,6 +188,14 @@ class StaticTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
+
+    @pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only')
+    def test_static_longpath(self):
+        """Test serving of a file in subdir of a Windows long-path staticdir."""
+        self.getPage('/static-long/static/index.html')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
 
     def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
