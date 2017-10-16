@@ -1,6 +1,7 @@
 """Tests for client certificate validation."""
 
 import itertools
+import json
 import pytest
 import ssl
 from os.path import abspath, basename, dirname, join
@@ -22,20 +23,25 @@ SERVER_KEY = join(SSL_DIR, 'server.key')
 SERVER_CERT = join(SSL_DIR, 'server.cert')
 
 
+def subdict(d, key_predicate):
+    return {k: v for k, v in d.items() if key_predicate(k)}
+
+
 class ClientCertTests(object):
     """Client certificate validation tests."""
     scheme = 'https'
-    script_name = '/index'
+    script_name = '/wsgi_env'
 
     server_should_reject = False
     server_host = 'localhost'
     client_host = 'localhost'
     ca_chain = CA_CERT
     client_cert = CLIENT_CERT
-    verify_mode = 'none'  # none, optional, required
+    verify_mode = None  # None, 'none', 'optional', 'required'
 
     @classmethod
     def setup_server(cls):
+        """Prepare server for test."""
         cherrypy.config.update({
             'checker.on': False,
             'engine.autoreload_on': False,
@@ -48,9 +54,14 @@ class ClientCertTests(object):
         })
 
         class Root:
+            """Test application."""
             @cherrypy.expose
-            def index(self):
-                return 'ok'
+            @cherrypy.tools.json_out()
+            def wsgi_env(self):
+                """Return client certificate WSGI environment variables."""
+                return subdict(
+                    cherrypy.request.wsgi_environ,
+                    lambda k: k.startswith('SSL_CLIENT_'))
 
         cherrypy.tree.mount(Root())
 
@@ -66,7 +77,23 @@ class ClientCertTests(object):
             with pytest.raises(urllib.error.URLError):
                 urllib.request.urlopen(self.base(), context=context)
         else:
-            assert b'ok' == urllib.request.urlopen(self.base(), context=context).read()
+            self.assert_wsgi_env(context)
+
+    def assert_wsgi_env(self, ssl_context):
+        """Verify the response contains WSGI environment variables from our client certificate."""
+        if self.verify_mode in (None, 'none'):
+            return
+
+        body = urllib.request.urlopen(self.base(), context=ssl_context).read()
+        wsgi_env = json.loads(body.decode())
+        assert wsgi_env['SSL_CLIENT_S_DN_C'] == 'US'
+        assert wsgi_env['SSL_CLIENT_S_DN_CN'] is not None
+        assert wsgi_env['SSL_CLIENT_S_DN_O'] == 'CherryPy'
+        assert wsgi_env['SSL_CLIENT_S_DN_ST'] == 'XX'
+        assert wsgi_env['SSL_CLIENT_I_DN_C'] == 'US'
+        assert wsgi_env['SSL_CLIENT_I_DN_L'] == 'XXX'
+        assert wsgi_env['SSL_CLIENT_I_DN_O'] == 'CherryPy'
+        assert wsgi_env['SSL_CLIENT_I_DN_ST'] == 'XX'
 
 
 BAD_CLIENT_CERTS = [CLIENT_WRONG_CA]
