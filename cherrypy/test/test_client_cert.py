@@ -1,6 +1,7 @@
 """Tests for client certificate validation."""
 
 import itertools
+import pytest
 import ssl
 from os.path import abspath, basename, dirname, join
 from six.moves import urllib
@@ -62,16 +63,10 @@ class ClientCertTests(object):
         context.check_hostname = False
 
         if self.server_should_reject:
-            self.assertRaises(
-                urllib.error.URLError,
-                urllib.request.urlopen,
-                self.base(),
-                context=context)
+            with pytest.raises(urllib.error.URLError):
+                urllib.request.urlopen(self.base(), context=context)
         else:
-            self.assertEqual(
-                b'ok',
-                urllib.request.urlopen(
-                    self.base(), context=context).read())
+            assert b'ok' == urllib.request.urlopen(self.base(), context=context).read()
 
 
 BAD_CLIENT_CERTS = [CLIENT_WRONG_CA]
