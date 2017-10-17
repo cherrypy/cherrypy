@@ -111,13 +111,12 @@ import datetime
 import logging
 import os
 import sys
-
-import six
+import uuid
 
 import cherrypy
+import six
 from cherrypy import _cperror
 from cherrypy._cpcompat import ntob
-
 
 # Silence the no-handlers "warning" (stderr write!) in stdlib logging
 logging.Logger.manager.emittedNoHandlerWarning = 1
@@ -216,7 +215,8 @@ class LogManager(object):
         if traceback:
             exc_info = _cperror._exc_info()
 
-        self.error_log.log(severity, ' '.join((self.time(), context, msg)), exc_info=exc_info)
+        self.error_log.log(severity, ' '.join(
+            (self.time(), context, msg)), exc_info=exc_info)
 
     def __call__(self, *args, **kwargs):
         """An alias for ``error``."""
@@ -262,6 +262,8 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
+                 '4': uuid.uuid4(),
+                 'z': self.time_z(),
                  }
         if six.PY3:
             for k, v in atoms.items():
@@ -311,6 +313,11 @@ class LogManager(object):
         month = monthnames[now.month - 1].capitalize()
         return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
                 (now.day, month, now.year, now.hour, now.minute, now.second))
+
+    def time_z(self):
+        """Return now() in RFC3339 UTC Format."""
+        now = datetime.datetime.now()
+        return now.isoformat("T") + "Z"
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
