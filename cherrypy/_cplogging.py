@@ -317,7 +317,7 @@ class LogManager(object):
     def time_z(self):
         """Return now() in RFC3339 UTC Format."""
         now = datetime.datetime.now()
-        return now.isoformat("T") + "Z"
+        return now.isoformat('T') + 'Z'
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
