@@ -127,6 +127,44 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
         cherrypy._cplogging.LogManager.access_log_format = original_logformat
 
+    def testUUIDv4ParameterLogFormat(self):
+        '''Test a customized access_log_format string,
+           which is a feature of _cplogging.LogManager.access() '''
+
+        original_logformat = cherrypy._cplogging.LogManager.access_log_format
+        cherrypy._cplogging.LogManager.access_log_format = (
+            '{i}' if six.PY3
+            else
+            '%(i)s'
+        )
+
+        self.markLog()
+        self.getPage('/as_string')
+        self.assertValidUUIDv4()
+
+        cherrypy._cplogging.LogManager.access_log_format = original_logformat
+
+    def testTimezLogFormat(self):
+        '''Test a customized access_log_format string,
+           which is a feature of _cplogging.LogManager.access() '''
+
+        original_logformat = cherrypy._cplogging.LogManager.access_log_format
+        cherrypy._cplogging.LogManager.access_log_format = (
+            '{h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
+            else
+            '%(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        )
+
+        self.markLog()
+        self.getPage('/as_string', headers=[('Referer', 'REFERER'),
+                                            ('User-Agent', 'USERAGENT'),
+                                            ('Host', 'HOST')])
+        self.assertLog(-1, '%s - - ' % self.interface())
+        self.assertLog(-1, ' "GET /as_string HTTP/1.1" '
+                           '200 7 "REFERER" "USERAGENT" HOST')
+
+        cherrypy._cplogging.LogManager.access_log_format = original_logformat
+
     def testEscapedOutput(self):
         # Test unicode in access log pieces.
         self.markLog()
