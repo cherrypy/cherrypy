@@ -107,9 +107,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
                            % self.prefix())
 
     def testCustomLogFormat(self):
-        """Test a customized access_log_format string,
-           which is a feature of _cplogging.LogManager.access() """
-
+        """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
         cherrypy._cplogging.LogManager.access_log_format = (
             '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
@@ -128,9 +126,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         cherrypy._cplogging.LogManager.access_log_format = original_logformat
 
     def testUUIDv4ParameterLogFormat(self):
-        """Test a customized access_log_format string,
-           which is a feature of _cplogging.LogManager.access() """
-
+        """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
         cherrypy._cplogging.LogManager.access_log_format = (
             '{i}' if six.PY3
@@ -145,9 +141,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         cherrypy._cplogging.LogManager.access_log_format = original_logformat
 
     def testTimezLogFormat(self):
-        """Test a customized access_log_format string,
-           which is a feature of _cplogging.LogManager.access() """
-
+        """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
         original_logformat = cherrypy._cplogging.LogManager.access_log_format
         cherrypy._cplogging.LogManager.access_log_format = (
             '{h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
