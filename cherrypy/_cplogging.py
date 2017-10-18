@@ -314,9 +314,9 @@ class LogManager(object):
         month = monthnames[now.month - 1].capitalize()
         return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
                 (now.day, month, now.year, now.hour, now.minute, now.second))
-                
+
     @staticmethod
-    def time_z(self):
+    def time_z():
         """Return now() in RFC3339 UTC Format."""
         now = datetime.datetime.now()
         return now.isoformat('T') + 'Z'
