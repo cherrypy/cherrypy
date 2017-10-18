@@ -173,7 +173,6 @@ class LogCase(object):
         msg = ''
         for lines in data:
             uuid_log = lines[:-1].decode('utf-8')
-            uuid_obj = UUID(uuid_log, version=4)
             try:
                 uuid_obj = UUID(uuid_log, version=4)
             except:
