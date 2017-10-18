@@ -119,6 +119,7 @@ import cherrypy
 from cherrypy import _cperror
 from cherrypy._cpcompat import ntob
 
+
 # Silence the no-handlers "warning" (stderr write!) in stdlib logging
 logging.Logger.manager.emittedNoHandlerWarning = 1
 logfmt = logging.Formatter('%(message)s')
