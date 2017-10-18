@@ -116,7 +116,6 @@ import six
 import uuid
 
 import cherrypy
-
 from cherrypy import _cperror
 from cherrypy._cpcompat import ntob
 
