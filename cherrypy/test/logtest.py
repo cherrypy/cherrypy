@@ -172,7 +172,7 @@ class LogCase(object):
         uuid_obj = ''
         msg = ''
         for lines in data:
-            uuid_log = lines[:-1].decode("utf-8")
+            uuid_log = lines[:-1].decode('utf-8')
             uuid_obj = UUID(uuid_log, version=4)
             try:
                 uuid_obj = UUID(uuid_log, version=4)
@@ -182,7 +182,6 @@ class LogCase(object):
                 if str(uuid_obj) != uuid_log:
                     msg = '%r not a valid UUIDv4' % uuid_log
                     self._handleLogError(msg, data, marker, lines)
-
 
     def assertLog(self, sliceargs, lines, marker=None):
         """Fail if log.readlines()[sliceargs] is not contained in 'lines'.
