@@ -111,10 +111,12 @@ import datetime
 import logging
 import os
 import sys
+
+import six
 import uuid
 
 import cherrypy
-import six
+
 from cherrypy import _cperror
 from cherrypy._cpcompat import ntob
 
@@ -215,8 +217,7 @@ class LogManager(object):
         if traceback:
             exc_info = _cperror._exc_info()
 
-        self.error_log.log(severity, ' '.join(
-            (self.time(), context, msg)), exc_info=exc_info)
+        self.error_log.log(severity, ' '.join((self.time(), context, msg)), exc_info=exc_info)
 
     def __call__(self, *args, **kwargs):
         """An alias for ``error``."""
