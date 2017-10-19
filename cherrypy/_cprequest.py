@@ -902,7 +902,7 @@ class Response(object):
         self.header_list = None
         self._body = []
         self.time = time.time()
-        self._uuid = ""
+        self._uuid = ''
 
         self.headers = httputil.HeaderMap()
         # Since we know all our keys are titled strings, we can
