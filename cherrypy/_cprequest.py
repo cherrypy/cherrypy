@@ -4,7 +4,6 @@ import warnings
 
 import six
 from six.moves.http_cookies import SimpleCookie, CookieError
-import uuid
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob
@@ -912,9 +911,6 @@ class Response(object):
         self.body = newbody
         return newbody
 
-    def __str__(self):
-        return uuid.uuid4()
-
     def finalize(self):
         """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
@@ -927,7 +923,6 @@ class Response(object):
         self.status = '%s %s' % (code, reason)
         self.output_status = ntob(str(code), 'ascii') + \
             ntob(' ') + headers.encode(reason)
-        self.uuid = self.__str__()
 
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
