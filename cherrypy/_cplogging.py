@@ -113,7 +113,6 @@ import os
 import sys
 
 import six
-import uuid
 
 import cherrypy
 from cherrypy import _cperror
@@ -137,17 +136,6 @@ class NullHandler(logging.Handler):
 
     def createLock(self):
         self.lock = None
-
-
-class GetUuid(object):
-    def __init__(self):
-        self._uuid = None
-
-    @property
-    def get_uuid(self):
-        if self._uuid is None:
-            self._uuid = uuid.uuid4()
-        return self._uuid
 
 
 class LogManager(object):
@@ -257,7 +245,6 @@ class LogManager(object):
         response = cherrypy.serving.response
         outheaders = response.headers
         inheaders = request.headers
-        request_uid = GetUuid()
         if response.output_status is None:
             status = '-'
         else:
@@ -275,7 +262,7 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
-                 'i': request_uid.get_uuid(),
+                 'i': request.uuid,
                  'z': self.time_z(),
                  }
         if six.PY3:

@@ -2,6 +2,7 @@ import sys
 import time
 import warnings
 
+import uuid
 import six
 from six.moves.http_cookies import SimpleCookie, CookieError
 
@@ -834,6 +835,20 @@ class ResponseBody(object):
         obj._body = value
 
 
+class RequestUuid(object):
+
+    """The UUIDv4."""
+    def __get__(self, obj, objclass=None):
+        if obj is None:
+            # When calling on the class instead of instance...
+            return self
+        else:
+            return obj._uuid
+
+    def __set__(self, obj, value):
+        obj._uuid = uuid.uuid4()
+
+
 class Response(object):
 
     """An HTTP Response, including status, headers, and body."""
@@ -879,11 +894,15 @@ class Response(object):
     stream = False
     """If False, buffer the response body."""
 
+    uuid = RequestUuid()
+    """The uuidv4 (entity) of the HTTP request."""
+
     def __init__(self):
         self.status = None
         self.header_list = None
         self._body = []
         self.time = time.time()
+        self._uuid = None
 
         self.headers = httputil.HeaderMap()
         # Since we know all our keys are titled strings, we can
@@ -894,6 +913,9 @@ class Response(object):
             'Date': httputil.HTTPDate(self.time),
         })
         self.cookie = SimpleCookie()
+
+    def get_uuid(self):
+        return self.uuid
 
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
