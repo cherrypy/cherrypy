@@ -138,39 +138,15 @@ class NullHandler(logging.Handler):
     def createLock(self):
         self.lock = None
 
+class GetUuid(object):
+    def __init__(self):
+        self._uuid = None
 
-class CachedUuid(object):
-    def __init__(self, wrapped):
-        self.wrapped = wrapped
-        try:
-            self.__doc__ = wrapped.__doc__
-        except:  # pragma: no cover
-            pass
-
-    # original sets the attributes on the instance
-    # def __get__(self, inst, objtype=None):
-    #    if inst is None:
-    #        return self
-    #    val = self.wrapped(inst)
-    #    setattr(inst, self.wrapped.__name__, val)
-    #    return val
-
-    # ignore the instance, and just set them on the class
-    # if called on a class, inst is None and objtype is the class
-    # if called on an instance, inst is the instance, and objtype
-    # the class
-    def __get__(self, inst, objtype=None):
-        # ask the value from the wrapped object, giving it
-        # our class
-        val = self.wrapped(objtype)
-
-        # and set the attribute directly to the class, thereby
-        # avoiding the descriptor to be called multiple times
-        setattr(objtype, self.wrapped.__name__, val)
-
-        # and return the calculated value
-        return val
-
+    @property
+    def get_uuid(self):
+        if self._uuid is None:
+            self._uuid = uuid.uuid4()
+        return self._uuid
 
 class LogManager(object):
 
@@ -279,6 +255,7 @@ class LogManager(object):
         response = cherrypy.serving.response
         outheaders = response.headers
         inheaders = request.headers
+        request_uid = GetUuid()
         if response.output_status is None:
             status = '-'
         else:
@@ -296,7 +273,7 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
-                 'i': self.get_uuid(),
+                 'i': request_uid.get_uuid(),
                  'z': self.time_z(),
                  }
         if six.PY3:
@@ -353,10 +330,6 @@ class LogManager(object):
         """Return now() in RFC3339 UTC Format."""
         now = datetime.datetime.now()
         return now.isoformat('T') + 'Z'
-    
-    @CachedUuid
-    def get_uuid(cls):
-        return uuid.uuid4()
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
