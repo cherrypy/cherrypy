@@ -902,7 +902,7 @@ class Response(object):
         self.header_list = None
         self._body = []
         self.time = time.time()
-        self._uuid = None
+        self._uuid = ""
 
         self.headers = httputil.HeaderMap()
         # Since we know all our keys are titled strings, we can
@@ -967,7 +967,7 @@ class Response(object):
 
         # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output()
-
+        self.uuid = self.get_uuid()
         cookie = self.cookie.output()
         if cookie:
             for line in cookie.split('\r\n'):
