@@ -251,7 +251,7 @@ class LogManager(object):
             status = response.output_status.split(ntob(' '), 1)[0]
             if six.PY3:
                 status = status.decode('ISO-8859-1')
-                
+
         atoms = {'h': remote.name or remote.ip,
                  'l': '-',
                  'u': getattr(request, 'login', None) or '-',
