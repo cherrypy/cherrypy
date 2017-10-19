@@ -113,7 +113,6 @@ import os
 import sys
 
 import six
-import uuid
 
 import cherrypy
 from cherrypy import _cperror
@@ -252,7 +251,6 @@ class LogManager(object):
             status = response.output_status.split(ntob(' '), 1)[0]
             if six.PY3:
                 status = status.decode('ISO-8859-1')
-
         atoms = {'h': remote.name or remote.ip,
                  'l': '-',
                  'u': getattr(request, 'login', None) or '-',
@@ -263,7 +261,7 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
-                 'i': str(uuid.uuid4()),
+                 'i': response.uuid,
                  'z': self.time_z(),
                  }
         if six.PY3:
