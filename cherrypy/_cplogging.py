@@ -138,6 +138,7 @@ class NullHandler(logging.Handler):
     def createLock(self):
         self.lock = None
 
+
 class GetUuid(object):
     def __init__(self):
         self._uuid = None
@@ -147,6 +148,7 @@ class GetUuid(object):
         if self._uuid is None:
             self._uuid = uuid.uuid4()
         return self._uuid
+
 
 class LogManager(object):
 
