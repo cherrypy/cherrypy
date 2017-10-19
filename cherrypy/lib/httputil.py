@@ -273,15 +273,10 @@ def valid_status(status):
     if not status:
         status = 200
 
-    status = str(status)
-    parts = status.split(' ', 1)
-    if len(parts) == 1:
-        # No reason supplied.
-        code, = parts
-        reason = None
-    else:
-        code, reason = parts
-        reason = reason.strip()
+    code, reason = status, None
+    if isinstance(status, six.string_types):
+        code, _, reason = status.partition(' ')
+        reason = reason.strip() or None
 
     try:
         code = int(code)
