@@ -32,19 +32,26 @@ def test_urljoin(script_name, path_info, expected_url):
     assert actual_url == expected_url
 
 
+EXPECTED_200 = (200, 'OK', 'Request fulfilled, document follows')
+EXPECTED_500 = (500, 'Internal Server Error',
+                'The server encountered an unexpected condition which prevented it from fulfilling the request.')
+EXPECTED_404 = (404, 'Not Found', 'Nothing matches the given URI')
+EXPECTED_444 = (444, 'Non-existent reason', '')
+
+
 @pytest.mark.parametrize(
-    'status,code,reason',
+    'status,expected_status',
     [
-        (None, 200, 'OK'),
-        (200, 200, 'OK'),
-        ('500', 500, 'Internal Server Error'),
-        (http_client.NOT_FOUND, 404, 'Not Found'),
-        ('444 Non-existent reason', 444, 'Non-existent reason'),
+        (None, EXPECTED_200),
+        (200, EXPECTED_200),
+        ('500', EXPECTED_500),
+        (http_client.NOT_FOUND, EXPECTED_404),
+        ('444 Non-existent reason', EXPECTED_444),
     ]
 )
-def test_valid_status(status, code, reason):
+def test_valid_status(status, expected_status):
     """Valid int and string statuses."""
-    assert httputil.valid_status(status)[:2] == (code, reason)
+    assert httputil.valid_status(status) == expected_status
 
 
 @pytest.mark.parametrize(
