@@ -132,10 +132,15 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
     def testTimezLogFormat(self):
         """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
         self.markLog()
-        self.getPage('/as_string', headers=[('Referer', 'REFERER'),
-                                            ('User-Agent', 'USERAGENT'),
-                                            ('Host', 'HOST')])
+
+        expected_time = str(cherrypy._cplogging.LazyRfc3339UtcTime())
+        with mock.patch('cherrypy._cplogging.LazyRfc3339UtcTime', lambda: expected_time):
+            self.getPage('/as_string', headers=[('Referer', 'REFERER'),
+                                                ('User-Agent', 'USERAGENT'),
+                                                ('Host', 'HOST')])
+
         self.assertLog(-1, '%s - - ' % self.interface())
+        self.assertLog(-1, expected_time)
         self.assertLog(-1, ' "GET /as_string HTTP/1.1" '
                            '200 7 "REFERER" "USERAGENT" HOST')
 
