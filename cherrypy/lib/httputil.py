@@ -280,7 +280,7 @@ def valid_status(status):
 
     try:
         code = int(code)
-    except ValueError:
+    except (TypeError, ValueError):
         raise ValueError('Illegal response status from server '
                          '(%s is non-numeric).' % repr(code))
 

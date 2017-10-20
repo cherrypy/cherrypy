@@ -46,7 +46,18 @@ def test_valid_status(status, code, reason):
     assert httputil.valid_status(status)[:2] == (code, reason)
 
 
-def test_invalid_status():
+@pytest.mark.parametrize(
+    'status_code,error_msg',
+    [
+        ('hey', "Illegal response status from server ('hey' is non-numeric)."),
+        ({'hey': 'hi'}, "Illegal response status from server ({'hey': 'hi'} is non-numeric)."),
+        (1, 'Illegal response status from server (1 is out of range).'),
+        (600, 'Illegal response status from server (600 is out of range).'),
+    ]
+)
+def test_invalid_status(status_code, error_msg):
     """Invalid status should raise an error."""
-    with pytest.raises(ValueError):
-        httputil.valid_status(1)
+    with pytest.raises(ValueError) as excinfo:
+        httputil.valid_status(status_code)
+
+    assert error_msg in str(excinfo)
