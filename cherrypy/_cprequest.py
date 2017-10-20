@@ -951,6 +951,7 @@ class Response(object):
 
         # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output()
+
         cookie = self.cookie.output()
         if cookie:
             for line in cookie.split('\r\n'):
