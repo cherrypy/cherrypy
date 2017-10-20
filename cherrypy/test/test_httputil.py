@@ -35,6 +35,7 @@ def test_urljoin(script_name, path_info, expected_url):
 @pytest.mark.parametrize(
     'status,code,reason',
     [
+        (None, 200, 'OK'),
         (200, 200, 'OK'),
         ('500', 500, 'Internal Server Error'),
         (http_client.NOT_FOUND, 404, 'Not Found'),
