@@ -111,7 +111,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         'cherrypy._cplogging.LogManager.access_log_format',
         '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}'
         if six.PY3 else
-        '%(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
     )
     def testCustomLogFormat(self):
         """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
