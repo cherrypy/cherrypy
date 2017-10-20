@@ -172,7 +172,7 @@ jobs:
 cache:
   pip: true
   directories:
-  - $HOME/.pre-commit
+  - $HOME/.cache/pre-commit
   - $HOME/Library/Caches/Homebrew
 install:
 - pip install tox "setuptools>=28.2"
