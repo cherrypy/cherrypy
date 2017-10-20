@@ -262,6 +262,8 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
+                 'i': request.unique_id,
+                 'z': LazyRfc3339UtcTime(),
                  }
         if six.PY3:
             for k, v in atoms.items():
@@ -462,3 +464,10 @@ class WSGIErrorHandler(logging.Handler):
                 self.flush()
             except:
                 self.handleError(record)
+
+
+class LazyRfc3339UtcTime(object):
+    def __str__(self):
+        """Return now() in RFC3339 UTC Format."""
+        now = datetime.datetime.now()
+        return now.isoformat('T') + 'Z'

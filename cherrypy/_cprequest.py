@@ -2,6 +2,7 @@ import sys
 import time
 import warnings
 
+import uuid
 import six
 from six.moves.http_cookies import SimpleCookie, CookieError
 
@@ -466,6 +467,9 @@ class Request(object):
     A string containing the stage reached in the request-handling process.
     This is useful when debugging a live server with hung requests."""
 
+    unique_id = None
+    """A lazy object generating and memorizing UUID4 on ``str()`` render."""
+
     namespaces = reprconf.NamespaceSet(
         **{'hooks': hooks_namespace,
            'request': request_namespace,
@@ -496,6 +500,8 @@ class Request(object):
         self.namespaces = self.namespaces.copy()
 
         self.stage = None
+
+        self.unique_id = LazyUUID4()
 
     def close(self):
         """Run cleanup code. (Core)"""
@@ -964,3 +970,23 @@ class Response(object):
         """
         if time.time() > self.time + self.timeout:
             self.timed_out = True
+
+
+class LazyUUID4(object):
+    def __str__(self):
+        """Return UUID4 and keep it for future calls."""
+        return str(self.uuid4)
+
+    @property
+    def uuid4(self):
+        """Provide unique id on per-request basis using UUID4.
+
+        It's evaluated lazily on render.
+        """
+        try:
+            self._uuid4
+        except AttributeError:
+            # evaluate on first access
+            self._uuid4 = uuid.uuid4()
+
+        return self._uuid4
