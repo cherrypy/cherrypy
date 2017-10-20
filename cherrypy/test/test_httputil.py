@@ -39,6 +39,7 @@ def test_urljoin(script_name, path_info, expected_url):
         (200, 200, 'OK'),
         ('500', 500, 'Internal Server Error'),
         (http_client.NOT_FOUND, 404, 'Not Found'),
+        ('444 Non-existent reason', 444, 'Non-existent reason'),
     ]
 )
 def test_valid_status(status, code, reason):
