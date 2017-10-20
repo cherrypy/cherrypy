@@ -2,6 +2,7 @@
 
 import sys
 import time
+from uuid import UUID
 
 import six
 
