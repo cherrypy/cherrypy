@@ -176,12 +176,15 @@ class LogCase(object):
                 uuid_log = data[-1]
                 uuid_obj = UUID(uuid_log, version=4)
             except (TypeError, ValueError):
-                msg = '%r not a valid UUIDv4' % uuid_log
-                self._handleLogError(msg, data, marker, log_chunk)
+                pass  # it might be in other chunk
             else:
-                if str(uuid_obj) != uuid_log:
-                    msg = '%r not a valid UUIDv4' % uuid_log
-                    self._handleLogError(msg, data, marker, log_chunk)
+                if str(uuid_obj) == uuid_log:
+                    return
+                msg = '%r is not a valid UUIDv4' % uuid_log
+                self._handleLogError(msg, data, marker, log_chunk)
+
+        msg = 'UUIDv4 not found in log'
+        self._handleLogError(msg, data, marker, log_chunk)
 
     def assertLog(self, sliceargs, lines, marker=None):
         """Fail if log.readlines()[sliceargs] is not contained in 'lines'.
