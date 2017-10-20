@@ -264,28 +264,31 @@ def decode_TEXT_maybe(value):
 def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
 
-    The status arg must be an int, or a str that begins with an int.
+    The status arg must be an int, a str that begins with an int
+    or the constant from ``http.client`` stdlib module.
 
-    If status is an int, or a str and no reason-phrase is supplied,
-    a default reason-phrase will be provided.
+    If status has no reason-phrase is supplied, a default reason-
+    phrase will be provided.
+
+    >>> from six.moves import http_client
+    >>> from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
+    >>> valid_status(http_client.ACCEPTED) == (
+    ...     int(http_client.ACCEPTED),
+    ... ) + BaseHTTPRequestHandler.responses[http_client.ACCEPTED]
+    True
     """
 
     if not status:
         status = 200
 
-    status = str(status)
-    parts = status.split(' ', 1)
-    if len(parts) == 1:
-        # No reason supplied.
-        code, = parts
-        reason = None
-    else:
-        code, reason = parts
-        reason = reason.strip()
+    code, reason = status, None
+    if isinstance(status, six.string_types):
+        code, _, reason = status.partition(' ')
+        reason = reason.strip() or None
 
     try:
         code = int(code)
-    except ValueError:
+    except (TypeError, ValueError):
         raise ValueError('Illegal response status from server '
                          '(%s is non-numeric).' % repr(code))
 
