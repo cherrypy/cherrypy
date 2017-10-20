@@ -467,6 +467,9 @@ class Request(object):
     A string containing the stage reached in the request-handling process.
     This is useful when debugging a live server with hung requests."""
 
+    unique_id = None
+    """A lazy object generating and memorizing UUID4 on ``str()`` render."""
+
     namespaces = reprconf.NamespaceSet(
         **{'hooks': hooks_namespace,
            'request': request_namespace,
@@ -497,6 +500,8 @@ class Request(object):
         self.namespaces = self.namespaces.copy()
 
         self.stage = None
+
+        self.unique_id = LazyUUID4()
 
     def close(self):
         """Run cleanup code. (Core)"""
@@ -835,20 +840,6 @@ class ResponseBody(object):
         obj._body = value
 
 
-class RequestUuid(object):
-
-    """The UUIDv4."""
-    def __get__(self, obj, objclass=None):
-        if obj is None:
-            # When calling on the class instead of instance...
-            return self
-        else:
-            return obj._uuid
-
-    def __set__(self, obj, value):
-        obj._uuid = uuid.uuid4()
-
-
 class Response(object):
 
     """An HTTP Response, including status, headers, and body."""
@@ -894,9 +885,6 @@ class Response(object):
     stream = False
     """If False, buffer the response body."""
 
-    uuid = RequestUuid()
-    """The uuidv4 (entity) of the HTTP request."""
-
     def __init__(self):
         self.status = None
         self.header_list = None
@@ -913,9 +901,6 @@ class Response(object):
             'Date': httputil.HTTPDate(self.time),
         })
         self.cookie = SimpleCookie()
-
-    def get_uuid(self):
-        return self.uuid
 
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
@@ -967,7 +952,6 @@ class Response(object):
 
         # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output()
-        self.uuid = self.get_uuid()
         cookie = self.cookie.output()
         if cookie:
             for line in cookie.split('\r\n'):
@@ -986,3 +970,23 @@ class Response(object):
         """
         if time.time() > self.time + self.timeout:
             self.timed_out = True
+
+
+class LazyUUID4(object):
+    def __str__(self):
+        """Return UUID4 and keep it for future calls."""
+        return self.uuid4
+
+    @property
+    def uuid4(self):
+        """Provide unique id on per-request basis using UUID4.
+
+        It's evaluated lazily on render.
+        """
+        try:
+            self._uuid4
+        except AttributeError:
+            # evaluate on first access
+            self._uuid4 = uuid.uuid4()
+
+        return self._uuid4

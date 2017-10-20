@@ -262,7 +262,7 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
-                 'i': str(response.uuid),
+                 'i': request.unique_id,
                  'z': LazyRfc3339UtcTime(),
                  }
         if six.PY3:
