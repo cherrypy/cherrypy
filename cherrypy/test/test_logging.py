@@ -1,6 +1,7 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
+from unittest import mock
 
 import six
 
@@ -144,22 +145,16 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
         cherrypy._cplogging.LogManager.access_log_format = original_logformat
 
+    @mock.patch(
+        'cherrypy._cplogging.LogManager.access_log_format',
+        '{i}' if six.PY3 else '%(i)s'
+    )
     def testUUIDv4ParameterLogFormat(self):
         '''Test a customized access_log_format string,
            which is a feature of _cplogging.LogManager.access() '''
-
-        original_logformat = cherrypy._cplogging.LogManager.access_log_format
-        cherrypy._cplogging.LogManager.access_log_format = (
-            '{i}' if six.PY3
-            else
-            '%(i)s'
-        )
-
         self.markLog()
         self.getPage('/as_string')
         self.assertValidUUIDv4()
-
-        cherrypy._cplogging.LogManager.access_log_format = original_logformat
 
     def testEscapedOutput(self):
         # Test unicode in access log pieces.
