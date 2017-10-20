@@ -263,7 +263,7 @@ class LogManager(object):
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
                  'i': str(response.uuid),
-                 'z': self.time_z(),
+                 'z': LazyRfc3339UtcTime(),
                  }
         if six.PY3:
             for k, v in atoms.items():
@@ -313,12 +313,6 @@ class LogManager(object):
         month = monthnames[now.month - 1].capitalize()
         return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
                 (now.day, month, now.year, now.hour, now.minute, now.second))
-
-    @staticmethod
-    def time_z():
-        """Return now() in RFC3339 UTC Format."""
-        now = datetime.datetime.now()
-        return now.isoformat('T') + 'Z'
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
@@ -470,3 +464,10 @@ class WSGIErrorHandler(logging.Handler):
                 self.flush()
             except:
                 self.handleError(record)
+
+
+class LazyRfc3339UtcTime(object):
+    def __str__(self):
+        """Return now() in RFC3339 UTC Format."""
+        now = datetime.datetime.now()
+        return now.isoformat('T') + 'Z'
