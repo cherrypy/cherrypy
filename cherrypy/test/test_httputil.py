@@ -1,8 +1,8 @@
 """Tests for ``cherrypy.lib.httputil``."""
 import pytest
+from six.moves import http_client
 
 from cherrypy.lib import httputil
-from six.moves import http_client
 
 
 @pytest.mark.parametrize(
