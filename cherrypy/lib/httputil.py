@@ -264,10 +264,11 @@ def decode_TEXT_maybe(value):
 def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
 
-    The status arg must be an int, or a str that begins with an int.
+    The status arg must be an int, a str that begins with an int
+    or the constant from ``http.client`` stdlib module.
 
-    If status is an int, or a str and no reason-phrase is supplied,
-    a default reason-phrase will be provided.
+    If status has no reason-phrase is supplied, a default reason-
+    phrase will be provided.
     """
 
     if not status:
