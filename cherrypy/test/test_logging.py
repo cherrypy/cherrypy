@@ -154,11 +154,6 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
             else
             '%(i)s'
         )
-        cherrypy._cplogging.LogManager.access_log_format = (
-            '{i} {h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
-            else
-            '%(i)s %(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
-        )
 
         self.markLog()
         self.getPage('/as_string')
