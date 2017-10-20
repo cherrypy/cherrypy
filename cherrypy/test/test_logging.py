@@ -150,8 +150,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         '{i}' if six.PY3 else '%(i)s'
     )
     def testUUIDv4ParameterLogFormat(self):
-        '''Test a customized access_log_format string,
-           which is a feature of _cplogging.LogManager.access() '''
+        """Test rendering of UUID4 within access log."""
         self.markLog()
         self.getPage('/as_string')
         self.assertValidUUIDv4()
