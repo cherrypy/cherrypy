@@ -4,6 +4,7 @@ from functools import wraps
 import os
 import sys
 import types
+import uuid
 
 import six
 from six.moves.http_client import IncompleteRead
@@ -45,6 +46,14 @@ class RequestObjectTests(helper.CPWebCase):
             def body_example_com_3128(self):
                 """Handle CONNECT method."""
                 return cherrypy.request.method + 'ed to ' + cherrypy.request.path_info
+
+            @cherrypy.expose
+            def request_uuid4(self):
+                return [
+                    str(cherrypy.request.unique_id),
+                    ' ',
+                    str(cherrypy.request.unique_id),
+                ]
 
         root = Root()
 
@@ -310,6 +319,15 @@ class RequestObjectTests(helper.CPWebCase):
     def test_scheme(self):
         self.getPage('/scheme')
         self.assertBody(self.scheme)
+
+    def test_per_request_uuid4(self):
+        self.getPage('/request_uuid4')
+        first_uuid4, _, second_uuid4 = self.body.decode().partition(' ')
+        assert uuid.UUID(first_uuid4, version=4) == uuid.UUID(second_uuid4, version=4)
+
+        self.getPage('/request_uuid4')
+        third_uuid4, _, _ = self.body.decode().partition(' ')
+        assert uuid.UUID(first_uuid4, version=4) != uuid.UUID(third_uuid4, version=4)
 
     def testRelativeURIPathInfo(self):
         self.getPage('/pathinfo/foo/bar')
