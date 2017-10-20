@@ -975,7 +975,7 @@ class Response(object):
 class LazyUUID4(object):
     def __str__(self):
         """Return UUID4 and keep it for future calls."""
-        return self.uuid4
+        return str(self.uuid4)
 
     @property
     def uuid4(self):
