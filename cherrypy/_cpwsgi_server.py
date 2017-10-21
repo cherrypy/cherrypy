@@ -1,6 +1,7 @@
 """
-WSGI server interface (see PEP 333). This adds some CP-specific bits to
-the framework-agnostic cheroot package.
+WSGI server interface (see PEP 333).
+
+This adds some CP-specific bits to the framework-agnostic cheroot package.
 """
 import sys
 
@@ -11,11 +12,12 @@ import cherrypy
 
 
 class CPWSGIHTTPRequest(cheroot.server.HTTPRequest):
-    """Wrapper for cheroot.server.HTTPRequest
+    """Wrapper for cheroot.server.HTTPRequest.
 
     This is a layer, which preserves URI parsing mode like it which was
     before Cheroot v5.8.0.
     """
+
     def __init__(self, server, conn):
         """Initialize HTTP request container instance.
 
@@ -99,4 +101,5 @@ class CPWSGIServer(cheroot.wsgi.Server):
             self.server_adapter, 'statistics', False)
 
     def error_log(self, msg='', level=20, traceback=False):
+        """Write given message to the error log."""
         cherrypy.engine.log(msg, level, traceback)
