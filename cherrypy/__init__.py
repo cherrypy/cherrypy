@@ -1,6 +1,5 @@
 """CherryPy is a pythonic, object-oriented HTTP framework.
 
-
 CherryPy consists of not one, but four separate API layers.
 
 The APPLICATION LAYER is the simplest. CherryPy applications are written as
@@ -136,7 +135,10 @@ class _TimeoutMonitor(process.plugins.Monitor):
             pass
 
     def run(self):
-        """Check timeout on all responses. (Internal)"""
+        """Check timeout on all responses.
+
+        (Internal)
+        """
         for req, resp in self.servings:
             resp.check_timeout()
 engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
@@ -152,15 +154,16 @@ engine.signal_handler = process.plugins.SignalHandler(engine)
 
 
 class _HandleSignalsPlugin(object):
+    """Handle signals from other processes.
 
-    """Handle signals from other processes based on the configured
-    platform handlers above."""
+    Based on the configured platform handlers above.
+    """
 
     def __init__(self, bus):
         self.bus = bus
 
     def subscribe(self):
-        """Add the handlers based on the platform"""
+        """Add the handlers based on the platform."""
         if hasattr(self.bus, 'signal_handler'):
             self.bus.signal_handler.subscribe()
         if hasattr(self.bus, 'console_control_handler'):
@@ -201,7 +204,6 @@ def quickstart(root=None, script_name='', config=None):
 
 
 class _Serving(_local):
-
     """An interface for registering request and response objects.
 
     Rather than have a separate "thread local" object for the request and
@@ -299,7 +301,6 @@ response = _ThreadLocalProxy('response')
 
 
 class _ThreadData(_local):
-
     """A container for thread-specific data."""
 thread_data = _ThreadData()  # noqa: E305
 
@@ -323,7 +324,6 @@ except ImportError:
 
 
 class _GlobalLogManager(_cplogging.LogManager):
-
     """A site-wide LogManager; routes to app.log or global log as appropriate.
 
     This :class:`LogManager<cherrypy._cplogging.LogManager>` implements
@@ -334,8 +334,7 @@ class _GlobalLogManager(_cplogging.LogManager):
     """
 
     def __call__(self, *args, **kwargs):
-        """Log the given message to the app.log or global log as appropriate.
-        """
+        """Log the given message to the app.log or global log as appropriate."""
         # Do NOT use try/except here. See
         # https://github.com/cherrypy/cherrypy/issues/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
@@ -345,8 +344,7 @@ class _GlobalLogManager(_cplogging.LogManager):
         return log.error(*args, **kwargs)
 
     def access(self):
-        """Log an access message to the app.log or global log as appropriate.
-        """
+        """Log an access message to the app.log or global log as appropriate."""
         try:
             return request.app.log.access()
         except AttributeError:
