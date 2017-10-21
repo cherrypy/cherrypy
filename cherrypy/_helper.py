@@ -1,6 +1,4 @@
-"""
-Helper functions for CP apps
-"""
+"""Helper functions for CP apps."""
 
 import six
 from six.moves import urllib
@@ -11,9 +9,9 @@ import cherrypy
 
 
 def expose(func=None, alias=None):
-    """
-    Expose the function or class, optionally providing
-    an alias or set of aliases.
+    """Expose the function or class.
+
+    Optionally provide an alias or set of aliases.
     """
     def expose_(func):
         func.exposed = True
@@ -59,8 +57,9 @@ def expose(func=None, alias=None):
 
 
 def popargs(*args, **kwargs):
-    """A decorator for _cp_dispatch
-    (cherrypy.dispatch.Dispatcher.dispatch_method_name).
+    """A decorator for _cp_dispatch.
+
+    (cherrypy.dispatch.Dispatcher.dispatch_method_name)
 
     Optional keyword argument: handler=(Object or Function)
 
@@ -136,7 +135,6 @@ def popargs(*args, **kwargs):
             #...
 
     """
-
     # Since keyword arg comes after *args, we have to process it ourselves
     # for lower versions of python.
 
@@ -287,6 +285,7 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
 
 
 def normalize_path(path):
+    """Resolve given path from relative into absolute form."""
     if './' not in path:
         return path
 
