@@ -73,6 +73,7 @@ def start(configfiles=None, daemonize=False, environment=None,
 
 
 def run():
+    """Run cherryd CLI."""
     from optparse import OptionParser
 
     p = OptionParser()
