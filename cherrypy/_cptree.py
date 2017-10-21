@@ -11,7 +11,6 @@ from cherrypy.lib import httputil, reprconf
 
 
 class Application(object):
-
     """A CherryPy Application.
 
     Servers and gateways should not instantiate Request objects directly.
@@ -47,6 +46,7 @@ class Application(object):
     relative_urls = False
 
     def __init__(self, root, script_name='', config=None):
+        """Initialize Application with given root."""
         self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
         self.script_name = script_name
@@ -61,6 +61,7 @@ class Application(object):
             self.merge(config)
 
     def __repr__(self):
+        """Generate a representation of the Application instance."""
         return '%s.%s(%r, %r)' % (self.__module__, self.__class__.__name__,
                                   self.root, self.script_name)
 
@@ -150,11 +151,11 @@ class Application(object):
         cherrypy.serving.clear()
 
     def __call__(self, environ, start_response):
+        """Call a WSGI-callable."""
         return self.wsgiapp(environ, start_response)
 
 
 class Tree(object):
-
     """A registry of CherryPy applications, mounted at diverse points.
 
     An instance of this class may also be used as a WSGI callable
@@ -170,6 +171,7 @@ class Tree(object):
     WSGI callable if you happen to be using a WSGI server)."""
 
     def __init__(self):
+        """Initialize registry Tree."""
         self.apps = {}
 
     def mount(self, root, script_name='', config=None):
@@ -257,6 +259,7 @@ class Tree(object):
             path = path[:path.rfind('/')]
 
     def __call__(self, environ, start_response):
+        """Pre-initialize WSGI env and call WSGI-callable."""
         # If you're calling this, then you're probably setting SCRIPT_NAME
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
