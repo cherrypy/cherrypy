@@ -1,5 +1,5 @@
 -   repo: git://github.com/pre-commit/pre-commit-hooks
-    sha: 5bf6c09
+    sha: v1.1.1
     hooks:
     -   id: trailing-whitespace
         exclude: cherrypy/test/static/index.html
@@ -40,11 +40,11 @@
         exclude: tests/dist|cherrypy/(_cp(compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request)|(lib/(auth|auth_basic|auth_digest|caching|covercp|cpstats|cptools|encoding|gctools|httpauth|httputil|jsontools|lockfile|locking|profiler|reprconf|sessions)|process/(plugins|servers|win32)).py|test|tutorial)
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks
-    sha: 1e30aa4
+    sha: v1.1.1
     hooks:
     -   id: remove-tabs
 
 -   repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
-    sha: 44f1a42
+    sha: v1.0.2
     hooks:
     -   id: forbid-html-img-without-alt-text

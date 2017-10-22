@@ -21,7 +21,7 @@ dependencies CherryPy enables you to specify extras in your requirements (e.g.
 ``cherrypy[json,routes_dispatcher,ssl]``):
 
 - doc -- for documentation related stuff
-- json -- for custom `JSON processing library <https://github.com/simplejson/simplejson>`_ 
+- json -- for custom `JSON processing library <https://github.com/simplejson/simplejson>`_
 - routes_dispatcher -- `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
 - ssl -- for `OpenSSL bindings <https://github.com/pyca/pyopenssl>`_, useful in Python environments not having the builtin :mod:`ssl` module
 - testing
@@ -157,4 +157,3 @@ Command-Line Options
 .. cmdoption:: -P, --Path
 
    Add the given paths to sys.path
-

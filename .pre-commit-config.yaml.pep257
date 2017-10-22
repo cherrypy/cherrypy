@@ -1,0 +1,4 @@
+-   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+    sha: f464d46
+    hooks:
+    -   id: pep257

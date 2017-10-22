@@ -481,4 +481,3 @@ limiting or just plain wrong, feel free to extend them or add new environments:
         'tools.encode.encoding': 'ISO-8859-7',
         'tools.decode.encoding': 'ISO-8859-7',
         }
-
