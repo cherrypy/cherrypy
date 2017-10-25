@@ -1,3 +1,4 @@
+repos:
 -   repo: git://github.com/pre-commit/pre-commit-hooks
     sha: v1.1.1
     hooks:
