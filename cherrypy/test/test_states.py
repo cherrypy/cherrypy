@@ -70,23 +70,9 @@ def setup_server():
             engine.graceful()
             return 'app was (gracefully) restarted succesfully'
 
-        @cherrypy.expose
-        def block_explicit(self):
-            while True:
-                if cherrypy.response.timed_out:
-                    cherrypy.response.timed_out = False
-                    return 'broken!'
-                time.sleep(0.01)
-
-        @cherrypy.expose
-        def block_implicit(self):
-            time.sleep(0.5)
-            return 'response.timeout = %s' % cherrypy.response.timeout
-
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'environment': 'test_suite',
-        'engine.timeout_monitor.frequency': 0.1,
     })
 
     db_connection.subscribe()
@@ -236,37 +222,6 @@ class ServerStateTests(helper.CPWebCase):
         engine.block()
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
-
-    def test_3_Deadlocks(self):
-        cherrypy.config.update({'response.timeout': 0.2})
-
-        engine.start()
-        cherrypy.server.start()
-        try:
-            self.assertNotEqual(engine.timeout_monitor.thread, None)
-
-            # Request a "normal" page.
-            self.assertEqual(engine.timeout_monitor.servings, [])
-            self.getPage('/')
-            self.assertBody('Hello World')
-            # request.close is called async.
-            while engine.timeout_monitor.servings:
-                sys.stdout.write('.')
-                time.sleep(0.01)
-
-            # Request a page that explicitly checks itself for deadlock.
-            # The deadlock_timeout should be 2 secs.
-            self.getPage('/block_explicit')
-            self.assertBody('broken!')
-
-            # Request a page that implicitly breaks deadlock.
-            # If we deadlock, we want to touch as little code as possible,
-            # so we won't even call handle_error, just bail ASAP.
-            self.getPage('/block_implicit')
-            self.assertStatus(500)
-            self.assertInBody('raise cherrypy.TimeoutError()')
-        finally:
-            engine.exit()
 
     def test_4_Autoreload(self):
         # If test_3 has not been executed, the server won't be stopped,

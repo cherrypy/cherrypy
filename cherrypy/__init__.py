@@ -65,7 +65,7 @@ from threading import local as _local
 
 from ._cperror import (
     HTTPError, HTTPRedirect, InternalRedirect,
-    NotFound, CherryPyException, TimeoutError,
+    NotFound, CherryPyException,
 )
 
 from . import _cpdispatch as dispatch
@@ -92,7 +92,7 @@ except ImportError:
 
 __all__ = (
     'HTTPError', 'HTTPRedirect', 'InternalRedirect',
-    'NotFound', 'CherryPyException', 'TimeoutError',
+    'NotFound', 'CherryPyException',
     'dispatch', 'tools', 'Tool', 'Application',
     'wsgi', 'process', 'tree', 'engine',
     'quickstart', 'serving', 'request', 'response', 'thread_data',
@@ -113,36 +113,9 @@ except Exception:
     __version__ = 'unknown'
 
 
-# Timeout monitor. We add two channels to the engine
-# to which cherrypy.Application will publish.
 engine.listeners['before_request'] = set()
 engine.listeners['after_request'] = set()
 
-
-class _TimeoutMonitor(process.plugins.Monitor):
-
-    def __init__(self, bus):
-        self.servings = []
-        process.plugins.Monitor.__init__(self, bus, self.run)
-
-    def before_request(self):
-        self.servings.append((serving.request, serving.response))
-
-    def after_request(self):
-        try:
-            self.servings.remove((serving.request, serving.response))
-        except ValueError:
-            pass
-
-    def run(self):
-        """Check timeout on all responses.
-
-        (Internal)
-        """
-        for req, resp in self.servings:
-            resp.check_timeout()
-engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
-engine.timeout_monitor.subscribe()
 
 engine.autoreload = process.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()

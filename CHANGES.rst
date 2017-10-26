@@ -1,3 +1,12 @@
+v12.0.0
+-------
+
+* #1625: Removed response timeout and timeout monitor and
+  related exceptions, as it not possible to interrupt a request.
+  Servers that wish to exit a request prematurely are
+  recommended to monitor ``response.time`` and raise an
+  exception or otherwise act accordingly.
+
 v11.0.1
 -------
 
