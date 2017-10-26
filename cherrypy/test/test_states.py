@@ -420,9 +420,11 @@ test_case_name: "test_signal_handler_unsubscribe"
         p.join()
 
         # Assert the old handler ran.
-        target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not ntob('I am an old SIGTERM handler.') in target_line:
-            self.fail('Old SIGTERM handler did not run.\n%r' % target_line)
+        log_lines = list(open(p.error_log, 'rb'))
+        assert any(
+            line.endswith(b'I am an old SIGTERM handler.\n')
+            for line in log_lines
+        )
 
 
 class WaitTests(unittest.TestCase):
