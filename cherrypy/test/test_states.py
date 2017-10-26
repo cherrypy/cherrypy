@@ -11,7 +11,6 @@ import portend
 
 import cherrypy
 import cherrypy.process.servers
-from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
 engine = cherrypy.engine
