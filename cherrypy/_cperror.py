@@ -567,11 +567,11 @@ def _be_ie_unfriendly(status):
         # Since we are issuing an HTTP error status, we assume that
         # the entity is short, and we should just collapse it.
         content = response.collapse_body()
-        l = len(content)
-        if l and l < s:
+        content_length = len(content)
+        if content_length and content_length < s:
             # IN ADDITION: the response must be written to IE
             # in one chunk or it will still get replaced! Bah.
-            content = content + (ntob(' ') * (s - l))
+            content = content + (ntob(' ') * (s - content_length))
         response.body = content
         response.headers['Content-Length'] = str(len(content))
 
