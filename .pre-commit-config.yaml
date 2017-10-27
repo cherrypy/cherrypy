@@ -9,7 +9,8 @@ repos:
         # 79 chars is too strict and we don't have 80-char terminals nowadays,
         # 160 chars is too much since it doesn't let us use split view efficiently:
         - --max-line-length=120
-        - --ignore=E731
+        - --ignore=E722,E731
+        # FIXME: decide whether we need check E722 (bare except used)
     -   id: check-merge-conflict
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
