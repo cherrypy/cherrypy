@@ -40,6 +40,7 @@ repos:
     -   id: pep257
         exclude: |
             (?x)
+            tests/dist|
             cherrypy/(
                 _cp(
                     compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
