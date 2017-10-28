@@ -247,15 +247,16 @@ class ServerAdapter(object):
             time.sleep(.1)
 
         # Wait for port to be occupied
-        if not os.environ.get('LISTEN_PID', None):
-            # Wait for port to be occupied if not running via socket-activation
-            # (for socket-activation the port will be managed by systemd )
-            if isinstance(self.bind_addr, tuple):
-                with _safe_wait(*self.bound_addr):
-                    portend.occupied(
-                        *self.bound_addr,
-                        timeout=Timeouts.occupied,
-                    )
+        if os.environ.get('LISTEN_PID', None):
+            return
+
+        # Wait for port to be occupied if not running via socket-activation
+        # (for socket-activation the port will be managed by systemd )
+        if not isinstance(self.bind_addr, tuple):
+            return
+
+        with _safe_wait(*self.bound_addr):
+            portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
 
     @property
     def bound_addr(self):
