@@ -63,7 +63,9 @@ def log_test_case_name():
     if cherrypy.config.get('test_case_name', False):
         cherrypy.log('STARTED FROM: %s' %
                      cherrypy.config.get('test_case_name'))
-cherrypy.engine.subscribe('start', log_test_case_name, priority=6)  # noqa: E305
+
+
+cherrypy.engine.subscribe('start', log_test_case_name, priority=6)
 
 
 cherrypy.tree.mount(Root(), '/', {'/': {}})

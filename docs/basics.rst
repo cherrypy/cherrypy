@@ -177,7 +177,7 @@ You can also log an exception:
 
    try:
       ...
-   except:
+   except Exception:
       cherrypy.log("kaboom!", traceback=True)
 
 Both logs are writing to files identified by the following keys

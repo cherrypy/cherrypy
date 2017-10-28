@@ -1,6 +1,7 @@
 """Basic tests for the CherryPy core: request handling."""
 
 import os
+from unittest import mock
 
 import six
 
@@ -106,17 +107,15 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
             self.assertLog(-1, '] "GET %s/as_yield HTTP/1.1" 200 - "" ""'
                            % self.prefix())
 
+    @mock.patch(
+        'cherrypy._cplogging.LogManager.access_log_format',
+        '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}'
+        if six.PY3 else
+        '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+    )
     def testCustomLogFormat(self):
-        '''Test a customized access_log_format string,
-           which is a feature of _cplogging.LogManager.access() '''
-
-        original_logformat = cherrypy._cplogging.LogManager.access_log_format
-        cherrypy._cplogging.LogManager.access_log_format = (
-            '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}' if six.PY3
-            else
-            '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
-        )
-
+        """Test a customized access_log_format string, which is a
+        feature of _cplogging.LogManager.access()."""
         self.markLog()
         self.getPage('/as_string', headers=[('Referer', 'REFERER'),
                                             ('User-Agent', 'USERAGENT'),
@@ -125,7 +124,39 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.assertLog(-1, '] "GET /as_string HTTP/1.1" '
                            '200 7 "REFERER" "USERAGENT" HOST')
 
-        cherrypy._cplogging.LogManager.access_log_format = original_logformat
+    @mock.patch(
+        'cherrypy._cplogging.LogManager.access_log_format',
+        '{h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}'
+        if six.PY3 else
+        '%(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+    )
+    def testTimezLogFormat(self):
+        """Test a customized access_log_format string, which is a
+        feature of _cplogging.LogManager.access()."""
+        self.markLog()
+
+        expected_time = str(cherrypy._cplogging.LazyRfc3339UtcTime())
+        with mock.patch(
+                'cherrypy._cplogging.LazyRfc3339UtcTime',
+                lambda: expected_time):
+            self.getPage('/as_string', headers=[('Referer', 'REFERER'),
+                                                ('User-Agent', 'USERAGENT'),
+                                                ('Host', 'HOST')])
+
+        self.assertLog(-1, '%s - - ' % self.interface())
+        self.assertLog(-1, expected_time)
+        self.assertLog(-1, ' "GET /as_string HTTP/1.1" '
+                           '200 7 "REFERER" "USERAGENT" HOST')
+
+    @mock.patch(
+        'cherrypy._cplogging.LogManager.access_log_format',
+        '{i}' if six.PY3 else '%(i)s'
+    )
+    def testUUIDv4ParameterLogFormat(self):
+        """Test rendering of UUID4 within access log."""
+        self.markLog()
+        self.getPage('/as_string')
+        self.assertValidUUIDv4()
 
     def testEscapedOutput(self):
         # Test unicode in access log pieces.

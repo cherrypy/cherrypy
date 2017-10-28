@@ -1,8 +1,17 @@
 v11.1.0
 -------
 
-* Expose default status logic for a redirect as
+* #1611: Expose default status logic for a redirect as
   ``HTTPRedirect.default_status``.
+
+* #1615: ``HTTPRedirect.status`` is now an instance property and
+  derived from the value in ``args``. Although it was previously
+  possible to set the property on an instance, and this change
+  prevents that possibilty, CherryPy never relied on that behavior
+  and we presume no applications depend on that interface.
+
+* #1627: Fixed issue in proxy tool where more than one port would
+  appear in the ``request.base`` and thus in ``cherrypy.url``.
 
 v11.0.0
 -------

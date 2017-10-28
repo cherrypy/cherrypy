@@ -37,7 +37,8 @@ class Supervisor(object):
             setattr(self, k, v)
 
 
-log_to_stderr = lambda msg, level: sys.stderr.write(msg + os.linesep)
+def log_to_stderr(msg, level):
+    return sys.stderr.write(msg + os.linesep)
 
 
 class LocalSupervisor(Supervisor):

@@ -37,6 +37,7 @@ KNOWN BUGS
 import os
 import re
 
+import cherrypy
 from cherrypy.test import helper
 
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -132,7 +133,6 @@ def wsgisetup(req):
         loaded = True
         options = req.get_options()
 
-        import cherrypy
         cherrypy.config.update({
             'log.error_file': os.path.join(curdir, 'test.log'),
             'environment': 'test_suite',
@@ -155,7 +155,6 @@ def cpmodpysetup(req):
         loaded = True
         options = req.get_options()
 
-        import cherrypy
         cherrypy.config.update({
             'log.error_file': os.path.join(curdir, 'test.log'),
             'environment': 'test_suite',

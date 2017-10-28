@@ -94,14 +94,6 @@ def base64_decode(n, encoding='ISO-8859-1'):
     return tonative(decoded, encoding)
 
 
-try:
-    # functions not supported by six (yet)
-    # https://github.com/benjaminp/six/pull/203
-    from urllib.request import parse_http_list, parse_keqv_list
-except ImportError:
-    from urllib2 import parse_http_list, parse_keqv_list  # noqa
-
-
 # Some platforms don't expose HTTPSConnection, so handle it separately
 HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
 

@@ -39,6 +39,7 @@ import time
 
 import portend
 
+import cherrypy
 from cherrypy.test import helper, webtest
 
 curdir = os.path.abspath(os.path.dirname(__file__))
@@ -87,7 +88,7 @@ LoadModule env_module modules/mod_env.so
 
 WSGIScriptAlias / "%(curdir)s/modwsgi.py"
 SetEnv testmod %(testmod)s
-"""
+""" # noqa E501
 
 
 class ModWSGISupervisor(helper.Supervisor):
@@ -134,7 +135,6 @@ loaded = False
 
 
 def application(environ, start_response):
-    import cherrypy
     global loaded
     if not loaded:
         loaded = True

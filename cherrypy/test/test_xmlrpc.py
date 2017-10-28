@@ -2,12 +2,10 @@ import sys
 
 import six
 
-try:
-    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
-    from xmlrpclib import SafeTransport
-except ImportError:
-    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
-    from xmlrpc.client import SafeTransport
+from six.moves.xmlrpc_client import (
+    DateTime, Fault,
+    ProtocolError, ServerProxy, SafeTransport
+)
 
 import cherrypy
 from cherrypy import _cptools

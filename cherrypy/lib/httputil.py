@@ -12,11 +12,7 @@ import email.utils
 import re
 from binascii import b2a_base64
 from cgi import parse_header
-try:
-    # Python 3
-    from email.header import decode_header
-except ImportError:
-    from email.Header import decode_header
+from email.header import decode_header
 
 import six
 from six.moves import range
@@ -239,7 +235,12 @@ def header_elements(fieldname, fieldvalue):  # noqa: E302
 
 
 def decode_TEXT(value):
-    r"""Decode :rfc:`2047` TEXT (e.g. "=?utf-8?q?f=C3=BCr?=" -> "f\xfcr")."""
+    r"""
+    Decode :rfc:`2047` TEXT
+
+    >>> decode_TEXT("=?utf-8?q?f=C3=BCr?=") == b'f\xfcr'.decode('latin-1')
+    True
+    """
     atoms = decode_header(value)
     decodedvalue = ''
     for atom, charset in atoms:
@@ -249,31 +250,41 @@ def decode_TEXT(value):
     return decodedvalue
 
 
+def decode_TEXT_maybe(value):
+    """
+    Decode the text but only if '=?' appears in it.
+    """
+    return decode_TEXT(value) if '=?' in value else value
+
+
 def valid_status(status):
     """Return legal HTTP status Code, Reason-phrase and Message.
 
-    The status arg must be an int, or a str that begins with an int.
+    The status arg must be an int, a str that begins with an int
+    or the constant from ``http.client`` stdlib module.
 
-    If status is an int, or a str and no reason-phrase is supplied,
-    a default reason-phrase will be provided.
+    If status has no reason-phrase is supplied, a default reason-
+    phrase will be provided.
+
+    >>> from six.moves import http_client
+    >>> from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
+    >>> valid_status(http_client.ACCEPTED) == (
+    ...     int(http_client.ACCEPTED),
+    ... ) + BaseHTTPRequestHandler.responses[http_client.ACCEPTED]
+    True
     """
 
     if not status:
         status = 200
 
-    status = str(status)
-    parts = status.split(' ', 1)
-    if len(parts) == 1:
-        # No reason supplied.
-        code, = parts
-        reason = None
-    else:
-        code, reason = parts
-        reason = reason.strip()
+    code, reason = status, None
+    if isinstance(status, six.string_types):
+        code, _, reason = status.partition(' ')
+        reason = reason.strip() or None
 
     try:
         code = int(code)
-    except ValueError:
+    except (TypeError, ValueError):
         raise ValueError('Illegal response status from server '
                          '(%s is non-numeric).' % repr(code))
 
@@ -383,10 +394,6 @@ class CaseInsensitiveDict(dict):
 
     def get(self, key, default=None):
         return dict.get(self, str(key).title(), default)
-
-    if hasattr({}, 'has_key'):
-        def has_key(self, key):
-            return str(key).title() in self
 
     def update(self, E):
         for k in E.keys():

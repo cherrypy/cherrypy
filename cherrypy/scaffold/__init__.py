@@ -21,9 +21,11 @@ local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 @cherrypy.config(**{'tools.log_tracebacks.on': True})
 class Root:
+    """Declaration of the CherryPy app URI structure."""
 
     @cherrypy.expose
     def index(self):
+        """Render HTML-template at the root path of the web-app."""
         return """<html>
 <body>Try some <a href='%s?a=7'>other</a> path,
 or a <a href='%s?n=14'>default</a> path.<br />
@@ -34,10 +36,12 @@ Or, just look at the pretty picture:<br />
 
     @cherrypy.expose
     def default(self, *args, **kwargs):
+        """Render catch-all args and kwargs."""
         return 'args: %s kwargs: %s' % (args, kwargs)
 
     @cherrypy.expose
     def other(self, a=2, b='bananas', c=None):
+        """Render number of fruits based on third argument."""
         cherrypy.response.headers['Content-Type'] = 'text/plain'
         if c is None:
             return 'Have %d %s.' % (int(a), b)

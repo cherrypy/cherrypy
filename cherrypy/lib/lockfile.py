@@ -76,7 +76,7 @@ class SystemLockFile(object):
 
         try:
             self._lock_file()
-        except:
+        except Exception:
             self.fp.seek(1)
             self.fp.close()
             del self.fp
@@ -99,7 +99,7 @@ class SystemLockFile(object):
         """
         try:
             os.remove(self.path)
-        except:
+        except Exception:
             pass
 
     def _unlock_file(self):

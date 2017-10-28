@@ -4,15 +4,15 @@ Foreword
 Why CherryPy?
 #############
 
-CherryPy is among the oldest web framework available for Python, yet many people aren't aware of its existence. 
+CherryPy is among the oldest web framework available for Python, yet many people aren't aware of its existence.
 One of the reason for this is that CherryPy is not a complete stack with built-in support for a multi-tier architecture.
 It doesn't provide frontend utilities nor will it tell you how to speak with your storage. Instead, CherryPy's take
-is to let the developer make those decisions. This is a contrasting position compared to other well-known frameworks. 
+is to let the developer make those decisions. This is a contrasting position compared to other well-known frameworks.
 
 CherryPy has a clean interface and does its best to stay out of your way whilst providing
 a reliable scaffolding for you to build from.
 
-Typical use-cases for CherryPy go from regular web application with user frontends 
+Typical use-cases for CherryPy go from regular web application with user frontends
 (think blogging, CMS, portals, ecommerce) to web-services only.
 
 Here are some reasons you would want to choose CherryPy:
@@ -34,13 +34,13 @@ Here are some reasons you would want to choose CherryPy:
    CherryPy also provides :ref:`tools <tools>` and :ref:`plugins <busplugins>`, which are powerful extension points needed to develop world-class web applications.
 
 3. Maturity
-   
+
    Maturity is extremely important when developing a real-world application. Unlike many other web frameworks, CherryPy has had many final, stable releases. It is fully bugtested, optimized, and proven reliable for real-world use. The API will not suddenly change and break backwards compatibility, so your applications are assured to continue working even through subsequent updates in the current version series.
 
    CherryPy is also a “3.0” project: the first edition of CherryPy set the tone, the second edition made it work, and the third edition makes it beautiful. Each version built on lessons learned from the previous, bringing the developer a superior tool for the job.
 
 4. Community
-   
+
    CherryPy has an devoted community that develops deployed CherryPy applications and are willing and ready to assist you on the CherryPy mailing list or IRC (#cherrypy on OFTC). The developers also frequent the list and often answer questions and implement features requested by the end-users.
 
 5. Deployability
@@ -117,7 +117,7 @@ Communication training company. Built on CherryPy 3.2.0 and Python 2.7.3, with
 
 `Almad's Homepage <http://www.almad.net>`_ - Simple homepage with blog.
 
-`Fight.Watch <http://fight.watch>`_ - Twitch.tv web portal for fighting games. 
+`Fight.Watch <http://fight.watch>`_ - Twitch.tv web portal for fighting games.
 Built on CherryPy 3.3.0 and Python 2.7.3 with Jinja 2.7.2 and SQLAlchemy 0.9.4.
 
 Products based on CherryPy

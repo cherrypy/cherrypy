@@ -1,14 +1,9 @@
 #! /usr/bin/env python
 """CherryPy package setuptools installer."""
 
-import sys
 import io
 
 import setuptools
-
-
-needs_pytest = set(['pytest', 'test']).intersection(sys.argv)
-pytest_runner = ['pytest_runner'] if needs_pytest else []
 
 
 ###############################################################################
@@ -62,8 +57,8 @@ packages = [
 ]
 
 install_requires = [
-    'six',
-    'cheroot>=5.2.0',
+    'six>=1.11.0',
+    'cheroot>=5.8.3',
     'portend>=2.1.1',
     'jaraco.classes',
 ]
@@ -72,7 +67,7 @@ extras_require = {
     'docs': [
         'sphinx',
         'docutils',
-        'sphinx_rtd_theme',
+        'alabaster',
         'rst.linker>=1.9',
         'jaraco.packaging>=3.2',
     ],
@@ -81,13 +76,16 @@ extras_require = {
     'ssl': ['pyOpenSSL'],
     'testing': [
         'coverage',  # inspects tests coverage
+        'codecov',   # sends tests coverage to codecov.io
 
         # cherrypy.lib.gctools
         'objgraph',
 
         'pytest>=2.8',
+        'pytest-cov',
         'pytest-sugar',
         'backports.unittest_mock',
+        'path.py',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
@@ -119,7 +117,7 @@ setup_params = dict(
     extras_require=extras_require,
     setup_requires=[
         'setuptools_scm',
-    ] + pytest_runner,
+    ],
     python_requires='>=2.7,!=3.0.*',
 )
 

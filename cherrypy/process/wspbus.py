@@ -93,13 +93,13 @@ _startup_cwd = os.getcwd()
 
 
 class ChannelFailures(Exception):
+    """Exception raised during errors on Bus.publish()."""
 
-    """Exception raised when errors occur in a listener during Bus.publish().
-    """
     delimiter = '\n'
 
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(*args, **kwargs)
+        """Initialize ChannelFailures errors wrapper."""
+        super(ChannelFailures, self).__init__(*args, **kwargs)
         self._exceptions = list()
 
     def handle_exception(self):
@@ -111,12 +111,14 @@ class ChannelFailures(Exception):
         return self._exceptions[:]
 
     def __str__(self):
+        """Render the list of errors, which happened in channel."""
         exception_strings = map(repr, self.get_instances())
         return self.delimiter.join(exception_strings)
 
     __repr__ = __str__
 
     def __bool__(self):
+        """Determine whether any error happened in channel."""
         return bool(self._exceptions)
     __nonzero__ = __bool__
 
@@ -155,7 +157,6 @@ else:
 
 
 class Bus(object):
-
     """Process state-machine and messenger for HTTP site deployment.
 
     All listeners for a given channel are guaranteed to be called even
@@ -171,6 +172,7 @@ class Bus(object):
     max_cloexec_files = max_files
 
     def __init__(self):
+        """Initialize pub/sub bus."""
         self.execv = False
         self.state = states.STOPPED
         channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
@@ -220,7 +222,7 @@ class Bus(object):
                 if exc and e.code == 0:
                     e.code = 1
                 raise
-            except:
+            except Exception:
                 exc.handle_exception()
                 if channel == 'log':
                     # Assume any further messages to 'log' will fail.
@@ -254,13 +256,13 @@ class Bus(object):
             self.log('Bus STARTED')
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             self.log('Shutting down due to error in start listener:',
                      level=40, traceback=True)
             e_info = sys.exc_info()[1]
             try:
                 self.exit()
-            except:
+            except Exception:
                 # Any stop/exit errors will be logged inside publish().
                 pass
             # Re-raise the original error
@@ -279,7 +281,7 @@ class Bus(object):
             # This isn't strictly necessary, but it's better than seeing
             # "Waiting for child threads to terminate..." and then nothing.
             self.log('Bus EXITED')
-        except:
+        except Exception:
             # This method is often called asynchronously (whether thread,
             # signal handler, console handler, or atexit handler), so we
             # can't just let exceptions propagate out unhandled.
@@ -342,7 +344,8 @@ class Bus(object):
             if (
                     t != threading.currentThread() and
                     not isinstance(t, threading._MainThread) and
-                    # Note that any dummy (external) threads are always daemonic.
+                    # Note that any dummy (external) threads are
+                    # always daemonic.
                     not t.daemon
             ):
                 self.log('Waiting for thread %s.' % t.getName())
@@ -406,7 +409,7 @@ class Bus(object):
 
     @staticmethod
     def _get_interpreter_argv():
-        """Retrieve current Python interpreter's arguments
+        """Retrieve current Python interpreter's arguments.
 
         Returns empty tuple in case of frozen mode, uses built-in arguments
         reproduction function otherwise.
@@ -424,7 +427,7 @@ class Bus(object):
 
     @staticmethod
     def _get_true_argv():
-        """Retrieves all real arguments of the python interpreter
+        """Retrieve all real arguments of the python interpreter.
 
         ...even those not listed in ``sys.argv``
 
@@ -432,14 +435,16 @@ class Bus(object):
         :seealso: http://stackoverflow.com/a/6683222/595220
         :seealso: http://stackoverflow.com/a/28414807/595220
         """
-
         try:
             char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
 
             argv = ctypes.POINTER(char_p)()
             argc = ctypes.c_int()
 
-            ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+            ctypes.pythonapi.Py_GetArgcArgv(
+                ctypes.byref(argc),
+                ctypes.byref(argv),
+            )
 
             _argv = argv[:argc.value]
 
@@ -499,7 +504,7 @@ class Bus(object):
 
             :seealso: https://github.com/cherrypy/cherrypy/issues/1506
             :seealso: https://github.com/cherrypy/cherrypy/issues/1512
-            :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
+            :ref: http://bit.ly/2gK6bXK
             """
             raise NotImplementedError
         else:
@@ -507,7 +512,8 @@ class Bus(object):
 
     @staticmethod
     def _extend_pythonpath(env):
-        """
+        """Prepend current working dir to PATH environment variable if needed.
+
         If sys.path[0] is an empty string, the interpreter was likely
         invoked with -m and the effective path is about to change on
         re-exec.  Add the current directory to $PYTHONPATH to ensure
