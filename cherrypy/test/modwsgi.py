@@ -88,7 +88,7 @@ LoadModule env_module modules/mod_env.so
 
 WSGIScriptAlias / "%(curdir)s/modwsgi.py"
 SetEnv testmod %(testmod)s
-""" # noqa
+""" # noqa E501
 
 
 class ModWSGISupervisor(helper.Supervisor):
