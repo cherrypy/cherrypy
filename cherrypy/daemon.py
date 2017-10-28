@@ -65,7 +65,7 @@ def start(configfiles=None, daemonize=False, environment=None,
     # Always start the engine; this will start all other services
     try:
         engine.start()
-    except:
+    except Exception:
         # Assume the error has been logged already via bus.log.
         sys.exit(1)
     else:
@@ -73,6 +73,7 @@ def start(configfiles=None, daemonize=False, environment=None,
 
 
 def run():
+    """Run cherryd CLI."""
     from optparse import OptionParser
 
     p = OptionParser()

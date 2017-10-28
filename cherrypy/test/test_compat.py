@@ -28,4 +28,7 @@ class EscapeTester(unittest.TestCase):
 
     def test_escape_quote(self):
         """test_escape_quote - Verify the output for &<>"' chars."""
-        self.assertEqual("""xx&amp;&lt;&gt;"aa'""", compat.escape_html("""xx&<>"aa'"""))
+        self.assertEqual(
+            """xx&amp;&lt;&gt;"aa'""",
+            compat.escape_html("""xx&<>"aa'"""),
+        )

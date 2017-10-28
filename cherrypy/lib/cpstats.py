@@ -250,7 +250,9 @@ appstats.update({
     'Requests': {},
 })
 
-proc_time = lambda s: time.time() - s['Start Time']
+
+def proc_time(s):
+    return time.time() - s['Start Time']
 
 
 class ByteCountWrapper(object):
@@ -296,7 +298,8 @@ class ByteCountWrapper(object):
         return data
 
 
-average_uriset_time = lambda s: s['Count'] and (s['Sum'] / s['Count']) or 0
+def average_uriset_time(s):
+    return s['Count'] and (s['Sum'] / s['Count']) or 0
 
 
 def _get_threading_ident():
@@ -404,8 +407,13 @@ thisdir = os.path.abspath(os.path.dirname(__file__))
 
 missing = object()
 
-locale_date = lambda v: time.strftime('%c', time.gmtime(v))
-iso_format = lambda v: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(v))
+
+def locale_date(v):
+    return time.strftime('%c', time.gmtime(v))
+
+
+def iso_format(v):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(v))
 
 
 def pause_resume(ns):

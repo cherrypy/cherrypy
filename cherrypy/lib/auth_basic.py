@@ -73,7 +73,8 @@ def basic_auth(realm, checkpassword, debug=False):
     auth_header = request.headers.get('authorization')
     if auth_header is not None:
         # split() error, base64.decodestring() error
-        with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, 'Bad Request'):
+        msg = 'Bad Request'
+        with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, msg):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 username, password = base64_decode(params).split(':', 1)

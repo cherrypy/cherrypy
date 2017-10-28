@@ -1,6 +1,5 @@
 """CherryPy is a pythonic, object-oriented HTTP framework.
 
-
 CherryPy consists of not one, but four separate API layers.
 
 The APPLICATION LAYER is the simplest. CherryPy applications are written as
@@ -53,7 +52,8 @@ with customized or extended components. The core API's are:
  * Server API
  * WSGI API
 
-These API's are described in the `CherryPy specification <https://bitbucket.org/cherrypy/cherrypy/wiki/CherryPySpec>`_.
+These API's are described in the `CherryPy specification
+<https://github.com/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
 try:
@@ -63,32 +63,45 @@ except ImportError:
 
 from threading import local as _local
 
-from cherrypy._cperror import HTTPError, HTTPRedirect, InternalRedirect  # noqa: F401
-from cherrypy._cperror import NotFound, CherryPyException, TimeoutError  # noqa: F401
+from ._cperror import (
+    HTTPError, HTTPRedirect, InternalRedirect,
+    NotFound, CherryPyException, TimeoutError,
+)
 
-from cherrypy import _cplogging
+from . import _cpdispatch as dispatch
 
-from cherrypy import _cpdispatch as dispatch  # noqa: F401
+from ._cptools import default_toolbox as tools, Tool
+from ._helper import expose, popargs, url
 
-from cherrypy import _cptools  # noqa: F401
-from cherrypy._cptools import default_toolbox as tools, Tool  # noqa: F401
+from . import _cprequest, _cpserver, _cptree, _cplogging, _cpconfig
 
-from cherrypy import _cprequest
-from cherrypy.lib import httputil as _httputil
+import cherrypy.lib.httputil as _httputil
 
-from cherrypy import _cptree
-from cherrypy._cptree import Application  # noqa
-from cherrypy import _cpwsgi as wsgi  # noqa
+from ._cptree import Application
+from . import _cpwsgi as wsgi
 
-from cherrypy import _cpserver
-from cherrypy import process
+from . import process
 try:
-    from cherrypy.process import win32
+    from .process import win32
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
 except ImportError:
     engine = process.bus
+
+
+__all__ = (
+    'HTTPError', 'HTTPRedirect', 'InternalRedirect',
+    'NotFound', 'CherryPyException', 'TimeoutError',
+    'dispatch', 'tools', 'Tool', 'Application',
+    'wsgi', 'process', 'tree', 'engine',
+    'quickstart', 'serving', 'request', 'response', 'thread_data',
+    'log', 'expose', 'popargs', 'url', 'config',
+)
+
+
+__import__('cherrypy._cptools')
+__import__('cherrypy._cprequest')
 
 
 tree = _cptree.Tree()
@@ -122,7 +135,10 @@ class _TimeoutMonitor(process.plugins.Monitor):
             pass
 
     def run(self):
-        """Check timeout on all responses. (Internal)"""
+        """Check timeout on all responses.
+
+        (Internal)
+        """
         for req, resp in self.servings:
             resp.check_timeout()
 engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
@@ -138,15 +154,16 @@ engine.signal_handler = process.plugins.SignalHandler(engine)
 
 
 class _HandleSignalsPlugin(object):
+    """Handle signals from other processes.
 
-    """Handle signals from other processes based on the configured
-    platform handlers above."""
+    Based on the configured platform handlers above.
+    """
 
     def __init__(self, bus):
         self.bus = bus
 
     def subscribe(self):
-        """Add the handlers based on the platform"""
+        """Add the handlers based on the platform."""
         if hasattr(self.bus, 'signal_handler'):
             self.bus.signal_handler.subscribe()
         if hasattr(self.bus, 'console_control_handler'):
@@ -187,7 +204,6 @@ def quickstart(root=None, script_name='', config=None):
 
 
 class _Serving(_local):
-
     """An interface for registering request and response objects.
 
     Rather than have a separate "thread local" object for the request and
@@ -285,7 +301,6 @@ response = _ThreadLocalProxy('response')
 
 
 class _ThreadData(_local):
-
     """A container for thread-specific data."""
 thread_data = _ThreadData()  # noqa: E305
 
@@ -309,7 +324,6 @@ except ImportError:
 
 
 class _GlobalLogManager(_cplogging.LogManager):
-
     """A site-wide LogManager; routes to app.log or global log as appropriate.
 
     This :class:`LogManager<cherrypy._cplogging.LogManager>` implements
@@ -320,7 +334,10 @@ class _GlobalLogManager(_cplogging.LogManager):
     """
 
     def __call__(self, *args, **kwargs):
-        """Log the given message to the app.log or global log as appropriate.
+        """Log the given message to the app.log or global log.
+
+        Log the given message to the app.log or global
+        log as appropriate.
         """
         # Do NOT use try/except here. See
         # https://github.com/cherrypy/cherrypy/issues/945
@@ -331,7 +348,10 @@ class _GlobalLogManager(_cplogging.LogManager):
         return log.error(*args, **kwargs)
 
     def access(self):
-        """Log an access message to the app.log or global log as appropriate.
+        """Log an access message to the app.log or global log.
+
+        Log the given message to the app.log or global
+        log as appropriate.
         """
         try:
             return request.app.log.access()
@@ -351,10 +371,6 @@ def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 engine.subscribe('log', _buslog)  # noqa: E305
 
-from cherrypy._helper import expose, popargs, url  # noqa: F401
-
-# import _cpconfig last so it can reference other top-level objects
-from cherrypy import _cpconfig  # noqa: F401
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
@@ -369,6 +385,6 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from cherrypy import _cpchecker  # noqa: F401
+from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)

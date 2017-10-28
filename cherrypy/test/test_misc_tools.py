@@ -71,13 +71,8 @@ def setup_server():
             cherrypy.request.headers['Host']
             # Read a header directly with '__contains__'
             'If-Modified-Since' in cherrypy.request.headers
-            # Read a header directly with 'has_key'
-            if hasattr(dict, 'has_key'):
-                # Python 2
-                cherrypy.request.headers.has_key('Range')  # noqa: W601
-            else:
-                # Python 3
-                'Range' in cherrypy.request.headers
+            # Read a header directly
+            'Range' in cherrypy.request.headers
             # Call a lib function
             tools.accept.callable(['text/html', 'text/plain'])
             return 'Hello, world!'

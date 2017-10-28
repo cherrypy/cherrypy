@@ -222,7 +222,8 @@ class DropPrivileges(SimplePlugin):
 
     """Drop privileges. uid/gid arguments not available on Windows.
 
-    Special thanks to `Gavin Baker <http://antonym.org/2005/12/dropping-privileges-in-python.html>`_
+    Special thanks to `Gavin Baker
+    <http://antonym.org/2005/12/dropping-privileges-in-python.html>`_
     """
 
     def __init__(self, bus, umask=None, uid=None, gid=None):
@@ -451,7 +452,7 @@ class PIDFile(SimplePlugin):
             self.bus.log('PID file removed: %r.' % self.pidfile)
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             pass
 
 

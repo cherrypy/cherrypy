@@ -222,7 +222,7 @@ Finished 1000 requests
         # Parse output of ab, setting attributes on self
         try:
             self.output = _cpmodpy.read_process(AB_PATH or 'ab', self.args())
-        except:
+        except Exception:
             print(_cperror.format_exc())
             raise
 
@@ -390,7 +390,7 @@ if __name__ == '__main__':
             try:
                 try:
                     run_standard_benchmarks()
-                except:
+                except Exception:
                     print(_cperror.format_exc())
                     raise
             finally:

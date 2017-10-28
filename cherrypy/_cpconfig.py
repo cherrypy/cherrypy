@@ -122,9 +122,6 @@ import cherrypy
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import reprconf
 
-# Deprecated in  CherryPy 3.2--remove in 3.3
-NamespaceSet = reprconf.NamespaceSet
-
 
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.
@@ -147,7 +144,6 @@ def merge(base, other):
 
 
 class Config(reprconf.Config):
-
     """The 'global' configuration data for the entire CherryPy process."""
 
     def update(self, config):
@@ -182,10 +178,8 @@ class Config(reprconf.Config):
 
 
 class _Vars(object):
-    """
-    Adapter that allows setting a default attribute on a function
-    or class.
-    """
+    """Adapter allowing setting a default attribute on a function or class."""
+
     def __init__(self, target):
         self.target = target
 

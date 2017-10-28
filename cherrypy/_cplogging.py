@@ -59,7 +59,8 @@ tracebacks, if enabled).
 If you are logging the access log and error log to the same source, then there
 is a possibility that a specially crafted error message may replicate an access
 log message as described in CWE-117.  In this case it is the application
-developer's responsibility to manually escape data before using CherryPy's log()
+developer's responsibility to manually escape data before
+using CherryPy's log()
 functionality, or they may create an application that is vulnerable to CWE-117.
 This would be achieved by using a custom handler escape any special characters,
 and attached as described below.
@@ -216,7 +217,11 @@ class LogManager(object):
         if traceback:
             exc_info = _cperror._exc_info()
 
-        self.error_log.log(severity, ' '.join((self.time(), context, msg)), exc_info=exc_info)
+        self.error_log.log(
+            severity,
+            ' '.join((self.time(), context, msg)),
+            exc_info=exc_info,
+        )
 
     def __call__(self, *args, **kwargs):
         """An alias for ``error``."""
@@ -226,7 +231,8 @@ class LogManager(object):
         """Write to the access log (in Apache/NCSA Combined Log format).
 
         See the
-        `apache documentation <http://httpd.apache.org/docs/current/logs.html#combined>`_
+        `apache documentation
+        <http://httpd.apache.org/docs/current/logs.html#combined>`_
         for format details.
 
         CherryPy calls this automatically for you. Note there are no arguments;
@@ -262,6 +268,8 @@ class LogManager(object):
                  'f': dict.get(inheaders, 'Referer', ''),
                  'a': dict.get(inheaders, 'User-Agent', ''),
                  'o': dict.get(inheaders, 'Host', '-'),
+                 'i': request.unique_id,
+                 'z': LazyRfc3339UtcTime(),
                  }
         if six.PY3:
             for k, v in atoms.items():
@@ -283,7 +291,7 @@ class LogManager(object):
             try:
                 self.access_log.log(
                     logging.INFO, self.access_log_format.format(**atoms))
-            except:
+            except Exception:
                 self(traceback=True)
         else:
             for k, v in atoms.items():
@@ -300,7 +308,7 @@ class LogManager(object):
             try:
                 self.access_log.log(
                     logging.INFO, self.access_log_format % atoms)
-            except:
+            except Exception:
                 self(traceback=True)
 
     def time(self):
@@ -460,5 +468,12 @@ class WSGIErrorHandler(logging.Handler):
                     except UnicodeError:
                         stream.write(fs % msg.encode('UTF-8'))
                 self.flush()
-            except:
+            except Exception:
                 self.handleError(record)
+
+
+class LazyRfc3339UtcTime(object):
+    def __str__(self):
+        """Return now() in RFC3339 UTC Format."""
+        now = datetime.datetime.now()
+        return now.isoformat('T') + 'Z'

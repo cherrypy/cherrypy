@@ -1,0 +1,49 @@
+<!-- Based on https://github.com/kennethreitz/python-guide/commit/7a58e5c03ab1a21f07367937454c966505ca8af7 -->
+<aside id="python27eol">
+    <a href="https://pythonclock.org/" target="_blank" title="Python 2.7 EOL Countdown">
+        Python 3, the new best practice, is here to stay.
+        Python 2 will retire in only <time></time>!
+    </a>
+</aside>
+
+<!-- Python 2 EOL Clock -->
+<style type="text/css">
+  body {
+    margin-top: 4em;
+  }
+
+  #python27eol {
+    position: fixed;
+    top: 0;
+    left: 0; right: 0;
+    height:  auto;
+    text-align: center;
+    color: white;
+    background-color: black;
+    font-size: larger;
+    line-height: 3;
+  }
+
+  #python27eol>* {
+    color: white;
+    background-color: black;
+  }
+
+  #python27eol>a {
+    display: block;
+  }
+</style>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/countdown/2.6.0/countdown.min.js"></script>
+<script src="//cdn.rawgit.com/icambron/moment-countdown/master/dist/moment-countdown.min.js"></script>
+
+<script>
+  var py2_death = moment('2020-04-12').toDate()
+
+  countdown(py2_death, update_time_left)
+
+  function update_time_left(moments_left, timer_id) {
+    document.querySelector('#python27eol time').innerHTML = moments_left.toHTML("em")
+  }
+</script>

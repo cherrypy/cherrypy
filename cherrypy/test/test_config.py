@@ -16,7 +16,8 @@ from cherrypy.test import helper
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
-StringIOFromNative = lambda x: io.StringIO(six.text_type(x))
+def StringIOFromNative(x):
+    return io.StringIO(six.text_type(x))
 
 
 def setup_server():

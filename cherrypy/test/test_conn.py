@@ -354,7 +354,7 @@ class PipelineTests(helper.CPWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
+        except Exception:
             if not isinstance(sys.exc_info()[1],
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
@@ -387,7 +387,7 @@ class PipelineTests(helper.CPWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
+        except Exception:
             if not isinstance(sys.exc_info()[1],
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
@@ -799,7 +799,8 @@ class LimitedRequestQueueTests(helper.CPWebCase):
                 conn.endheaders()
                 conns.append(conn)
 
-            # Now try a 16th conn, which should be closed by the server immediately.
+            # Now try a 16th conn, which should be closed by the
+            # server immediately.
             overflow_conn = self.HTTP_CONN(self.HOST, self.PORT)
             # Manually connect since httplib won't let us set a timeout
             for res in socket.getaddrinfo(self.HOST, self.PORT, 0,
@@ -813,7 +814,10 @@ class LimitedRequestQueueTests(helper.CPWebCase):
             overflow_conn.putrequest('GET', '/', skip_host=True)
             overflow_conn.putheader('Host', self.HOST)
             overflow_conn.endheaders()
-            response = overflow_conn.response_class(overflow_conn.sock, method='GET')
+            response = overflow_conn.response_class(
+                overflow_conn.sock,
+                method='GET',
+            )
             try:
                 response.begin()
             except socket.error as exc:

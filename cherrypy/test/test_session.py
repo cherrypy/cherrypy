@@ -6,6 +6,7 @@ import socket
 from six.moves.http_client import HTTPConnection
 
 import pytest
+from path import Path
 
 import cherrypy
 from cherrypy._cpcompat import (
@@ -26,7 +27,8 @@ def http_methods_allowed(methods=['GET', 'HEAD']):
         cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
 
-cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)  # noqa: E305
+
+cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 
 def setup_server():
@@ -143,7 +145,8 @@ class SessionTest(helper.CPWebCase):
         # Clean up sessions.
         for fname in os.listdir(localDir):
             if fname.startswith(sessions.FileSession.SESSION_PREFIX):
-                os.unlink(os.path.join(localDir, fname))
+                path = Path(localDir) / fname
+                path.remove_p()
 
     @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
@@ -209,14 +212,17 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('done')
         self.getPage('/delete', cookieset1)
         self.assertBody('done')
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
+
+        def f():
+            return [
+                x
+                for x in os.listdir(localDir)
+                if x.startswith('session-')
+            ]
         self.assertEqual(f(), [])
 
         # Wait for the cleanup thread to delete remaining session files
         self.getPage('/')
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
         time.sleep(2)
         self.assertEqual(f(), [])
@@ -286,7 +292,6 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/iredir', self.cookies)
         self.assertBody('FileSession')
 
-    @pytest.mark.xfail(reason='#1540')
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
@@ -296,7 +301,6 @@ class SessionTest(helper.CPWebCase):
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
-    @pytest.mark.xfail(reason='#1557')
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
         self.assertErrorPage(404, "The path '/unknown/page' was not found.")
@@ -388,7 +392,8 @@ class SessionTest(helper.CPWebCase):
         assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
-        assert len(sessions.RamSession.locks) == 1, 'Clean up should not remove active lock'
+        msg = 'Clean up should not remove active lock'
+        assert len(sessions.RamSession.locks) == 1, msg
         t.join()
 
 

@@ -111,6 +111,10 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.root': curdir,
             },
+            '/static-long': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': r'\\?\%s' % curdir,
+            },
             '/style.css': {
                 'tools.staticfile.on': True,
                 'tools.staticfile.filename': os.path.join(curdir, 'style.css'),
@@ -155,7 +159,7 @@ class StaticTest(helper.CPWebCase):
             if os.path.exists(f):
                 try:
                     os.unlink(f)
-                except:
+                except Exception:
                     pass
 
     def test_static(self):
@@ -185,6 +189,15 @@ class StaticTest(helper.CPWebCase):
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
 
+    @pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only')
+    def test_static_longpath(self):
+        """Test serving of a file in subdir of a Windows long-path
+        staticdir."""
+        self.getPage('/static-long/static/index.html')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello, world\r\n')
+
     def test_fallthrough(self):
         # Test that NotFound will then try dynamic handlers (see [878]).
         self.getPage('/static/dynamic')
@@ -206,8 +219,11 @@ class StaticTest(helper.CPWebCase):
         self.getPage('/docroot')
         self.assertStatus(301)
         self.assertHeader('Location', '%s/docroot/' % self.base())
-        self.assertMatchesBody("This resource .* <a href=(['\"])%s/docroot/\\1>"
-                               '%s/docroot/</a>.' % (self.base(), self.base()))
+        self.assertMatchesBody(
+            "This resource .* <a href=(['\"])%s/docroot/\\1>"
+            '%s/docroot/</a>.'
+            % (self.base(), self.base())
+        )
 
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir

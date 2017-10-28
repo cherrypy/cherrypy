@@ -1,3 +1,4 @@
+"""Checker for CherryPy sites and mounted apps."""
 import os
 import warnings
 
@@ -8,7 +9,6 @@ import cherrypy
 
 
 class Checker(object):
-
     """A checker for CherryPy sites and their mounted applications.
 
     When this object is called at engine startup, it executes each
@@ -26,6 +26,7 @@ class Checker(object):
     """If True (the default), run all checks; if False, turn off all checks."""
 
     def __init__(self):
+        """Initialize Checker instance."""
         self._populate_known_types()
 
     def __call__(self):
@@ -50,8 +51,7 @@ class Checker(object):
     global_config_contained_paths = False
 
     def check_app_config_entries_dont_start_with_script_name(self):
-        """Check for Application config with sections that repeat script_name.
-        """
+        """Check for App config with sections that repeat script_name."""
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue
@@ -108,9 +108,7 @@ class Checker(object):
                 return
 
     def check_app_config_brackets(self):
-        """Check for Application config with extraneous brackets in section
-        names.
-        """
+        """Check for App config with extraneous brackets in section names."""
         for sn, app in cherrypy.tree.apps.items():
             if not isinstance(app, cherrypy.Application):
                 continue

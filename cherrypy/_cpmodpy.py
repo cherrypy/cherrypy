@@ -243,7 +243,7 @@ def handler(req):
                     response.body, response.stream)
             finally:
                 app.release_serving()
-    except:
+    except Exception:
         tb = format_exc()
         cherrypy.log(tb, 'MOD_PYTHON', severity=logging.ERROR)
         s, h, b = bare_error()

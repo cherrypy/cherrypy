@@ -18,6 +18,8 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
+from cherrypy._cpcompat import text_or_bytes
+
 try:
     # Python 3.0+
     from configparser import ConfigParser
@@ -93,7 +95,7 @@ class NamespaceSet(dict):
                     try:
                         for k, v in ns_confs.get(ns, {}).items():
                             callable(k, v)
-                    except:
+                    except Exception:
                         # The exceptional case is handled here
                         no_exc = False
                         if exit is None:

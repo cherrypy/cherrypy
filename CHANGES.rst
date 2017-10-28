@@ -7,6 +7,9 @@ v11.1.0
   prevents that possibilty, CherryPy never relied on that behavior
   and we presume no applications depend on that interface.
 
+* #1627: Fixed issue in proxy tool where more than one port would
+  appear in the ``request.base`` and thus in ``cherrypy.url``.
+
 v11.0.0
 -------
 

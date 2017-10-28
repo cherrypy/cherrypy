@@ -234,7 +234,7 @@ def _show_branch(root, base, path, pct=0, showpct=False, exclude='',
             if showpct:
                 try:
                     _, statements, _, missing, _ = coverage.analysis2(newpath)
-                except:
+                except Exception:
                     # Yes, we really want to pass on all errors.
                     pass
                 else:

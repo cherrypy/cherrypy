@@ -57,6 +57,17 @@ However, CherryPy "recognizes" a session id by looking up the saved session
 data for that id. Therefore, if you never save any session data,
 **you will get a new session id for every request**.
 
+A side effect of CherryPy overwriting unrecognised session ids is that if you
+have multiple, separate CherryPy applications running on a single domain (e.g.
+on different ports), each app will overwrite the other's session id because by
+default they use the same cookie name (``"session_id"``) but do not recognise
+each others sessions. It is therefore a good idea to use a different name for
+each, for example::
+
+    [/]
+    ...
+    tools.sessions.name = "my_app_session_id"
+
 ================
 Sharing Sessions
 ================
@@ -337,13 +348,6 @@ class Session(object):
             self.load()
         return key in self._data
 
-    if hasattr({}, 'has_key'):
-        def has_key(self, key):
-            """D.has_key(k) -> True if D has a key k, else False."""
-            if not self.loaded:
-                self.load()
-            return key in self._data
-
     def get(self, key, default=None):
         """D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None."""
         if not self.loaded:
@@ -412,7 +416,11 @@ class RamSession(Session):
 
         # added to remove obsolete lock objects
         for _id in list(self.locks):
-            if _id not in self.cache and self.locks[_id].acquire(blocking=False):
+            locked = (
+                _id not in self.cache
+                and self.locks[_id].acquire(blocking=False)
+            )
+            if locked:
                 lock = self.locks.pop(_id)
                 lock.release()
 
@@ -473,7 +481,9 @@ class FileSession(Session):
         if isinstance(self.lock_timeout, (int, float)):
             self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
         if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
-            raise ValueError('Lock timeout must be numeric seconds or a timedelta instance.')
+            raise ValueError(
+                'Lock timeout must be numeric seconds or a timedelta instance.'
+            )
 
     @classmethod
     def setup(cls, **kwargs):
@@ -561,7 +571,11 @@ class FileSession(Session):
         now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
-            if fname.startswith(self.SESSION_PREFIX) and not fname.endswith(self.LOCK_SUFFIX):
+            have_session = (
+                fname.startswith(self.SESSION_PREFIX)
+                and not fname.endswith(self.LOCK_SUFFIX)
+            )
+            if have_session:
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)

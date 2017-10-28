@@ -12,10 +12,12 @@ from cherrypy.lib import httputil
 
 
 class NativeGateway(cheroot.server.Gateway):
+    """Native gateway implementation allowing to bypass WSGI."""
 
     recursive = False
 
     def respond(self):
+        """Obtain response from CherryPy machinery and then send it."""
         req = self.req
         try:
             # Obtain a Request object from CherryPy
@@ -81,7 +83,7 @@ class NativeGateway(cheroot.server.Gateway):
                         response.body)
                 finally:
                     app.release_serving()
-        except:
+        except Exception:
             tb = format_exc()
             # print tb
             cherrypy.log(tb, 'NATIVE_ADAPTER', severity=logging.ERROR)
@@ -89,6 +91,7 @@ class NativeGateway(cheroot.server.Gateway):
             self.send_response(s, h, b)
 
     def send_response(self, status, headers, body):
+        """Send response to HTTP request."""
         req = self.req
 
         # Set response status
@@ -107,7 +110,6 @@ class NativeGateway(cheroot.server.Gateway):
 
 
 class CPHTTPServer(cheroot.server.HTTPServer):
-
     """Wrapper for cheroot.server.HTTPServer.
 
     cheroot has been designed to not reference CherryPy in any way,
@@ -117,6 +119,7 @@ class CPHTTPServer(cheroot.server.HTTPServer):
     """
 
     def __init__(self, server_adapter=cherrypy.server):
+        """Initialize CPHTTPServer."""
         self.server_adapter = server_adapter
 
         server_name = (self.server_adapter.socket_host or

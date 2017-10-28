@@ -8,11 +8,10 @@ from cherrypy._cpcompat import text_or_bytes
 from cherrypy.process.servers import ServerAdapter
 
 
-__all__ = ['Server']
+__all__ = ('Server', )
 
 
 class Server(ServerAdapter):
-
     """An adapter for an HTTP server.
 
     You can set attributes (like socket_host and socket_port)
@@ -96,7 +95,8 @@ class Server(ServerAdapter):
 
     instance = None
     """If not None, this should be an HTTP server instance (such as
-    cheroot.wsgi.Server) which cherrypy.server will control. Use this when you need
+    cheroot.wsgi.Server) which cherrypy.server will control.
+    Use this when you need
     more control over object instantiation than is available in the various
     configuration options."""
 
@@ -144,9 +144,11 @@ class Server(ServerAdapter):
     which declares it covers WSGI version 1.0.1 but still mandates the
     wsgi.version (1, 0)] and ('u', 0), an experimental unicode version.
     You may create and register your own experimental versions of the WSGI
-    protocol by adding custom classes to the cheroot.server.wsgi_gateways dict."""
+    protocol by adding custom classes to the cheroot.server.wsgi_gateways dict.
+    """
 
     def __init__(self):
+        """Initialize Server instance."""
         self.bus = cherrypy.engine
         self.httpserver = None
         self.interrupt = None
@@ -202,7 +204,9 @@ class Server(ServerAdapter):
             'a str for Unix domain sockets.')
 
     def base(self):
-        """Return the base (scheme://host[:port] or sock file) for this server.
+        """Return the base for this server.
+
+        e.i. scheme://host[:port] or sock file
         """
         if self.socket_file:
             return self.socket_file
