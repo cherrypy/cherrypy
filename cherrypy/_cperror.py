@@ -201,9 +201,6 @@ class HTTPRedirect(CherryPyException):
     See :ref:`redirectingpost` for additional caveats.
     """
 
-    status = None
-    """The integer HTTP status code to emit."""
-
     urls = None
     """The list of URL's to emit."""
 
@@ -242,8 +239,13 @@ class HTTPRedirect(CherryPyException):
             if status < 300 or status > 399:
                 raise ValueError('status must be between 300 and 399.')
 
-        self.status = status
         CherryPyException.__init__(self, abs_urls, status)
+
+    @property
+    def status(self):
+        """The integer HTTP status code to emit."""
+        _, status = self.args[:2]
+        return status
 
     def set_response(self):
         """Modify cherrypy.response status, headers, and body to represent
