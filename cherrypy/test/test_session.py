@@ -210,14 +210,17 @@ class SessionTest(helper.CPWebCase):
         self.assertBody('done')
         self.getPage('/delete', cookieset1)
         self.assertBody('done')
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
+
+        def f():
+            return [
+                x
+                for x in os.listdir(localDir)
+                if x.startswith('session-')
+            ]
         self.assertEqual(f(), [])
 
         # Wait for the cleanup thread to delete remaining session files
         self.getPage('/')
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
         time.sleep(2)
         self.assertEqual(f(), [])

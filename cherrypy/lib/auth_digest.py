@@ -31,7 +31,9 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 
-md5_hex = lambda s: md5(ntob(s)).hexdigest()
+def md5_hex(s):
+    return md5(ntob(s)).hexdigest()
+
 
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'

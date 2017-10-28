@@ -7,7 +7,7 @@ repos:
     -   id: flake8
         args:
         # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
-        - --ignore=E731,W503
+        - --ignore=W503
     -   id: check-merge-conflict
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
