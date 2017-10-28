@@ -586,7 +586,8 @@ class Part(Entity):
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
+    `HTTP/1.1
+    <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
     """
 

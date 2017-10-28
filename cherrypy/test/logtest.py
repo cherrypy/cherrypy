@@ -170,7 +170,10 @@ class LogCase(object):
         been marked (using self.markLog), the entire log will be searched.
         """
         data = self._read_marked_region(marker)
-        data = [chunk.decode('utf-8').rstrip('\n').rstrip('\r') for chunk in data]
+        data = [
+            chunk.decode('utf-8').rstrip('\n').rstrip('\r')
+            for chunk in data
+        ]
         for log_chunk in data:
             try:
                 uuid_log = data[-1]

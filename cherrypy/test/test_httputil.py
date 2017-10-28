@@ -33,8 +33,12 @@ def test_urljoin(script_name, path_info, expected_url):
 
 
 EXPECTED_200 = (200, 'OK', 'Request fulfilled, document follows')
-EXPECTED_500 = (500, 'Internal Server Error',
-                'The server encountered an unexpected condition which prevented it from fulfilling the request.')
+EXPECTED_500 = (
+    500,
+    'Internal Server Error',
+    'The server encountered an unexpected condition which '
+    'prevented it from fulfilling the request.',
+)
 EXPECTED_404 = (404, 'Not Found', 'Nothing matches the given URI')
 EXPECTED_444 = (444, 'Non-existent reason', '')
 
@@ -50,7 +54,8 @@ EXPECTED_444 = (444, 'Non-existent reason', '')
     ]
 )
 def test_valid_status(status, expected_status):
-    """Check valid int, string and http_client-constants statuses processing."""
+    """Check valid int, string and http_client-constants
+    statuses processing."""
     assert httputil.valid_status(status) == expected_status
 
 
@@ -58,7 +63,11 @@ def test_valid_status(status, expected_status):
     'status_code,error_msg',
     [
         ('hey', "Illegal response status from server ('hey' is non-numeric)."),
-        ({'hey': 'hi'}, "Illegal response status from server ({'hey': 'hi'} is non-numeric)."),
+        (
+            {'hey': 'hi'},
+            'Illegal response status from server '
+            "({'hey': 'hi'} is non-numeric).",
+        ),
         (1, 'Illegal response status from server (1 is out of range).'),
         (600, 'Illegal response status from server (600 is out of range).'),
     ]

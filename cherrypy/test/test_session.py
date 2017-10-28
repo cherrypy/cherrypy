@@ -26,7 +26,8 @@ def http_methods_allowed(methods=['GET', 'HEAD']):
         cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
 
-cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)  # noqa: E305
+
+cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 
 def setup_server():
@@ -388,7 +389,8 @@ class SessionTest(helper.CPWebCase):
         assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
-        assert len(sessions.RamSession.locks) == 1, 'Clean up should not remove active lock'
+        msg = 'Clean up should not remove active lock'
+        assert len(sessions.RamSession.locks) == 1, msg
         t.join()
 
 

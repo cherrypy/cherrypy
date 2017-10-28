@@ -8,6 +8,7 @@ from unittest import mock
 
 import six
 from six.moves.http_client import HTTPConnection
+from six.moves import urllib
 
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection, ntob
@@ -116,7 +117,11 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
         # `_get_content_length` is needed for Python 3.6+
-        with mock.patch.object(c, '_get_content_length', lambda body, method: None, create=True):
+        with mock.patch.object(
+                c,
+                '_get_content_length',
+                lambda body, method: None,
+                create=True):
             # `_set_content_length` is needed for Python 2.7-3.5
             with mock.patch.object(c, '_set_content_length', create=True):
                 c.request('POST', '/')
@@ -148,7 +153,8 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(', '.join(['%s * 65536' % c for c in alphabet]))  # noqa: F812
+        parts = ['%s * 65536' % ch for ch in alphabet]
+        self.assertBody(', '.join(parts))
 
     def test_post_filename_with_special_characters(self):
         '''Testing that we can handle filenames with special characters. This
@@ -197,11 +203,15 @@ class HTTPTests(helper.CPWebCase):
         c.close()
 
     def test_request_line_split_issue_1220(self):
-        Request_URI = (
-            '/index?intervenant-entreprise-evenement_classaction=evenement-mailremerciements'
-            '&_path=intervenant-entreprise-evenement&intervenant-entreprise-evenement_action-id=19404'
-            '&intervenant-entreprise-evenement_id=19404&intervenant-entreprise_id=28092'
-        )
+        params = {
+            'intervenant-entreprise-evenement_classaction':
+                'evenement-mailremerciements',
+            '_path': 'intervenant-entreprise-evenement',
+            'intervenant-entreprise-evenement_action-id': 19404,
+            'intervenant-entreprise-evenement_id': 19404,
+            'intervenant-entreprise_id': 28092,
+        }
+        Request_URI = '/index?' + urllib.parse.urlencode(params)
         self.assertEqual(len('GET %s HTTP/1.1\r\n' % Request_URI), 256)
         self.getPage(Request_URI)
         self.assertBody('Hello world!')

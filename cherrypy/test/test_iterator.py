@@ -139,7 +139,8 @@ class IteratorTest(helper.CPWebCase):
             headers = response.getheaders()
             for header_name, header_value in headers:
                 if header_name.lower() == 'content-length':
-                    assert header_value == six.text_type(1024 * 16 * 256), header_value
+                    expected = six.text_type(1024 * 16 * 256)
+                    assert header_value == expected, header_value
                     break
             else:
                 raise AssertionError('No Content-Length header found')

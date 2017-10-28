@@ -344,7 +344,8 @@ class Bus(object):
             if (
                     t != threading.currentThread() and
                     not isinstance(t, threading._MainThread) and
-                    # Note that any dummy (external) threads are always daemonic.
+                    # Note that any dummy (external) threads are
+                    # always daemonic.
                     not t.daemon
             ):
                 self.log('Waiting for thread %s.' % t.getName())
@@ -503,7 +504,7 @@ class Bus(object):
 
             :seealso: https://github.com/cherrypy/cherrypy/issues/1506
             :seealso: https://github.com/cherrypy/cherrypy/issues/1512
-            :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
+            :ref: http://bit.ly/2gK6bXK
             """
             raise NotImplementedError
         else:

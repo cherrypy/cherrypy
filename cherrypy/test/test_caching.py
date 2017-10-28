@@ -285,7 +285,10 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader('Expires', 'Sun, 28 Jan 2007 00:00:00 GMT')
 
     def _assert_resp_len_and_enc_for_gzip(self, uri):
-        """Test that after querying gzipped content it's remains valid in cache and available non-gzipped as well."""
+        """
+        Test that after querying gzipped content it's remains valid in
+        cache and available non-gzipped as well.
+        """
         ACCEPT_GZIP_HEADERS = [('Accept-Encoding', 'gzip')]
         content_len = None
 

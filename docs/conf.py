@@ -178,8 +178,12 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-    'index': ['about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html'],
-    '**': ['about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html'],
+    'index': [
+        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+    ],
+    '**': [
+        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+    ],
 }
 
 # Additional templates that should be rendered to pages, maps page names to
@@ -290,9 +294,11 @@ link_files = {
                 url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
             ),
             dict(
-                # FIXME: currently this puts #v1.2.3 style version into URL, but it should be v1-2-3
+                # FIXME: currently this puts #v1.2.3 style version
+                # into URL, but it should be v1-2-3
                 pattern=r'cheroot v?(?P<cheroot_version>\d+(\.\d+){1,2})',
-                url='https://cheroot.readthedocs.io/en/latest/history.html#v{cheroot_version}',
+                url='https://cheroot.readthedocs.io'
+                    '/en/latest/history.html#v{cheroot_version}',
             ),
         ],
     ),
