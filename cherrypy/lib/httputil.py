@@ -399,10 +399,6 @@ class CaseInsensitiveDict(dict):
     def get(self, key, default=None):
         return dict.get(self, str(key).title(), default)
 
-    if hasattr({}, 'has_key'):
-        def has_key(self, key):
-            return str(key).title() in self
-
     def update(self, E):
         for k in E.keys():
             self[str(k).title()] = E[k]
