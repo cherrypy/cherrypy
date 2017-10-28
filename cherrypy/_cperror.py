@@ -199,9 +199,6 @@ class HTTPRedirect(CherryPyException):
     See :ref:`redirectingpost` for additional caveats.
     """
 
-    status = None
-    """The integer HTTP status code to emit."""
-
     urls = None
     """The list of URL's to emit."""
 
@@ -245,6 +242,7 @@ class HTTPRedirect(CherryPyException):
 
     @property
     def status(self):
+        """The integer HTTP status code to emit."""
         urls, status = self.args[:2]
         return status
 
