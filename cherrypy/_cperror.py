@@ -243,7 +243,7 @@ class HTTPRedirect(CherryPyException):
     @property
     def status(self):
         """The integer HTTP status code to emit."""
-        urls, status = self.args[:2]
+        _, status = self.args[:2]
         return status
 
     def set_response(self):
