@@ -275,7 +275,7 @@ class AppResponse(object):
 
             self.iter_response = iter(r.body)
             self.write = start_response(outstatus, outheaders)
-        except Exception:
+        except BaseException:
             self.close()
             raise
 
