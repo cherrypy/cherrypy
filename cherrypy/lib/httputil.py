@@ -12,11 +12,7 @@ import email.utils
 import re
 from binascii import b2a_base64
 from cgi import parse_header
-try:
-    # Python 3
-    from email.header import decode_header
-except ImportError:
-    from email.Header import decode_header
+from email.header import decode_header
 
 import six
 from six.moves import range
