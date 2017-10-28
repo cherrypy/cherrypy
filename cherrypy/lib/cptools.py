@@ -585,20 +585,13 @@ def accept(media=None, debug=False):
 
 class MonitoredHeaderMap(_httputil.HeaderMap):
 
+    def transform_key(self, key):
+        self.accessed_headers.add(key)
+        return super(MonitoredHeaderMap, self).transform_key(key)
+
     def __init__(self):
         self.accessed_headers = set()
-
-    def __getitem__(self, key):
-        self.accessed_headers.add(key)
-        return _httputil.HeaderMap.__getitem__(self, key)
-
-    def __contains__(self, key):
-        self.accessed_headers.add(key)
-        return _httputil.HeaderMap.__contains__(self, key)
-
-    def get(self, key, default=None):
-        self.accessed_headers.add(key)
-        return _httputil.HeaderMap.get(self, key, default=default)
+        super(MonitoredHeaderMap, self).__init__()
 
 
 def autovary(ignore=None, debug=False):
