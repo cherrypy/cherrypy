@@ -22,8 +22,10 @@ class CPWSGIHTTPRequest(cheroot.server.HTTPRequest):
         """Initialize HTTP request container instance.
 
         Args:
-            server (cheroot.server.HTTPServer): web server object receiving this request
-            conn (cheroot.server.HTTPConnection): HTTP connection object for this request
+            server (cheroot.server.HTTPServer):
+                web server object receiving this request
+            conn (cheroot.server.HTTPConnection):
+                HTTP connection object for this request
         """
         super(CPWSGIHTTPRequest, self).__init__(
             server, conn, proxy_mode=True
@@ -39,7 +41,8 @@ class CPWSGIServer(cheroot.wsgi.Server):
     and apply some attributes from config -> cherrypy.server -> wsgi.Server.
     """
 
-    version = 'CherryPy/' + cherrypy.__version__ + ' ' + cheroot.wsgi.Server.version
+    fmt = 'CherryPy/{cherrypy.__version__} {cheroot.wsgi.Server.version}'
+    version = fmt.format(**globals())
 
     def __init__(self, server_adapter=cherrypy.server):
         """Initialize CPWSGIServer instance.

@@ -532,7 +532,7 @@ def get_error_page(status, **kwargs):
             else:
                 # Load the template from this path.
                 template = tonative(open(error_page, 'rb').read())
-        except:
+        except Exception:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']
             if m:

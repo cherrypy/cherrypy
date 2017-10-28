@@ -334,7 +334,9 @@ class _GlobalLogManager(_cplogging.LogManager):
     """
 
     def __call__(self, *args, **kwargs):
-        """Log the given message to the app.log or global log as appropriate."""
+        """
+        Log the given message to the app.log or global log as appropriate.
+        """
         # Do NOT use try/except here. See
         # https://github.com/cherrypy/cherrypy/issues/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
@@ -344,7 +346,9 @@ class _GlobalLogManager(_cplogging.LogManager):
         return log.error(*args, **kwargs)
 
     def access(self):
-        """Log an access message to the app.log or global log as appropriate."""
+        """
+        Log an access message to the app.log or global log as appropriate.
+        """
         try:
             return request.app.log.access()
         except AttributeError:
