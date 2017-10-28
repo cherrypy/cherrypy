@@ -6,6 +6,7 @@ import socket
 from six.moves.http_client import HTTPConnection
 
 import pytest
+from path import Path
 
 import cherrypy
 from cherrypy._cpcompat import (
@@ -144,7 +145,8 @@ class SessionTest(helper.CPWebCase):
         # Clean up sessions.
         for fname in os.listdir(localDir):
             if fname.startswith(sessions.FileSession.SESSION_PREFIX):
-                os.unlink(os.path.join(localDir, fname))
+                path = Path(localDir) / fname
+                path.remove_p()
 
     @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
@@ -290,7 +292,6 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/iredir', self.cookies)
         self.assertBody('FileSession')
 
-    @pytest.mark.xfail(reason='#1540')
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
@@ -300,7 +301,6 @@ class SessionTest(helper.CPWebCase):
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
-    @pytest.mark.xfail(reason='#1557')
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
         self.assertErrorPage(404, "The path '/unknown/page' was not found.")
