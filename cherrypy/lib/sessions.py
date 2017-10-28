@@ -423,7 +423,11 @@ class RamSession(Session):
 
         # added to remove obsolete lock objects
         for _id in list(self.locks):
-            if _id not in self.cache and self.locks[_id].acquire(blocking=False):
+            locked = (
+                _id not in self.cache
+                and self.locks[_id].acquire(blocking=False)
+            )
+            if locked:
                 lock = self.locks.pop(_id)
                 lock.release()
 
@@ -484,7 +488,9 @@ class FileSession(Session):
         if isinstance(self.lock_timeout, (int, float)):
             self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
         if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
-            raise ValueError('Lock timeout must be numeric seconds or a timedelta instance.')
+            raise ValueError(
+                'Lock timeout must be numeric seconds or a timedelta instance.'
+            )
 
     @classmethod
     def setup(cls, **kwargs):
@@ -572,7 +578,11 @@ class FileSession(Session):
         now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
-            if fname.startswith(self.SESSION_PREFIX) and not fname.endswith(self.LOCK_SUFFIX):
+            have_session = (
+                fname.startswith(self.SESSION_PREFIX)
+                and not fname.endswith(self.LOCK_SUFFIX)
+            )
+            if have_session:
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
                 path = os.path.join(self.storage_path, fname)

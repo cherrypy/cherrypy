@@ -95,7 +95,7 @@ class NamespaceSet(dict):
                     try:
                         for k, v in ns_confs.get(ns, {}).items():
                             callable(k, v)
-                    except:
+                    except Exception:
                         # The exceptional case is handled here
                         no_exc = False
                         if exit is None:

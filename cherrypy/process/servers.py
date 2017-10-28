@@ -232,7 +232,7 @@ class ServerAdapter(object):
             self.interrupt = sys.exc_info()[1]
             self.bus.exit()
             raise
-        except:
+        except Exception:
             self.interrupt = sys.exc_info()[1]
             self.bus.log('Error in HTTP server: shutting down',
                          traceback=True, level=40)
@@ -252,7 +252,10 @@ class ServerAdapter(object):
             # (for socket-activation the port will be managed by systemd )
             if isinstance(self.bind_addr, tuple):
                 with _safe_wait(*self.bound_addr):
-                    portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
+                    portend.occupied(
+                        *self.bound_addr,
+                        timeout=Timeouts.occupied,
+                    )
 
     @property
     def bound_addr(self):

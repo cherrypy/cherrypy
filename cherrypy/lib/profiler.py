@@ -51,7 +51,11 @@ try:
         """
         filename, line, name = func_name
         if filename.endswith('__init__.py'):
-            return os.path.basename(filename[:-12]) + filename[-12:], line, name
+            return (
+                os.path.basename(filename[:-12]) + filename[-12:],
+                line,
+                name,
+            )
         return os.path.basename(filename), line, name
 
     pstats.func_strip_path = new_func_strip_path

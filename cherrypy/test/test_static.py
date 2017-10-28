@@ -159,7 +159,7 @@ class StaticTest(helper.CPWebCase):
             if os.path.exists(f):
                 try:
                     os.unlink(f)
-                except:
+                except Exception:
                     pass
 
     def test_static(self):

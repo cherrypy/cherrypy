@@ -354,7 +354,7 @@ class PipelineTests(helper.CPWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
+        except Exception:
             if not isinstance(sys.exc_info()[1],
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
@@ -387,7 +387,7 @@ class PipelineTests(helper.CPWebCase):
         response = conn.response_class(conn.sock, method='GET')
         try:
             response.begin()
-        except:
+        except Exception:
             if not isinstance(sys.exc_info()[1],
                               (socket.error, BadStatusLine)):
                 self.fail("Writing to timed out socket didn't fail"
