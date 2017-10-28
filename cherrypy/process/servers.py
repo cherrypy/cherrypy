@@ -246,15 +246,16 @@ class ServerAdapter(object):
                 raise self.interrupt
             time.sleep(.1)
 
-        # Wait for port to be occupied
+        # bypass check when LISTEN_PID is set
         if os.environ.get('LISTEN_PID', None):
             return
 
-        # Wait for port to be occupied if not running via socket-activation
-        # (for socket-activation the port will be managed by systemd )
+        # bypass check when running via socket-activation
+        # (for socket-activation the port will be managed by systemd)
         if not isinstance(self.bind_addr, tuple):
             return
 
+        # wait for port to be occupied
         with _safe_wait(*self.bound_addr):
             portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
 
