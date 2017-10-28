@@ -351,7 +351,7 @@ using the http://localhost:8080/static/css/style.css URL.
        def index(self):
            return """<html>
              <head>
-               <link href="/static/css/style.css" rel="stylesheet">
+               <link href="/public/css/style.css" rel="stylesheet">
              </head>
              <body>
                <form method="get" action="generate">
