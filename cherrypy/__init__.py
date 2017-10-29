@@ -89,6 +89,7 @@ try:
 except ImportError:
     engine = process.bus
 
+from . import _cpchecker
 
 __all__ = (
     'HTTPError', 'HTTPRedirect', 'InternalRedirect',
@@ -394,6 +395,5 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)
