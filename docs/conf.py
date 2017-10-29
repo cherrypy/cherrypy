@@ -165,7 +165,9 @@ def mock_pywin32():
     ]
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = mock.MagicMock()
-mock_pywin32()  # noqa: E305
+
+
+mock_pywin32()
 
 link_files = {
     '../CHANGES.rst': dict(
