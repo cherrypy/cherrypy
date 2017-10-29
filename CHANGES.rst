@@ -1,6 +1,9 @@
 v11.1.0
 -------
 
+* #1611: Expose default status logic for a redirect as
+  ``HTTPRedirect.default_status``.
+
 * #1615: ``HTTPRedirect.status`` is now an instance property and
   derived from the value in ``args``. Although it was previously
   possible to set the property on an instance, and this change
