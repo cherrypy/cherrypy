@@ -13,6 +13,26 @@ v11.1.0
 * #1627: Fixed issue in proxy tool where more than one port would
   appear in the ``request.base`` and thus in ``cherrypy.url``.
 
+* #1645: Added new log format markers:
+
+  - ``i`` holds a per-request UUID4
+  - ``z`` outputs UTC time in format of RFC 3339
+  - ``cherrypy._cprequest.Request.unique_id.uuid4`` now has lazily
+    invocable UUID4
+
+* #1646: Improve http status conversion helper.
+
+* #1638: Always use backslash for path separator when processing
+  paths in staticdir.
+
+* #1190: Fix gzip, caching, and staticdir tools integration. Makes
+  cache of gzipped content valid.
+
+* Requires cheroot 5.8.3 or later.
+
+* Also, many improvements around continuous integration and code
+  quality checks.
+
 v11.0.0
 -------
 
