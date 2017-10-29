@@ -2,6 +2,7 @@ import os
 import threading
 import time
 import socket
+import importlib
 
 from six.moves.http_client import HTTPConnection
 
@@ -398,7 +399,7 @@ class SessionTest(helper.CPWebCase):
 
 
 try:
-    import memcache  # NOQA
+    importlib.import_module('memcache')
 
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
