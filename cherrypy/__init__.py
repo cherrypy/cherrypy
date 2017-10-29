@@ -141,7 +141,9 @@ class _TimeoutMonitor(process.plugins.Monitor):
         """
         for req, resp in self.servings:
             resp.check_timeout()
-engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
+
+
+engine.timeout_monitor = _TimeoutMonitor(engine)
 engine.timeout_monitor.subscribe()
 
 engine.autoreload = process.plugins.Autoreloader(engine)
@@ -169,7 +171,8 @@ class _HandleSignalsPlugin(object):
         if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
-engine.signals = _HandleSignalsPlugin(engine)  # noqa: E305
+
+engine.signals = _HandleSignalsPlugin(engine)
 
 
 server = _cpserver.Server()
@@ -233,7 +236,8 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-serving = _Serving()  # noqa: E305
+
+serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
@@ -302,7 +306,9 @@ response = _ThreadLocalProxy('response')
 
 class _ThreadData(_local):
     """A container for thread-specific data."""
-thread_data = _ThreadData()  # noqa: E305
+
+
+thread_data = _ThreadData()
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
@@ -315,7 +321,8 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
         thing = getattr(serving, thing.__attrname__)
     return _pydoc._builtin_resolve(thing, forceload)
 
-try:  # noqa: E305
+
+try:
     import pydoc as _pydoc
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve

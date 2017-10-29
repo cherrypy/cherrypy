@@ -138,7 +138,9 @@ class _StateEnum(object):
         if isinstance(value, self.State):
             value.name = key
         object.__setattr__(self, key, value)
-states = _StateEnum()  # noqa: E305
+
+
+states = _StateEnum()
 states.STOPPED = states.State()
 states.STARTING = states.State()
 states.STARTED = states.State()
@@ -591,4 +593,5 @@ class Bus(object):
             msg += '\n' + ''.join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
-bus = Bus()  # noqa: E305
+
+bus = Bus()

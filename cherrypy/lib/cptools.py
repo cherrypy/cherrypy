@@ -239,7 +239,9 @@ def response_headers(headers=None, debug=False):
                      'TOOLS.RESPONSE_HEADERS')
     for name, value in (headers or []):
         cherrypy.serving.response.headers[name] = value
-response_headers.failsafe = True  # noqa: E305
+
+
+response_headers.failsafe = True
 
 
 def referer(pattern, accept=True, accept_missing=False, error=403,
@@ -408,7 +410,9 @@ def session_auth(**kwargs):
     for k, v in kwargs.items():
         setattr(sa, k, v)
     return sa.run()
-session_auth.__doc__ = (  # noqa: E305
+
+
+session_auth.__doc__ = (
     """Session authentication hook.
 
     Any attribute of the SessionAuth class may be overridden via a keyword arg

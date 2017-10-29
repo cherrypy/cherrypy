@@ -216,7 +216,8 @@ class AcceptElement(HeaderElement):
         else:
             return self.qvalue < other.qvalue
 
-RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')  # noqa: E305
+
+RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
 def header_elements(fieldname, fieldvalue):  # noqa: E302
     """Return a sorted HeaderElement list from a comma-separated header string.
     """
