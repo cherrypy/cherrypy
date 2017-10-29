@@ -295,10 +295,11 @@ class _ThreadLocalProxy(object):
     # Python 3
     __bool__ = __nonzero__
 
+
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')  # noqa: E305
+request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
