@@ -1,8 +1,9 @@
 v11.2.0
 -------
 
-* Added ``cherrypy.engine.subscribed``, providing syntactic sugar
-  for decorating a callback for ``cherrypy.engine.subscribe``.
+* ``cherrypy.engine.subscribe`` now may be called without a
+  callback, in which case it returns a decorator expecting the
+  callback.
 
 v11.1.0
 -------

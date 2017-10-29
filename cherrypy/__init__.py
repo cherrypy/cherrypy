@@ -367,7 +367,7 @@ log.error_file = ''
 log.access_file = ''
 
 
-@engine.subscribed('log')
+@engine.subscribe('log')
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
 
