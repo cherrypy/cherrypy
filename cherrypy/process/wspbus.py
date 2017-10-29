@@ -193,7 +193,7 @@ class Bus(object):
         self._priorities[(channel, callback)] = priority
 
     def subscribed(self, *args, **kwargs):
-        """Decorator factory for self.subscribe"""
+        """Generate decorator for self.subscribe."""
         return functools.partial(self.subscribe, *args, **kwargs)
 
     def unsubscribe(self, channel, callback):
