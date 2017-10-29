@@ -192,7 +192,7 @@ class Bus(object):
         if callback is None:
             return functools.partial(
                 self.subscribe,
-                channel=channel,
+                channel,
                 priority=priority,
             )
 
