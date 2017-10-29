@@ -15,7 +15,7 @@ from cgi import parse_header
 from email.header import decode_header
 
 import six
-from six.moves import range
+from six.moves import range, builtins
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
 from cherrypy._cpcompat import ntob, ntou
@@ -137,7 +137,7 @@ class HeaderElement(object):
         self.params = params
 
     def __cmp__(self, other):
-        return cmp(self.value, other.value)  # noqa: F821
+        return builtins.cmp(self.value, other.value)
 
     def __lt__(self, other):
         return self.value < other.value
@@ -205,9 +205,9 @@ class AcceptElement(HeaderElement):
         return float(val)
 
     def __cmp__(self, other):
-        diff = cmp(self.qvalue, other.qvalue)  # noqa: F821
+        diff = builtins.cmp(self.qvalue, other.qvalue)
         if diff == 0:
-            diff = cmp(str(self), str(other))  # noqa: F821
+            diff = builtins.cmp(str(self), str(other))
         return diff
 
     def __lt__(self, other):
