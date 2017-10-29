@@ -367,9 +367,10 @@ log.error_file = ''
 log.access_file = ''
 
 
+@engine.subscribed('log')
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
-engine.subscribe('log', _buslog)  # noqa: E305
+
 
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.

@@ -79,6 +79,7 @@ import time
 import traceback as _traceback
 import warnings
 import subprocess
+import functools
 
 import six
 
@@ -190,6 +191,10 @@ class Bus(object):
         if priority is None:
             priority = getattr(callback, 'priority', 50)
         self._priorities[(channel, callback)] = priority
+
+    def subscribed(self, *args, **kwargs):
+        """Decorator factory for self.subscribe"""
+        return functools.partial(self.subscribe, *args, **kwargs)
 
     def unsubscribe(self, channel, callback):
         """Discard the given callback (if present)."""

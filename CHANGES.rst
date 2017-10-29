@@ -1,3 +1,9 @@
+v11.2.0
+-------
+
+* Added ``cherrypy.engine.subscribed``, providing syntactic sugar
+  for decorating a callback for ``cherrypy.engine.subscribe``.
+
 v11.1.0
 -------
 
