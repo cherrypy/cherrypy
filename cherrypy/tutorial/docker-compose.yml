@@ -1,15 +1,14 @@
 version: "3.3"
 
 services:
-  cherrpy:
+  cherrypy:
     build:
       context: .
       cache_from:
       - python:3.6-alpine
-    image: cherrypy
+    image: cherrypy/cherrypy
     volumes:
-      - ".:/tutorial"
+    - ".:/tutorial"
     ports:
     - "8080:8080"
-    # command could be some develoment server
-    command: python $CHERRYPY_APP
+    command: python ${CHERRYPY_APP:-tut01_helloworld.py}
