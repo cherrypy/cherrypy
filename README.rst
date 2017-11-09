@@ -12,6 +12,10 @@
 
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
 
+.. image:: http://badges.github.io/stability-badges/dist/stable.svg
+   :target: http://github.com/badges/stability-badges
+   :alt: stable
+
 .. image:: https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715
    :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade
 
