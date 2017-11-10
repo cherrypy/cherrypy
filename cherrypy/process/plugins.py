@@ -393,28 +393,19 @@ class Daemonizer(SimplePlugin):
             "{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n"
         )
 
-        # Do first fork.
-        try:
-            pid = os.fork()
-            if pid > 0:
-                # This is the parent; exit.
-                logger('Forking once.')
-                os._exit(0)
-        except OSError as exc:
-            # Python raises OSError rather than returning negative numbers.
-            sys.exit(error_tmpl.format(sys=sys, exc=exc, n=1))
-
-        os.setsid()
-
-        # Do second fork
-        try:
-            pid = os.fork()
-            if pid > 0:
-                # This is the parent; exit.
-                logger('Forking twice.')
-                os._exit(0)
-        except OSError as exc:
-            sys.exit(error_tmpl.format(sys=sys, exc=exc, n=2))
+        for fork in range(2):
+            msg = ['Forking once.', 'Forking twice.'][fork]
+            try:
+                pid = os.fork()
+                if pid > 0:
+                    # This is the parent; exit.
+                    logger(msg)
+                    os._exit(0)
+            except OSError as exc:
+                # Python raises OSError rather than returning negative numbers.
+                sys.exit(error_tmpl.format(sys=sys, exc=exc, n=fork + 1))
+            if fork == 0:
+                os.setsid()
 
         os.umask(0)
 
