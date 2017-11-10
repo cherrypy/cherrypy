@@ -102,7 +102,7 @@ def setup(req):
     engine.autoreload.unsubscribe()
     cherrypy.server.unsubscribe()
 
-    @engine.subscribed('log')
+    @engine.subscribe('log')
     def _log(msg, level):
         newlevel = apache.APLOG_ERR
         if logging.DEBUG >= level:

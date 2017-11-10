@@ -35,7 +35,7 @@ class Root:
         cherrypy.engine.exit()
 
 
-@cherrypy.engine.subscribed('start', priority=100)
+@cherrypy.engine.subscribe('start', priority=100)
 def unsub_sig():
     cherrypy.log('unsubsig: %s' % cherrypy.config.get('unsubsig', False))
     if cherrypy.config.get('unsubsig', False):
@@ -53,13 +53,13 @@ def unsub_sig():
         signal(SIGTERM, old_term_handler)
 
 
-@cherrypy.engine.subscribed('start', priority=6)
+@cherrypy.engine.subscribe('start', priority=6)
 def starterror():
     if cherrypy.config.get('starterror', False):
         1 / 0
 
 
-@cherrypy.engine.subscribed('start', priority=6)
+@cherrypy.engine.subscribe('start', priority=6)
 def log_test_case_name():
     if cherrypy.config.get('test_case_name', False):
         cherrypy.log('STARTED FROM: %s' %

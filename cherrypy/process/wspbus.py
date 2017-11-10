@@ -185,18 +185,25 @@ class Bus(object):
         )
         self._priorities = {}
 
-    def subscribe(self, channel, callback, priority=None):
-        """Add the given callback at the given channel (if not present)."""
+    def subscribe(self, channel, callback=None, priority=None):
+        """Add the given callback at the given channel (if not present).
+
+        If callback is None, return a partial suitable for decorating
+        the callback.
+        """
+        if callback is None:
+            return functools.partial(
+                self.subscribe,
+                channel,
+                priority=priority,
+            )
+
         ch_listeners = self.listeners.setdefault(channel, set())
         ch_listeners.add(callback)
 
         if priority is None:
             priority = getattr(callback, 'priority', 50)
         self._priorities[(channel, callback)] = priority
-
-    def subscribed(self, *args, **kwargs):
-        """Generate decorator for self.subscribe."""
-        return functools.partial(self.subscribe, *args, **kwargs)
 
     def unsubscribe(self, channel, callback):
         """Discard the given callback (if present)."""
