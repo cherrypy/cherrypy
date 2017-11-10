@@ -390,7 +390,7 @@ class Daemonizer(SimplePlugin):
         sys.stderr.flush()
 
         error_tmpl = (
-            "{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n"
+            '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
         )
 
         for fork in range(2):
