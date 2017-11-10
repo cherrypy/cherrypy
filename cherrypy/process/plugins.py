@@ -396,11 +396,8 @@ class Daemonizer(SimplePlugin):
         # Do first fork.
         try:
             pid = os.fork()
-            if pid == 0:
-                # This is the child process. Continue.
-                pass
-            else:
-                # This is the first parent. Exit, now that we've forked.
+            if pid > 0:
+                # This is the parent; exit.
                 logger('Forking once.')
                 os._exit(0)
         except OSError as exc:
@@ -413,8 +410,9 @@ class Daemonizer(SimplePlugin):
         try:
             pid = os.fork()
             if pid > 0:
+                # This is the parent; exit.
                 logger('Forking twice.')
-                os._exit(0)  # Exit second parent
+                os._exit(0)
         except OSError as exc:
             sys.exit(error_tmpl.format(sys=sys, exc=exc, n=2))
 
