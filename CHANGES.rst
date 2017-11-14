@@ -5,6 +5,9 @@ v11.2.0
   callback, in which case it returns a decorator expecting the
   callback.
 
+* #1656: Images are now compressed using lossless compression
+  and consume less space.
+
 v11.1.0
 -------
 
