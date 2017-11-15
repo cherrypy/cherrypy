@@ -325,55 +325,12 @@ the client. Because of the issues outlined above, **it is usually better to
 flatten (buffer) content rather than stream content**. Do otherwise only when
 the benefits of streaming outweigh the risks.
 
-Response timeouts
-#################
+Response timing
+###############
 
-CherryPy responses include 3 attributes related to time:
+CherryPy responses include an attribute:
 
  * ``response.time``: the :func:`time.time` at which the response began
- * ``response.timeout``: the number of seconds to allow responses to run
- * ``response.timed_out``: a boolean indicating whether the response has
-   timed out (default False).
-
-The request processing logic inspects the value of ``response.timed_out`` at
-various stages; if it is ever True, then :class:`TimeoutError` is raised.
-You are free to do the same within your own code.
-
-Rather than calculate the difference by hand, you can call
-``response.check_timeout`` to set ``timed_out`` for you.
-
-.. note::
-
-   The default response timeout is 300 seconds.
-
-.. _timeoutmonitor:
-
-Timeout Monitor
-^^^^^^^^^^^^^^^
-
-In addition, CherryPy includes a ``cherrypy.engine.timeout_monitor`` which
-monitors all active requests in a separate thread; periodically, it calls
-``check_timeout`` on them all. It is subscribed by default. To turn it off:
-
-.. code-block:: ini
-
-    [global]
-    engine.timeout_monitor.on: False
-
-or:
-
-.. code-block:: python
-
-    cherrypy.engine.timeout_monitor.unsubscribe()
-
-You can also change the interval (in seconds) at which the timeout monitor runs:
-
-.. code-block:: ini
-
-    [global]
-    engine.timeout_monitor.frequency: 60 * 60
-
-The default is once per minute. The above example changes that to once per hour.
 
 Deal with signals
 #################

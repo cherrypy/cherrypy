@@ -7,6 +7,19 @@ v12.0.0
   recommended to monitor ``response.time`` and raise an
   exception or otherwise act accordingly.
 
+  Servers that previously disabled timeouts by invoking
+  ``cherrypy.engine.timeout_monitor.unsubscribe()`` will now
+  crash. For forward-compatibility with this release on older
+  versions of CherryPy, disable
+  timeouts using the config option::
+
+    'engine.timeout_monitor.on': False,
+
+  Or test for the presence of the timeout_monitor attribute::
+
+    with contextlib2.suppress(AttributeError):
+        cherrypy.engine.timeout_monitor.unsubscribe()
+
 v11.2.0
 -------
 
@@ -288,7 +301,7 @@ v6.2.0
 
 * #1441: Added tool to automatically convert request
   params based on type annotations (primarily in
-  Python 3). For example:
+  Python 3). For example::
 
     @cherrypy.tools.params()
     def resource(self, limit: int):

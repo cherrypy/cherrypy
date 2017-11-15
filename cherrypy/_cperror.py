@@ -142,7 +142,7 @@ class CherryPyException(Exception):
 
 class TimeoutError(CherryPyException):
 
-    """Exception raised when Response.timed_out is detected."""
+    """Exception suitable for signaling a response timeout."""
     pass
 
 
