@@ -140,12 +140,6 @@ class CherryPyException(Exception):
     pass
 
 
-class TimeoutError(CherryPyException):
-
-    """Exception suitable for signaling a response timeout."""
-    pass
-
-
 class InternalRedirect(CherryPyException):
 
     """Exception raised to switch to the handler for a different URL.

@@ -20,6 +20,12 @@ v12.0.0
     with contextlib2.suppress(AttributeError):
         cherrypy.engine.timeout_monitor.unsubscribe()
 
+  Additionally, the ``TimeoutError`` exception has been removed,
+  as it's no longer called anywhere. If your application
+  benefits from this Exception, please comment in the linked
+  ticket describing the use case, and we'll help devise a
+  solution or bring the exception back.
+
 v11.2.0
 -------
 
