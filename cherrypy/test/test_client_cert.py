@@ -23,8 +23,9 @@ SERVER_KEY = join(SSL_DIR, 'server.key')
 SERVER_CERT = join(SSL_DIR, 'server.cert')
 
 
-def subdict(d, key_predicate):
-    return {k: v for k, v in d.items() if key_predicate(k)}
+def subdict(dict_, key_predicate):
+    """Return a subset of a dictionary.  Only keys matching `key_predicate` are included."""
+    return {k: v for k, v in dict_.items() if key_predicate(k)}
 
 
 class ClientCertTests(object):
