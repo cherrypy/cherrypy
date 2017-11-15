@@ -16,7 +16,8 @@ from cherrypy.test import helper
 localDir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
-StringIOFromNative = lambda x: io.StringIO(six.text_type(x))
+def StringIOFromNative(x):
+    return io.StringIO(six.text_type(x))
 
 
 def setup_server():
@@ -147,13 +148,13 @@ class ConfigTests(helper.CPWebCase):
 
     def testConfig(self):
         tests = [
-            ('/',        'nex', 'None'),  # noqa: E241
-            ('/',        'foo', 'this'),  # noqa: E241
-            ('/',        'bar', 'that'),  # noqa: E241
-            ('/xyz',     'foo', 'this'),  # noqa: E241
-            ('/foo/',    'foo', 'this2'),  # noqa: E241
-            ('/foo/',    'bar', 'that'),  # noqa: E241
-            ('/foo/',    'bax', 'None'),  # noqa: E241
+            ('/', 'nex', 'None'),
+            ('/', 'foo', 'this'),
+            ('/', 'bar', 'that'),
+            ('/xyz', 'foo', 'this'),
+            ('/foo/', 'foo', 'this2'),
+            ('/foo/', 'bar', 'that'),
+            ('/foo/', 'bax', 'None'),
             ('/foo/bar', 'baz', "'that2'"),
             ('/foo/nex', 'baz', 'that2'),
             # If 'foo' == 'this', then the mount point '/another' leaks into

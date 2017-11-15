@@ -7,11 +7,50 @@ v12.0.0
   recommended to monitor ``response.time`` and raise an
   exception or otherwise act accordingly.
 
-v11.0.1
+v11.2.0
 -------
+
+* ``cherrypy.engine.subscribe`` now may be called without a
+  callback, in which case it returns a decorator expecting the
+  callback.
+
+* #1656: Images are now compressed using lossless compression
+  and consume less space.
+
+v11.1.0
+-------
+
+* #1611: Expose default status logic for a redirect as
+  ``HTTPRedirect.default_status``.
+
+* #1615: ``HTTPRedirect.status`` is now an instance property and
+  derived from the value in ``args``. Although it was previously
+  possible to set the property on an instance, and this change
+  prevents that possibilty, CherryPy never relied on that behavior
+  and we presume no applications depend on that interface.
 
 * #1627: Fixed issue in proxy tool where more than one port would
   appear in the ``request.base`` and thus in ``cherrypy.url``.
+
+* #1645: Added new log format markers:
+
+  - ``i`` holds a per-request UUID4
+  - ``z`` outputs UTC time in format of RFC 3339
+  - ``cherrypy._cprequest.Request.unique_id.uuid4`` now has lazily
+    invocable UUID4
+
+* #1646: Improve http status conversion helper.
+
+* #1638: Always use backslash for path separator when processing
+  paths in staticdir.
+
+* #1190: Fix gzip, caching, and staticdir tools integration. Makes
+  cache of gzipped content valid.
+
+* Requires cheroot 5.8.3 or later.
+
+* Also, many improvements around continuous integration and code
+  quality checks.
 
 v11.0.0
 -------

@@ -89,6 +89,7 @@ try:
 except ImportError:
     engine = process.bus
 
+from . import _cpchecker
 
 __all__ = (
     'HTTPError', 'HTTPRedirect', 'InternalRedirect',
@@ -142,7 +143,8 @@ class _HandleSignalsPlugin(object):
         if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
-engine.signals = _HandleSignalsPlugin(engine)  # noqa: E305
+
+engine.signals = _HandleSignalsPlugin(engine)
 
 
 server = _cpserver.Server()
@@ -206,7 +208,8 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-serving = _Serving()  # noqa: E305
+
+serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
@@ -264,10 +267,11 @@ class _ThreadLocalProxy(object):
     # Python 3
     __bool__ = __nonzero__
 
+
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')  # noqa: E305
+request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
@@ -275,7 +279,9 @@ response = _ThreadLocalProxy('response')
 
 class _ThreadData(_local):
     """A container for thread-specific data."""
-thread_data = _ThreadData()  # noqa: E305
+
+
+thread_data = _ThreadData()
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
@@ -288,7 +294,8 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
         thing = getattr(serving, thing.__attrname__)
     return _pydoc._builtin_resolve(thing, forceload)
 
-try:  # noqa: E305
+
+try:
     import pydoc as _pydoc
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
@@ -307,7 +314,11 @@ class _GlobalLogManager(_cplogging.LogManager):
     """
 
     def __call__(self, *args, **kwargs):
-        """Log the given message to the app.log or global log as appropriate."""
+        """Log the given message to the app.log or global log.
+
+        Log the given message to the app.log or global
+        log as appropriate.
+        """
         # Do NOT use try/except here. See
         # https://github.com/cherrypy/cherrypy/issues/945
         if hasattr(request, 'app') and hasattr(request.app, 'log'):
@@ -317,7 +328,11 @@ class _GlobalLogManager(_cplogging.LogManager):
         return log.error(*args, **kwargs)
 
     def access(self):
-        """Log an access message to the app.log or global log as appropriate."""
+        """Log an access message to the app.log or global log.
+
+        Log the given message to the app.log or global
+        log as appropriate.
+        """
         try:
             return request.app.log.access()
         except AttributeError:
@@ -332,9 +347,10 @@ log.error_file = ''
 log.access_file = ''
 
 
+@engine.subscribe('log')
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
-engine.subscribe('log', _buslog)  # noqa: E305
+
 
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
@@ -350,6 +366,5 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)

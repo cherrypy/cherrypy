@@ -145,7 +145,7 @@ class Application(object):
 
         try:
             req.close()
-        except:
+        except Exception:
             cherrypy.log(traceback=True, severity=40)
 
         cherrypy.serving.clear()
@@ -218,8 +218,17 @@ class Tree(object):
             app = Application(root, script_name)
 
             # If mounted at "", add favicon.ico
-            if script_name == '' and root is not None and not hasattr(root, 'favicon_ico'):
-                favicon = os.path.join(os.getcwd(), os.path.dirname(__file__), 'favicon.ico')
+            needs_favicon = (
+                script_name == ''
+                and root is not None
+                and not hasattr(root, 'favicon_ico')
+            )
+            if needs_favicon:
+                favicon = os.path.join(
+                    os.getcwd(),
+                    os.path.dirname(__file__),
+                    'favicon.ico',
+                )
                 root.favicon_ico = tools.staticfile.handler(favicon)
 
         if config:

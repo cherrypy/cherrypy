@@ -12,14 +12,10 @@ import email.utils
 import re
 from binascii import b2a_base64
 from cgi import parse_header
-try:
-    # Python 3
-    from email.header import decode_header
-except ImportError:
-    from email.Header import decode_header
+from email.header import decode_header
 
 import six
-from six.moves import range
+from six.moves import range, builtins
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
 from cherrypy._cpcompat import ntob, ntou
@@ -141,7 +137,7 @@ class HeaderElement(object):
         self.params = params
 
     def __cmp__(self, other):
-        return cmp(self.value, other.value)  # noqa: F821
+        return builtins.cmp(self.value, other.value)
 
     def __lt__(self, other):
         return self.value < other.value
@@ -209,9 +205,9 @@ class AcceptElement(HeaderElement):
         return float(val)
 
     def __cmp__(self, other):
-        diff = cmp(self.qvalue, other.qvalue)  # noqa: F821
+        diff = builtins.cmp(self.qvalue, other.qvalue)
         if diff == 0:
-            diff = cmp(str(self), str(other))  # noqa: F821
+            diff = builtins.cmp(str(self), str(other))
         return diff
 
     def __lt__(self, other):
@@ -220,8 +216,11 @@ class AcceptElement(HeaderElement):
         else:
             return self.qvalue < other.qvalue
 
-RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')  # noqa: E305
-def header_elements(fieldname, fieldvalue):  # noqa: E302
+
+RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
+
+
+def header_elements(fieldname, fieldvalue):
     """Return a sorted HeaderElement list from a comma-separated header string.
     """
     if not fieldvalue:
@@ -398,10 +397,6 @@ class CaseInsensitiveDict(dict):
 
     def get(self, key, default=None):
         return dict.get(self, str(key).title(), default)
-
-    if hasattr({}, 'has_key'):
-        def has_key(self, key):
-            return str(key).title() in self
 
     def update(self, E):
         for k in E.keys():

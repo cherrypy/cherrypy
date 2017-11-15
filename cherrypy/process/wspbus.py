@@ -79,6 +79,7 @@ import time
 import traceback as _traceback
 import warnings
 import subprocess
+import functools
 
 import six
 
@@ -93,7 +94,7 @@ _startup_cwd = os.getcwd()
 
 
 class ChannelFailures(Exception):
-    """Exception raised when errors occur in a listener during Bus.publish()."""
+    """Exception raised during errors on Bus.publish()."""
 
     delimiter = '\n'
 
@@ -137,7 +138,9 @@ class _StateEnum(object):
         if isinstance(value, self.State):
             value.name = key
         object.__setattr__(self, key, value)
-states = _StateEnum()  # noqa: E305
+
+
+states = _StateEnum()
 states.STOPPED = states.State()
 states.STARTING = states.State()
 states.STARTED = states.State()
@@ -182,8 +185,19 @@ class Bus(object):
         )
         self._priorities = {}
 
-    def subscribe(self, channel, callback, priority=None):
-        """Add the given callback at the given channel (if not present)."""
+    def subscribe(self, channel, callback=None, priority=None):
+        """Add the given callback at the given channel (if not present).
+
+        If callback is None, return a partial suitable for decorating
+        the callback.
+        """
+        if callback is None:
+            return functools.partial(
+                self.subscribe,
+                channel,
+                priority=priority,
+            )
+
         ch_listeners = self.listeners.setdefault(channel, set())
         ch_listeners.add(callback)
 
@@ -222,7 +236,7 @@ class Bus(object):
                 if exc and e.code == 0:
                     e.code = 1
                 raise
-            except:
+            except Exception:
                 exc.handle_exception()
                 if channel == 'log':
                     # Assume any further messages to 'log' will fail.
@@ -256,13 +270,13 @@ class Bus(object):
             self.log('Bus STARTED')
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             self.log('Shutting down due to error in start listener:',
                      level=40, traceback=True)
             e_info = sys.exc_info()[1]
             try:
                 self.exit()
-            except:
+            except Exception:
                 # Any stop/exit errors will be logged inside publish().
                 pass
             # Re-raise the original error
@@ -281,7 +295,7 @@ class Bus(object):
             # This isn't strictly necessary, but it's better than seeing
             # "Waiting for child threads to terminate..." and then nothing.
             self.log('Bus EXITED')
-        except:
+        except Exception:
             # This method is often called asynchronously (whether thread,
             # signal handler, console handler, or atexit handler), so we
             # can't just let exceptions propagate out unhandled.
@@ -344,7 +358,8 @@ class Bus(object):
             if (
                     t != threading.currentThread() and
                     not isinstance(t, threading._MainThread) and
-                    # Note that any dummy (external) threads are always daemonic.
+                    # Note that any dummy (external) threads are
+                    # always daemonic.
                     not t.daemon
             ):
                 self.log('Waiting for thread %s.' % t.getName())
@@ -440,7 +455,10 @@ class Bus(object):
             argv = ctypes.POINTER(char_p)()
             argc = ctypes.c_int()
 
-            ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+            ctypes.pythonapi.Py_GetArgcArgv(
+                ctypes.byref(argc),
+                ctypes.byref(argv),
+            )
 
             _argv = argv[:argc.value]
 
@@ -500,7 +518,7 @@ class Bus(object):
 
             :seealso: https://github.com/cherrypy/cherrypy/issues/1506
             :seealso: https://github.com/cherrypy/cherrypy/issues/1512
-            :ref: https://chromium.googlesource.com/infra/infra/+/69eb0279c12bcede5937ce9298020dd4581e38dd%5E!/
+            :ref: http://bit.ly/2gK6bXK
             """
             raise NotImplementedError
         else:
@@ -582,4 +600,5 @@ class Bus(object):
             msg += '\n' + ''.join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
-bus = Bus()  # noqa: E305
+
+bus = Bus()

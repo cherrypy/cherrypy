@@ -159,7 +159,7 @@ class StaticTest(helper.CPWebCase):
             if os.path.exists(f):
                 try:
                     os.unlink(f)
-                except:
+                except Exception:
                     pass
 
     def test_static(self):
@@ -191,7 +191,8 @@ class StaticTest(helper.CPWebCase):
 
     @pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only')
     def test_static_longpath(self):
-        """Test serving of a file in subdir of a Windows long-path staticdir."""
+        """Test serving of a file in subdir of a Windows long-path
+        staticdir."""
         self.getPage('/static-long/static/index.html')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html')
@@ -218,8 +219,11 @@ class StaticTest(helper.CPWebCase):
         self.getPage('/docroot')
         self.assertStatus(301)
         self.assertHeader('Location', '%s/docroot/' % self.base())
-        self.assertMatchesBody("This resource .* <a href=(['\"])%s/docroot/\\1>"
-                               '%s/docroot/</a>.' % (self.base(), self.base()))
+        self.assertMatchesBody(
+            "This resource .* <a href=(['\"])%s/docroot/\\1>"
+            '%s/docroot/</a>.'
+            % (self.base(), self.base())
+        )
 
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir

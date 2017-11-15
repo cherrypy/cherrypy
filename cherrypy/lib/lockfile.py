@@ -33,7 +33,7 @@ class UnlockError(LockError):
 
 
 # first, a default, naive locking implementation
-class LockFile(object):
+class NaiveLockFile(object):
 
     """
     A default, naive locking implementation. Always fails if the file
@@ -76,7 +76,7 @@ class SystemLockFile(object):
 
         try:
             self._lock_file()
-        except:
+        except Exception:
             self.fp.seek(1)
             self.fp.close()
             del self.fp
@@ -99,7 +99,7 @@ class SystemLockFile(object):
         """
         try:
             os.remove(self.path)
-        except:
+        except Exception:
             pass
 
     def _unlock_file(self):
@@ -123,9 +123,6 @@ class WindowsLockFile(SystemLockFile):
         except IOError:
             raise UnlockError(self.fp.name)
 
-if 'msvcrt' in globals():  # noqa: E305
-    LockFile = WindowsLockFile  # noqa: F811
-
 
 class UnixLockFile(SystemLockFile):
 
@@ -138,5 +135,9 @@ class UnixLockFile(SystemLockFile):
 
     # no need to implement _unlock_file, it will be unlocked on close()
 
-if 'fcntl' in globals():  # noqa: E305
-    LockFile = UnixLockFile
+
+LockFile = (
+    UnixLockFile if 'fcntl' in globals() else
+    WindowsLockFile if 'msvcrt' in globals() else
+    NaiveLockFile
+)

@@ -83,7 +83,7 @@ class NativeGateway(cheroot.server.Gateway):
                         response.body)
                 finally:
                     app.release_serving()
-        except:
+        except Exception:
             tb = format_exc()
             # print tb
             cherrypy.log(tb, 'NATIVE_ADAPTER', severity=logging.ERROR)

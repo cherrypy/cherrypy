@@ -60,6 +60,7 @@ install_requires = [
     'six>=1.11.0',
     'cheroot>=5.8.3',
     'portend>=2.1.1',
+    'jaraco.classes',
 ]
 
 extras_require = {
@@ -84,6 +85,7 @@ extras_require = {
         'pytest-cov',
         'pytest-sugar',
         'backports.unittest_mock',
+        'path.py',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],

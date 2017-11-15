@@ -125,6 +125,8 @@ from xml.sax import saxutils
 import six
 from six.moves import urllib
 
+from jaraco.classes.properties import classproperty
+
 import cherrypy
 from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, ntob
@@ -201,9 +203,6 @@ class HTTPRedirect(CherryPyException):
     See :ref:`redirectingpost` for additional caveats.
     """
 
-    status = None
-    """The integer HTTP status code to emit."""
-
     urls = None
     """The list of URL's to emit."""
 
@@ -211,8 +210,6 @@ class HTTPRedirect(CherryPyException):
     """The encoding when passed urls are not native strings"""
 
     def __init__(self, urls, status=None, encoding=None):
-        request = cherrypy.serving.request
-
         if isinstance(urls, text_or_bytes):
             urls = [urls]
 
@@ -229,21 +226,32 @@ class HTTPRedirect(CherryPyException):
             abs_urls.append(url)
         self.urls = abs_urls
 
-        # RFC 2616 indicates a 301 response code fits our goal; however,
-        # browser support for 301 is quite messy. Do 302/303 instead. See
-        # http://www.alanflavell.org.uk/www/post-redirect.html
-        if status is None:
-            if request.protocol >= (1, 1):
-                status = 303
-            else:
-                status = 302
-        else:
-            status = int(status)
-            if status < 300 or status > 399:
-                raise ValueError('status must be between 300 and 399.')
+        status = (
+            int(status)
+            if status is not None
+            else self.default_status
+        )
+        if not 300 <= status <= 399:
+            raise ValueError('status must be between 300 and 399.')
 
-        self.status = status
         CherryPyException.__init__(self, abs_urls, status)
+
+    @classproperty
+    def default_status(cls):
+        """
+        The default redirect status for the request.
+
+        RFC 2616 indicates a 301 response code fits our goal; however,
+        browser support for 301 is quite messy. Use 302/303 instead. See
+        http://www.alanflavell.org.uk/www/post-redirect.html
+        """
+        return 303 if cherrypy.serving.request.protocol >= (1, 1) else 302
+
+    @property
+    def status(self):
+        """The integer HTTP status code to emit."""
+        _, status = self.args[:2]
+        return status
 
     def set_response(self):
         """Modify cherrypy.response status, headers, and body to represent
@@ -532,7 +540,7 @@ def get_error_page(status, **kwargs):
             else:
                 # Load the template from this path.
                 template = tonative(open(error_page, 'rb').read())
-        except:
+        except Exception:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']
             if m:
@@ -567,11 +575,11 @@ def _be_ie_unfriendly(status):
         # Since we are issuing an HTTP error status, we assume that
         # the entity is short, and we should just collapse it.
         content = response.collapse_body()
-        l = len(content)
-        if l and l < s:
+        content_length = len(content)
+        if content_length and content_length < s:
             # IN ADDITION: the response must be written to IE
             # in one chunk or it will still get replaced! Bah.
-            content = content + (ntob(' ') * (s - l))
+            content = content + (ntob(' ') * (s - content_length))
         response.body = content
         response.headers['Content-Length'] = str(len(content))
 

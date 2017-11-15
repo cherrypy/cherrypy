@@ -17,7 +17,8 @@ def usocket_path():
     os.remove(path)
     return path
 
-USOCKET_PATH = usocket_path()  # noqa: E305
+
+USOCKET_PATH = usocket_path()
 
 
 class USocketHTTPConnection(HTTPConnection):

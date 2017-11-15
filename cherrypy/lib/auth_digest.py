@@ -31,7 +31,9 @@ __author__ = 'visteya'
 __date__ = 'April 2009'
 
 
-md5_hex = lambda s: md5(ntob(s)).hexdigest()
+def md5_hex(s):
+    return md5(ntob(s)).hexdigest()
+
 
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'
@@ -354,8 +356,8 @@ def digest_auth(realm, get_ha1, key, debug=False):
     auth_header = request.headers.get('authorization')
     nonce_is_stale = False
     if auth_header is not None:
-        with cherrypy.HTTPError.handle(
-                ValueError, 400, 'The Authorization header could not be parsed.'):
+        msg = 'The Authorization header could not be parsed.'
+        with cherrypy.HTTPError.handle(ValueError, 400, msg):
             auth = HttpDigestAuthorization(
                 auth_header, request.method, debug=debug)
 

@@ -95,7 +95,7 @@ function init() {
     <tr><th>Python Version:</th><td>%(pyversion)s</td></tr>
 </table>
 </body></html>
-"""
+"""  # noqa E501
 
 
 class Root(object):

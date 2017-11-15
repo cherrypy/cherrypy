@@ -107,7 +107,7 @@ class HookMap(dict):
                 except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
                         cherrypy.InternalRedirect):
                     exc = sys.exc_info()[1]
-                except:
+                except Exception:
                     exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True, severity=40)
         if exc:
@@ -595,7 +595,7 @@ class Request(object):
 
         except self.throws:
             raise
-        except:
+        except Exception:
             if self.throw_errors:
                 raise
             else:
@@ -615,7 +615,7 @@ class Request(object):
 
         try:
             cherrypy.log.access()
-        except:
+        except Exception:
             cherrypy.log.error(traceback=True)
 
         return response
@@ -640,7 +640,7 @@ class Request(object):
                 self.hooks.run('on_end_resource')
         except self.throws:
             raise
-        except:
+        except Exception:
             if self.throw_errors:
                 raise
             self.handle_error()

@@ -156,7 +156,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 raise cherrypy.HTTPRedirect("/some\"url/that'we/want")
 
             def url_with_xss(self):
-                raise cherrypy.HTTPRedirect("/some<script>alert(1);</script>url/that'we/want")
+                raise cherrypy.HTTPRedirect(
+                    "/some<script>alert(1);</script>url/that'we/want")
 
             def url_with_unicode(self):
                 raise cherrypy.HTTPRedirect(ntou('тест', 'utf-8'))
@@ -324,8 +325,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Make sure GET params are preserved.
         self.getPage('/redirect?id=3')
         self.assertStatus(301)
-        self.assertMatchesBody('<a href=([\'"])%s/redirect/[?]id=3\\1>'
-                               '%s/redirect/[?]id=3</a>' % (self.base(), self.base()))
+        self.assertMatchesBody(
+            '<a href=([\'"])%s/redirect/[?]id=3\\1>'
+            '%s/redirect/[?]id=3</a>' % (self.base(), self.base())
+        )
 
         if self.prefix():
             # Corner case: the "trailing slash" redirect could be tricky if
@@ -340,9 +343,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # Make sure GET params are preserved.
         self.getPage('/redirect/by_code/?code=307')
         self.assertStatus(301)
-        self.assertMatchesBody("<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
-                               '%s/redirect/by_code[?]code=307</a>'
-                               % (self.base(), self.base()))
+        self.assertMatchesBody(
+            "<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
+            '%s/redirect/by_code[?]code=307</a>'
+            % (self.base(), self.base())
+        )
 
         # If the trailing_slash tool is off, CP should just continue
         # as if the slashes were correct. But it needs some help
@@ -428,9 +433,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         def assertValidXHTML():
             from xml.etree import ElementTree
             try:
-                ElementTree.fromstring('<html><body>%s</body></html>' % self.body)
-            except ElementTree.ParseError as e:  # noqa: F841
-                self._handlewebError('automatically generated redirect did not generate well-formed html')
+                ElementTree.fromstring(
+                    '<html><body>%s</body></html>' % self.body,
+                )
+            except ElementTree.ParseError:
+                self._handlewebError(
+                    'automatically generated redirect did not '
+                    'generate well-formed html',
+                )
 
         # check redirects to URLs generated valid HTML - we check this
         # by seeing if it appears as valid XHTML.
@@ -444,7 +454,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         assertValidXHTML()
 
     def test_redirect_with_xss(self):
-        """A redirect to a URL with HTML injected should result in page contents escaped."""
+        """A redirect to a URL with HTML injected should result
+        in page contents escaped."""
         self.getPage('/redirect/url_with_xss')
         self.assertStatus(303)
         assert b'<script>' not in self.body

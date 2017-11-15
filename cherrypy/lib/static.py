@@ -1,6 +1,7 @@
 """Module with helpers for serving static files."""
 
 import os
+import platform
 import re
 import stat
 import mimetypes
@@ -314,11 +315,12 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
     branch = request.path_info[len(section) + 1:]
     branch = urllib.parse.unquote(branch.lstrip(r'\/'))
 
-    # On Windows requesting a file in sub-dir of the staticdir results
-    # in mixing of delimiter styles, eg: C:\static\js/script.js
-    # Python normally converts this but not when the staticdir is
-    # supplied in long-path notation, eg: \\?\C:\static\js/script.js
-    if os.name == 'nt':
+    # Requesting a file in sub-dir of the staticdir results
+    # in mixing of delimiter styles, e.g. C:\static\js/script.js.
+    # Windows accepts this form except not when the path is
+    # supplied in extended-path notation, e.g. \\?\C:\static\js/script.js.
+    # http://bit.ly/1vdioCX
+    if platform.system() == 'Windows':
         branch = branch.replace('/', '\\')
 
     # If branch is "", filename will end in a slash

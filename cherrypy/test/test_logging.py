@@ -114,7 +114,8 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
     )
     def testCustomLogFormat(self):
-        """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
+        """Test a customized access_log_format string, which is a
+        feature of _cplogging.LogManager.access()."""
         self.markLog()
         self.getPage('/as_string', headers=[('Referer', 'REFERER'),
                                             ('User-Agent', 'USERAGENT'),
@@ -130,11 +131,14 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         '%(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
     )
     def testTimezLogFormat(self):
-        """Test a customized access_log_format string, which is a feature of _cplogging.LogManager.access()."""
+        """Test a customized access_log_format string, which is a
+        feature of _cplogging.LogManager.access()."""
         self.markLog()
 
         expected_time = str(cherrypy._cplogging.LazyRfc3339UtcTime())
-        with mock.patch('cherrypy._cplogging.LazyRfc3339UtcTime', lambda: expected_time):
+        with mock.patch(
+                'cherrypy._cplogging.LazyRfc3339UtcTime',
+                lambda: expected_time):
             self.getPage('/as_string', headers=[('Referer', 'REFERER'),
                                                 ('User-Agent', 'USERAGENT'),
                                                 ('Host', 'HOST')])

@@ -232,7 +232,7 @@ class ServerAdapter(object):
             self.interrupt = sys.exc_info()[1]
             self.bus.exit()
             raise
-        except:
+        except Exception:
             self.interrupt = sys.exc_info()[1]
             self.bus.log('Error in HTTP server: shutting down',
                          traceback=True, level=40)
@@ -246,13 +246,18 @@ class ServerAdapter(object):
                 raise self.interrupt
             time.sleep(.1)
 
-        # Wait for port to be occupied
-        if not os.environ.get('LISTEN_PID', None):
-            # Wait for port to be occupied if not running via socket-activation
-            # (for socket-activation the port will be managed by systemd )
-            if isinstance(self.bind_addr, tuple):
-                with _safe_wait(*self.bound_addr):
-                    portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
+        # bypass check when LISTEN_PID is set
+        if os.environ.get('LISTEN_PID', None):
+            return
+
+        # bypass check when running via socket-activation
+        # (for socket-activation the port will be managed by systemd)
+        if not isinstance(self.bind_addr, tuple):
+            return
+
+        # wait for port to be occupied
+        with _safe_wait(*self.bound_addr):
+            portend.occupied(*self.bound_addr, timeout=Timeouts.occupied)
 
     @property
     def bound_addr(self):

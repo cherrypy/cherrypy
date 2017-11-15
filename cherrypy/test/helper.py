@@ -37,7 +37,8 @@ class Supervisor(object):
             setattr(self, k, v)
 
 
-log_to_stderr = lambda msg, level: sys.stderr.write(msg + os.linesep)
+def log_to_stderr(msg, level):
+    return sys.stderr.write(msg + os.linesep)
 
 
 class LocalSupervisor(Supervisor):
@@ -388,7 +389,9 @@ def _test_method_sorter(_, x, y):
     if x < y:
         return -1
     return 0
-unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter  # noqa: E305
+
+
+unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter
 
 
 def setup_client():

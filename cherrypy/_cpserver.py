@@ -95,7 +95,8 @@ class Server(ServerAdapter):
 
     instance = None
     """If not None, this should be an HTTP server instance (such as
-    cheroot.wsgi.Server) which cherrypy.server will control. Use this when you need
+    cheroot.wsgi.Server) which cherrypy.server will control.
+    Use this when you need
     more control over object instantiation than is available in the various
     configuration options."""
 
@@ -143,7 +144,8 @@ class Server(ServerAdapter):
     which declares it covers WSGI version 1.0.1 but still mandates the
     wsgi.version (1, 0)] and ('u', 0), an experimental unicode version.
     You may create and register your own experimental versions of the WSGI
-    protocol by adding custom classes to the cheroot.server.wsgi_gateways dict."""
+    protocol by adding custom classes to the cheroot.server.wsgi_gateways dict.
+    """
 
     def __init__(self):
         """Initialize Server instance."""

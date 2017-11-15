@@ -45,7 +45,11 @@ class RequestObjectTests(helper.CPWebCase):
             @cherrypy.expose
             def body_example_com_3128(self):
                 """Handle CONNECT method."""
-                return cherrypy.request.method + 'ed to ' + cherrypy.request.path_info
+                return (
+                    cherrypy.request.method
+                    + 'ed to '
+                    + cherrypy.request.path_info
+                )
 
             @cherrypy.expose
             def request_uuid4(self):
@@ -323,11 +327,17 @@ class RequestObjectTests(helper.CPWebCase):
     def test_per_request_uuid4(self):
         self.getPage('/request_uuid4')
         first_uuid4, _, second_uuid4 = self.body.decode().partition(' ')
-        assert uuid.UUID(first_uuid4, version=4) == uuid.UUID(second_uuid4, version=4)
+        assert (
+            uuid.UUID(first_uuid4, version=4)
+            == uuid.UUID(second_uuid4, version=4)
+        )
 
         self.getPage('/request_uuid4')
         third_uuid4, _, _ = self.body.decode().partition(' ')
-        assert uuid.UUID(first_uuid4, version=4) != uuid.UUID(third_uuid4, version=4)
+        assert (
+            uuid.UUID(first_uuid4, version=4)
+            != uuid.UUID(third_uuid4, version=4)
+        )
 
     def testRelativeURIPathInfo(self):
         self.getPage('/pathinfo/foo/bar')

@@ -318,7 +318,8 @@ class Entity(object):
     :attr:`request.body.parts<cherrypy._cpreqbody.Entity.parts>`. You can
     enable it with::
 
-        cherrypy.request.body.processors['multipart'] = _cpreqbody.process_multipart
+        cherrypy.request.body.processors['multipart'] = \
+            _cpreqbody.process_multipart
 
     in an ``on_start_resource`` tool.
     """
@@ -335,7 +336,8 @@ class Entity(object):
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
+    `HTTP/1.1
+    <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
     """
 
@@ -584,7 +586,8 @@ class Part(Entity):
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
+    `HTTP/1.1
+    <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
     """
 
@@ -733,7 +736,8 @@ class Part(Entity):
         self.read_lines_to_boundary(fp_out=fp_out)
         return fp_out
 
-Entity.part_class = Part  # noqa: E305
+
+Entity.part_class = Part
 
 inf = float('inf')
 
