@@ -397,7 +397,6 @@ def _test_method_sorter(_, x, y):
         return -1
     return 0
 
-
 unittest.TestLoader.sortTestMethodsUsing = _test_method_sorter
 
 # --------------------------- Spawning helpers --------------------------- #
