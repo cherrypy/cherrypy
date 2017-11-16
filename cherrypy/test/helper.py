@@ -15,11 +15,12 @@ import portend
 import pytest
 import six
 
+from cheroot.test import webtest
+
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
-from cherrypy.test import webtest
 
 log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))

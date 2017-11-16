@@ -1,3 +1,12 @@
+v11.3.0
+-------
+
+* Bump to cheroot 5.9.0.
+
+* ``cherrypy.test.webtest`` module is now merged with the
+  ``cheroot.test.webtest`` module. The CherryPy name is retained
+  for now for compatibility and will be removed eventually.
+
 v11.2.0
 -------
 
