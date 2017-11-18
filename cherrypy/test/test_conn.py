@@ -11,9 +11,11 @@ from six.moves.http_client import BadStatusLine, HTTPConnection, NotConnected
 
 import pytest
 
+from cheroot.test import webtest
+
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection, ntob, tonative
-from cherrypy.test import helper, webtest
+from cherrypy.test import helper
 
 
 timeout = 1
