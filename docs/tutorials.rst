@@ -53,7 +53,6 @@ This will display something along the following:
    The Application mounted at '' has an empty config.
 
    [24/Feb/2014:21:01:46] ENGINE Started monitor thread 'Autoreloader'.
-   [24/Feb/2014:21:01:46] ENGINE Started monitor thread '_TimeoutMonitor'.
    [24/Feb/2014:21:01:46] ENGINE Serving on http://127.0.0.1:8080
    [24/Feb/2014:21:01:46] ENGINE Bus STARTED
 
