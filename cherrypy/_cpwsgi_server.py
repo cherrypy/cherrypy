@@ -90,7 +90,8 @@ class CPWSGIServer(cheroot.wsgi.Server):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                self.server_adapter.ssl_ciphers,
+                self.server_adapter.ssl_verify_mode)
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
@@ -98,7 +99,8 @@ class CPWSGIServer(cheroot.wsgi.Server):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                self.server_adapter.ssl_ciphers,
+                self.server_adapter.ssl_verify_mode)
 
         self.stats['Enabled'] = getattr(
             self.server_adapter, 'statistics', False)
