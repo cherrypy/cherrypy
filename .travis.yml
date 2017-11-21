@@ -66,8 +66,6 @@ _base_envs:
 python:
 - 2.7
 - 3.3
-- 3.4
-- 3.5
 - 3.7-dev
 - *pypy2
 - &pypy3 pypy3.5-5.8.0
@@ -106,18 +104,6 @@ jobs:
     python: 3.3
     env:
     - PYTHON_VERSION=3.3.6
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: 3.4
-    env:
-    - PYTHON_VERSION=3.4.6
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: 3.5
-    env:
-    - PYTHON_VERSION=3.5.3
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
