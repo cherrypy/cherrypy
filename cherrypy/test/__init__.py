@@ -5,9 +5,6 @@ Regression test suite for CherryPy.
 import os
 import sys
 
-# for compatibility, expose cheroot webtest here
-webtest = __import__('cheroot.test.webtest')
-
 
 def newexit():
     os._exit(1)

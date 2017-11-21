@@ -1,3 +1,10 @@
+v12.0.1
+-------
+
+* Fixed issues importing cherrypy.test.webtest (by creating
+  a module and importing classes from cheroot) and added a
+  corresponding DeprecationWarning.
+
 v12.0.0
 -------
 
