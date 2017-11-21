@@ -127,13 +127,6 @@ jobs:
     - TOXENV=cheroot-master
     - *env_pyenv
     - *env_path
-  - <<: *osx_python_base
-    python: *pypy2
-    env:
-    - PYTHON_VERSION=pypy2.7-5.8.0
-    - *env_pyenv
-    - *env_path
-  # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
     python: *mainstream_python
     install: skip
