@@ -1,3 +1,10 @@
+v12.0.2
+-------
+
+* #1665: In request processing, when an invalid cookie is
+  received, render the actual error message reported rather
+  than guessing (sometimes incorrectly) what error occurred.
+
 v12.0.1
 -------
 

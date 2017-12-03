@@ -731,9 +731,8 @@ class Request(object):
             if name == 'Cookie':
                 try:
                     self.cookie.load(value)
-                except CookieError:
-                    msg = 'Illegal cookie name %s' % value.split('=')[0]
-                    raise cherrypy.HTTPError(400, msg)
+                except CookieError as exc:
+                    raise cherrypy.HTTPError(400, str(exc))
 
         if not dict.__contains__(headers, 'Host'):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
