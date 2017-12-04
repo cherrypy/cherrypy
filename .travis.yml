@@ -77,6 +77,8 @@ jobs:
   # TODO: fix tests
   - python: *pypy3
   - env: TOXENV=pre-commit-pep257
+  # Python 3.3 tests failing; see #1666
+  - python: 3.3
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
