@@ -65,7 +65,7 @@ _base_envs:
   after_failure: skip
 python:
 - 2.7
-- 3.3
+- 3.4
 - 3.7-dev
 - *pypy2
 - &pypy3 pypy3.5-5.8.0
@@ -77,8 +77,6 @@ jobs:
   # TODO: fix tests
   - python: *pypy3
   - env: TOXENV=pre-commit-pep257
-  # Python 3.3 tests failing; see #1666
-  - python: 3.3
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
@@ -103,9 +101,9 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: 3.3
+    python: 3.4
     env:
-    - PYTHON_VERSION=3.3.6
+    - PYTHON_VERSION=3.4.4
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
