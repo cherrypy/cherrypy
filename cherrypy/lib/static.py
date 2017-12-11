@@ -16,7 +16,8 @@ from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
-mimetypes.init()
+if not mimetypes.inited:
+  mimetypes.init()
 mimetypes.types_map['.dwg'] = 'image/x-dwg'
 mimetypes.types_map['.ico'] = 'image/x-icon'
 mimetypes.types_map['.bz2'] = 'application/x-bzip2'
