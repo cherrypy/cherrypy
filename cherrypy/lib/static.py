@@ -17,7 +17,7 @@ from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
 if not mimetypes.inited:
-  mimetypes.init()
+    mimetypes.init()
 mimetypes.types_map['.dwg'] = 'image/x-dwg'
 mimetypes.types_map['.ico'] = 'image/x-icon'
 mimetypes.types_map['.bz2'] = 'application/x-bzip2'
