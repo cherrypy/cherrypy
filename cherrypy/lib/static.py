@@ -16,11 +16,17 @@ from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
-mimetypes.init()
-mimetypes.types_map['.dwg'] = 'image/x-dwg'
-mimetypes.types_map['.ico'] = 'image/x-icon'
-mimetypes.types_map['.bz2'] = 'application/x-bzip2'
-mimetypes.types_map['.gz'] = 'application/x-gzip'
+def _setup_mimetypes():
+    """Pre-initialize global mimetype map."""
+    if not mimetypes.inited:
+        mimetypes.init()
+    mimetypes.types_map['.dwg'] = 'image/x-dwg'
+    mimetypes.types_map['.ico'] = 'image/x-icon'
+    mimetypes.types_map['.bz2'] = 'application/x-bzip2'
+    mimetypes.types_map['.gz'] = 'application/x-gzip'
+
+
+_setup_mimetypes()
 
 
 def serve_file(path, content_type=None, disposition=None, name=None,
