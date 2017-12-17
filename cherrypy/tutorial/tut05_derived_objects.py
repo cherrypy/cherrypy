@@ -7,6 +7,8 @@ want to create a central base class used for all your pages, which takes
 care of things like printing a common page header and footer.
 """
 
+import os.path
+
 import cherrypy
 
 
@@ -45,6 +47,7 @@ class HomePage(Page):
         # create a subpage
         self.another = AnotherPage()
 
+    @cherrypy.expose
     def index(self):
         # Note that we call the header and footer methods inherited
         # from the Page class!
@@ -54,22 +57,20 @@ class HomePage(Page):
             <a href="./another/">another page</a>, too!
             </p>
         ''' + self.footer()
-    index.exposed = True
 
 
 class AnotherPage(Page):
     title = 'Another Page'
 
+    @cherrypy.expose
     def index(self):
         return self.header() + '''
             <p>
             And this is the amazing second page!
             </p>
         ''' + self.footer()
-    index.exposed = True
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
@@ -77,6 +78,3 @@ if __name__ == '__main__':
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
     cherrypy.quickstart(HomePage(), config=tutconf)
-else:
-    # This branch is for the test suite; you can ignore it.
-    cherrypy.tree.mount(HomePage(), config=tutconf)

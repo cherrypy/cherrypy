@@ -18,6 +18,8 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
+from cherrypy._cpcompat import text_or_bytes
+
 try:
     # Python 3.0+
     from configparser import ConfigParser
@@ -25,29 +27,19 @@ except ImportError:
     from ConfigParser import ConfigParser
 
 try:
-    set
+    text_or_bytes
 except NameError:
-    from sets import Set as set
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
-try:
-    # Python 3
-    import builtins
-except ImportError:
-    # Python 2
-    import __builtin__ as builtins
+    text_or_bytes = str
 
 import operator as _operator
 import sys
 
+from six.moves import builtins
+
 
 def as_dict(config):
     """Return a dict from 'config' whether it is a dict, file, or filename."""
-    if isinstance(config, basestring):
+    if isinstance(config, text_or_bytes):
         config = Parser().dict_from_file(config)
     elif hasattr(config, 'read'):
         config = Parser().dict_from_file(config)
@@ -83,19 +75,19 @@ class NamespaceSet(dict):
         # Separate the given config into namespaces
         ns_confs = {}
         for k in config:
-            if "." in k:
-                ns, name = k.split(".", 1)
+            if '.' in k:
+                ns, name = k.split('.', 1)
                 bucket = ns_confs.setdefault(ns, {})
                 bucket[name] = config[k]
 
         # I chose __enter__ and __exit__ so someday this could be
         # rewritten using Python 2.5's 'with' statement:
-        # for ns, handler in self.iteritems():
+        # for ns, handler in six.iteritems(self):
         #     with handler as callable:
-        #         for k, v in ns_confs.get(ns, {}).iteritems():
+        #         for k, v in six.iteritems(ns_confs.get(ns, {})):
         #             callable(k, v)
         for ns, handler in self.items():
-            exit = getattr(handler, "__exit__", None)
+            exit = getattr(handler, '__exit__', None)
             if exit:
                 callable = handler.__enter__()
                 no_exc = True
@@ -103,7 +95,7 @@ class NamespaceSet(dict):
                     try:
                         for k, v in ns_confs.get(ns, {}).items():
                             callable(k, v)
-                    except:
+                    except Exception:
                         # The exceptional case is handled here
                         no_exc = False
                         if exit is None:
@@ -120,7 +112,7 @@ class NamespaceSet(dict):
                     handler(k, v)
 
     def __repr__(self):
-        return "%s.%s(%s)" % (self.__module__, self.__class__.__name__,
+        return '%s.%s(%s)' % (self.__module__, self.__class__.__name__,
                               dict.__repr__(self))
 
     def __copy__(self):
@@ -155,7 +147,7 @@ class Config(dict):
 
     def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(config, basestring):
+        if isinstance(config, text_or_bytes):
             # Filename
             config = Parser().dict_from_file(config)
         elif hasattr(config, 'read'):
@@ -192,7 +184,7 @@ class Parser(ConfigParser):
         return optionstr
 
     def read(self, filenames):
-        if isinstance(filenames, basestring):
+        if isinstance(filenames, text_or_bytes):
             filenames = [filenames]
         for filename in filenames:
             # try:
@@ -218,8 +210,8 @@ class Parser(ConfigParser):
                     value = unrepr(value)
                 except Exception:
                     x = sys.exc_info()[1]
-                    msg = ("Config error in section: %r, option: %r, "
-                           "value: %r. Config values must be valid Python." %
+                    msg = ('Config error in section: %r, option: %r, '
+                           'value: %r. Config values must be valid Python.' %
                            (section, option, value))
                     raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
@@ -241,7 +233,7 @@ class _Builder2:
     def build(self, o):
         m = getattr(self, 'build_' + o.__class__.__name__, None)
         if m is None:
-            raise TypeError("unrepr does not recognize %s" %
+            raise TypeError('unrepr does not recognize %s' %
                             repr(o.__class__.__name__))
         return m(o)
 
@@ -254,7 +246,7 @@ class _Builder2:
             # e.g. IronPython 1.0.
             return eval(s)
 
-        p = compiler.parse("__tempvalue__ = " + s)
+        p = compiler.parse('__tempvalue__ = ' + s)
         return p.getChildren()[1].getChildren()[0].getChildren()[1]
 
     def build_Subscript(self, o):
@@ -279,7 +271,7 @@ class _Builder2:
             if class_name == 'Keyword':
                 kwargs.update(self.build(child))
             # Everything else becomes args
-            else :
+            else:
                 args.append(self.build(child))
 
         return callee(*args, **kwargs)
@@ -327,7 +319,7 @@ class _Builder2:
         except AttributeError:
             pass
 
-        raise TypeError("unrepr could not resolve the name %s" % repr(name))
+        raise TypeError('unrepr could not resolve the name %s' % repr(name))
 
     def build_Add(self, o):
         left, right = map(self.build, o.getChildren())
@@ -356,7 +348,7 @@ class _Builder3:
     def build(self, o):
         m = getattr(self, 'build_' + o.__class__.__name__, None)
         if m is None:
-            raise TypeError("unrepr does not recognize %s" %
+            raise TypeError('unrepr does not recognize %s' %
                             repr(o.__class__.__name__))
         return m(o)
 
@@ -369,7 +361,7 @@ class _Builder3:
             # e.g. IronPython 1.0.
             return eval(s)
 
-        p = ast.parse("__tempvalue__ = " + s)
+        p = ast.parse('__tempvalue__ = ' + s)
         return p.body[0].value
 
     def build_Subscript(self, o):
@@ -394,16 +386,16 @@ class _Builder3:
                     args.append(self.build(a))
         kwargs = {}
         for kw in o.keywords:
-            if kw.arg is None: # double asterix `**`
+            if kw.arg is None:  # double asterix `**`
                 rst = self.build(kw.value)
                 if not isinstance(rst, dict):
-                    raise TypeError("Invalid argument for call."
-                                    "Must be a mapping object.")
+                    raise TypeError('Invalid argument for call.'
+                                    'Must be a mapping object.')
                 # give preference to the keys set directly from arg=value
                 for k, v in rst.items():
                     if k not in kwargs:
                         kwargs[k] = v
-            else: # defined on the call as: arg=value
+            else:  # defined on the call as: arg=value
                 kwargs[kw.arg] = self.build(kw.value)
         return callee(*args, **kwargs)
 
@@ -427,7 +419,7 @@ class _Builder3:
             kwargs = {}
         else:
             kwargs = self.build(o.kwargs)
-        if o.keywords is not None: # direct a=b keywords
+        if o.keywords is not None:  # direct a=b keywords
             for kw in o.keywords:
                 # preference because is a direct keyword against **kwargs
                 kwargs[kw.arg] = self.build(kw.value)
@@ -471,7 +463,7 @@ class _Builder3:
         except AttributeError:
             pass
 
-        raise TypeError("unrepr could not resolve the name %s" % repr(name))
+        raise TypeError('unrepr could not resolve the name %s' % repr(name))
 
     def build_NameConstant(self, o):
         return o.value
@@ -523,7 +515,7 @@ def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
 
     # Parse out the path, module, and attribute
-    last_dot = full_attribute_name.rfind(".")
+    last_dot = full_attribute_name.rfind('.')
     attr_name = full_attribute_name[last_dot + 1:]
     mod_path = full_attribute_name[:last_dot]
 

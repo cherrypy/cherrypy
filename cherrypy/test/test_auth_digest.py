@@ -11,19 +11,20 @@ from cherrypy.test import helper
 
 class DigestAuthTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
-                return "This is public."
-            index.exposed = True
+                return 'This is public.'
 
         class DigestProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         def fetch_users():
             return {'test': 'test'}
@@ -38,28 +39,27 @@ class DigestAuthTest(helper.CPWebCase):
         root = Root()
         root.digest = DigestProtected()
         cherrypy.tree.mount(root, config=conf)
-    setup_server = staticmethod(setup_server)
 
     def testPublic(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testDigest(self):
-        self.getPage("/digest/")
+        self.getPage('/digest/')
         self.assertStatus(401)
 
         value = None
         for k, v in self.headers:
-            if k.lower() == "www-authenticate":
-                if v.startswith("Digest"):
+            if k.lower() == 'www-authenticate':
+                if v.startswith('Digest'):
                     value = v
                     break
 
         if value is None:
             self._handlewebError(
-                "Digest authentification scheme was not found")
+                'Digest authentification scheme was not found')
 
         value = value[7:]
         items = value.split(', ')
@@ -68,7 +68,7 @@ class DigestAuthTest(helper.CPWebCase):
             key, value = item.split('=')
             tokens[key.lower()] = value
 
-        missing_msg = "%s is missing"
+        missing_msg = '%s is missing'
         bad_value_msg = "'%s' was expecting '%s' but found '%s'"
         nonce = None
         if 'realm' not in tokens:

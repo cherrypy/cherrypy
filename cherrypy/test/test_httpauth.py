@@ -9,33 +9,34 @@ from cherrypy.test import helper
 
 class HTTPAuthTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
-                return "This is public."
-            index.exposed = True
+                return 'This is public.'
 
         class DigestProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         class BasicProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         class BasicProtected2:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         def fetch_users():
             return {'test': 'test'}
@@ -72,16 +73,15 @@ class HTTPAuthTest(helper.CPWebCase):
         root.basic = BasicProtected()
         root.basic2 = BasicProtected2()
         cherrypy.tree.mount(root, config=conf)
-    setup_server = staticmethod(setup_server)
 
     def testPublic(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testBasic(self):
-        self.getPage("/basic/")
+        self.getPage('/basic/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="localhost"')
 
@@ -93,7 +93,7 @@ class HTTPAuthTest(helper.CPWebCase):
         self.assertBody("Hello test, you've been authorized.")
 
     def testBasic2(self):
-        self.getPage("/basic2/")
+        self.getPage('/basic2/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="localhost"')
 
@@ -105,19 +105,19 @@ class HTTPAuthTest(helper.CPWebCase):
         self.assertBody("Hello test, you've been authorized.")
 
     def testDigest(self):
-        self.getPage("/digest/")
+        self.getPage('/digest/')
         self.assertStatus(401)
 
         value = None
         for k, v in self.headers:
-            if k.lower() == "www-authenticate":
-                if v.startswith("Digest"):
+            if k.lower() == 'www-authenticate':
+                if v.startswith('Digest'):
                     value = v
                     break
 
         if value is None:
             self._handlewebError(
-                "Digest authentification scheme was not found")
+                'Digest authentification scheme was not found')
 
         value = value[7:]
         items = value.split(', ')
@@ -126,7 +126,7 @@ class HTTPAuthTest(helper.CPWebCase):
             key, value = item.split('=')
             tokens[key.lower()] = value
 
-        missing_msg = "%s is missing"
+        missing_msg = '%s is missing'
         bad_value_msg = "'%s' was expecting '%s' but found '%s'"
         nonce = None
         if 'realm' not in tokens:

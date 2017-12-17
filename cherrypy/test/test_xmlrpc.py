@@ -1,19 +1,22 @@
 import sys
-from cherrypy._cpcompat import py3k
 
-try:
-    from xmlrpclib import DateTime, Fault, ProtocolError, ServerProxy
-    from xmlrpclib import SafeTransport
-except ImportError:
-    from xmlrpc.client import DateTime, Fault, ProtocolError, ServerProxy
-    from xmlrpc.client import SafeTransport
+import six
 
-if py3k:
+from six.moves.xmlrpc_client import (
+    DateTime, Fault,
+    ProtocolError, ServerProxy, SafeTransport
+)
+
+import cherrypy
+from cherrypy import _cptools
+from cherrypy.test import helper
+
+if six.PY3:
     HTTPSTransport = SafeTransport
 
     # Python 3.0's SafeTransport still mistakenly checks for socket.ssl
     import socket
-    if not hasattr(socket, "ssl"):
+    if not hasattr(socket, 'ssl'):
         socket.ssl = True
 else:
     class HTTPSTransport(SafeTransport):
@@ -47,67 +50,64 @@ else:
 
             return self.parse_response(h.getfile())
 
-import cherrypy
-
 
 def setup_server():
-    from cherrypy import _cptools
 
     class Root:
 
+        @cherrypy.expose
         def index(self):
             return "I'm a standard index!"
-        index.exposed = True
 
     class XmlRpc(_cptools.XMLRPCController):
 
+        @cherrypy.expose
         def foo(self):
-            return "Hello world!"
-        foo.exposed = True
+            return 'Hello world!'
 
+        @cherrypy.expose
         def return_single_item_list(self):
             return [42]
-        return_single_item_list.exposed = True
 
+        @cherrypy.expose
         def return_string(self):
-            return "here is a string"
-        return_string.exposed = True
+            return 'here is a string'
 
+        @cherrypy.expose
         def return_tuple(self):
             return ('here', 'is', 1, 'tuple')
-        return_tuple.exposed = True
 
+        @cherrypy.expose
         def return_dict(self):
             return dict(a=1, b=2, c=3)
-        return_dict.exposed = True
 
+        @cherrypy.expose
         def return_composite(self):
             return dict(a=1, z=26), 'hi', ['welcome', 'friend']
-        return_composite.exposed = True
 
+        @cherrypy.expose
         def return_int(self):
             return 42
-        return_int.exposed = True
 
+        @cherrypy.expose
         def return_float(self):
             return 3.14
-        return_float.exposed = True
 
+        @cherrypy.expose
         def return_datetime(self):
             return DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1))
-        return_datetime.exposed = True
 
+        @cherrypy.expose
         def return_boolean(self):
             return True
-        return_boolean.exposed = True
 
+        @cherrypy.expose
         def test_argument_passing(self, num):
             return num * 2
-        test_argument_passing.exposed = True
 
+        @cherrypy.expose
         def test_returning_Fault(self):
-            return Fault(1, "custom Fault response")
-        test_returning_Fault.exposed = True
+            return Fault(1, 'custom Fault response')
 
     root = Root()
     root.xmlrpc = XmlRpc()
@@ -117,16 +117,13 @@ def setup_server():
     }})
 
 
-from cherrypy.test import helper
-
-
 class XmlRpcTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
     def testXmlRpc(self):
 
         scheme = self.scheme
-        if scheme == "https":
+        if scheme == 'https':
             url = 'https://%s:%s/xmlrpc/' % (self.interface(), self.PORT)
             proxy = ServerProxy(url, transport=HTTPSTransport())
         else:
@@ -134,12 +131,12 @@ class XmlRpcTest(helper.CPWebCase):
             proxy = ServerProxy(url)
 
         # begin the tests ...
-        self.getPage("/xmlrpc/foo")
-        self.assertBody("Hello world!")
+        self.getPage('/xmlrpc/foo')
+        self.assertBody('Hello world!')
 
         self.assertEqual(proxy.return_single_item_list(), [42])
         self.assertNotEqual(proxy.return_single_item_list(), 'one bazillion')
-        self.assertEqual(proxy.return_string(), "here is a string")
+        self.assertEqual(proxy.return_string(), 'here is a string')
         self.assertEqual(proxy.return_tuple(),
                          list(('here', 'is', 1, 'tuple')))
         self.assertEqual(proxy.return_dict(), {'a': 1, 'c': 3, 'b': 2})
@@ -158,10 +155,10 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString, ("unsupported operand type(s) "
+            self.assertEqual(x.faultString, ('unsupported operand type(s) '
                                              "for *: 'dict' and 'int'"))
         else:
-            self.fail("Expected xmlrpclib.Fault")
+            self.fail('Expected xmlrpclib.Fault')
 
         # https://github.com/cherrypy/cherrypy/issues/533
         # if a method is not found, an xmlrpclib.Fault should be raised
@@ -173,7 +170,7 @@ class XmlRpcTest(helper.CPWebCase):
             self.assertEqual(x.faultString,
                              'method "non_method" is not supported')
         else:
-            self.fail("Expected xmlrpclib.Fault")
+            self.fail('Expected xmlrpclib.Fault')
 
         # Test returning a Fault from the page handler.
         try:
@@ -181,6 +178,6 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString, ("custom Fault response"))
+            self.assertEqual(x.faultString, ('custom Fault response'))
         else:
-            self.fail("Expected xmlrpclib.Fault")
+            self.fail('Expected xmlrpclib.Fault')

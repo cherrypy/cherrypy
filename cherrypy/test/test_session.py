@@ -1,128 +1,142 @@
 import os
-localDir = os.path.dirname(__file__)
 import threading
 import time
+import socket
+import importlib
+
+from six.moves.http_client import HTTPConnection
+
+import pytest
+from path import Path
 
 import cherrypy
-from cherrypy._cpcompat import copykeys, HTTPConnection, HTTPSConnection
+from cherrypy._cpcompat import (
+    json_decode,
+    HTTPSConnection,
+)
 from cherrypy.lib import sessions
+from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
+from cherrypy.test import helper
+
+localDir = os.path.dirname(__file__)
 
 
 def http_methods_allowed(methods=['GET', 'HEAD']):
     method = cherrypy.request.method.upper()
     if method not in methods:
-        cherrypy.response.headers['Allow'] = ", ".join(methods)
+        cherrypy.response.headers['Allow'] = ', '.join(methods)
         raise cherrypy.HTTPError(405)
+
 
 cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 
 def setup_server():
 
+    @cherrypy.config(**{
+        'tools.sessions.on': True,
+        'tools.sessions.storage_class': sessions.RamSession,
+        'tools.sessions.storage_path': localDir,
+        'tools.sessions.timeout': (1.0 / 60),
+        'tools.sessions.clean_freq': (1.0 / 60),
+    })
     class Root:
 
-        _cp_config = {'tools.sessions.on': True,
-                      'tools.sessions.storage_type': 'ram',
-                      'tools.sessions.storage_path': localDir,
-                      'tools.sessions.timeout': (1.0 / 60),
-                      'tools.sessions.clean_freq': (1.0 / 60),
-                      }
-
+        @cherrypy.expose
         def clear(self):
             cherrypy.session.cache.clear()
-        clear.exposed = True
 
+        @cherrypy.expose
         def data(self):
             cherrypy.session['aha'] = 'foo'
             return repr(cherrypy.session._data)
-        data.exposed = True
 
+        @cherrypy.expose
         def testGen(self):
             counter = cherrypy.session.get('counter', 0) + 1
             cherrypy.session['counter'] = counter
             yield str(counter)
-        testGen.exposed = True
 
+        @cherrypy.expose
         def testStr(self):
             counter = cherrypy.session.get('counter', 0) + 1
             cherrypy.session['counter'] = counter
             return str(counter)
-        testStr.exposed = True
 
-        def setsessiontype(self, newtype):
-            self.__class__._cp_config.update(
-                {'tools.sessions.storage_type': newtype})
-            if hasattr(cherrypy, "session"):
+        @cherrypy.expose
+        @cherrypy.config(**{'tools.sessions.on': False})
+        def set_session_cls(self, new_cls_name):
+            new_cls = reprconf.attributes(new_cls_name)
+            cfg = {'tools.sessions.storage_class': new_cls}
+            self.__class__._cp_config.update(cfg)
+            if hasattr(cherrypy, 'session'):
                 del cherrypy.session
-            cls = getattr(sessions, newtype.title() + 'Session')
-            if cls.clean_thread:
-                cls.clean_thread.stop()
-                cls.clean_thread.unsubscribe()
-                del cls.clean_thread
-        setsessiontype.exposed = True
-        setsessiontype._cp_config = {'tools.sessions.on': False}
+            if new_cls.clean_thread:
+                new_cls.clean_thread.stop()
+                new_cls.clean_thread.unsubscribe()
+                del new_cls.clean_thread
 
+        @cherrypy.expose
         def index(self):
             sess = cherrypy.session
             c = sess.get('counter', 0) + 1
             time.sleep(0.01)
             sess['counter'] = c
             return str(c)
-        index.exposed = True
 
+        @cherrypy.expose
         def keyin(self, key):
             return str(key in cherrypy.session)
-        keyin.exposed = True
 
+        @cherrypy.expose
         def delete(self):
             cherrypy.session.delete()
             sessions.expire()
-            return "done"
-        delete.exposed = True
+            return 'done'
 
+        @cherrypy.expose
         def delkey(self, key):
             del cherrypy.session[key]
-            return "OK"
-        delkey.exposed = True
+            return 'OK'
 
-        def blah(self):
-            return self._cp_config['tools.sessions.storage_type']
-        blah.exposed = True
+        @cherrypy.expose
+        def redir_target(self):
+            return self._cp_config['tools.sessions.storage_class'].__name__
 
+        @cherrypy.expose
         def iredir(self):
-            raise cherrypy.InternalRedirect('/blah')
-        iredir.exposed = True
+            raise cherrypy.InternalRedirect('/redir_target')
 
+        @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.allow.on': True,
+            'tools.allow.methods': ['GET'],
+        })
         def restricted(self):
             return cherrypy.request.method
-        restricted.exposed = True
-        restricted._cp_config = {'tools.allow.on': True,
-                                 'tools.allow.methods': ['GET']}
 
+        @cherrypy.expose
         def regen(self):
             cherrypy.tools.sessions.regenerate()
-            return "logged in"
-        regen.exposed = True
+            return 'logged in'
 
+        @cherrypy.expose
         def length(self):
             return str(len(cherrypy.session))
-        length.exposed = True
 
+        @cherrypy.expose
+        @cherrypy.config(**{
+            'tools.sessions.path': '/session_cookie',
+            'tools.sessions.name': 'temp',
+            'tools.sessions.persistent': False,
+        })
         def session_cookie(self):
             # Must load() to start the clean thread.
             cherrypy.session.load()
             return cherrypy.session.id
-        session_cookie.exposed = True
-        session_cookie._cp_config = {
-            'tools.sessions.path': '/session_cookie',
-            'tools.sessions.name': 'temp',
-            'tools.sessions.persistent': False}
 
     cherrypy.tree.mount(Root())
-
-
-from cherrypy.test import helper
 
 
 class SessionTest(helper.CPWebCase):
@@ -132,10 +146,12 @@ class SessionTest(helper.CPWebCase):
         # Clean up sessions.
         for fname in os.listdir(localDir):
             if fname.startswith(sessions.FileSession.SESSION_PREFIX):
-                os.unlink(os.path.join(localDir, fname))
+                path = Path(localDir) / fname
+                path.remove_p()
 
+    @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
 
         # Test that a normal request gets the same id in the cookies.
@@ -149,7 +165,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr')
         self.assertBody('1')
         cookie_parts = dict([p.strip().split('=')
-                             for p in self.cookies[0][1].split(";")])
+                             for p in self.cookies[0][1].split(';')])
         # Assert there is an 'expires' param
         self.assertEqual(set(cookie_parts.keys()),
                          set(['session_id', 'expires', 'Path']))
@@ -158,13 +174,14 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        self.assertBody("{'aha': 'foo', 'counter': 3}")
+        self.assertDictEqual(json_decode(self.body),
+                             {'counter': 3, 'aha': 'foo'})
         self.getPage('/length', self.cookies)
         self.assertBody('2')
         self.getPage('/delkey?key=counter', self.cookies)
         self.assertStatus(200)
 
-        self.getPage('/setsessiontype/file')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self.getPage('/testStr')
         self.assertBody('1')
         self.getPage('/testGen', self.cookies)
@@ -183,7 +200,7 @@ class SessionTest(helper.CPWebCase):
 
         # Test session __contains__
         self.getPage('/keyin?key=counter', self.cookies)
-        self.assertBody("True")
+        self.assertBody('True')
         cookieset1 = self.cookies
 
         # Make a new session and test __len__ again
@@ -193,27 +210,31 @@ class SessionTest(helper.CPWebCase):
 
         # Test session delete
         self.getPage('/delete', self.cookies)
-        self.assertBody("done")
+        self.assertBody('done')
         self.getPage('/delete', cookieset1)
-        self.assertBody("done")
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
+        self.assertBody('done')
+
+        def f():
+            return [
+                x
+                for x in os.listdir(localDir)
+                if x.startswith('session-')
+            ]
         self.assertEqual(f(), [])
 
         # Wait for the cleanup thread to delete remaining session files
         self.getPage('/')
-        f = lambda: [
-            x for x in os.listdir(localDir) if x.startswith('session-')]
         self.assertNotEqual(f(), [])
         time.sleep(2)
         self.assertEqual(f(), [])
 
     def test_1_Ram_Concurrency(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self._test_Concurrency()
 
+    @pytest.mark.xfail(reason='#1306')
     def test_2_File_Concurrency(self):
-        self.getPage('/setsessiontype/file')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self._test_Concurrency()
 
     def _test_Concurrency(self):
@@ -221,8 +242,8 @@ class SessionTest(helper.CPWebCase):
         request_count = 30
 
         # Get initial cookie
-        self.getPage("/")
-        self.assertBody("1")
+        self.getPage('/')
+        self.assertBody('1')
         cookies = self.cookies
 
         data_dict = {}
@@ -245,7 +266,7 @@ class SessionTest(helper.CPWebCase):
                 else:
                     data_dict[index] = max(data_dict[index], int(body))
                 # Uncomment the following line to prove threads overlap.
-##                sys.stdout.write("%d " % index)
+                # sys.stdout.write("%d " % index)
 
         # Start <request_count> requests from each of
         # <client_thread_count> concurrent clients
@@ -270,14 +291,14 @@ class SessionTest(helper.CPWebCase):
         # Start a new session
         self.getPage('/testStr')
         self.getPage('/iredir', self.cookies)
-        self.assertBody("file")
+        self.assertBody('FileSession')
 
     def test_4_File_deletion(self):
         # Start a new session
         self.getPage('/testStr')
         # Delete the session file manually and retry.
-        id = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
-        path = os.path.join(localDir, "session-" + id)
+        id = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
+        path = os.path.join(localDir, 'session-' + id)
         os.unlink(path)
         self.getPage('/testStr', self.cookies)
 
@@ -296,50 +317,50 @@ class SessionTest(helper.CPWebCase):
     def test_6_regenerate(self):
         self.getPage('/testStr')
         # grab the cookie ID
-        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.getPage('/regen')
         self.assertBody('logged in')
-        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.assertNotEqual(id1, id2)
 
         self.getPage('/testStr')
         # grab the cookie ID
-        id1 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.getPage('/testStr',
                      headers=[
                          ('Cookie',
                           'session_id=maliciousid; '
                           'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
-        id2 = self.cookies[0][1].split(";", 1)[0].split("=", 1)[1]
+        id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.assertNotEqual(id1, id2)
         self.assertNotEqual(id2, 'maliciousid')
 
     def test_7_session_cookies(self):
-        self.getPage('/setsessiontype/ram')
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
         self.getPage('/session_cookie')
         # grab the cookie ID
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         id1 = cookie_parts['temp']
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         self.assertBody(id1)
-        self.assertEqual(copykeys(sessions.RamSession.cache), [id1])
+        self.assertEqual(list(sessions.RamSession.cache), [id1])
 
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
         # grab the cookie ID
         cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(";")])
+                            for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
         self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
         # Assert a new id has been generated...
@@ -350,12 +371,12 @@ class SessionTest(helper.CPWebCase):
 
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
-        cache = copykeys(sessions.RamSession.cache)
+        cache = list(sessions.RamSession.cache)
         if cache:
             if cache == [id2]:
-                self.fail("The second session did not time out.")
+                self.fail('The second session did not time out.')
             else:
-                self.fail("Unknown session id in cache: %r", cache)
+                self.fail('Unknown session id in cache: %r', cache)
 
     def test_8_Ram_Cleanup(self):
         def lock():
@@ -366,15 +387,19 @@ class SessionTest(helper.CPWebCase):
 
         t = threading.Thread(target=lock)
         t.start()
+        start = time.time()
+        while not sessions.RamSession.locks and time.time() - start < 5:
+            time.sleep(0.01)
+        assert len(sessions.RamSession.locks) == 1, 'Lock not acquired'
         s2 = sessions.RamSession()
         s2.clean_up()
-        self.assertEqual(len(sessions.RamSession.locks), 1, 'Clean up should not remove active lock')
+        msg = 'Clean up should not remove active lock'
+        assert len(sessions.RamSession.locks) == 1, msg
         t.join()
 
 
-import socket
 try:
-    import memcache  # NOQA
+    importlib.import_module('memcache')
 
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
@@ -398,13 +423,13 @@ except (ImportError, socket.error):
         setup_server = staticmethod(setup_server)
 
         def test(self):
-            return self.skip("memcached not reachable ")
+            return self.skip('memcached not reachable ')
 else:
     class MemcachedSessionTest(helper.CPWebCase):
         setup_server = staticmethod(setup_server)
 
         def test_0_Session(self):
-            self.getPage('/setsessiontype/memcached')
+            self.getPage('/set_session_cls/cherrypy.Sessions.MemcachedSession')
 
             self.getPage('/testStr')
             self.assertBody('1')
@@ -414,7 +439,7 @@ else:
             self.assertBody('3')
             self.getPage('/length', self.cookies)
             self.assertErrorPage(500)
-            self.assertInBody("NotImplementedError")
+            self.assertInBody('NotImplementedError')
             self.getPage('/delkey?key=counter', self.cookies)
             self.assertStatus(200)
 
@@ -425,28 +450,28 @@ else:
 
             # Test session __contains__
             self.getPage('/keyin?key=counter', self.cookies)
-            self.assertBody("True")
+            self.assertBody('True')
 
             # Test session delete
             self.getPage('/delete', self.cookies)
-            self.assertBody("done")
+            self.assertBody('done')
 
         def test_1_Concurrency(self):
             client_thread_count = 5
             request_count = 30
 
             # Get initial cookie
-            self.getPage("/")
-            self.assertBody("1")
+            self.getPage('/')
+            self.assertBody('1')
             cookies = self.cookies
 
             data_dict = {}
 
             def request(index):
                 for i in range(request_count):
-                    self.getPage("/", cookies)
+                    self.getPage('/', cookies)
                     # Uncomment the following line to prove threads overlap.
-##                    sys.stdout.write("%d " % index)
+                    # sys.stdout.write("%d " % index)
                 if not self.body.isdigit():
                     self.fail(self.body)
                 data_dict[index] = int(self.body)
@@ -471,7 +496,7 @@ else:
             # Start a new session
             self.getPage('/testStr')
             self.getPage('/iredir', self.cookies)
-            self.assertBody("memcached")
+            self.assertBody('memcached')
 
         def test_5_Error_paths(self):
             self.getPage('/unknown/page')

@@ -16,19 +16,23 @@ Requirements
 ############
 
 CherryPy does not have any mandatory requirements. However certain features it comes with
-will require you install certain packages.
+will require you install certain packages. To simplify installing additional
+dependencies CherryPy enables you to specify extras in your requirements (e.g.
+``cherrypy[json,routes_dispatcher,ssl]``):
 
-- `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
-- `psycopg2 <http://pythonhosted.org//psycopg2/>`_ for PostgreSQL backend session
-- `pywin32 <http://sourceforge.net/projects/pywin32/>`_ for Windows services
-- `python-memcached <https://github.com/linsomniac/python-memcached>`_ for memcached backend session
-- `simplejson <https://github.com/simplejson/simplejson>`_ for a better JSON support
-- `pyOpenSSL <https://github.com/pyca/pyopenssl>`_ if your Python environment does not have the builtin :mod:`ssl` module
+- doc -- for documentation related stuff
+- json -- for custom `JSON processing library <https://github.com/simplejson/simplejson>`_
+- routes_dispatcher -- `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
+- ssl -- for `OpenSSL bindings <https://github.com/pyca/pyopenssl>`_, useful in Python environments not having the builtin :mod:`ssl` module
+- testing
+- memcached_session -- enables `memcached <https://github.com/linsomniac/python-memcached>`_ backend session
+- xcgi
+
 
 Supported python version
 ########################
 
-CherryPy supports Python 2.3 through to 3.4.
+CherryPy supports Python 2.7 through to 3.5.
 
 
 Installing
@@ -74,7 +78,6 @@ Once started the above command shows the following logs:
    [15/Feb/2014:21:51:22] ENGINE Listening for SIGUSR1.
    [15/Feb/2014:21:51:22] ENGINE Bus STARTING
    [15/Feb/2014:21:51:22] ENGINE Started monitor thread 'Autoreloader'.
-   [15/Feb/2014:21:51:22] ENGINE Started monitor thread '_TimeoutMonitor'.
    [15/Feb/2014:21:51:22] ENGINE Serving on http://127.0.0.1:8080
    [15/Feb/2014:21:51:23] ENGINE Bus STARTED
 
@@ -153,4 +156,3 @@ Command-Line Options
 .. cmdoption:: -P, --Path
 
    Add the given paths to sys.path
-

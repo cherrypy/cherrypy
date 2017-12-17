@@ -12,26 +12,27 @@ from cherrypy.test import helper
 
 class BasicAuthTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
-                return "This is public."
-            index.exposed = True
+                return 'This is public.'
 
         class BasicProtected:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         class BasicProtected2:
 
+            @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
-            index.exposed = True
 
         userpassdict = {'xuser': 'xpassword'}
         userhashdict = {'xuser': md5(ntob('xpassword')).hexdigest()}
@@ -58,16 +59,15 @@ class BasicAuthTest(helper.CPWebCase):
         root.basic = BasicProtected()
         root.basic2 = BasicProtected2()
         cherrypy.tree.mount(root, config=conf)
-    setup_server = staticmethod(setup_server)
 
     def testPublic(self):
-        self.getPage("/")
+        self.getPage('/')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
         self.assertBody('This is public.')
 
     def testBasic(self):
-        self.getPage("/basic/")
+        self.getPage('/basic/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
 
@@ -81,7 +81,7 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertBody("Hello xuser, you've been authorized.")
 
     def testBasic2(self):
-        self.getPage("/basic2/")
+        self.getPage('/basic2/')
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
 

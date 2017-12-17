@@ -4,6 +4,7 @@ from cherrypy.test import helper
 
 class SessionAuthenticateTest(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
 
         def check(username, password):
@@ -15,7 +16,7 @@ class SessionAuthenticateTest(helper.CPWebCase):
             # A simple tool to add some things to request.params
             # This is to check to make sure that session_auth can handle
             # request params (ticket #780)
-            cherrypy.request.params["test"] = "test"
+            cherrypy.request.params['test'] = 'test'
 
         cherrypy.tools.augment_params = cherrypy.Tool(
             'before_handler', augment_params, None, priority=30)
@@ -29,12 +30,11 @@ class SessionAuthenticateTest(helper.CPWebCase):
                 'tools.augment_params.on': True,
             }
 
+            @cherrypy.expose
             def index(self, **kwargs):
-                return "Hi %s, you are logged in" % cherrypy.request.login
-            index.exposed = True
+                return 'Hi %s, you are logged in' % cherrypy.request.login
 
         cherrypy.tree.mount(Test())
-    setup_server = staticmethod(setup_server)
 
     def testSessionAuthenticate(self):
         # request a page and check for login form

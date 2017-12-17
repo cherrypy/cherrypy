@@ -1,36 +1,63 @@
 """Basic tests for the cherrypy.Request object."""
 
+from functools import wraps
 import os
-localDir = os.path.dirname(__file__)
 import sys
 import types
-from cherrypy._cpcompat import IncompleteRead, ntob, ntou, unicodestr
+import uuid
+
+import six
+from six.moves.http_client import IncompleteRead
 
 import cherrypy
-from cherrypy import _cptools, tools
+from cherrypy._cpcompat import ntob, ntou
 from cherrypy.lib import httputil
+from cherrypy.test import helper
 
-defined_http_methods = ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
-                        "TRACE", "PROPFIND")
+localDir = os.path.dirname(__file__)
+
+defined_http_methods = ('OPTIONS', 'GET', 'HEAD', 'POST', 'PUT', 'DELETE',
+                        'TRACE', 'PROPFIND', 'PATCH')
 
 
 #                             Client-side code                             #
 
-from cherrypy.test import helper
-
 
 class RequestObjectTests(helper.CPWebCase):
 
+    @staticmethod
     def setup_server():
         class Root:
 
+            @cherrypy.expose
             def index(self):
-                return "hello"
-            index.exposed = True
+                return 'hello'
 
+            @cherrypy.expose
             def scheme(self):
                 return cherrypy.request.scheme
-            scheme.exposed = True
+
+            @cherrypy.expose
+            def created_example_com_3128(self):
+                """Handle CONNECT method."""
+                cherrypy.response.status = 204
+
+            @cherrypy.expose
+            def body_example_com_3128(self):
+                """Handle CONNECT method."""
+                return (
+                    cherrypy.request.method
+                    + 'ed to '
+                    + cherrypy.request.path_info
+                )
+
+            @cherrypy.expose
+            def request_uuid4(self):
+                return [
+                    str(cherrypy.request.unique_id),
+                    ' ',
+                    str(cherrypy.request.unique_id),
+                ]
 
         root = Root()
 
@@ -58,121 +85,130 @@ class RequestObjectTests(helper.CPWebCase):
                 return repr(thing)
 
             def ismap(self, x, y):
-                return "Coordinates: %s, %s" % (x, y)
+                return 'Coordinates: %s, %s' % (x, y)
 
+            @cherrypy.config(**{'request.query_string_encoding': 'latin1'})
             def default(self, *args, **kwargs):
-                return "args: %s kwargs: %s" % (args, sorted(kwargs.items()))
-            default._cp_config = {'request.query_string_encoding': 'latin1'}
+                return 'args: %s kwargs: %s' % (args, sorted(kwargs.items()))
 
+        @cherrypy.expose
         class ParamErrorsCallable(object):
-            exposed = True
 
             def __call__(self):
-                return "data"
+                return 'data'
+
+        def handler_dec(f):
+            @wraps(f)
+            def wrapper(handler, *args, **kwargs):
+                return f(handler, *args, **kwargs)
+            return wrapper
 
         class ParamErrors(Test):
 
+            @cherrypy.expose
             def one_positional(self, param1):
-                return "data"
-            one_positional.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def one_positional_args(self, param1, *args):
-                return "data"
-            one_positional_args.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def one_positional_args_kwargs(self, param1, *args, **kwargs):
-                return "data"
-            one_positional_args_kwargs.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def one_positional_kwargs(self, param1, **kwargs):
-                return "data"
-            one_positional_kwargs.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def no_positional(self):
-                return "data"
-            no_positional.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def no_positional_args(self, *args):
-                return "data"
-            no_positional_args.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def no_positional_args_kwargs(self, *args, **kwargs):
-                return "data"
-            no_positional_args_kwargs.exposed = True
+                return 'data'
 
+            @cherrypy.expose
             def no_positional_kwargs(self, **kwargs):
-                return "data"
-            no_positional_kwargs.exposed = True
+                return 'data'
 
             callable_object = ParamErrorsCallable()
 
+            @cherrypy.expose
             def raise_type_error(self, **kwargs):
-                raise TypeError("Client Error")
-            raise_type_error.exposed = True
+                raise TypeError('Client Error')
 
+            @cherrypy.expose
             def raise_type_error_with_default_param(self, x, y=None):
                 return '%d' % 'a'  # throw an exception
-            raise_type_error_with_default_param.exposed = True
+
+            @cherrypy.expose
+            @handler_dec
+            def raise_type_error_decorated(self, *args, **kwargs):
+                raise TypeError('Client Error')
 
         def callable_error_page(status, **kwargs):
             return "Error %s - Well, I'm very sorry but you haven't paid!" % (
                 status)
 
+        @cherrypy.config(**{'tools.log_tracebacks.on': True})
         class Error(Test):
-
-            _cp_config = {'tools.log_tracebacks.on': True,
-                          }
 
             def reason_phrase(self):
                 raise cherrypy.HTTPError("410 Gone fishin'")
 
+            @cherrypy.config(**{
+                'error_page.404': os.path.join(localDir, 'static/index.html'),
+                'error_page.401': callable_error_page,
+            })
             def custom(self, err='404'):
                 raise cherrypy.HTTPError(
-                    int(err), "No, <b>really</b>, not found!")
-            custom._cp_config = {
-                'error_page.404': os.path.join(localDir, "static/index.html"),
-                'error_page.401': callable_error_page,
-            }
+                    int(err), 'No, <b>really</b>, not found!')
 
+            @cherrypy.config(**{
+                'error_page.default': callable_error_page,
+            })
             def custom_default(self):
                 return 1 + 'a'  # raise an unexpected error
-            custom_default._cp_config = {
-                'error_page.default': callable_error_page}
 
+            @cherrypy.config(**{'error_page.404': 'nonexistent.html'})
             def noexist(self):
-                raise cherrypy.HTTPError(404, "No, <b>really</b>, not found!")
-            noexist._cp_config = {'error_page.404': "nonexistent.html"}
+                raise cherrypy.HTTPError(404, 'No, <b>really</b>, not found!')
 
             def page_method(self):
                 raise ValueError()
 
             def page_yield(self):
-                yield "howdy"
+                yield 'howdy'
                 raise ValueError()
 
+            @cherrypy.config(**{'response.stream': True})
             def page_streamed(self):
-                yield "word up"
+                yield 'word up'
                 raise ValueError()
-                yield "very oops"
-            page_streamed._cp_config = {"response.stream": True}
+                yield 'very oops'
 
+            @cherrypy.config(**{'request.show_tracebacks': False})
             def cause_err_in_finalize(self):
                 # Since status must start with an int, this should error.
-                cherrypy.response.status = "ZOO OK"
-            cause_err_in_finalize._cp_config = {
-                'request.show_tracebacks': False}
+                cherrypy.response.status = 'ZOO OK'
 
+            @cherrypy.config(**{'request.throw_errors': True})
             def rethrow(self):
                 """Test that an error raised here will be thrown out to
                 the server.
                 """
                 raise ValueError()
-            rethrow._cp_config = {'request.throw_errors': True}
 
         class Expect(Test):
 
             def expectation_failed(self):
-                expect = cherrypy.request.headers.elements("Expect")
+                expect = cherrypy.request.headers.elements('Expect')
                 if expect and expect[0].value != '100-continue':
                     raise cherrypy.HTTPError(400)
                 raise cherrypy.HTTPError(417, 'Expectation Failed')
@@ -192,7 +228,7 @@ class RequestObjectTests(helper.CPWebCase):
 
                 # Set the most common headers
                 hMap = cherrypy.response.headers
-                hMap['content-type'] = "text/html"
+                hMap['content-type'] = 'text/html'
                 hMap['content-length'] = 18
                 hMap['server'] = 'CherryPy headertest'
                 hMap['location'] = ('%s://%s:%s/headers/'
@@ -203,11 +239,11 @@ class RequestObjectTests(helper.CPWebCase):
                 # Set a rare header for fun
                 hMap['Expires'] = 'Thu, 01 Dec 2194 16:00:00 GMT'
 
-                return "double header test"
+                return 'double header test'
 
             def ifmatch(self):
                 val = cherrypy.request.headers['If-Match']
-                assert isinstance(val, unicodestr)
+                assert isinstance(val, six.text_type)
                 cherrypy.response.headers['ETag'] = val
                 return val
 
@@ -215,16 +251,16 @@ class RequestObjectTests(helper.CPWebCase):
 
             def get_elements(self, headername):
                 e = cherrypy.request.headers.elements(headername)
-                return "\n".join([unicodestr(x) for x in e])
+                return '\n'.join([six.text_type(x) for x in e])
 
         class Method(Test):
 
             def index(self):
                 m = cherrypy.request.method
-                if m in defined_http_methods or m == "CONNECT":
+                if m in defined_http_methods or m == 'CONNECT':
                     return m
 
-                if m == "LINK":
+                if m == 'LINK':
                     raise cherrypy.HTTPError(405)
                 else:
                     raise cherrypy.HTTPError(501)
@@ -238,9 +274,9 @@ class RequestObjectTests(helper.CPWebCase):
                 return cherrypy.request.body
 
             def reachable(self):
-                return "success"
+                return 'success'
 
-        class Divorce:
+        class Divorce(Test):
 
             """HTTP Method handlers shouldn't collide with normal method names.
             For example, a GET-handler shouldn't collide with a method named
@@ -254,92 +290,105 @@ class RequestObjectTests(helper.CPWebCase):
 
             documents = {}
 
+            @cherrypy.expose
             def index(self):
-                yield "<h1>Choose your document</h1>\n"
-                yield "<ul>\n"
+                yield '<h1>Choose your document</h1>\n'
+                yield '<ul>\n'
                 for id, contents in self.documents.items():
                     yield (
                         "    <li><a href='/divorce/get?ID=%s'>%s</a>:"
-                        " %s</li>\n" % (id, id, contents))
-                yield "</ul>"
-            index.exposed = True
+                        ' %s</li>\n' % (id, id, contents))
+                yield '</ul>'
 
+            @cherrypy.expose
             def get(self, ID):
-                return ("Divorce document %s: %s" %
-                        (ID, self.documents.get(ID, "empty")))
-            get.exposed = True
-
-        root.divorce = Divorce()
+                return ('Divorce document %s: %s' %
+                        (ID, self.documents.get(ID, 'empty')))
 
         class ThreadLocal(Test):
 
             def index(self):
-                existing = repr(getattr(cherrypy.request, "asdf", None))
-                cherrypy.request.asdf = "rassfrassin"
+                existing = repr(getattr(cherrypy.request, 'asdf', None))
+                cherrypy.request.asdf = 'rassfrassin'
                 return existing
 
         appconf = {
             '/method': {
-                'request.methods_with_bodies': ("POST", "PUT", "PROPFIND")
+                'request.methods_with_bodies': ('POST', 'PUT', 'PROPFIND',
+                                                'PATCH')
             },
         }
         cherrypy.tree.mount(root, config=appconf)
-    setup_server = staticmethod(setup_server)
 
     def test_scheme(self):
-        self.getPage("/scheme")
+        self.getPage('/scheme')
         self.assertBody(self.scheme)
 
+    def test_per_request_uuid4(self):
+        self.getPage('/request_uuid4')
+        first_uuid4, _, second_uuid4 = self.body.decode().partition(' ')
+        assert (
+            uuid.UUID(first_uuid4, version=4)
+            == uuid.UUID(second_uuid4, version=4)
+        )
+
+        self.getPage('/request_uuid4')
+        third_uuid4, _, _ = self.body.decode().partition(' ')
+        assert (
+            uuid.UUID(first_uuid4, version=4)
+            != uuid.UUID(third_uuid4, version=4)
+        )
+
     def testRelativeURIPathInfo(self):
-        self.getPage("/pathinfo/foo/bar")
-        self.assertBody("/pathinfo/foo/bar")
+        self.getPage('/pathinfo/foo/bar')
+        self.assertBody('/pathinfo/foo/bar')
 
     def testAbsoluteURIPathInfo(self):
         # http://cherrypy.org/ticket/1061
-        self.getPage("http://localhost/pathinfo/foo/bar")
-        self.assertBody("/pathinfo/foo/bar")
+        self.getPage('http://localhost/pathinfo/foo/bar')
+        self.assertBody('/pathinfo/foo/bar')
 
     def testParams(self):
-        self.getPage("/params/?thing=a")
-        self.assertBody(repr(ntou("a")))
+        self.getPage('/params/?thing=a')
+        self.assertBody(repr(ntou('a')))
 
-        self.getPage("/params/?thing=a&thing=b&thing=c")
+        self.getPage('/params/?thing=a&thing=b&thing=c')
         self.assertBody(repr([ntou('a'), ntou('b'), ntou('c')]))
 
         # Test friendly error message when given params are not accepted.
-        cherrypy.config.update({"request.show_mismatched_params": True})
-        self.getPage("/params/?notathing=meeting")
-        self.assertInBody("Missing parameters: thing")
-        self.getPage("/params/?thing=meeting&notathing=meeting")
-        self.assertInBody("Unexpected query string parameters: notathing")
+        cherrypy.config.update({'request.show_mismatched_params': True})
+        self.getPage('/params/?notathing=meeting')
+        self.assertInBody('Missing parameters: thing')
+        self.getPage('/params/?thing=meeting&notathing=meeting')
+        self.assertInBody('Unexpected query string parameters: notathing')
 
         # Test ability to turn off friendly error messages
-        cherrypy.config.update({"request.show_mismatched_params": False})
-        self.getPage("/params/?notathing=meeting")
-        self.assertInBody("Not Found")
-        self.getPage("/params/?thing=meeting&notathing=meeting")
-        self.assertInBody("Not Found")
+        cherrypy.config.update({'request.show_mismatched_params': False})
+        self.getPage('/params/?notathing=meeting')
+        self.assertInBody('Not Found')
+        self.getPage('/params/?thing=meeting&notathing=meeting')
+        self.assertInBody('Not Found')
 
         # Test "% HEX HEX"-encoded URL, param keys, and values
-        self.getPage("/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville")
-        self.assertBody("args: %s kwargs: %s" %
+        self.getPage('/params/%d4%20%e3/cheese?Gruy%E8re=Bulgn%e9ville')
+        self.assertBody('args: %s kwargs: %s' %
                         (('\xd4 \xe3', 'cheese'),
                          [('Gruy\xe8re', ntou('Bulgn\xe9ville'))]))
 
         # Make sure that encoded = and & get parsed correctly
         self.getPage(
-            "/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2")
-        self.assertBody("args: %s kwargs: %s" %
+            '/params/code?url=http%3A//cherrypy.org/index%3Fa%3D1%26b%3D2')
+        self.assertBody('args: %s kwargs: %s' %
                         (('code',),
                          [('url', ntou('http://cherrypy.org/index?a=1&b=2'))]))
 
         # Test coordinates sent by <img ismap>
-        self.getPage("/params/ismap?223,114")
-        self.assertBody("Coordinates: 223, 114")
+        self.getPage('/params/ismap?223,114')
+        self.assertBody('Coordinates: 223, 114')
 
         # Test "name[key]" dict-like params
-        self.getPage("/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz")
-        self.assertBody("args: %s kwargs: %s" %
+        self.getPage('/params/dictlike?a[1]=1&a[2]=2&b=foo&b[bar]=baz')
+        self.assertBody('args: %s kwargs: %s' %
                         (('dictlike',),
                          [('a[1]', ntou('1')), ('a[2]', ntou('2')),
                           ('b', ntou('foo')), ('b[bar]', ntou('baz'))]))
@@ -431,7 +480,7 @@ class RequestObjectTests(helper.CPWebCase):
                 if show_mismatched_params:
                     self.assertInBody(msg)
                 else:
-                    self.assertInBody("Not Found")
+                    self.assertInBody('Not Found')
 
         # if body parameters are wrong, a 400 must be returned.
         for uri, body, msg in (
@@ -460,7 +509,7 @@ class RequestObjectTests(helper.CPWebCase):
                 if show_mismatched_params:
                     self.assertInBody(msg)
                 else:
-                    self.assertInBody("400 Bad")
+                    self.assertInBody('400 Bad')
 
         # even if body parameters are wrong, if we get the uri wrong, then
         # it's a 404
@@ -488,7 +537,7 @@ class RequestObjectTests(helper.CPWebCase):
                 if show_mismatched_params:
                     self.assertInBody(msg)
                 else:
-                    self.assertInBody("Not Found")
+                    self.assertInBody('Not Found')
 
         # In the case that a handler raises a TypeError we should
         # let that type error through.
@@ -496,13 +545,14 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/raise_type_error',
                 '/paramerrors/raise_type_error_with_default_param?x=0',
                 '/paramerrors/raise_type_error_with_default_param?x=0&y=0',
+                '/paramerrors/raise_type_error_decorated',
         ):
             self.getPage(uri, method='GET')
             self.assertStatus(500)
             self.assertTrue('Client Error', self.body)
 
     def testErrorHandling(self):
-        self.getPage("/error/missing")
+        self.getPage('/error/missing')
         self.assertStatus(404)
         self.assertErrorPage(404, "The path '/error/missing' was not found.")
 
@@ -510,27 +560,27 @@ class RequestObjectTests(helper.CPWebCase):
         ignore.append(ValueError)
         try:
             valerr = '\n    raise ValueError()\nValueError'
-            self.getPage("/error/page_method")
+            self.getPage('/error/page_method')
             self.assertErrorPage(500, pattern=valerr)
 
-            self.getPage("/error/page_yield")
+            self.getPage('/error/page_yield')
             self.assertErrorPage(500, pattern=valerr)
 
-            if (cherrypy.server.protocol_version == "HTTP/1.0" or
-                    getattr(cherrypy.server, "using_apache", False)):
-                self.getPage("/error/page_streamed")
+            if (cherrypy.server.protocol_version == 'HTTP/1.0' or
+                    getattr(cherrypy.server, 'using_apache', False)):
+                self.getPage('/error/page_streamed')
                 # Because this error is raised after the response body has
                 # started, the status should not change to an error status.
                 self.assertStatus(200)
-                self.assertBody("word up")
+                self.assertBody('word up')
             else:
                 # Under HTTP/1.1, the chunked transfer-coding is used.
                 # The HTTP client will choke when the output is incomplete.
                 self.assertRaises((ValueError, IncompleteRead), self.getPage,
-                                  "/error/page_streamed")
+                                  '/error/page_streamed')
 
             # No traceback should be present
-            self.getPage("/error/cause_err_in_finalize")
+            self.getPage('/error/cause_err_in_finalize')
             msg = "Illegal response status from server ('ZOO' is non-numeric)."
             self.assertErrorPage(500, msg, None)
         finally:
@@ -541,126 +591,126 @@ class RequestObjectTests(helper.CPWebCase):
         self.assertStatus("410 Gone fishin'")
 
         # Test custom error page for a specific error.
-        self.getPage("/error/custom")
+        self.getPage('/error/custom')
         self.assertStatus(404)
-        self.assertBody("Hello, world\r\n" + (" " * 499))
+        self.assertBody('Hello, world\r\n' + (' ' * 499))
 
         # Test custom error page for a specific error.
-        self.getPage("/error/custom?err=401")
+        self.getPage('/error/custom?err=401')
         self.assertStatus(401)
         self.assertBody(
-            "Error 401 Unauthorized - "
+            'Error 401 Unauthorized - '
             "Well, I'm very sorry but you haven't paid!")
 
         # Test default custom error page.
-        self.getPage("/error/custom_default")
+        self.getPage('/error/custom_default')
         self.assertStatus(500)
         self.assertBody(
-            "Error 500 Internal Server Error - "
+            'Error 500 Internal Server Error - '
             "Well, I'm very sorry but you haven't paid!".ljust(513))
 
         # Test error in custom error page (ticket #305).
         # Note that the message is escaped for HTML (ticket #310).
-        self.getPage("/error/noexist")
+        self.getPage('/error/noexist')
         self.assertStatus(404)
         if sys.version_info >= (3, 3):
-            exc_name = "FileNotFoundError"
+            exc_name = 'FileNotFoundError'
         else:
-            exc_name = "IOError"
-        msg = ("No, &lt;b&gt;really&lt;/b&gt;, not found!<br />"
-               "In addition, the custom error page failed:\n<br />"
-               "%s: [Errno 2] "
+            exc_name = 'IOError'
+        msg = ('No, &lt;b&gt;really&lt;/b&gt;, not found!<br />'
+               'In addition, the custom error page failed:\n<br />'
+               '%s: [Errno 2] '
                "No such file or directory: 'nonexistent.html'") % (exc_name,)
         self.assertInBody(msg)
 
-        if getattr(cherrypy.server, "using_apache", False):
+        if getattr(cherrypy.server, 'using_apache', False):
             pass
         else:
             # Test throw_errors (ticket #186).
-            self.getPage("/error/rethrow")
-            self.assertInBody("raise ValueError()")
+            self.getPage('/error/rethrow')
+            self.assertInBody('raise ValueError()')
 
     def testExpect(self):
         e = ('Expect', '100-continue')
-        self.getPage("/headerelements/get_elements?headername=Expect", [e])
+        self.getPage('/headerelements/get_elements?headername=Expect', [e])
         self.assertBody('100-continue')
 
-        self.getPage("/expect/expectation_failed", [e])
+        self.getPage('/expect/expectation_failed', [e])
         self.assertStatus(417)
 
     def testHeaderElements(self):
         # Accept-* header elements should be sorted, with most preferred first.
         h = [('Accept', 'audio/*; q=0.2, audio/basic')]
-        self.getPage("/headerelements/get_elements?headername=Accept", h)
+        self.getPage('/headerelements/get_elements?headername=Accept', h)
         self.assertStatus(200)
-        self.assertBody("audio/basic\n"
-                        "audio/*;q=0.2")
+        self.assertBody('audio/basic\n'
+                        'audio/*;q=0.2')
 
         h = [
             ('Accept',
              'text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c')
         ]
-        self.getPage("/headerelements/get_elements?headername=Accept", h)
+        self.getPage('/headerelements/get_elements?headername=Accept', h)
         self.assertStatus(200)
-        self.assertBody("text/x-c\n"
-                        "text/html\n"
-                        "text/x-dvi;q=0.8\n"
-                        "text/plain;q=0.5")
+        self.assertBody('text/x-c\n'
+                        'text/html\n'
+                        'text/x-dvi;q=0.8\n'
+                        'text/plain;q=0.5')
 
         # Test that more specific media ranges get priority.
         h = [('Accept', 'text/*, text/html, text/html;level=1, */*')]
-        self.getPage("/headerelements/get_elements?headername=Accept", h)
+        self.getPage('/headerelements/get_elements?headername=Accept', h)
         self.assertStatus(200)
-        self.assertBody("text/html;level=1\n"
-                        "text/html\n"
-                        "text/*\n"
-                        "*/*")
+        self.assertBody('text/html;level=1\n'
+                        'text/html\n'
+                        'text/*\n'
+                        '*/*')
 
         # Test Accept-Charset
         h = [('Accept-Charset', 'iso-8859-5, unicode-1-1;q=0.8')]
         self.getPage(
-            "/headerelements/get_elements?headername=Accept-Charset", h)
-        self.assertStatus("200 OK")
-        self.assertBody("iso-8859-5\n"
-                        "unicode-1-1;q=0.8")
+            '/headerelements/get_elements?headername=Accept-Charset', h)
+        self.assertStatus('200 OK')
+        self.assertBody('iso-8859-5\n'
+                        'unicode-1-1;q=0.8')
 
         # Test Accept-Encoding
         h = [('Accept-Encoding', 'gzip;q=1.0, identity; q=0.5, *;q=0')]
         self.getPage(
-            "/headerelements/get_elements?headername=Accept-Encoding", h)
-        self.assertStatus("200 OK")
-        self.assertBody("gzip;q=1.0\n"
-                        "identity;q=0.5\n"
-                        "*;q=0")
+            '/headerelements/get_elements?headername=Accept-Encoding', h)
+        self.assertStatus('200 OK')
+        self.assertBody('gzip;q=1.0\n'
+                        'identity;q=0.5\n'
+                        '*;q=0')
 
         # Test Accept-Language
         h = [('Accept-Language', 'da, en-gb;q=0.8, en;q=0.7')]
         self.getPage(
-            "/headerelements/get_elements?headername=Accept-Language", h)
-        self.assertStatus("200 OK")
-        self.assertBody("da\n"
-                        "en-gb;q=0.8\n"
-                        "en;q=0.7")
+            '/headerelements/get_elements?headername=Accept-Language', h)
+        self.assertStatus('200 OK')
+        self.assertBody('da\n'
+                        'en-gb;q=0.8\n'
+                        'en;q=0.7')
 
         # Test malformed header parsing. See
         # https://github.com/cherrypy/cherrypy/issues/763.
-        self.getPage("/headerelements/get_elements?headername=Content-Type",
+        self.getPage('/headerelements/get_elements?headername=Content-Type',
                      # Note the illegal trailing ";"
                      headers=[('Content-Type', 'text/html; charset=utf-8;')])
         self.assertStatus(200)
-        self.assertBody("text/html;charset=utf-8")
+        self.assertBody('text/html;charset=utf-8')
 
     def test_repeated_headers(self):
         # Test that two request headers are collapsed into one.
         # See https://github.com/cherrypy/cherrypy/issues/542.
-        self.getPage("/headers/Accept-Charset",
-                     headers=[("Accept-Charset", "iso-8859-5"),
-                              ("Accept-Charset", "unicode-1-1;q=0.8")])
-        self.assertBody("iso-8859-5, unicode-1-1;q=0.8")
+        self.getPage('/headers/Accept-Charset',
+                     headers=[('Accept-Charset', 'iso-8859-5'),
+                              ('Accept-Charset', 'unicode-1-1;q=0.8')])
+        self.assertBody('iso-8859-5, unicode-1-1;q=0.8')
 
         # Tests that each header only appears once, regardless of case.
-        self.getPage("/headers/doubledheaders")
-        self.assertBody("double header test")
+        self.getPage('/headers/doubledheaders')
+        self.assertBody('double header test')
         hnames = [name.title() for name, val in self.headers]
         for key in ['Content-Length', 'Content-Type', 'Date',
                     'Expires', 'Location', 'Server']:
@@ -669,26 +719,26 @@ class RequestObjectTests(helper.CPWebCase):
     def test_encoded_headers(self):
         # First, make sure the innards work like expected.
         self.assertEqual(
-            httputil.decode_TEXT(ntou("=?utf-8?q?f=C3=BCr?=")), ntou("f\xfcr"))
+            httputil.decode_TEXT(ntou('=?utf-8?q?f=C3=BCr?=')), ntou('f\xfcr'))
 
-        if cherrypy.server.protocol_version == "HTTP/1.1":
+        if cherrypy.server.protocol_version == 'HTTP/1.1':
             # Test RFC-2047-encoded request and response header values
             u = ntou('\u212bngstr\xf6m', 'escape')
-            c = ntou("=E2=84=ABngstr=C3=B6m")
-            self.getPage("/headers/ifmatch",
+            c = ntou('=E2=84=ABngstr=C3=B6m')
+            self.getPage('/headers/ifmatch',
                          [('If-Match', ntou('=?utf-8?q?%s?=') % c)])
             # The body should be utf-8 encoded.
-            self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m"))
+            self.assertBody(ntob('\xe2\x84\xabngstr\xc3\xb6m'))
             # But the Etag header should be RFC-2047 encoded (binary)
-            self.assertHeader("ETag", ntou('=?utf-8?b?4oSrbmdzdHLDtm0=?='))
+            self.assertHeader('ETag', ntou('=?utf-8?b?4oSrbmdzdHLDtm0=?='))
 
             # Test a *LONG* RFC-2047-encoded request and response header value
-            self.getPage("/headers/ifmatch",
+            self.getPage('/headers/ifmatch',
                          [('If-Match', ntou('=?utf-8?q?%s?=') % (c * 10))])
-            self.assertBody(ntob("\xe2\x84\xabngstr\xc3\xb6m") * 10)
+            self.assertBody(ntob('\xe2\x84\xabngstr\xc3\xb6m') * 10)
             # Note: this is different output for Python3, but it decodes fine.
             etag = self.assertHeader(
-                "ETag",
+                'ETag',
                 '=?utf-8?b?4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
                 '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
                 '4oSrbmdzdHLDtm3ihKtuZ3N0csO2beKEq25nc3Ryw7Zt'
@@ -698,57 +748,99 @@ class RequestObjectTests(helper.CPWebCase):
     def test_header_presence(self):
         # If we don't pass a Content-Type header, it should not be present
         # in cherrypy.request.headers
-        self.getPage("/headers/Content-Type",
+        self.getPage('/headers/Content-Type',
                      headers=[])
         self.assertStatus(500)
 
         # If Content-Type is present in the request, it should be present in
         # cherrypy.request.headers
-        self.getPage("/headers/Content-Type",
-                     headers=[("Content-type", "application/json")])
-        self.assertBody("application/json")
+        self.getPage('/headers/Content-Type',
+                     headers=[('Content-type', 'application/json')])
+        self.assertBody('application/json')
 
     def test_basic_HTTPMethods(self):
-        helper.webtest.methods_with_bodies = ("POST", "PUT", "PROPFIND")
+        helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND',
+                                              'PATCH')
 
         # Test that all defined HTTP methods work.
         for m in defined_http_methods:
-            self.getPage("/method/", method=m)
+            self.getPage('/method/', method=m)
 
             # HEAD requests should not return any body.
-            if m == "HEAD":
-                self.assertBody("")
-            elif m == "TRACE":
+            if m == 'HEAD':
+                self.assertBody('')
+            elif m == 'TRACE':
                 # Some HTTP servers (like modpy) have their own TRACE support
-                self.assertEqual(self.body[:5], ntob("TRACE"))
+                self.assertEqual(self.body[:5], ntob('TRACE'))
             else:
                 self.assertBody(m)
 
+        # test of PATCH requests
+        # Request a PATCH method with a form-urlencoded body
+        self.getPage('/method/parameterized', method='PATCH',
+                     body='data=on+top+of+other+things')
+        self.assertBody('on top of other things')
+
+        # Request a PATCH method with a file body
+        b = 'one thing on top of another'
+        h = [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(b)))]
+        self.getPage('/method/request_body', headers=h, method='PATCH', body=b)
+        self.assertStatus(200)
+        self.assertBody(b)
+
+        # Request a PATCH method with a file body but no Content-Type.
+        # See https://github.com/cherrypy/cherrypy/issues/790.
+        b = ntob('one thing on top of another')
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.putrequest('PATCH', '/method/request_body', skip_host=True)
+            conn.putheader('Host', self.HOST)
+            conn.putheader('Content-Length', str(len(b)))
+            conn.endheaders()
+            conn.send(b)
+            response = conn.response_class(conn.sock, method='PATCH')
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b)
+        finally:
+            self.persistent = False
+
+        # Request a PATCH method with no body whatsoever (not an empty one).
+        # See https://github.com/cherrypy/cherrypy/issues/650.
+        # Provide a C-T or webtest will provide one (and a C-L) for us.
+        h = [('Content-Type', 'text/plain')]
+        self.getPage('/method/reachable', headers=h, method='PATCH')
+        self.assertStatus(411)
+
+        # HTTP PUT tests
         # Request a PUT method with a form-urlencoded body
-        self.getPage("/method/parameterized", method="PUT",
-                     body="data=on+top+of+other+things")
-        self.assertBody("on top of other things")
+        self.getPage('/method/parameterized', method='PUT',
+                     body='data=on+top+of+other+things')
+        self.assertBody('on top of other things')
 
         # Request a PUT method with a file body
-        b = "one thing on top of another"
-        h = [("Content-Type", "text/plain"),
-             ("Content-Length", str(len(b)))]
-        self.getPage("/method/request_body", headers=h, method="PUT", body=b)
+        b = 'one thing on top of another'
+        h = [('Content-Type', 'text/plain'),
+             ('Content-Length', str(len(b)))]
+        self.getPage('/method/request_body', headers=h, method='PUT', body=b)
         self.assertStatus(200)
         self.assertBody(b)
 
         # Request a PUT method with a file body but no Content-Type.
         # See https://github.com/cherrypy/cherrypy/issues/790.
-        b = ntob("one thing on top of another")
+        b = ntob('one thing on top of another')
         self.persistent = True
         try:
             conn = self.HTTP_CONN
-            conn.putrequest("PUT", "/method/request_body", skip_host=True)
-            conn.putheader("Host", self.HOST)
+            conn.putrequest('PUT', '/method/request_body', skip_host=True)
+            conn.putheader('Host', self.HOST)
             conn.putheader('Content-Length', str(len(b)))
             conn.endheaders()
             conn.send(b)
-            response = conn.response_class(conn.sock, method="PUT")
+            response = conn.response_class(conn.sock, method='PUT')
             response.begin()
             self.assertEqual(response.status, 200)
             self.body = response.read()
@@ -759,8 +851,8 @@ class RequestObjectTests(helper.CPWebCase):
         # Request a PUT method with no body whatsoever (not an empty one).
         # See https://github.com/cherrypy/cherrypy/issues/650.
         # Provide a C-T or webtest will provide one (and a C-L) for us.
-        h = [("Content-Type", "text/plain")]
-        self.getPage("/method/reachable", headers=h, method="PUT")
+        h = [('Content-Type', 'text/plain')]
+        self.getPage('/method/reachable', headers=h, method='PUT')
         self.assertStatus(411)
 
         # Request a custom method with a request body
@@ -769,40 +861,72 @@ class RequestObjectTests(helper.CPWebCase):
              '</prop></propfind>')
         h = [('Content-Type', 'text/xml'),
              ('Content-Length', str(len(b)))]
-        self.getPage("/method/request_body", headers=h,
-                     method="PROPFIND", body=b)
+        self.getPage('/method/request_body', headers=h,
+                     method='PROPFIND', body=b)
         self.assertStatus(200)
         self.assertBody(b)
 
         # Request a disallowed method
-        self.getPage("/method/", method="LINK")
+        self.getPage('/method/', method='LINK')
         self.assertStatus(405)
 
         # Request an unknown method
-        self.getPage("/method/", method="SEARCH")
+        self.getPage('/method/', method='SEARCH')
         self.assertStatus(501)
 
         # For method dispatchers: make sure that an HTTP method doesn't
         # collide with a virtual path atom. If you build HTTP-method
         # dispatching into the core, rewrite these handlers to use
         # your dispatch idioms.
-        self.getPage("/divorce/get?ID=13")
+        self.getPage('/divorce/get?ID=13')
         self.assertBody('Divorce document 13: empty')
         self.assertStatus(200)
-        self.getPage("/divorce/", method="GET")
+        self.getPage('/divorce/', method='GET')
         self.assertBody('<h1>Choose your document</h1>\n<ul>\n</ul>')
         self.assertStatus(200)
 
     def test_CONNECT_method(self):
-        if getattr(cherrypy.server, "using_apache", False):
-            return self.skip("skipped due to known Apache differences... ")
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.request('CONNECT', 'created.example.com:3128')
+            response = conn.response_class(conn.sock, method='CONNECT')
+            response.begin()
+            self.assertEqual(response.status, 204)
+        finally:
+            self.persistent = False
 
-        self.getPage("/method/", method="CONNECT")
-        self.assertBody("CONNECT")
+        self.persistent = True
+        try:
+            conn = self.HTTP_CONN
+            conn.request('CONNECT', 'body.example.com:3128')
+            response = conn.response_class(conn.sock, method='CONNECT')
+            response.begin()
+            self.assertEqual(response.status, 200)
+            self.body = response.read()
+            self.assertBody(b'CONNECTed to /body.example.com:3128')
+        finally:
+            self.persistent = False
+
+    def test_CONNECT_method_invalid_authority(self):
+        for request_target in ['example.com', 'http://example.com:33',
+                               '/path/', 'path/', '/?q=f', '#f']:
+            self.persistent = True
+            try:
+                conn = self.HTTP_CONN
+                conn.request('CONNECT', request_target)
+                response = conn.response_class(conn.sock, method='CONNECT')
+                response.begin()
+                self.assertEqual(response.status, 400)
+                self.body = response.read()
+                self.assertBody(b'Invalid path in Request-URI: request-target '
+                                b'must match authority-form.')
+            finally:
+                self.persistent = False
 
     def testEmptyThreadlocals(self):
         results = []
         for x in range(20):
-            self.getPage("/threadlocal/")
+            self.getPage('/threadlocal/')
             results.append(self.body)
-        self.assertEqual(results, [ntob("None")] * 20)
+        self.assertEqual(results, [ntob('None')] * 20)

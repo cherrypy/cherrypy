@@ -1,2 +1,0 @@
-rm MANIFEST
-python setup.py sdist

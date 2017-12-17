@@ -1,12 +1,15 @@
 import os
-import sys
 import socket
 import atexit
 import tempfile
 
+from six.moves.http_client import HTTPConnection
+
+import pytest
+
 import cherrypy
 from cherrypy.test import helper
-from cherrypy._cpcompat import HTTPConnection
+
 
 def usocket_path():
     fd, path = tempfile.mkstemp('cp_test.sock')
@@ -14,7 +17,9 @@ def usocket_path():
     os.remove(path)
     return path
 
+
 USOCKET_PATH = usocket_path()
+
 
 class USocketHTTPConnection(HTTPConnection):
     """
@@ -42,21 +47,7 @@ class USocketHTTPConnection(HTTPConnection):
         atexit.register(lambda: os.remove(self.path))
 
 
-def skip_on_windows(method):
-    """
-    Decorator to skip the method call if the test is executing on Windows.
-    """
-    def wrapper(self):
-        if sys.platform == "win32":
-            return self.skip("No UNIX Socket support in Windows.")
-        else:
-            return method(self)
-    wrapper.__doc__ = method.__doc__
-    wrapper.__name__ = method.__name__
-    return wrapper
-
-
-
+@pytest.mark.skipif("sys.platform == 'win32'")
 class WSGI_UnixSocket_Test(helper.CPWebCase):
     """
     Test basic behavior on a cherrypy wsgi server listening
@@ -66,18 +57,17 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
     """
     HTTP_CONN = USocketHTTPConnection(USOCKET_PATH)
 
-
     @staticmethod
     def setup_server():
         class Root(object):
 
             @cherrypy.expose
             def index(self):
-                return "Test OK"
+                return 'Test OK'
 
             @cherrypy.expose
             def error(self):
-                raise Exception("Invalid page")
+                raise Exception('Invalid page')
 
         config = {
             'server.socket_file': USOCKET_PATH
@@ -88,19 +78,16 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
     def tearDown(self):
         cherrypy.config.update({'server.socket_file': None})
 
-    @skip_on_windows
     def test_simple_request(self):
-        self.getPage("/")
-        self.assertStatus("200 OK")
-        self.assertInBody("Test OK")
+        self.getPage('/')
+        self.assertStatus('200 OK')
+        self.assertInBody('Test OK')
 
-    @skip_on_windows
     def test_not_found(self):
-        self.getPage("/invalid_path")
-        self.assertStatus("404 Not Found")
+        self.getPage('/invalid_path')
+        self.assertStatus('404 Not Found')
 
-    @skip_on_windows
     def test_internal_error(self):
-        self.getPage("/error")
-        self.assertStatus("500 Internal Server Error")
-        self.assertInBody("Invalid page")
+        self.getPage('/error')
+        self.assertStatus('500 Internal Server Error')
+        self.assertInBody('Invalid page')

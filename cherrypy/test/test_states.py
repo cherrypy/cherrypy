@@ -1,14 +1,16 @@
 import os
 import signal
-import socket
-import sys
 import time
 import unittest
 import warnings
 
+from six.moves.http_client import BadStatusLine
+
+import pytest
+import portend
+
 import cherrypy
 import cherrypy.process.servers
-from cherrypy._cpcompat import BadStatusLine, ntob
 from cherrypy.test import helper
 
 engine = cherrypy.engine
@@ -47,42 +49,29 @@ class Dependency:
     def stopthread(self, thread_id):
         del self.threads[thread_id]
 
+
 db_connection = Dependency(engine)
 
 
 def setup_server():
     class Root:
 
+        @cherrypy.expose
         def index(self):
-            return "Hello World"
-        index.exposed = True
+            return 'Hello World'
 
+        @cherrypy.expose
         def ctrlc(self):
             raise KeyboardInterrupt()
-        ctrlc.exposed = True
 
+        @cherrypy.expose
         def graceful(self):
             engine.graceful()
-            return "app was (gracefully) restarted succesfully"
-        graceful.exposed = True
-
-        def block_explicit(self):
-            while True:
-                if cherrypy.response.timed_out:
-                    cherrypy.response.timed_out = False
-                    return "broken!"
-                time.sleep(0.01)
-        block_explicit.exposed = True
-
-        def block_implicit(self):
-            time.sleep(0.5)
-            return "response.timeout = %s" % cherrypy.response.timeout
-        block_implicit.exposed = True
+            return 'app was (gracefully) restarted succesfully'
 
     cherrypy.tree.mount(Root())
     cherrypy.config.update({
         'environment': 'test_suite',
-        'engine.deadlock_poll_freq': 0.1,
     })
 
     db_connection.subscribe()
@@ -110,15 +99,15 @@ class ServerStateTests(helper.CPWebCase):
 
         host = cherrypy.server.socket_host
         port = cherrypy.server.socket_port
-        self.assertRaises(IOError, cherrypy._cpserver.check_port, host, port)
+        portend.occupied(host, port, timeout=0.1)
 
         # The db_connection should be running now
         self.assertEqual(db_connection.running, True)
         self.assertEqual(db_connection.startcount, 2)
         self.assertEqual(len(db_connection.threads), 0)
 
-        self.getPage("/")
-        self.assertBody("Hello World")
+        self.getPage('/')
+        self.assertBody('Hello World')
         self.assertEqual(len(db_connection.threads), 1)
 
         # Test engine stop. This will also stop the HTTP server.
@@ -131,8 +120,8 @@ class ServerStateTests(helper.CPWebCase):
 
         # Block the main thread now and verify that exit() works.
         def exittest():
-            self.getPage("/")
-            self.assertBody("Hello World")
+            self.getPage('/')
+            self.assertBody('Hello World')
             engine.exit()
         cherrypy.server.start()
         engine.start_with_callback(exittest)
@@ -147,23 +136,23 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(db_connection.running, True)
         grace = db_connection.gracecount
 
-        self.getPage("/")
-        self.assertBody("Hello World")
+        self.getPage('/')
+        self.assertBody('Hello World')
         self.assertEqual(len(db_connection.threads), 1)
 
         # Test server restart from this thread
         engine.graceful()
         self.assertEqual(engine.state, engine.states.STARTED)
-        self.getPage("/")
-        self.assertBody("Hello World")
+        self.getPage('/')
+        self.assertBody('Hello World')
         self.assertEqual(db_connection.running, True)
         self.assertEqual(db_connection.gracecount, grace + 1)
         self.assertEqual(len(db_connection.threads), 1)
 
         # Test server restart from inside a page handler
-        self.getPage("/graceful")
+        self.getPage('/graceful')
         self.assertEqual(engine.state, engine.states.STARTED)
-        self.assertBody("app was (gracefully) restarted succesfully")
+        self.assertBody('app was (gracefully) restarted succesfully')
         self.assertEqual(db_connection.running, True)
         self.assertEqual(db_connection.gracecount, grace + 2)
         # Since we are requesting synchronously, is only one thread used?
@@ -184,10 +173,10 @@ class ServerStateTests(helper.CPWebCase):
         self.persistent = True
         try:
             # Make the first request and assert there's no "Connection: close".
-            self.getPage("/")
+            self.getPage('/')
             self.assertStatus('200 OK')
-            self.assertBody("Hello World")
-            self.assertNoHeader("Connection")
+            self.assertBody('Hello World')
+            self.assertNoHeader('Connection')
 
             cherrypy.server.httpserver.interrupt = KeyboardInterrupt
             engine.block()
@@ -222,47 +211,16 @@ class ServerStateTests(helper.CPWebCase):
         # sideffects. python < 3.5 will raise directly BadStatusLine
         # which is not a subclass for socket.error/OSError.
         try:
-            self.getPage("/ctrlc", raise_subcls=BadStatusLine)
+            self.getPage('/ctrlc', raise_subcls=BadStatusLine)
         except BadStatusLine:
             pass
         else:
             print(self.body)
-            self.fail("AssertionError: BadStatusLine not raised")
+            self.fail('AssertionError: BadStatusLine not raised')
 
         engine.block()
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
-
-    def test_3_Deadlocks(self):
-        cherrypy.config.update({'response.timeout': 0.2})
-
-        engine.start()
-        cherrypy.server.start()
-        try:
-            self.assertNotEqual(engine.timeout_monitor.thread, None)
-
-            # Request a "normal" page.
-            self.assertEqual(engine.timeout_monitor.servings, [])
-            self.getPage("/")
-            self.assertBody("Hello World")
-            # request.close is called async.
-            while engine.timeout_monitor.servings:
-                sys.stdout.write(".")
-                time.sleep(0.01)
-
-            # Request a page that explicitly checks itself for deadlock.
-            # The deadlock_timeout should be 2 secs.
-            self.getPage("/block_explicit")
-            self.assertBody("broken!")
-
-            # Request a page that implicitly breaks deadlock.
-            # If we deadlock, we want to touch as little code as possible,
-            # so we won't even call handle_error, just bail ASAP.
-            self.getPage("/block_implicit")
-            self.assertStatus(500)
-            self.assertInBody("raise cherrypy.TimeoutError()")
-        finally:
-            engine.exit()
 
     def test_4_Autoreload(self):
         # If test_3 has not been executed, the server won't be stopped,
@@ -275,28 +233,28 @@ class ServerStateTests(helper.CPWebCase):
         p.write_conf(extra='test_case_name: "test_4_Autoreload"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
-            self.getPage("/start")
+            self.getPage('/start')
             start = float(self.body)
 
             # Give the autoreloader time to cache the file time.
             time.sleep(2)
 
             # Touch the file
-            os.utime(os.path.join(thisdir, "_test_states_demo.py"), None)
+            os.utime(os.path.join(thisdir, '_test_states_demo.py'), None)
 
             # Give the autoreloader time to re-exec the process
             time.sleep(2)
             host = cherrypy.server.socket_host
             port = cherrypy.server.socket_port
-            cherrypy._cpserver.wait_for_occupied_port(host, port)
+            portend.occupied(host, port, timeout=5)
 
-            self.getPage("/start")
+            self.getPage('/start')
             if not (float(self.body) > start):
-                raise AssertionError("start time %s not greater than %s" %
+                raise AssertionError('start time %s not greater than %s' %
                                      (float(self.body), start))
         finally:
             # Shut down the spawned process
-            self.getPage("/exit")
+            self.getPage('/exit')
         p.join()
 
     def test_5_Start_Error(self):
@@ -316,14 +274,14 @@ test_case_name: "test_5_Start_Error"
         )
         p.start(imports='cherrypy.test._test_states_demo')
         if p.exit_code == 0:
-            self.fail("Process failed to return nonzero exit code.")
+            self.fail('Process failed to return nonzero exit code.')
 
 
 class PluginTests(helper.CPWebCase):
 
     def test_daemonize(self):
         if os.name not in ['posix']:
-            return self.skip("skipped (not on posix) ")
+            return self.skip('skipped (not on posix) ')
         self.HOST = '127.0.0.1'
         self.PORT = 8081
         # Spawn the process and wait, when this returns, the original process
@@ -338,19 +296,19 @@ class PluginTests(helper.CPWebCase):
         p.start(imports='cherrypy.test._test_states_demo')
         try:
             # Just get the pid of the daemonization process.
-            self.getPage("/pid")
+            self.getPage('/pid')
             self.assertStatus(200)
             page_pid = int(self.body)
             self.assertEqual(page_pid, p.get_pid())
         finally:
             # Shut down the spawned process
-            self.getPage("/exit")
+            self.getPage('/exit')
         p.join()
 
         # Wait until here to test the exit code because we want to ensure
         # that we wait for the daemon to finish running before we fail.
         if p.exit_code != 0:
-            self.fail("Daemonized parent process failed to exit cleanly.")
+            self.fail('Daemonized parent process failed to exit cleanly.')
 
 
 class SignalHandlingTests(helper.CPWebCase):
@@ -360,7 +318,7 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            return self.skip("skipped (no SIGHUP) ")
+            return self.skip('skipped (no SIGHUP) ')
 
         # Spawn the process.
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
@@ -377,10 +335,10 @@ class SignalHandlingTests(helper.CPWebCase):
         try:
             from signal import SIGHUP
         except ImportError:
-            return self.skip("skipped (no SIGHUP) ")
+            return self.skip('skipped (no SIGHUP) ')
 
         if os.name not in ['posix']:
-            return self.skip("skipped (not on posix) ")
+            return self.skip('skipped (not on posix) ')
 
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
@@ -397,24 +355,24 @@ class SignalHandlingTests(helper.CPWebCase):
             os.kill(pid, SIGHUP)
             # Give the server some time to restart
             time.sleep(2)
-            self.getPage("/pid")
+            self.getPage('/pid')
             self.assertStatus(200)
             new_pid = int(self.body)
             self.assertNotEqual(new_pid, pid)
         finally:
             # Shut down the spawned process
-            self.getPage("/exit")
+            self.getPage('/exit')
         p.join()
 
     def _require_signal_and_kill(self, signal_name):
         if not hasattr(signal, signal_name):
-            self.skip("skipped (no %(signal_name)s)" % vars())
+            self.skip('skipped (no %(signal_name)s)' % vars())
 
         if not hasattr(os, 'kill'):
-            self.skip("skipped (no os.kill)")
+            self.skip('skipped (no os.kill)')
 
     def test_SIGTERM(self):
-        "SIGTERM should shut down the server whether daemonized or not."
+        'SIGTERM should shut down the server whether daemonized or not.'
         self._require_signal_and_kill('SIGTERM')
 
         # Spawn a normal, undaemonized process.
@@ -447,7 +405,7 @@ class SignalHandlingTests(helper.CPWebCase):
         #  will result in a forced termination of the process.
         #  Therefore, this test is not suitable for Windows.
         if os.name == 'nt':
-            self.skip("SIGTERM not available")
+            self.skip('SIGTERM not available')
 
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
@@ -462,14 +420,16 @@ test_case_name: "test_signal_handler_unsubscribe"
         p.join()
 
         # Assert the old handler ran.
-        target_line = open(p.error_log, 'rb').readlines()[-10]
-        if not ntob("I am an old SIGTERM handler.") in target_line:
-            self.fail("Old SIGTERM handler did not run.\n%r" % target_line)
+        log_lines = list(open(p.error_log, 'rb'))
+        assert any(
+            line.endswith(b'I am an old SIGTERM handler.\n')
+            for line in log_lines
+        )
 
 
 class WaitTests(unittest.TestCase):
 
-    def test_wait_for_occupied_port_INADDR_ANY(self):
+    def test_safe_wait_INADDR_ANY(self):
         """
         Wait on INADDR_ANY should not raise IOError
 
@@ -485,43 +445,23 @@ class WaitTests(unittest.TestCase):
         # Simulate the behavior we observe when no loopback interface is
         #  present by: finding a port that's not occupied, then wait on it.
 
-        free_port = self.find_free_port()
+        free_port = portend.find_available_local_port()
 
         servers = cherrypy.process.servers
 
-        def with_shorter_timeouts(func):
-            """
-            A context where occupied_port_timeout is much smaller to speed
-            test runs.
-            """
-            # When we have Python 2.5, simplify using the with_statement.
-            orig_timeout = servers.occupied_port_timeout
-            servers.occupied_port_timeout = .07
-            try:
-                func()
-            finally:
-                servers.occupied_port_timeout = orig_timeout
+        inaddr_any = '0.0.0.0'
 
-        def do_waiting():
-            # Wait on the free port that's unbound
-            with warnings.catch_warnings(record=True) as w:
-                servers.wait_for_occupied_port('0.0.0.0', free_port)
-                self.assertEqual(len(w), 1)
-                self.assertTrue(isinstance(w[0], warnings.WarningMessage))
-                self.assertTrue(
-                    'Unable to verify that the server is bound on ' in str(w[0]))
+        # Wait on the free port that's unbound
+        with warnings.catch_warnings(record=True) as w:
+            with servers._safe_wait(inaddr_any, free_port):
+                portend.occupied(inaddr_any, free_port, timeout=1)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(isinstance(w[0], warnings.WarningMessage))
+            self.assertTrue(
+                'Unable to verify that the server is bound on ' in str(w[0]))
 
-            # The wait should still raise an IO error if INADDR_ANY was
-            #  not supplied.
-            self.assertRaises(IOError, servers.wait_for_occupied_port,
-                              '127.0.0.1', free_port)
-
-        with_shorter_timeouts(do_waiting)
-
-    def find_free_port(self):
-        "Find a free port by binding to port 0 then unbinding."
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(('', 0))
-        free_port = sock.getsockname()[1]
-        sock.close()
-        return free_port
+        # The wait should still raise an IO error if INADDR_ANY was
+        #  not supplied.
+        with pytest.raises(IOError):
+            with servers._safe_wait('127.0.0.1', free_port):
+                portend.occupied('127.0.0.1', free_port, timeout=1)

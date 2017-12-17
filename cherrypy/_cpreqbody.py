@@ -61,7 +61,7 @@ Here's the built-in JSON tool for an example::
     def json_in(force=True, debug=False):
         request = cherrypy.serving.request
         def json_processor(entity):
-            \"""Read application/json data into request.json.\"""
+            '''Read application/json data into request.json.'''
             if not entity.headers.get("Content-Length", ""):
                 raise cherrypy.HTTPError(411)
 
@@ -120,8 +120,8 @@ try:
 except ImportError:
     def unquote_plus(bs):
         """Bytes version of urllib.parse.unquote_plus."""
-        bs = bs.replace(ntob('+'), ntob(' '))
-        atoms = bs.split(ntob('%'))
+        bs = bs.replace(b'+', b' ')
+        atoms = bs.split(b'%')
         for i in range(1, len(atoms)):
             item = atoms[i]
             try:
@@ -129,10 +129,13 @@ except ImportError:
                 atoms[i] = bytes([pct]) + item[2:]
             except ValueError:
                 pass
-        return ntob('').join(atoms)
+        return b''.join(atoms)
+
+import six
+import cheroot.server
 
 import cherrypy
-from cherrypy._cpcompat import basestring, ntob, ntou
+from cherrypy._cpcompat import text_or_bytes, ntob, ntou
 from cherrypy.lib import httputil
 
 
@@ -169,8 +172,8 @@ def process_urlencoded(entity):
             break
     else:
         raise cherrypy.HTTPError(
-            400, "The request entity could not be decoded. The following "
-            "charsets were attempted: %s" % repr(entity.attempt_charsets))
+            400, 'The request entity could not be decoded. The following '
+            'charsets were attempted: %s' % repr(entity.attempt_charsets))
 
     # Now that all values have been successfully parsed and decoded,
     # apply them to the entity.params dict.
@@ -185,7 +188,7 @@ def process_urlencoded(entity):
 
 def process_multipart(entity):
     """Read all multipart parts into entity.parts."""
-    ib = ""
+    ib = ''
     if 'boundary' in entity.content_type.params:
         # http://tools.ietf.org/html/rfc2046#section-5.1.1
         # "The grammar for parameters on the Content-type field is such that it
@@ -193,7 +196,7 @@ def process_multipart(entity):
         # on the Content-type line"
         ib = entity.content_type.params['boundary'].strip('"')
 
-    if not re.match("^[ -~]{0,200}[!-~]$", ib):
+    if not re.match('^[ -~]{0,200}[!-~]$', ib):
         raise ValueError('Invalid boundary in multipart form: %r' % (ib,))
 
     ib = ('--' + ib).encode('ascii')
@@ -315,7 +318,8 @@ class Entity(object):
     :attr:`request.body.parts<cherrypy._cpreqbody.Entity.parts>`. You can
     enable it with::
 
-        cherrypy.request.body.processors['multipart'] = _cpreqbody.process_multipart
+        cherrypy.request.body.processors['multipart'] = \
+            _cpreqbody.process_multipart
 
     in an ``on_start_resource`` tool.
     """
@@ -325,14 +329,15 @@ class Entity(object):
     # absence of a charset parameter, is US-ASCII."
     # However, many browsers send data in utf-8 with no charset.
     attempt_charsets = ['utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
+    `HTTP/1.1
+    <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
     """
 
@@ -428,7 +433,7 @@ class Entity(object):
 
         # Copy the class 'attempt_charsets', prepending any Content-Type
         # charset
-        dec = self.content_type.params.get("charset", None)
+        dec = self.content_type.params.get('charset', None)
         if dec:
             self.attempt_charsets = [dec] + [c for c in self.attempt_charsets
                                              if c != dec]
@@ -469,8 +474,8 @@ class Entity(object):
     # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
     type = property(
         lambda self: self.content_type,
-        doc="A deprecated alias for "
-            ":attr:`content_type<cherrypy._cpreqbody.Entity.content_type>`."
+        doc='A deprecated alias for '
+            ':attr:`content_type<cherrypy._cpreqbody.Entity.content_type>`.'
     )
 
     def read(self, size=None, fp_out=None):
@@ -520,7 +525,25 @@ class Entity(object):
             self.file.seek(0)
         else:
             value = self.value
+        value = self.decode_entity(value)
         return value
+
+    def decode_entity(self, value):
+        """Return a given byte encoded value as a string"""
+        for charset in self.attempt_charsets:
+            try:
+                value = value.decode(charset)
+            except UnicodeDecodeError:
+                pass
+            else:
+                self.charset = charset
+                return value
+        else:
+            raise cherrypy.HTTPError(
+                400,
+                'The request entity could not be decoded. The following '
+                'charsets were attempted: %s' % repr(self.attempt_charsets)
+            )
 
     def process(self):
         """Execute the best-match processor for the given media type."""
@@ -556,14 +579,15 @@ class Part(Entity):
     # "The default character set, which must be assumed in the absence of a
     # charset parameter, is US-ASCII."
     attempt_charsets = ['us-ascii', 'utf-8']
-    """A list of strings, each of which should be a known encoding.
+    r"""A list of strings, each of which should be a known encoding.
 
     When the Content-Type of the request body warrants it, each of the given
     encodings will be tried in order. The first one to successfully decode the
     entity without raising an error is stored as
     :attr:`entity.charset<cherrypy._cpreqbody.Entity.charset>`. This defaults
     to ``['utf-8']`` (plus 'ISO-8859-1' for "text/\*" types, as required by
-    `HTTP/1.1 <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
+    `HTTP/1.1
+    <http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1>`_),
     but ``['us-ascii', 'utf-8']`` for multipart parts.
     """
 
@@ -595,40 +619,40 @@ class Part(Entity):
         self.file = None
         self.value = None
 
+    @classmethod
     def from_fp(cls, fp, boundary):
         headers = cls.read_headers(fp)
         return cls(fp, headers, boundary)
-    from_fp = classmethod(from_fp)
 
+    @classmethod
     def read_headers(cls, fp):
         headers = httputil.HeaderMap()
         while True:
             line = fp.readline()
             if not line:
                 # No more data--illegal end of headers
-                raise EOFError("Illegal end of headers.")
+                raise EOFError('Illegal end of headers.')
 
             if line == ntob('\r\n'):
                 # Normal end of headers
                 break
             if not line.endswith(ntob('\r\n')):
-                raise ValueError("MIME requires CRLF terminators: %r" % line)
+                raise ValueError('MIME requires CRLF terminators: %r' % line)
 
             if line[0] in ntob(' \t'):
                 # It's a continuation line.
                 v = line.strip().decode('ISO-8859-1')
             else:
-                k, v = line.split(ntob(":"), 1)
+                k, v = line.split(ntob(':'), 1)
                 k = k.strip().decode('ISO-8859-1')
                 v = v.strip().decode('ISO-8859-1')
 
             existing = headers.get(k)
             if existing:
-                v = ", ".join((existing, v))
+                v = ', '.join((existing, v))
             headers[k] = v
 
         return headers
-    read_headers = classmethod(read_headers)
 
     def read_lines_to_boundary(self, fp_out=None):
         """Read bytes from self.fp and return or write them to a file.
@@ -640,16 +664,16 @@ class Part(Entity):
         object that supports the 'write' method; all bytes read will be
         written to the fp, and that fp is returned.
         """
-        endmarker = self.boundary + ntob("--")
-        delim = ntob("")
+        endmarker = self.boundary + ntob('--')
+        delim = ntob('')
         prev_lf = True
         lines = []
         seen = 0
         while True:
             line = self.fp.readline(1 << 16)
             if not line:
-                raise EOFError("Illegal end of multipart body.")
-            if line.startswith(ntob("--")) and prev_lf:
+                raise EOFError('Illegal end of multipart body.')
+            if line.startswith(ntob('--')) and prev_lf:
                 strippedline = line.strip()
                 if strippedline == self.boundary:
                     break
@@ -659,16 +683,16 @@ class Part(Entity):
 
             line = delim + line
 
-            if line.endswith(ntob("\r\n")):
-                delim = ntob("\r\n")
+            if line.endswith(ntob('\r\n')):
+                delim = ntob('\r\n')
                 line = line[:-2]
                 prev_lf = True
-            elif line.endswith(ntob("\n")):
-                delim = ntob("\n")
+            elif line.endswith(ntob('\n')):
+                delim = ntob('\n')
                 line = line[:-1]
                 prev_lf = True
             else:
-                delim = ntob("")
+                delim = ntob('')
                 prev_lf = False
 
             if fp_out is None:
@@ -683,20 +707,7 @@ class Part(Entity):
 
         if fp_out is None:
             result = ntob('').join(lines)
-            for charset in self.attempt_charsets:
-                try:
-                    result = result.decode(charset)
-                except UnicodeDecodeError:
-                    pass
-                else:
-                    self.charset = charset
-                    return result
-            else:
-                raise cherrypy.HTTPError(
-                    400,
-                    "The request entity could not be decoded. The following "
-                    "charsets were attempted: %s" % repr(self.attempt_charsets)
-                )
+            return result
         else:
             fp_out.seek(0)
             return fp_out
@@ -710,7 +721,7 @@ class Part(Entity):
             self.file = self.read_into_file()
         else:
             result = self.read_lines_to_boundary()
-            if isinstance(result, basestring):
+            if isinstance(result, text_or_bytes):
                 self.value = result
             else:
                 self.file = result
@@ -725,31 +736,10 @@ class Part(Entity):
         self.read_lines_to_boundary(fp_out=fp_out)
         return fp_out
 
+
 Entity.part_class = Part
 
-try:
-    inf = float('inf')
-except ValueError:
-    # Python 2.4 and lower
-    class Infinity(object):
-
-        def __cmp__(self, other):
-            return 1
-
-        def __sub__(self, other):
-            return self
-    inf = Infinity()
-
-
-comma_separated_headers = [
-    'Accept', 'Accept-Charset', 'Accept-Encoding',
-    'Accept-Language', 'Accept-Ranges', 'Allow',
-    'Cache-Control', 'Connection', 'Content-Encoding',
-    'Content-Language', 'Expect', 'If-Match',
-    'If-None-Match', 'Pragma', 'Proxy-Authenticate',
-    'Te', 'Trailer', 'Transfer-Encoding', 'Upgrade',
-    'Vary', 'Via', 'Warning', 'Www-Authenticate'
-]
+inf = float('inf')
 
 
 class SizedReader:
@@ -834,7 +824,7 @@ class SizedReader:
                 if e.__class__.__name__ == 'MaxSizeExceeded':
                     # Post data is too big
                     raise cherrypy.HTTPError(
-                        413, "Maximum request length: %r" % e.args[1])
+                        413, 'Maximum request length: %r' % e.args[1])
                 else:
                     raise
             if not data:
@@ -910,23 +900,23 @@ class SizedReader:
                         v = line.strip()
                     else:
                         try:
-                            k, v = line.split(ntob(":"), 1)
+                            k, v = line.split(ntob(':'), 1)
                         except ValueError:
-                            raise ValueError("Illegal header line.")
+                            raise ValueError('Illegal header line.')
                         k = k.strip().title()
                         v = v.strip()
 
-                    if k in comma_separated_headers:
-                        existing = self.trailers.get(envname)
+                    if k in cheroot.server.comma_separated_headers:
+                        existing = self.trailers.get(k)
                         if existing:
-                            v = ntob(", ").join((existing, v))
+                            v = ntob(', ').join((existing, v))
                     self.trailers[k] = v
             except Exception:
                 e = sys.exc_info()[1]
                 if e.__class__.__name__ == 'MaxSizeExceeded':
                     # Post data is too big
                     raise cherrypy.HTTPError(
-                        413, "Maximum request length: %r" % e.args[1])
+                        413, 'Maximum request length: %r' % e.args[1])
                 else:
                     raise
 
@@ -1002,7 +992,7 @@ class RequestBody(Entity):
             # Python 2 only: keyword arguments must be byte strings (type
             # 'str').
             if sys.version_info < (3, 0):
-                if isinstance(key, unicode):
+                if isinstance(key, six.text_type):
                     key = key.encode('ISO-8859-1')
 
             if key in request_params:

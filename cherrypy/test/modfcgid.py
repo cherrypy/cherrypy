@@ -34,22 +34,21 @@ KNOWN BUGS
 """
 
 import os
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 import re
-import sys
-import time
 
 import cherrypy
 from cherrypy._cpcompat import ntob
-from cherrypy.process import plugins, servers
+from cherrypy.process import servers
 from cherrypy.test import helper
 
+curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
-def read_process(cmd, args=""):
-    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
+
+def read_process(cmd, args=''):
+    pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r"(not recognized|No such file|not found)", firstline,
+        if (re.search(r'(not recognized|No such file|not found)', firstline,
                       re.IGNORECASE)):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
@@ -58,8 +57,8 @@ def read_process(cmd, args=""):
     return output
 
 
-APACHE_PATH = "httpd"
-CONF_PATH = "fcgi.conf"
+APACHE_PATH = 'httpd'
+CONF_PATH = 'fcgi.conf'
 
 conf_fcgid = """
 # Apache2 server conf file for testing CherryPy with mod_fcgid.
@@ -85,7 +84,7 @@ class ModFCGISupervisor(helper.LocalSupervisor):
     template = conf_fcgid
 
     def __str__(self):
-        return "FCGI Server on %s:%s" % (self.host, self.port)
+        return 'FCGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
         cherrypy.server.httpserver = servers.FlupFCGIServer(
@@ -112,13 +111,13 @@ class ModFCGISupervisor(helper.LocalSupervisor):
         finally:
             f.close()
 
-        result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
+        result = read_process(APACHE_PATH, '-k start -f %s' % fcgiconf)
         if result:
             print(result)
 
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
-        read_process(APACHE_PATH, "-k stop")
+        read_process(APACHE_PATH, '-k stop')
         helper.LocalServer.stop(self)
 
     def sync_apps(self):

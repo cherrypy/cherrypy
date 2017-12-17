@@ -17,9 +17,9 @@ except ImportError:
 
 class LockError(Exception):
 
-    "Could not obtain a lock"
+    'Could not obtain a lock'
 
-    msg = "Unable to lock %r"
+    msg = 'Unable to lock %r'
 
     def __init__(self, path):
         super(LockError, self).__init__(self.msg % path)
@@ -27,13 +27,13 @@ class LockError(Exception):
 
 class UnlockError(LockError):
 
-    "Could not release a lock"
+    'Could not release a lock'
 
-    msg = "Unable to unlock %r"
+    msg = 'Unable to unlock %r'
 
 
 # first, a default, naive locking implementation
-class LockFile(object):
+class NaiveLockFile(object):
 
     """
     A default, naive locking implementation. Always fails if the file
@@ -76,13 +76,13 @@ class SystemLockFile(object):
 
         try:
             self._lock_file()
-        except:
+        except Exception:
             self.fp.seek(1)
             self.fp.close()
             del self.fp
             raise
 
-        self.fp.write(" %s\n" % os.getpid())
+        self.fp.write(' %s\n' % os.getpid())
         self.fp.truncate()
         self.fp.flush()
 
@@ -99,13 +99,8 @@ class SystemLockFile(object):
         """
         try:
             os.remove(self.path)
-        except:
+        except Exception:
             pass
-
-    #@abc.abstract_method
-    # def _lock_file(self):
-    #    """Attempt to obtain the lock on self.fp. Raise LockError if not
-    #    acquired."""
 
     def _unlock_file(self):
         """Attempt to obtain the lock on self.fp. Raise UnlockError if not
@@ -128,9 +123,6 @@ class WindowsLockFile(SystemLockFile):
         except IOError:
             raise UnlockError(self.fp.name)
 
-if 'msvcrt' in globals():
-    LockFile = WindowsLockFile
-
 
 class UnixLockFile(SystemLockFile):
 
@@ -143,5 +135,9 @@ class UnixLockFile(SystemLockFile):
 
     # no need to implement _unlock_file, it will be unlocked on close()
 
-if 'fcntl' in globals():
-    LockFile = UnixLockFile
+
+LockFile = (
+    UnixLockFile if 'fcntl' in globals() else
+    WindowsLockFile if 'msvcrt' in globals() else
+    NaiveLockFile
+)

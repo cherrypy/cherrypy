@@ -177,7 +177,7 @@ You can also log an exception:
 
    try:
       ...
-   except:
+   except Exception:
       cherrypy.log("kaboom!", traceback=True)
 
 Both logs are writing to files identified by the following keys
@@ -307,7 +307,7 @@ example on setting it up.
         cherrypy.config.update({'log.screen': False,
                                 'log.access_file': '',
                                 'log.error_file': ''})
-	cherrypy.engine.unsubscribe('graceful', cherrypy.log.reopen_files)
+    cherrypy.engine.unsubscribe('graceful', cherrypy.log.reopen_files)
         logging.config.dictConfig(LOG_CONF)
         cherrypy.quickstart(Root())
 
@@ -568,8 +568,8 @@ the given directory.
 
    [/]
    tools.sessions.on: True
-   tools.sessions.storage_type = "file"
-   tools.sessions.storage_path = "/some/directorys"
+   tools.sessions.storage_class = cherrypy.lib.sessions.FileSession
+   tools.sessions.storage_path = "/some/directory"
 
 Memcached backend
 ^^^^^^^^^^^^^^^^^
@@ -578,13 +578,25 @@ Memcached backend
 it is distributed and a good choice if you want to
 share sessions outside of the process running CherryPy.
 
+Requires that the Python
+`memcached <https://pypi.org/project/memcached>`_
+package is installed, which may be indicated by installing
+``cherrypy[memcached_session]``.
+
 .. code-block:: ini
 
    [/]
    tools.sessions.on: True
-   tools.sessions.storage_type = "memcached"
+   tools.sessions.storage_class = cherrypy.lib.sessions.MemcachedSession
 
 .. _staticontent:
+
+Other backends
+^^^^^^^^^^^^^^
+
+Any other library may implement a session backend. Simply subclass
+``cherrypy.lib.sessions.Session`` and indicate that subclass as
+``tools.sessions.storage_class``.
 
 Static content serving
 ######################
@@ -654,7 +666,7 @@ CherryPy will automatically respond to URLs such as
 Specifying an index file
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, CherryPy will repsond to the root of a static
+By default, CherryPy will respond to the root of a static
 directory with an 404 error indicating the path '/' was not found.
 To specify an index file, you can use the following:
 

@@ -4,22 +4,6 @@ cherrypy.test package
 Submodules
 ----------
 
-cherrypy.test._test_decorators module
--------------------------------------
-
-.. automodule:: cherrypy.test._test_decorators
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cherrypy.test._test_states_demo module
---------------------------------------
-
-.. automodule:: cherrypy.test._test_states_demo
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy.test.benchmark module
 ------------------------------
 
@@ -212,6 +196,14 @@ cherrypy.test.test_httplib module
     :undoc-members:
     :show-inheritance:
 
+cherrypy.test.test_iterator module
+----------------------------------
+
+.. automodule:: cherrypy.test.test_iterator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 cherrypy.test.test_json module
 ------------------------------
 
@@ -248,6 +240,14 @@ cherrypy.test.test_objectmapping module
 ---------------------------------------
 
 .. automodule:: cherrypy.test.test_objectmapping
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cherrypy.test.test_params module
+--------------------------------
+
+.. automodule:: cherrypy.test.test_params
     :members:
     :undoc-members:
     :show-inheritance:
@@ -344,6 +344,14 @@ cherrypy.test.test_wsgi_ns module
 ---------------------------------
 
 .. automodule:: cherrypy.test.test_wsgi_ns
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+cherrypy.test.test_wsgi_unix_socket module
+------------------------------------------
+
+.. automodule:: cherrypy.test.test_wsgi_unix_socket
     :members:
     :undoc-members:
     :show-inheritance:

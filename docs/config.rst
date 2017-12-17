@@ -84,7 +84,7 @@ or, in python code:
 
 .. code-block:: python
 
-    config = {'/': 
+    config = {'/':
         {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
             'tools.trailing_slash.on': False,
@@ -237,9 +237,9 @@ that bit of config directly on the page handler:
 
 .. code-block:: python
 
+    @cherrypy.expose
     def page(self):
         return "Hello, world!"
-    page.exposed = True
     page._cp_config = {"request.methods_with_bodies": ("POST", "PUT", "PROPPATCH")}
 
 ``_cp_config`` is a reserved attribute which the dispatcher looks for at
@@ -258,9 +258,9 @@ attached that config to a class which contains the page method:
 
         _cp_config = {"request.methods_with_bodies": ("POST", "PUT", "PROPPATCH")}
 
+        @cherrypy.expose
         def page(self):
             return "Hullo, Werld!"
-        page.exposed = True
 
 .. note::
 
@@ -441,7 +441,7 @@ will call ``db_namespace('connstring', 'Oracle:host=1.10.100.200;sid=TEST')``.
 The point at which your namespace handler is called depends on where you add it:
 
 ===========  =============================================================================  ===================================
-Scope        Namespace dict                                                                 Handler is called in  
+Scope        Namespace dict                                                                 Handler is called in
 -----------  -----------------------------------------------------------------------------  -----------------------------------
 Global       :attr:`cherrypy.config.namespaces <cherrypy._cpconfig.Config.namespaces>`      cherrypy.config.update
 Application  :attr:`app.namespaces <cherrypy._cptree.Application.namespaces>`               Application.merge (which is called by cherrypy.tree.mount)
@@ -466,7 +466,7 @@ It only applies to the global config, and only when you use
 entry *imports* other config entries from the following template stored in
 ``cherrypy._cpconfig.environments[environment]``.
 
-.. literalinclude:: ../../../cherrypy/_cpconfig.py
+.. literalinclude:: ../cherrypy/_cpconfig.py
     :start-after: Sphinx begin config.environments
     :end-before: Sphinx end config.environments
 
@@ -481,4 +481,3 @@ limiting or just plain wrong, feel free to extend them or add new environments:
         'tools.encode.encoding': 'ISO-8859-7',
         'tools.decode.encoding': 'ISO-8859-7',
         }
-

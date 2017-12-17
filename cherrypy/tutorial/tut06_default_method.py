@@ -16,11 +16,14 @@ like /users/<username>. Since the <username> bit will not be found (as
 there are no matching methods), it is handled by the default method.
 """
 
+import os.path
+
 import cherrypy
 
 
 class UsersPage:
 
+    @cherrypy.expose
     def index(self):
         # Since this is just a stupid little example, we'll simply
         # display a list of links to random, made-up users. In a real
@@ -30,27 +33,25 @@ class UsersPage:
             <a href="./hendrik">Hendrik Mans</a><br/>
             <a href="./lorenzo">Lorenzo Lamas</a><br/>
         '''
-    index.exposed = True
 
+    @cherrypy.expose
     def default(self, user):
         # Here we react depending on the virtualPath -- the part of the
         # path that could not be mapped to an object method. In a real
         # application, we would probably do some database lookups here
         # instead of the silly if/elif/else construct.
         if user == 'remi':
-            out = "Remi Delon, CherryPy lead developer"
+            out = 'Remi Delon, CherryPy lead developer'
         elif user == 'hendrik':
-            out = "Hendrik Mans, CherryPy co-developer & crazy German"
+            out = 'Hendrik Mans, CherryPy co-developer & crazy German'
         elif user == 'lorenzo':
-            out = "Lorenzo Lamas, famous actor and singer!"
+            out = 'Lorenzo Lamas, famous actor and singer!'
         else:
-            out = "Unknown user. :-("
+            out = 'Unknown user. :-('
 
         return '%s (<a href="./">back</a>)' % out
-    default.exposed = True
 
 
-import os.path
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
 if __name__ == '__main__':
@@ -58,6 +59,3 @@ if __name__ == '__main__':
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
     cherrypy.quickstart(UsersPage(), config=tutconf)
-else:
-    # This branch is for the test suite; you can ignore it.
-    cherrypy.tree.mount(UsersPage(), config=tutconf)

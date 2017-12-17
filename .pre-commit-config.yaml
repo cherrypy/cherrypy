@@ -1,0 +1,65 @@
+repos:
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: v1.1.1
+    hooks:
+    -   id: trailing-whitespace
+        exclude: cherrypy/test/static/index.html
+    -   id: flake8
+        args:
+        # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
+        - --ignore=W503
+    -   id: check-merge-conflict
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: name-tests-test
+        include: cherrypy/test/
+        args:
+        - --django
+        exclude: tests/dist-check.py
+    -   id: debug-statements
+    -   id: check-added-large-files
+    -   id: check-ast
+    -   id: check-byte-order-marker
+    -   id: check-case-conflict
+    # disabled due to pre-commit/pre-commit-hooks#159
+    #-   id: check-docstring-first
+    -   id: check-json
+        include: .mention-bot
+    -   id: pretty-format-json
+    -   id: check-symlinks
+    -   id: check-yaml
+    -   id: detect-private-key
+        exclude: cherrypy/test/test.pem
+    -   id: requirements-txt-fixer
+
+-   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
+    sha: f464d46
+    hooks:
+    -   id: pep257
+        exclude: |
+            (?x)
+            tests/dist|
+            cherrypy/(
+                _cp(
+                    compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
+                )|
+                (
+                    lib/(
+                        auth|auth_basic|auth_digest|caching|covercp|
+                        cpstats|cptools|encoding|gctools|httpauth|httputil|
+                        jsontools|lockfile|locking|profiler|reprconf|sessions
+                    )|
+                    process/(plugins|servers|win32)
+                ).py|
+                test|tutorial
+            )
+
+-   repo: git://github.com/Lucas-C/pre-commit-hooks
+    sha: v1.1.1
+    hooks:
+    -   id: remove-tabs
+
+-   repo: git://github.com/Lucas-C/pre-commit-hooks-lxml
+    sha: v1.0.2
+    hooks:
+    -   id: forbid-html-img-without-alt-text

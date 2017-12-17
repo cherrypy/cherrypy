@@ -23,13 +23,15 @@ http://127.0.0.1:8080/
 
    import cherrypy
 
+
    class HelloWorld(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
+
 
    if __name__ == '__main__':
-      cherrypy.quickstart(HelloWorld())
+       cherrypy.quickstart(HelloWorld())
 
 Store this code snippet into a file named `tut01.py` and
 execute it as follows:
@@ -49,14 +51,13 @@ This will display something along the following:
    [24/Feb/2014:21:01:46] ENGINE Bus STARTING
    CherryPy Checker:
    The Application mounted at '' has an empty config.
-   
+
    [24/Feb/2014:21:01:46] ENGINE Started monitor thread 'Autoreloader'.
-   [24/Feb/2014:21:01:46] ENGINE Started monitor thread '_TimeoutMonitor'.
    [24/Feb/2014:21:01:46] ENGINE Serving on http://127.0.0.1:8080
    [24/Feb/2014:21:01:46] ENGINE Bus STARTED
 
 This tells you several things. The first three lines indicate
-the server will handle :mod:`signal` for you. The next line tells you 
+the server will handle :mod:`signal` for you. The next line tells you
 the current state of the server, as that
 point it is in `STARTING` stage. Then, you are notified your
 application has no specific configuration set to it.
@@ -78,8 +79,8 @@ understand how to set the configuration.
 Tutorial 2: Different URLs lead to different functions
 ######################################################
 
-Your applications will obviously handle more than a single URL. 
-Let's imagine you have an application that generates a random 
+Your applications will obviously handle more than a single URL.
+Let's imagine you have an application that generates a random
 string each time it is called:
 
 .. code-block:: python
@@ -87,18 +88,20 @@ string each time it is called:
 
    import random
    import string
-   
+
    import cherrypy
+
 
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
 
        @cherrypy.expose
        def generate(self):
            return ''.join(random.sample(string.hexdigits, 8))
-    
+
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -109,7 +112,7 @@ Save this into a file named `tut02.py` and run it as follows:
    $ python tut02.py
 
 Go now to http://localhost:8080/generate and your browser
-will display a random string. 
+will display a random string.
 
 Let's take a minute to decompose what's happening here. This is the
 URL that you have typed into your browser: http://localhost:8080/generate
@@ -138,18 +141,20 @@ to indicate the length of that string dynamically.
 
    import random
    import string
-   
+
    import cherrypy
+
 
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return "Hello world!"
+           return "Hello world!"
 
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
-    
+
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -161,18 +166,18 @@ Save this into a file named `tut03.py` and run it as follows:
 
 Go now to http://localhost:8080/generate?length=16 and your browser
 will display a generated string of length 16. Notice how
-we benefit from Python's default arguments' values to support 
+we benefit from Python's default arguments' values to support
 URLs such as http://localhost:8080/generate still.
 
-In a URL such as this one, the section after `?` is called a 
-query-string. Traditionally, the query-string is used to 
+In a URL such as this one, the section after `?` is called a
+query-string. Traditionally, the query-string is used to
 contextualize the URL by passing a set of (key, value) pairs. The
 format for those pairs is `key=value`. Each pair being
 separated by a `&` character.
 
 Notice how we have to convert the given `length` value to
-and integer. Indeed, values are sent out from the client
-to our server as strings. 
+an integer. Indeed, values are sent out from the client
+to our server as strings.
 
 Much like CherryPy maps URL path segments to exposed functions,
 query-string keys are mapped to those exposed function parameters.
@@ -194,26 +199,28 @@ example.
 
    import random
    import string
-   
+
    import cherrypy
+
 
    class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-	   return """<html>
+           return """<html>
              <head></head>
-	     <body>
-	       <form method="get" action="generate">
-	         <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-	       </form>
-	     </body>
-	   </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
            return ''.join(random.sample(string.hexdigits, int(length)))
-    
+
+
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
@@ -227,9 +234,9 @@ Go now to http://localhost:8080/ and your browser and this will
 display a simple input field to indicate the length of the string
 you want to generate.
 
-Notice that in this example, the form uses the `GET` method and 
+Notice that in this example, the form uses the `GET` method and
 when you pressed the `Give it now!` button, the form is sent using the
-same URL as in the :ref:`previous <tut03>` tutorial. HTML forms also support the 
+same URL as in the :ref:`previous <tut03>` tutorial. HTML forms also support the
 `POST` method, in that case the query-string is not appended to the
 URL but it sent as the body of the client's request to the server.
 However, this would not change your application's exposed method because
@@ -244,29 +251,30 @@ Tutorial 5: Track my end-user's activity
 It's not uncommon that an application needs to follow the
 user's activity for a while. The usual mechanism is to use
 a `session identifier <http://en.wikipedia.org/wiki/Session_(computer_science)#HTTP_session_token>`_
-that is carried during the conversation between the user and 
-your application. 
+that is carried during the conversation between the user and
+your application.
 
 .. code-block:: python
    :linenos:
 
-    import random
-    import string
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return """<html>
              <head></head>
-         <body>
-           <form method="get" action="generate">
-             <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-           </form>
-         </body>
-       </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
@@ -278,13 +286,14 @@ your application.
        def display(self):
            return cherrypy.session['mystring']
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True
-            }
-        }
-        cherrypy.quickstart(StringGenerator(), '/', conf)
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True
+           }
+       }
+       cherrypy.quickstart(StringGenerator(), '/', conf)
 
 Save this into a file named `tut05.py` and run it as follows:
 
@@ -292,11 +301,11 @@ Save this into a file named `tut05.py` and run it as follows:
 
    $ python tut05.py
 
-In this example, we generate the string as in the 
+In this example, we generate the string as in the
 :ref:`previous <tut04>` tutorial but also store it in the current
 session. If you go to http://localhost:8080/, generate a
 random string, then go to http://localhost:8080/display, you
-will see the string you just generated. 
+will see the string you just generated.
 
 The lines 30-34 show you how to enable the session support
 in your CherryPy application. By default, CherryPy will save
@@ -319,9 +328,9 @@ and stored into a local directory `public/css`.
 .. code-block:: css
    :linenos:
 
-      body { 
-        background-color: blue;
-      }
+   body {
+     background-color: blue;
+   }
 
 Now let's update the HTML code so that we link to the stylesheet
 using the http://localhost:8080/static/css/style.css URL.
@@ -329,26 +338,27 @@ using the http://localhost:8080/static/css/style.css URL.
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import string
+   import os, os.path
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return """<html>
              <head>
                <link href="/static/css/style.css" rel="stylesheet">
              </head>
-         <body>
-           <form method="get" action="generate">
-             <input type="text" value="8" name="length" />
+             <body>
+               <form method="get" action="generate">
+                 <input type="text" value="8" name="length" />
                  <button type="submit">Give it now!</button>
-           </form>
-         </body>
-       </html>"""
+               </form>
+             </body>
+           </html>"""
 
        @cherrypy.expose
        def generate(self, length=8):
@@ -360,18 +370,20 @@ using the http://localhost:8080/static/css/style.css URL.
        def display(self):
            return cherrypy.session['mystring']
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-		'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-		'tools.staticdir.dir': './public'
-            }
-        }
-        cherrypy.quickstart(StringGenerator(), '/', conf)
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+       cherrypy.quickstart(StringGenerator(), '/', conf)
+
 
 Save this into a file named `tut06.py` and run it as follows:
 
@@ -409,7 +421,7 @@ Roughly speaking, it assumes that you can identify a resource
 and that you can address that resource through that identifier.
 
 "What for?" you may ask. Well, mostly, these principles are there
-to ensure that you decouple, as best as you can, the entities 
+to ensure that you decouple, as best as you can, the entities
 your application expose from the way they are manipulated or
 consumed. To embrace this point of view, developers will
 usually design a web API that expose pairs of `(URL, HTTP method, data, constraints)`.
@@ -428,39 +440,41 @@ mildly following REST principles.
 .. code-block:: python
    :linenos:
 
-    import random
-    import string
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGeneratorWebService(object):
-        exposed = True
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            return cherrypy.session['mystring']
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            cherrypy.session['mystring'] = some_string
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           return cherrypy.session['mystring']
 
-        def PUT(self, another_string):
-            cherrypy.session['mystring'] = another_string
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('mystring', None)
+       def PUT(self, another_string):
+           cherrypy.session['mystring'] = another_string
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.sessions.on': True,
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            }
-        }
-        cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
+       def DELETE(self):
+           cherrypy.session.pop('mystring', None)
+
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.sessions.on': True,
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           }
+       }
+       cherrypy.quickstart(StringGeneratorWebService(), '/', conf)
 
 
 Save this into a file named `tut07.py` and run it as follows:
@@ -472,18 +486,18 @@ Save this into a file named `tut07.py` and run it as follows:
 Before we see it in action, let's explain a few things. Until now,
 CherryPy was creating a tree of exposed methods that were used to
 match URLs. In the case of our web API, we want to stress the role
-played by the actual requests' HTTP methods. So we created 
+played by the actual requests' HTTP methods. So we created
 methods that are named after them and they are all exposed at once
-through the `exposed = True` attribute of the class itself.
+by decorating the class itself with `cherrypy.expose`.
 
 However, we must then switch from the default mechanism of matching
 URLs to method for one that is aware of the whole HTTP method
-shenanigan. This is what goes on line 27 where we create 
+shenanigan. This is what goes on line 27 where we create
 a :class:`~cherrypy.dispatch.MethodDispatcher` instance.
 
 Then we force the responses `content-type` to be `text/plain` and
 we finally ensure that `GET` requests will only be responded to clients
-that accept that `content-type` by having a `Accept: text/plain` 
+that accept that `content-type` by having a `Accept: text/plain`
 header set in their request. However, we do this only for that
 HTTP method as it wouldn't have much meaning on the other methods.
 
@@ -533,7 +547,7 @@ on the latter case, that it doesn't exist after we've deleted it.
 
 Lines 12-14 show you how the application reacted when our client requested
 the generated string as a JSON format. Since we configured the
-web API to only support plain text, it returns the appropriate 
+web API to only support plain text, it returns the appropriate
 `HTTP error code <http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7>`_.
 
 
@@ -547,7 +561,7 @@ web API to only support plain text, it returns the appropriate
 .. important::
 
    It's all about RESTful URLs these days, isn't it?
-   
+
    It is likely your URL will be made of dynamic parts that you
    will not be able to match to page handlers. For example,
    ``/library/12/book/15`` cannot be directly handled by the
@@ -558,7 +572,7 @@ web API to only support plain text, it returns the appropriate
    explained in the :ref:`advanced section <restful>`.
 
 
-   
+
 .. _tut08:
 
 
@@ -566,11 +580,11 @@ Tutorial 8: Make it smoother with Ajax
 ######################################
 
 In the recent years, web applications have moved away from the
-simple pattern of "HTML forms + refresh the whole page". This 
+simple pattern of "HTML forms + refresh the whole page". This
 traditional scheme still works very well but users have become used
-to web applications that don't refresh the entire page. 
-Broadly speaking, web applications carry code performed 
-client-side that can speak with the backend without having to 
+to web applications that don't refresh the entire page.
+Broadly speaking, web applications carry code performed
+client-side that can speak with the backend without having to
 refresh the whole page.
 
 This tutorial will involve a little more code this time around. First,
@@ -579,11 +593,11 @@ let's see our CSS stylesheet located in `public/css/style.css`.
 .. code-block:: css
    :linenos:
 
-   body { 
+   body {
      background-color: blue;
    }
 
-   #the-string { 
+   #the-string {
      display: none;
    }
 
@@ -596,56 +610,56 @@ Save the following HTML code into a file named `index.html`.
 
    <!DOCTYPE html>
    <html>
-      <head>
-	<link href="/static/css/style.css" rel="stylesheet">
-	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-	<script type="text/javascript">
-	  $(document).ready(function() {
+     <head>
+       <link href="/static/css/style.css" rel="stylesheet">
+       <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+       <script type="text/javascript">
+         $(document).ready(function() {
 
-	    $("#generate-string").click(function(e) {
-	      $.post("/generator", {"length": $("input[name='length']").val()})
-	       .done(function(string) {
-		  $("#the-string").show();
-		  $("#the-string input").val(string);
-	       });
-	      e.preventDefault();
-	    });
+           $("#generate-string").click(function(e) {
+             $.post("/generator", {"length": $("input[name='length']").val()})
+              .done(function(string) {
+               $("#the-string").show();
+               $("#the-string input").val(string);
+             });
+             e.preventDefault();
+           });
 
-	    $("#replace-string").click(function(e) {
-	      $.ajax({
-		 type: "PUT",
-		 url: "/generator",
-		 data: {"another_string": $("#the-string input").val()}
-	      })
-	      .done(function() {
-		 alert("Replaced!");
-	      });
-	      e.preventDefault();
-	    });
+           $("#replace-string").click(function(e) {
+             $.ajax({
+               type: "PUT",
+               url: "/generator",
+               data: {"another_string": $("#the-string input").val()}
+             })
+             .done(function() {
+               alert("Replaced!");
+             });
+             e.preventDefault();
+           });
 
-	    $("#delete-string").click(function(e) {
-	      $.ajax({
-		 type: "DELETE",
-		 url: "/generator"
-	      })
-	      .done(function() {
-		 $("#the-string").hide();
-	      });
-	      e.preventDefault();
-	    });
+           $("#delete-string").click(function(e) {
+             $.ajax({
+               type: "DELETE",
+               url: "/generator"
+             })
+             .done(function() {
+               $("#the-string").hide();
+             });
+             e.preventDefault();
+           });
 
-	  });
-	</script>
-      </head>
-      <body>
-	<input type="text" value="8" name="length" />
-	<button id="generate-string">Give it now!</button>
-	<div id="the-string">
-	    <input type="text" />
-	    <button id="replace-string">Replace</button>
-	    <button id="delete-string">Delete it</button>
-	</div>
-      </body>
+         });
+       </script>
+     </head>
+     <body>
+       <input type="text" value="8" name="length"/>
+       <button id="generate-string">Give it now!</button>
+       <div id="the-string">
+         <input type="text" />
+         <button id="replace-string">Replace</button>
+         <button id="delete-string">Delete it</button>
+       </div>
+     </body>
    </html>
 
 We'll be using the `jQuery framework <http://jquery.com/>`_
@@ -662,55 +676,57 @@ Both are hosted by the same application server.
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import string
+   import os, os.path
+   import random
+   import string
 
-    import cherrypy
+   import cherrypy
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
            return open('index.html')
 
-    class StringGeneratorWebService(object):
-        exposed = True
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            return cherrypy.session['mystring']
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            cherrypy.session['mystring'] = some_string
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           return cherrypy.session['mystring']
 
-        def PUT(self, another_string):
-            cherrypy.session['mystring'] = another_string
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           cherrypy.session['mystring'] = some_string
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('mystring', None)
+       def PUT(self, another_string):
+           cherrypy.session['mystring'] = another_string
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-                'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },            
-            '/generator': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': './public'
-            }
-        }
-        webapp = StringGenerator()
-        webapp.generator = StringGeneratorWebService()
-        cherrypy.quickstart(webapp, '/', conf)
+       def DELETE(self):
+           cherrypy.session.pop('mystring', None)
 
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/generator': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+       webapp = StringGenerator()
+       webapp.generator = StringGeneratorWebService()
+       cherrypy.quickstart(webapp, '/', conf)
 
 Save this into a file named `tut08.py` and run it as follows:
 
@@ -718,7 +734,7 @@ Save this into a file named `tut08.py` and run it as follows:
 
    $ python tut08.py
 
-Go to http://127.0.0.1:8080/ and play with the input and buttons 
+Go to http://127.0.0.1:8080/ and play with the input and buttons
 to generate, replace or delete the strings. Notice how the page
 isn't refreshed, simply part of its content.
 
@@ -731,10 +747,10 @@ could easily be used by non-HTML clients.
 Tutorial 9: Data is all my life
 ###############################
 
-Until now, all the generated strings were saved in the 
+Until now, all the generated strings were saved in the
 session, which by default is stored in the process memory. Though,
 you can persist sessions on disk or in a distributed memory store,
-this is not the right way of keeping your data on the long run. 
+this is not the right way of keeping your data on the long run.
 Sessions are there to identify your user and carry as little
 amount of data as necessary for the operation carried by the user.
 
@@ -748,11 +764,11 @@ There exist many to choose from with various paradigm support:
 - graph-oriented: neo4j
 
 Let's focus on the relational ones since they are the most common
-and probably what you will want to learn first. 
+and probably what you will want to learn first.
 
 For the sake of reducing the number of dependencies for these
 tutorials, we will go for the :mod:`sqlite` database which
-is directly supported by Python. 
+is directly supported by Python.
 
 Our application will replace the storage of the generated
 string from the session to a SQLite database. The application
@@ -762,92 +778,96 @@ So let's simply focus on the application code itself:
 .. code-block:: python
    :linenos:
 
-    import os, os.path
-    import random
-    import sqlite3
-    import string
-    import time
+   import os, os.path
+   import random
+   import sqlite3
+   import string
+   import time
 
-    import cherrypy
+   import cherrypy
 
-    DB_STRING = "my.db"
+   DB_STRING = "my.db"
 
-    class StringGenerator(object):
+
+   class StringGenerator(object):
        @cherrypy.expose
        def index(self):
-           return file('index.html')
+           return open('index.html')
 
-    class StringGeneratorWebService(object):
-        exposed = True
 
-        @cherrypy.tools.accept(media='text/plain')
-        def GET(self):
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                r = c.execute("SELECT value FROM user_string WHERE session_id=?",
-                          [cherrypy.session.id])
-                return r.fetchone()
+   @cherrypy.expose
+   class StringGeneratorWebService(object):
 
-        def POST(self, length=8):
-            some_string = ''.join(random.sample(string.hexdigits, int(length)))
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                c.execute("INSERT INTO user_string VALUES (?, ?)",
-                          [cherrypy.session.id, some_string])
-            return some_string
+       @cherrypy.tools.accept(media='text/plain')
+       def GET(self):
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               r = c.execute("SELECT value FROM user_string WHERE session_id=?",
+                             [cherrypy.session.id])
+               return r.fetchone()
 
-        def PUT(self, another_string):
-            with sqlite3.connect(DB_STRING) as c:
-                cherrypy.session['ts'] = time.time()
-                c.execute("UPDATE user_string SET value=? WHERE session_id=?",
-                          [another_string, cherrypy.session.id])
+       def POST(self, length=8):
+           some_string = ''.join(random.sample(string.hexdigits, int(length)))
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               c.execute("INSERT INTO user_string VALUES (?, ?)",
+                         [cherrypy.session.id, some_string])
+           return some_string
 
-        def DELETE(self):
-            cherrypy.session.pop('ts', None)
-            with sqlite3.connect(DB_STRING) as c:
-                c.execute("DELETE FROM user_string WHERE session_id=?",
-                          [cherrypy.session.id])
+       def PUT(self, another_string):
+           with sqlite3.connect(DB_STRING) as c:
+               cherrypy.session['ts'] = time.time()
+               c.execute("UPDATE user_string SET value=? WHERE session_id=?",
+                         [another_string, cherrypy.session.id])
 
-    def setup_database():
-        """
-        Create the `user_string` table in the database
-        on server startup
-        """
-        with sqlite3.connect(DB_STRING) as con:
-            con.execute("CREATE TABLE user_string (session_id, value)")
+       def DELETE(self):
+           cherrypy.session.pop('ts', None)
+           with sqlite3.connect(DB_STRING) as c:
+               c.execute("DELETE FROM user_string WHERE session_id=?",
+                         [cherrypy.session.id])
 
-    def cleanup_database():
-        """
-        Destroy the `user_string` table from the database
-        on server shutdown.
-        """
-        with sqlite3.connect(DB_STRING) as con:
-            con.execute("DROP TABLE user_string")
 
-    if __name__ == '__main__':
-        conf = {
-            '/': {
-                'tools.sessions.on': True,
-                'tools.staticdir.root': os.path.abspath(os.getcwd())
-            },            
-            '/generator': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [('Content-Type', 'text/plain')],
-            },
-            '/static': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': './public'
-            }
-        }
+   def setup_database():
+       """
+       Create the `user_string` table in the database
+       on server startup
+       """
+       with sqlite3.connect(DB_STRING) as con:
+           con.execute("CREATE TABLE user_string (session_id, value)")
 
-        cherrypy.engine.subscribe('start', setup_database)
-        cherrypy.engine.subscribe('stop', cleanup_database)
 
-        webapp = StringGenerator()
-        webapp.generator = StringGeneratorWebService()
-        cherrypy.quickstart(webapp, '/', conf)
+   def cleanup_database():
+       """
+       Destroy the `user_string` table from the database
+       on server shutdown.
+       """
+       with sqlite3.connect(DB_STRING) as con:
+           con.execute("DROP TABLE user_string")
 
+
+   if __name__ == '__main__':
+       conf = {
+           '/': {
+               'tools.sessions.on': True,
+               'tools.staticdir.root': os.path.abspath(os.getcwd())
+           },
+           '/generator': {
+               'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+               'tools.response_headers.on': True,
+               'tools.response_headers.headers': [('Content-Type', 'text/plain')],
+           },
+           '/static': {
+               'tools.staticdir.on': True,
+               'tools.staticdir.dir': './public'
+           }
+       }
+
+       cherrypy.engine.subscribe('start', setup_database)
+       cherrypy.engine.subscribe('stop', cleanup_database)
+
+       webapp = StringGenerator()
+       webapp.generator = StringGeneratorWebService()
+       cherrypy.quickstart(webapp, '/', conf)
 
 Save this into a file named `tut09.py` and run it as follows:
 
@@ -857,14 +877,14 @@ Save this into a file named `tut09.py` and run it as follows:
 
 Let's first see how we create two functions that create
 and destroy the table within our database. These functions
-are registered to the CherryPy's server on lines 76-77,
+are registered to the CherryPy's server on lines 85-86,
 so that they are called when the server starts and stops.
 
 Next, notice how we replaced all the session code with calls
 to the database. We use the session id to identify the
 user's string within our database. Since the session will go
 away after a while, it's probably not the right approach.
-A better idea would be to associate the user's login or 
+A better idea would be to associate the user's login or
 more resilient unique identifier. For the sake of our
 demo, this should do.
 
@@ -879,17 +899,17 @@ demo, this should do.
 .. note::
 
    Unfortunately, sqlite in Python forbids us
-   to share a connection between threads. Since CherryPy is a 
+   to share a connection between threads. Since CherryPy is a
    multi-threaded server, this would be an issue. This is the
    reason why we open and close a connection to the database
    on each call. This is clearly not really production friendly,
    and it is probably advisable to either use a more capable
-   database engine or a higher level library, such as 
+   database engine or a higher level library, such as
    `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_, to better
    support your application's needs.
 
 .. _tut10:
-   
+
 Tutorial 10: Make it a modern single-page application with React.js
 ###################################################################
 
@@ -915,14 +935,15 @@ First, let's see how our HTML code has changed:
          <link href="/static/css/style.css" rel="stylesheet">
          <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js"></script>
          <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
        </head>
        <body>
          <div id="generator"></div>
-         <script type="text/javascript" src="static/js/gen.js"></script>
+         <script type="text/babel" src="static/js/gen.js"></script>
        </body>
     </html>
 
-Basically, we have remove the entire Javascript code that was using jQuery.
+Basically, we have removed the entire Javascript code that was using jQuery.
 Instead, we load the React.js library as well as a new, local,
 Javascript module, named ``gen.js`` and located in the ``public/js``
 directory:
@@ -930,164 +951,163 @@ directory:
 .. code-block:: javascript
    :linenos:
 
-    var StringGeneratorBox = React.createClass({
-      handleGenerate: function() {
-        var length = this.state.length;
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            dataType: 'text',
-            type: 'POST',
-            data: {
-              "length": length
-            },
-            success: function(data) {
-              this.setState({
-                length: length,
-                string: data,
-                mode: "edit"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleEdit: function() {
-        var new_string = this.state.string;
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            type: 'PUT',
-            data: {
-              "another_string": new_string
-            },
-            success: function() {
-              this.setState({
-                length: new_string.length,
-                string: new_string,
-                mode: "edit"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleDelete: function() {
-        this.setState(function() {
-          $.ajax({
-            url: this.props.url,
-            type: 'DELETE',
-            success: function() {
-              this.setState({
-                length: "8",
-                string: "",
-                mode: "create"
-              });
-            }.bind(this),
-            error: function(xhr, status, err) {
-              console.error(this.props.url,
-                status, err.toString()
-              );
-            }.bind(this)
-          });
-        });
-      },
-      handleLengthChange: function(length) {
-        this.setState({
-          length: length,
-          string: "",
-          mode: "create"
-        });
-      },
-      handleStringChange: function(new_string) {
-        this.setState({
-          length: new_string.length,
-          string: new_string,
-          mode: "edit"
-        });
-      },
-      getInitialState: function() {
-        return {
-          length: "8",
-          string: "",
-          mode: "create"
-        };
-      },
-      render: function() {
-        return (
-          <div className="stringGenBox">
-                <StringGeneratorForm onCreateString={this.handleGenerate}
-                                     onReplaceString={this.handleEdit}
-                                     onDeleteString={this.handleDelete}
-                                     onLengthChange={this.handleLengthChange}
-                                     onStringChange={this.handleStringChange}
-                                     mode={this.state.mode}
-                                     length={this.state.length}
-                                     string={this.state.string}/>
-          </div>
-        );
-      }
-    });
+   var StringGeneratorBox = React.createClass({
+     handleGenerate: function() {
+       var length = this.state.length;
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           dataType: 'text',
+           type: 'POST',
+           data: {
+             "length": length
+           },
+           success: function(data) {
+             this.setState({
+               length: length,
+               string: data,
+               mode: "edit"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleEdit: function() {
+       var new_string = this.state.string;
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           type: 'PUT',
+           data: {
+             "another_string": new_string
+           },
+           success: function() {
+             this.setState({
+               length: new_string.length,
+               string: new_string,
+               mode: "edit"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleDelete: function() {
+       this.setState(function() {
+         $.ajax({
+           url: this.props.url,
+           type: 'DELETE',
+           success: function() {
+             this.setState({
+               length: "8",
+               string: "",
+               mode: "create"
+             });
+           }.bind(this),
+           error: function(xhr, status, err) {
+             console.error(this.props.url,
+               status, err.toString()
+             );
+           }.bind(this)
+         });
+       });
+     },
+     handleLengthChange: function(length) {
+       this.setState({
+         length: length,
+         string: "",
+         mode: "create"
+       });
+     },
+     handleStringChange: function(new_string) {
+       this.setState({
+         length: new_string.length,
+         string: new_string,
+         mode: "edit"
+       });
+     },
+     getInitialState: function() {
+       return {
+         length: "8",
+         string: "",
+         mode: "create"
+       };
+     },
+     render: function() {
+       return (
+         <div className="stringGenBox">
+               <StringGeneratorForm onCreateString={this.handleGenerate}
+                                    onReplaceString={this.handleEdit}
+                                    onDeleteString={this.handleDelete}
+                                    onLengthChange={this.handleLengthChange}
+                                    onStringChange={this.handleStringChange}
+                                    mode={this.state.mode}
+                                    length={this.state.length}
+                                    string={this.state.string}/>
+         </div>
+       );
+     }
+   });
 
-    var StringGeneratorForm = React.createClass({
-      handleCreate: function(e) {
-        e.preventDefault();
-        this.props.onCreateString();
-      },
-      handleReplace: function(e) {
-        e.preventDefault();
-        this.props.onReplaceString();
-      },
-      handleDelete: function(e) {
-        e.preventDefault();
-        this.props.onDeleteString();
-      },
-      handleLengthChange: function(e) {
-        e.preventDefault();
-        var length = React.findDOMNode(this.refs.length).value.trim();
-        this.props.onLengthChange(length);
-      },
-      handleStringChange: function(e) {
-        e.preventDefault();
-        var string = React.findDOMNode(this.refs.string).value.trim();
-        this.props.onStringChange(string);
-      },
-      render: function() {
-        if (this.props.mode == "create") {
-          return (
-            <div>
-               <input  type="text" ref="length" defaultValue="8" value={this.props.length} onChange={this.handleLengthChange} />
-               <button onClick={this.handleCreate}>Give it now!</button>
-            </div>
-          );
-        } else if (this.props.mode == "edit") {
-          return (
-            <div>
-               <input type="text" ref="string" value={this.props.string} onChange={this.handleStringChange} />
-               <button onClick={this.handleReplace}>Replace</button>
-               <button onClick={this.handleDelete}>Delete it</button>
-            </div>
-          );
-        }
+   var StringGeneratorForm = React.createClass({
+     handleCreate: function(e) {
+       e.preventDefault();
+       this.props.onCreateString();
+     },
+     handleReplace: function(e) {
+       e.preventDefault();
+       this.props.onReplaceString();
+     },
+     handleDelete: function(e) {
+       e.preventDefault();
+       this.props.onDeleteString();
+     },
+     handleLengthChange: function(e) {
+       e.preventDefault();
+       var length = React.findDOMNode(this.refs.length).value.trim();
+       this.props.onLengthChange(length);
+     },
+     handleStringChange: function(e) {
+       e.preventDefault();
+       var string = React.findDOMNode(this.refs.string).value.trim();
+       this.props.onStringChange(string);
+     },
+     render: function() {
+       if (this.props.mode == "create") {
+         return (
+           <div>
+              <input  type="text" ref="length" defaultValue="8" value={this.props.length} onChange={this.handleLengthChange} />
+              <button onClick={this.handleCreate}>Give it now!</button>
+           </div>
+         );
+       } else if (this.props.mode == "edit") {
+         return (
+           <div>
+              <input type="text" ref="string" value={this.props.string} onChange={this.handleStringChange} />
+              <button onClick={this.handleReplace}>Replace</button>
+              <button onClick={this.handleDelete}>Delete it</button>
+           </div>
+         );
+       }
 
-        return null;
-      }
-    });
+       return null;
+     }
+   });
 
-    React.render(
-      <StringGeneratorBox url="/generator" />,
-      document.getElementById('generator')
-    );
+   React.render(
+     <StringGeneratorBox url="/generator" />,
+     document.getElementById('generator')
+   );
 
-    
 Wow! What a lot of code for something so simple, isn't it?
 The entry point is the last few lines where we indicate that we
 want to render the HTML code of the ``StringGeneratorBox`` React.js
@@ -1114,7 +1134,7 @@ Tutorial 11: Organize my code
 
 CherryPy comes with a powerful architecture
 that helps you organizing your code in a way that should make
-it easier to maintain and more flexible. 
+it easier to maintain and more flexible.
 
 Several mechanisms are at your disposal, this tutorial will focus
 on the three main ones:
@@ -1131,7 +1151,7 @@ In order to understand them, let's imagine you are at a superstore:
   to make sure sections are always in order (this is your backend)
 
 In spite of being really simplistic, this is not far from how your
-application behaves. CherryPy helps you structure your application 
+application behaves. CherryPy helps you structure your application
 in a way that mirrors these high-level ideas.
 
 Dispatchers
@@ -1160,7 +1180,7 @@ only for a specific category of customers. CherryPy will deal
 with such use case via a mechanism called a :ref:`tool <tools>`.
 
 A tool is a piece of code that runs on a per-request
-basis in order to perform additional work. Usually a tool is a 
+basis in order to perform additional work. Usually a tool is a
 simple Python function that is executed at a given point during
 the process of the request by CherryPy.
 
@@ -1173,10 +1193,8 @@ the stock and deal with any customers' expectation.
 In the CherryPy world, this translates into having functions
 that run outside of any request life-cycle. These functions should
 take care of background tasks, long lived connections (such as
-those to a database for instance), etc. 
+those to a database for instance), etc.
 
-:ref:`Plugins <busplugins>` are called that way because 
-they work along with the CherryPy :ref:`engine <cpengine>` 
+:ref:`Plugins <busplugins>` are called that way because
+they work along with the CherryPy :ref:`engine <cpengine>`
 and extend it with your operations.
-
-

@@ -4,9 +4,11 @@
 import calendar
 from datetime import datetime
 import sys
+
+import six
+
 import cherrypy
 from cherrypy.lib import sessions
-from cherrypy._cpcompat import copyitems
 
 
 page = """
@@ -93,7 +95,7 @@ function init() {
     <tr><th>Python Version:</th><td>%(pyversion)s</td></tr>
 </table>
 </body></html>
-"""
+"""  # noqa E501
 
 
 class Root(object):
@@ -121,9 +123,9 @@ class Root(object):
             'changemsg': '<br>'.join(changemsg),
             'respcookie': cherrypy.response.cookie.output(),
             'reqcookie': cherrypy.request.cookie.output(),
-            'sessiondata': copyitems(cherrypy.session),
+            'sessiondata': list(six.iteritems(cherrypy.session)),
             'servertime': (
-                datetime.utcnow().strftime("%Y/%m/%d %H:%M") + " UTC"
+                datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'
             ),
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,
@@ -131,27 +133,28 @@ class Root(object):
             'expires': expires,
         }
 
+    @cherrypy.expose
     def index(self):
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'green'
         return self.page()
-    index.exposed = True
 
+    @cherrypy.expose
     def expire(self):
         sessions.expire()
         return self.page()
-    expire.exposed = True
 
+    @cherrypy.expose
     def regen(self):
         cherrypy.session.regenerate()
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'yellow'
         return self.page()
-    regen.exposed = True
+
 
 if __name__ == '__main__':
     cherrypy.config.update({
-        #'environment': 'production',
+        # 'environment': 'production',
         'log.screen': True,
         'tools.sessions.on': True,
     })

@@ -8,7 +8,7 @@ it is not uncommon to run CherryPy behind a reverse proxy
 or use other servers to host the application.
 
 .. note::
-   
+
    CherryPy's server has proven reliable and fast enough
    for years now. If the volume of traffic you receive is
    average, it will do well enough on its own. Nonetheless,
@@ -84,12 +84,25 @@ provide a 'pidfile' argument, preferably an absolute path:
 
    PIDFile(cherrypy.engine, '/var/run/myapp.pid').subscribe()
 
+Systemd socket activation
+#########################
+
+Socket Activation is a systemd feature that allows to setup a system so that
+the systemd will sit on a port and start services 'on demand' (a little bit
+like inetd and xinetd used to do).
+
+CherryPy has built-in socket activation support, if run from a systemd
+service file it will detect the `LISTEN_PID` environment variable to know that
+it should consider fd 3 to be the passed socket.
+
+To read more about socket activation:
+http://0pointer.de/blog/projects/socket-activation.html
 
 Control via Supervisord
 #######################
 
-`Supervisord <http://supervisord.org>`_ is a powerful process control 
-and management tool that can perform a lot of tasks around process monitoring. 
+`Supervisord <http://supervisord.org>`_ is a powerful process control
+and management tool that can perform a lot of tasks around process monitoring.
 
 Below is a simple supervisor configuration for your CherryPy
 application.
@@ -97,7 +110,7 @@ application.
 .. code-block:: ini
 
    [unix_http_server]
-   file=/tmp/supervisor.sock 
+   file=/tmp/supervisor.sock
 
    [supervisord]
    logfile=/tmp/supervisord.log ; (main log file;default $CWD/supervisord.log)
@@ -108,16 +121,16 @@ application.
    nodaemon=false               ; (start in foreground if true;default false)
    minfds=1024                  ; (min. avail startup file descriptors;default 1024)
    minprocs=200                 ; (min. avail process descriptors;default 200)
-   
+
    [rpcinterface:supervisor]
    supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-   
+
    [supervisorctl]
    serverurl=unix:///tmp/supervisor.sock
 
    [program:myapp]
    command=python server.py
-   environment=PYTHONPATH=.   
+   environment=PYTHONPATH=.
    directory=.
 
 This could control your server via the ``server.py`` module as
@@ -126,15 +139,15 @@ the application entry point.
 .. code-block:: python
 
    import cherrypy
-   
+
    class Root(object):
        @cherrypy.expose
        def index(self):
            return "Hello World!"
 
-	
+
    cherrypy.config.update({'server.socket_port': 8090,
-                           'engine.autoreload_on': False,
+                           'engine.autoreload.on': False,
                            'log.access_file': './access.log',
                            'log.error_file': './error.log'})
    cherrypy.quickstart(Root())
@@ -179,7 +192,7 @@ CherryPy can encrypt connections using SSL to create an https connection. This k
 
 You can create either a key that requires a password to use, or one without a password. Protecting your private key with a password is much more secure, but requires that you enter the password every time you use the key. For example, you may have to enter the password when you start or restart your CherryPy server. This may or may not be feasible, depending on your setup.
 
-If you want to require a password, add one of the ``-aes128``, ``-aes192`` or ``-aes256`` switches to the command above. You should not use any of the DES, 3DES, or SEED algoritms to protect your password, as they are insecure.
+If you want to require a password, add one of the ``-aes128``, ``-aes192`` or ``-aes256`` switches to the command above. You should not use any of the DES, 3DES, or SEED algorithms to protect your password, as they are insecure.
 
 SSL Labs recommends using 2048-bit RSA keys for security (see references section at the end).
 
@@ -209,7 +222,7 @@ openssl will then ask you a series of questions. You can enter whatever values a
 
 
 4. Add the following lines in your CherryPy config to point to your certificate files:
-    
+
 .. code-block:: python
 
    cherrypy.server.ssl_certificate = "cert.pem"
@@ -230,7 +243,7 @@ Embedding into another WSGI framework
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Though CherryPy comes with a very reliable and fast enough HTTP server,
-you may wish to integrate your CherryPy application within a 
+you may wish to integrate your CherryPy application within a
 different framework. To do so, we will benefit from the WSGI
 interface defined in :pep:`333` and :pep:`3333`.
 
@@ -248,7 +261,7 @@ in a third-party WSGI server:
 
      cherrypy.engine.start()
 
-- Stop the CherryPy's engine when you terminate. This will publish 
+- Stop the CherryPy's engine when you terminate. This will publish
   to the `"stop"` channel of the bus.
 
   .. code-block:: python
@@ -274,13 +287,13 @@ in a third-party WSGI server:
   on how the other framework handles them.
 
   .. code-block:: python
-        
+
      cherrypy.engine.signals.subscribe()
 
 - Use the ``"embedded"`` environment configuration scheme.
 
   .. code-block:: python
-        
+
      cherrypy.config.update({'environment': 'embedded'})
 
   Essentially this will disable the following:
@@ -296,7 +309,7 @@ in a third-party WSGI server:
 Tornado
 ^^^^^^^
 
-You can use `tornado <http://www.tornadoweb.org/>`_ HTTP server as 
+You can use `tornado <http://www.tornadoweb.org/>`_ HTTP server as
 follow:
 
 .. code-block:: python
@@ -316,7 +329,7 @@ follow:
         # our WSGI application
         wsgiapp = cherrypy.tree.mount(Root())
 
-        # Disable the autoreload which won't play well 
+        # Disable the autoreload which won't play well
         cherrypy.config.update({'engine.autoreload.on': False})
 
         # let's not start the CherryPy HTTP server
@@ -344,7 +357,7 @@ follow:
 Twisted
 ^^^^^^^
 
-You can use `Twisted <https://twistedmatrix.com/>`_ HTTP server as 
+You can use `Twisted <https://twistedmatrix.com/>`_ HTTP server as
 follow:
 
 .. code-block:: python
@@ -365,7 +378,7 @@ follow:
     wsgiapp = cherrypy.tree.mount(Root())
 
     # Configure the CherryPy's app server
-    # Disable the autoreload which won't play well 
+    # Disable the autoreload which won't play well
     cherrypy.config.update({'engine.autoreload.on': False})
 
     # We will be using Twisted HTTP server so let's
@@ -384,7 +397,7 @@ follow:
     reactor.addSystemEventTrigger('after', 'startup', cherrypy.engine.start)
     reactor.addSystemEventTrigger('before', 'shutdown', cherrypy.engine.exit)
     resource = WSGIResource(reactor, reactor.getThreadPool(), wsgiapp)
-		
+
 Notice how we attach the bus methods to the Twisted's own lifecycle.
 
 Save that code into a module named `cptw.py` and run it as follows:
@@ -397,7 +410,7 @@ Save that code into a module named `cptw.py` and run it as follows:
 uwsgi
 ^^^^^
 
-You can use `uwsgi <http://projects.unbit.it/uwsgi/>`_ HTTP server as 
+You can use `uwsgi <http://projects.unbit.it/uwsgi/>`_ HTTP server as
 follow:
 
 .. code-block:: python
@@ -470,8 +483,8 @@ In this example, we declare two domains and their ports:
 - company.com:8080
 - home.net:8080
 
-Thanks to the :class:`cherrypy.dispatch.VirtualHost` dispatcher, 
-we tell CherryPy which application to dispatch to when a request 
+Thanks to the :class:`cherrypy.dispatch.VirtualHost` dispatcher,
+we tell CherryPy which application to dispatch to when a request
 arrives. The dispatcher looks up the requested domain and
 call the according application.
 
@@ -542,7 +555,7 @@ be a good starting point.
       }
    }
 
-Edit this configuration to match your own paths. Then, save this configuration 
+Edit this configuration to match your own paths. Then, save this configuration
 into a file under ``/etc/nginx/conf.d/`` (assuming Ubuntu).
 The filename is irrelevant. Then run the following commands:
 
@@ -582,7 +595,7 @@ Now, let's see our application:
 
     if __name__ == '__main__':
         cherrypy.config.update({
-	    'server.socket_port': 8080,
+            'server.socket_port': 8080,
             'tools.proxy.on': True,
             'tools.proxy.base': 'http://www.example.com'
         })
