@@ -25,6 +25,8 @@ are generally either modules or instances of the tools.Tool class.
 import sys
 import warnings
 
+from jaraco.functools import assign_params
+
 import cherrypy
 from cherrypy._helper import expose
 
@@ -321,14 +323,8 @@ class SessionTool(Tool):
         sess = cherrypy.serving.session
         sess.regenerate()
 
-        # Grab cookie-relevant tool args
-        relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
-        conf = dict(
-            (k, v)
-            for k, v in self._merged_args().items()
-            if k in relevant
-        )
-        _sessions.set_response_cookie(**conf)
+        # Set response cookie with relevant args
+        assign_params(_sessions.set_response_cookie, self._merged_args())()
 
 
 class XMLRPCController(object):
