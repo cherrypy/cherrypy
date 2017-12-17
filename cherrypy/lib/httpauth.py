@@ -181,8 +181,6 @@ def parseAuthorization(credentials):
     the HTTP header to a map itself. If the parsing fails 'None' is returned.
     """
 
-    global AUTH_SCHEMES
-
     auth_scheme, auth_params = credentials.split(' ', 1)
     auth_scheme = auth_scheme.lower()
 
