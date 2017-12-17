@@ -53,11 +53,12 @@ packages = [
     'cherrypy.scaffold',
 ]
 
+# install requirements must not contain namespace
+# packages. See #1673
 install_requires = [
     'six>=1.11.0',
     'cheroot>=5.9.1',
     'portend>=2.1.1',
-    'jaraco.classes',
 ]
 
 extras_require = {
