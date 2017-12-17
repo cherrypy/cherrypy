@@ -310,11 +310,9 @@ def normalize_path(path):
     return newpath
 
 
-# Internalized from jaraco.classes because the dependency was a namespaced
-# package which is regretfully still unsupported in some cases of Python
-# environments (Pex, Celery, pip install -t)
-#
-# Code from http://stackoverflow.com/a/5191224
+####
+# Inlined from jaraco.classes 1.4.3
+# Ref #1673
 class _ClassPropertyDescriptor(object):
     """Descript for read-only class-based property.
 
@@ -334,10 +332,10 @@ class _ClassPropertyDescriptor(object):
         return self.fget.__get__(obj, klass)()
 
 
-# Code from http://stackoverflow.com/a/5191224
 def classproperty(func):
     """Decorator like classmethod to implement a static class property."""
     if not isinstance(func, (classmethod, staticmethod)):
         func = classmethod(func)
 
     return _ClassPropertyDescriptor(func)
+####

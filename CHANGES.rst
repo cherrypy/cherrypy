@@ -1,3 +1,10 @@
+v13.0.1
+-------
+
+* #1671: Restore support for installing CherryPy into
+  environments hostile to namespace packages, broken since
+  the 11.1.0 release.
+
 v13.0.0
 -------
 
@@ -100,6 +107,10 @@ v11.1.0
 
 * Also, many improvements around continuous integration and code
   quality checks.
+
+This release contained an unintentional regression in environments that
+are hostile to namespace packages, such as Pex, Celery, and py2exe.
+See #1671 for details.
 
 v11.0.0
 -------
