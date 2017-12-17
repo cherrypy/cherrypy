@@ -376,49 +376,77 @@ def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
     return pm
 
 
-class CaseInsensitiveDict(dict):
+####
+# Inlined from jaraco.collections 1.5.2
+# Ref #1673
+class KeyTransformingDict(dict):
+    """
+    A dict subclass that transforms the keys before they're used.
+    Subclasses may override the default transform_key to customize behavior.
+    """
+    @staticmethod
+    def transform_key(key):
+        return key
+
+    def __init__(self, *args, **kargs):
+        super(KeyTransformingDict, self).__init__()
+        # build a dictionary using the default constructs
+        d = dict(*args, **kargs)
+        # build this dictionary using transformed keys.
+        for item in d.items():
+            self.__setitem__(*item)
+
+    def __setitem__(self, key, val):
+        key = self.transform_key(key)
+        super(KeyTransformingDict, self).__setitem__(key, val)
+
+    def __getitem__(self, key):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).__getitem__(key)
+
+    def __contains__(self, key):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).__contains__(key)
+
+    def __delitem__(self, key):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).__delitem__(key)
+
+    def get(self, key, *args, **kwargs):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).get(key, *args, **kwargs)
+
+    def setdefault(self, key, *args, **kwargs):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).setdefault(
+            key, *args, **kwargs)
+
+    def pop(self, key, *args, **kwargs):
+        key = self.transform_key(key)
+        return super(KeyTransformingDict, self).pop(key, *args, **kwargs)
+
+    def matching_key_for(self, key):
+        """
+        Given a key, return the actual key stored in self that matches.
+        Raise KeyError if the key isn't found.
+        """
+        try:
+            return next(e_key for e_key in self.keys() if e_key == key)
+        except StopIteration:
+            raise KeyError(key)
+####
+
+
+class CaseInsensitiveDict(KeyTransformingDict):
 
     """A case-insensitive dict subclass.
 
     Each key is changed on entry to str(key).title().
     """
 
-    def __getitem__(self, key):
-        return dict.__getitem__(self, str(key).title())
-
-    def __setitem__(self, key, value):
-        dict.__setitem__(self, str(key).title(), value)
-
-    def __delitem__(self, key):
-        dict.__delitem__(self, str(key).title())
-
-    def __contains__(self, key):
-        return dict.__contains__(self, str(key).title())
-
-    def get(self, key, default=None):
-        return dict.get(self, str(key).title(), default)
-
-    def update(self, E):
-        for k in E.keys():
-            self[str(k).title()] = E[k]
-
-    @classmethod
-    def fromkeys(cls, seq, value=None):
-        newdict = cls()
-        for k in seq:
-            newdict[str(k).title()] = value
-        return newdict
-
-    def setdefault(self, key, x=None):
-        key = str(key).title()
-        try:
-            return self[key]
-        except KeyError:
-            self[key] = x
-            return x
-
-    def pop(self, key, default):
-        return dict.pop(self, str(key).title(), default)
+    @staticmethod
+    def transform_key(key):
+        return str(key).title()
 
 
 #   TEXT = <any OCTET except CTLs, but including LWS>

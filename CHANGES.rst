@@ -1,3 +1,15 @@
+v13.1.0
+-------
+
+* #1231 via #1654: CaseInsensitiveDict now re-uses the
+  generalized functionality from ``jaraco.collections`` to
+  provide a more complete interface for a CaseInsensitiveDict
+  and HeaderMap.
+
+  Users are encouraged to use the implementation from
+  `jaraco.collections <https://pypi.org/project/jaraco.collections>`_
+  except when dealing with headers in CherryPy.
+
 v13.0.1
 -------
 
