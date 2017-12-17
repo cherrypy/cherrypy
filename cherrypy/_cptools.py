@@ -25,6 +25,8 @@ are generally either modules or instances of the tools.Tool class.
 import sys
 import warnings
 
+from jaraco.collections import Projection
+
 import cherrypy
 from cherrypy._helper import expose
 
@@ -323,11 +325,7 @@ class SessionTool(Tool):
 
         # Grab cookie-relevant tool args
         relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
-        conf = dict(
-            (k, v)
-            for k, v in self._merged_args().items()
-            if k in relevant
-        )
+        conf = Projection(relevant, self._merged_args())
         _sessions.set_response_cookie(**conf)
 
 
