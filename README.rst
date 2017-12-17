@@ -7,10 +7,14 @@
 .. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=Linux%20build%20%40%20Travis%20CI
    :target: http://travis-ci.org/cherrypy/cherrypy
 
-.. image:: https://img.shields.io/appveyor/ci/jaraco/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
-   :target: https://ci.appveyor.com/project/jaraco/cherrypy/branch/master
+.. image:: https://img.shields.io/appveyor/ci/CherryPy/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
+   :target: https://ci.appveyor.com/project/CherryPy/cherrypy/branch/master
 
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
+
+.. image:: http://badges.github.io/stability-badges/dist/stable.svg
+   :target: http://github.com/badges/stability-badges
+   :alt: stable
 
 .. image:: https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715
    :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade

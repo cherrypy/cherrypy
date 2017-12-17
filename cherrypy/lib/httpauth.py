@@ -169,7 +169,8 @@ def _parseBasicAuthorization(auth_params):
     username, password = base64_decode(auth_params).split(':', 1)
     return {'username': username, 'password': password}
 
-AUTH_SCHEMES = {  # noqa: E305
+
+AUTH_SCHEMES = {
     'basic': _parseBasicAuthorization,
     'digest': _parseDigestAuthorization,
 }
@@ -179,8 +180,6 @@ def parseAuthorization(credentials):
     """parseAuthorization will convert the value of the 'Authorization' key in
     the HTTP header to a map itself. If the parsing fails 'None' is returned.
     """
-
-    global AUTH_SCHEMES
 
     auth_scheme, auth_params = credentials.split(' ', 1)
     auth_scheme = auth_scheme.lower()
@@ -352,7 +351,8 @@ def _checkBasicResponse(auth_map, password, method='GET', encrypt=None,
         candidate = encrypt(auth_map['password'])
     return candidate == password
 
-AUTH_RESPONSES = {  # noqa: E305
+
+AUTH_RESPONSES = {
     'basic': _checkBasicResponse,
     'digest': _checkDigestResponse,
 }

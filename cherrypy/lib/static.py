@@ -1,6 +1,7 @@
 """Module with helpers for serving static files."""
 
 import os
+import platform
 import re
 import stat
 import mimetypes
@@ -15,11 +16,17 @@ from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
-mimetypes.init()
-mimetypes.types_map['.dwg'] = 'image/x-dwg'
-mimetypes.types_map['.ico'] = 'image/x-icon'
-mimetypes.types_map['.bz2'] = 'application/x-bzip2'
-mimetypes.types_map['.gz'] = 'application/x-gzip'
+def _setup_mimetypes():
+    """Pre-initialize global mimetype map."""
+    if not mimetypes.inited:
+        mimetypes.init()
+    mimetypes.types_map['.dwg'] = 'image/x-dwg'
+    mimetypes.types_map['.ico'] = 'image/x-icon'
+    mimetypes.types_map['.bz2'] = 'application/x-bzip2'
+    mimetypes.types_map['.gz'] = 'application/x-gzip'
+
+
+_setup_mimetypes()
 
 
 def serve_file(path, content_type=None, disposition=None, name=None,
@@ -314,11 +321,12 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
     branch = request.path_info[len(section) + 1:]
     branch = urllib.parse.unquote(branch.lstrip(r'\/'))
 
-    # On Windows requesting a file in sub-dir of the staticdir results
-    # in mixing of delimiter styles, eg: C:\static\js/script.js
-    # Python normally converts this but not when the staticdir is
-    # supplied in long-path notation, eg: \\?\C:\static\js/script.js
-    if os.name == 'nt':
+    # Requesting a file in sub-dir of the staticdir results
+    # in mixing of delimiter styles, e.g. C:\static\js/script.js.
+    # Windows accepts this form except not when the path is
+    # supplied in extended-path notation, e.g. \\?\C:\static\js/script.js.
+    # http://bit.ly/1vdioCX
+    if platform.system() == 'Windows':
         branch = branch.replace('/', '\\')
 
     # If branch is "", filename will end in a slash

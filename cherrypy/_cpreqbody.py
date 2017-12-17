@@ -736,7 +736,8 @@ class Part(Entity):
         self.read_lines_to_boundary(fp_out=fp_out)
         return fp_out
 
-Entity.part_class = Part  # noqa: E305
+
+Entity.part_class = Part
 
 inf = float('inf')
 

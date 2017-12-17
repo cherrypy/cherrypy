@@ -1,5 +1,6 @@
 """Test Routes dispatcher."""
 import os
+import importlib
 
 import pytest
 
@@ -16,7 +17,7 @@ class RoutesDispatchTest(helper.CPWebCase):
     def setup_server():
         """Set up cherrypy test instance."""
         try:
-            import routes  # noqa
+            importlib.import_module('routes')
         except ImportError:
             pytest.skip('Install routes to test RoutesDispatcher code')
 

@@ -318,7 +318,6 @@ this application:
    [27/Apr/2014:13:04:07] ENGINE Listening for SIGUSR1.
    [27/Apr/2014:13:04:07] ENGINE Bus STARTING
    [27/Apr/2014:13:04:07] ENGINE Started monitor thread 'Autoreloader'.
-   [27/Apr/2014:13:04:07] ENGINE Started monitor thread '_TimeoutMonitor'.
    [27/Apr/2014:13:04:08] ENGINE Serving on http://127.0.0.1:8080
    [27/Apr/2014:13:04:08] ENGINE Bus STARTED
 
@@ -346,7 +345,6 @@ This is what we get:
    [27/Apr/2014:13:08:06] ENGINE Listening for SIGUSR1.
    [27/Apr/2014:13:08:06] ENGINE Bus STARTING
    [27/Apr/2014:13:08:06] ENGINE Started monitor thread 'Autoreloader'.
-   [27/Apr/2014:13:08:06] ENGINE Started monitor thread '_TimeoutMonitor'.
    [27/Apr/2014:13:08:06] ENGINE Bus STARTED
 
 As you can see, the server is not started. The missing:

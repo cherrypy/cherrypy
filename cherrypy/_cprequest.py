@@ -618,9 +618,6 @@ class Request(object):
         except Exception:
             cherrypy.log.error(traceback=True)
 
-        if response.timed_out:
-            raise cherrypy.TimeoutError()
-
         return response
 
     # Uncomment for stage debugging
@@ -734,9 +731,8 @@ class Request(object):
             if name == 'Cookie':
                 try:
                     self.cookie.load(value)
-                except CookieError:
-                    msg = 'Illegal cookie name %s' % value.split('=')[0]
-                    raise cherrypy.HTTPError(400, msg)
+                except CookieError as exc:
+                    raise cherrypy.HTTPError(400, str(exc))
 
         if not dict.__contains__(headers, 'Host'):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
@@ -874,14 +870,6 @@ class Response(object):
     time = None
     """The value of time.time() when created. Use in HTTP dates."""
 
-    timeout = 300
-    """Seconds after which the response will be aborted."""
-
-    timed_out = False
-    """
-    Flag to indicate the response should be aborted, because it has
-    exceeded its timeout."""
-
     stream = False
     """If False, buffer the response body."""
 
@@ -961,15 +949,6 @@ class Response(object):
                 if isinstance(value, six.text_type):
                     value = headers.encode(value)
                 h.append((name, value))
-
-    def check_timeout(self):
-        """If now > self.time + self.timeout, set self.timed_out.
-
-        This purposefully sets a flag, rather than raising an error,
-        so that a monitor thread can interrupt the Response thread.
-        """
-        if time.time() > self.time + self.timeout:
-            self.timed_out = True
 
 
 class LazyUUID4(object):

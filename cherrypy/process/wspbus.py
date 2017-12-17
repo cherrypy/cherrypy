@@ -79,6 +79,7 @@ import time
 import traceback as _traceback
 import warnings
 import subprocess
+import functools
 
 import six
 
@@ -137,7 +138,9 @@ class _StateEnum(object):
         if isinstance(value, self.State):
             value.name = key
         object.__setattr__(self, key, value)
-states = _StateEnum()  # noqa: E305
+
+
+states = _StateEnum()
 states.STOPPED = states.State()
 states.STARTING = states.State()
 states.STARTED = states.State()
@@ -182,8 +185,19 @@ class Bus(object):
         )
         self._priorities = {}
 
-    def subscribe(self, channel, callback, priority=None):
-        """Add the given callback at the given channel (if not present)."""
+    def subscribe(self, channel, callback=None, priority=None):
+        """Add the given callback at the given channel (if not present).
+
+        If callback is None, return a partial suitable for decorating
+        the callback.
+        """
+        if callback is None:
+            return functools.partial(
+                self.subscribe,
+                channel,
+                priority=priority,
+            )
+
         ch_listeners = self.listeners.setdefault(channel, set())
         ch_listeners.add(callback)
 
@@ -586,4 +600,5 @@ class Bus(object):
             msg += '\n' + ''.join(_traceback.format_exception(*sys.exc_info()))
         self.publish('log', msg, level)
 
-bus = Bus()  # noqa: E305
+
+bus = Bus()

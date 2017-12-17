@@ -65,7 +65,7 @@ from threading import local as _local
 
 from ._cperror import (
     HTTPError, HTTPRedirect, InternalRedirect,
-    NotFound, CherryPyException, TimeoutError,
+    NotFound, CherryPyException,
 )
 
 from . import _cpdispatch as dispatch
@@ -89,10 +89,11 @@ try:
 except ImportError:
     engine = process.bus
 
+from . import _cpchecker
 
 __all__ = (
     'HTTPError', 'HTTPRedirect', 'InternalRedirect',
-    'NotFound', 'CherryPyException', 'TimeoutError',
+    'NotFound', 'CherryPyException',
     'dispatch', 'tools', 'Tool', 'Application',
     'wsgi', 'process', 'tree', 'engine',
     'quickstart', 'serving', 'request', 'response', 'thread_data',
@@ -113,36 +114,9 @@ except Exception:
     __version__ = 'unknown'
 
 
-# Timeout monitor. We add two channels to the engine
-# to which cherrypy.Application will publish.
 engine.listeners['before_request'] = set()
 engine.listeners['after_request'] = set()
 
-
-class _TimeoutMonitor(process.plugins.Monitor):
-
-    def __init__(self, bus):
-        self.servings = []
-        process.plugins.Monitor.__init__(self, bus, self.run)
-
-    def before_request(self):
-        self.servings.append((serving.request, serving.response))
-
-    def after_request(self):
-        try:
-            self.servings.remove((serving.request, serving.response))
-        except ValueError:
-            pass
-
-    def run(self):
-        """Check timeout on all responses.
-
-        (Internal)
-        """
-        for req, resp in self.servings:
-            resp.check_timeout()
-engine.timeout_monitor = _TimeoutMonitor(engine)  # noqa: E305
-engine.timeout_monitor.subscribe()
 
 engine.autoreload = process.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
@@ -169,7 +143,8 @@ class _HandleSignalsPlugin(object):
         if hasattr(self.bus, 'console_control_handler'):
             self.bus.console_control_handler.subscribe()
 
-engine.signals = _HandleSignalsPlugin(engine)  # noqa: E305
+
+engine.signals = _HandleSignalsPlugin(engine)
 
 
 server = _cpserver.Server()
@@ -233,7 +208,8 @@ class _Serving(_local):
         """Remove all attributes of self."""
         self.__dict__.clear()
 
-serving = _Serving()  # noqa: E305
+
+serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
@@ -291,10 +267,11 @@ class _ThreadLocalProxy(object):
     # Python 3
     __bool__ = __nonzero__
 
+
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')  # noqa: E305
+request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
 
 # Create thread_data object as a thread-specific all-purpose storage
@@ -302,7 +279,9 @@ response = _ThreadLocalProxy('response')
 
 class _ThreadData(_local):
     """A container for thread-specific data."""
-thread_data = _ThreadData()  # noqa: E305
+
+
+thread_data = _ThreadData()
 
 
 # Monkeypatch pydoc to allow help() to go through the threadlocal proxy.
@@ -315,7 +294,8 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
         thing = getattr(serving, thing.__attrname__)
     return _pydoc._builtin_resolve(thing, forceload)
 
-try:  # noqa: E305
+
+try:
     import pydoc as _pydoc
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
@@ -367,9 +347,10 @@ log.error_file = ''
 log.access_file = ''
 
 
+@engine.subscribe('log')
 def _buslog(msg, level):
     log.error(msg, 'ENGINE', severity=level)
-engine.subscribe('log', _buslog)  # noqa: E305
+
 
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
@@ -385,6 +366,5 @@ config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
-from . import _cpchecker  # noqa: F401
 checker = _cpchecker.Checker()
 engine.subscribe('start', checker)

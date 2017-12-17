@@ -78,7 +78,6 @@ Once started the above command shows the following logs:
    [15/Feb/2014:21:51:22] ENGINE Listening for SIGUSR1.
    [15/Feb/2014:21:51:22] ENGINE Bus STARTING
    [15/Feb/2014:21:51:22] ENGINE Started monitor thread 'Autoreloader'.
-   [15/Feb/2014:21:51:22] ENGINE Started monitor thread '_TimeoutMonitor'.
    [15/Feb/2014:21:51:22] ENGINE Serving on http://127.0.0.1:8080
    [15/Feb/2014:21:51:23] ENGINE Bus STARTED
 

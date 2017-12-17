@@ -1,8 +1,116 @@
-v11.0.1
+v13.0.1
 -------
+
+* #1671: Restore support for installing CherryPy into
+  environments hostile to namespace packages, broken since
+  the 11.1.0 release.
+
+v13.0.0
+-------
+
+* #1666: Drop support for Python 3.3.
+
+v12.0.2
+-------
+
+* #1665: In request processing, when an invalid cookie is
+  received, render the actual error message reported rather
+  than guessing (sometimes incorrectly) what error occurred.
+
+v12.0.1
+-------
+
+* Fixed issues importing cherrypy.test.webtest (by creating
+  a module and importing classes from cheroot) and added a
+  corresponding DeprecationWarning.
+
+v12.0.0
+-------
+
+* Drop support for Python 3.1 and 3.2.
+
+* #1625: Removed response timeout and timeout monitor and
+  related exceptions, as it not possible to interrupt a request.
+  Servers that wish to exit a request prematurely are
+  recommended to monitor ``response.time`` and raise an
+  exception or otherwise act accordingly.
+
+  Servers that previously disabled timeouts by invoking
+  ``cherrypy.engine.timeout_monitor.unsubscribe()`` will now
+  crash. For forward-compatibility with this release on older
+  versions of CherryPy, disable
+  timeouts using the config option::
+
+    'engine.timeout_monitor.on': False,
+
+  Or test for the presence of the timeout_monitor attribute::
+
+    with contextlib2.suppress(AttributeError):
+        cherrypy.engine.timeout_monitor.unsubscribe()
+
+  Additionally, the ``TimeoutError`` exception has been removed,
+  as it's no longer called anywhere. If your application
+  benefits from this Exception, please comment in the linked
+  ticket describing the use case, and we'll help devise a
+  solution or bring the exception back.
+
+v11.3.0
+-------
+
+* Bump to cheroot 5.9.0.
+
+* ``cherrypy.test.webtest`` module is now merged with the
+  ``cheroot.test.webtest`` module. The CherryPy name is retained
+  for now for compatibility and will be removed eventually.
+
+v11.2.0
+-------
+
+* ``cherrypy.engine.subscribe`` now may be called without a
+  callback, in which case it returns a decorator expecting the
+  callback.
+
+* #1656: Images are now compressed using lossless compression
+  and consume less space.
+
+v11.1.0
+-------
+
+* #1611: Expose default status logic for a redirect as
+  ``HTTPRedirect.default_status``.
+
+* #1615: ``HTTPRedirect.status`` is now an instance property and
+  derived from the value in ``args``. Although it was previously
+  possible to set the property on an instance, and this change
+  prevents that possibilty, CherryPy never relied on that behavior
+  and we presume no applications depend on that interface.
 
 * #1627: Fixed issue in proxy tool where more than one port would
   appear in the ``request.base`` and thus in ``cherrypy.url``.
+
+* #1645: Added new log format markers:
+
+  - ``i`` holds a per-request UUID4
+  - ``z`` outputs UTC time in format of RFC 3339
+  - ``cherrypy._cprequest.Request.unique_id.uuid4`` now has lazily
+    invocable UUID4
+
+* #1646: Improve http status conversion helper.
+
+* #1638: Always use backslash for path separator when processing
+  paths in staticdir.
+
+* #1190: Fix gzip, caching, and staticdir tools integration. Makes
+  cache of gzipped content valid.
+
+* Requires cheroot 5.8.3 or later.
+
+* Also, many improvements around continuous integration and code
+  quality checks.
+
+This release contained an unintentional regression in environments that
+are hostile to namespace packages, such as Pex, Celery, and py2exe.
+See #1671 for details.
 
 v11.0.0
 -------
@@ -240,7 +348,7 @@ v6.2.0
 
 * #1441: Added tool to automatically convert request
   params based on type annotations (primarily in
-  Python 3). For example:
+  Python 3). For example::
 
     @cherrypy.tools.params()
     def resource(self, limit: int):

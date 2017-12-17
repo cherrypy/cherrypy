@@ -322,9 +322,12 @@ class SessionTool(Tool):
         sess.regenerate()
 
         # Grab cookie-relevant tool args
-        conf = dict([(k, v) for k, v in self._merged_args().items()
-                     if k in ('path', 'path_header', 'name', 'timeout',
-                              'domain', 'secure')])
+        relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
+        conf = dict(
+            (k, v)
+            for k, v in self._merged_args().items()
+            if k in relevant
+        )
         _sessions.set_response_cookie(**conf)
 
 
@@ -392,11 +395,7 @@ class XMLRPCController(object):
 
 
 class SessionAuthTool(HandlerTool):
-
-    def _setargs(self):
-        for name in dir(cptools.SessionAuth):  # noqa: F821
-            if not name.startswith('__'):
-                setattr(self, name, None)
+    pass
 
 
 class CachingTool(Tool):

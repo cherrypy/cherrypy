@@ -372,6 +372,15 @@ class Daemonizer(SimplePlugin):
                          'Daemonizing now may cause strange failures.' %
                          threading.enumerate(), level=30)
 
+        self.daemonize(self.stdin, self.stdout, self.stderr, self.bus.log)
+
+        self.finalized = True
+    start.priority = 65
+
+    @staticmethod
+    def daemonize(
+            stdin='/dev/null', stdout='/dev/null', stderr='/dev/null',
+            logger=lambda msg: None):
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
         # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -380,40 +389,29 @@ class Daemonizer(SimplePlugin):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # Do first fork.
-        try:
-            pid = os.fork()
-            if pid == 0:
-                # This is the child process. Continue.
-                pass
-            else:
-                # This is the first parent. Exit, now that we've forked.
-                self.bus.log('Forking once.')
-                os._exit(0)
-        except OSError:
-            # Python raises OSError rather than returning negative numbers.
-            exc = sys.exc_info()[1]
-            sys.exit('%s: fork #1 failed: (%d) %s\n'
-                     % (sys.argv[0], exc.errno, exc.strerror))
+        error_tmpl = (
+            '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
+        )
 
-        os.setsid()
-
-        # Do second fork
-        try:
-            pid = os.fork()
-            if pid > 0:
-                self.bus.log('Forking twice.')
-                os._exit(0)  # Exit second parent
-        except OSError:
-            exc = sys.exc_info()[1]
-            sys.exit('%s: fork #2 failed: (%d) %s\n'
-                     % (sys.argv[0], exc.errno, exc.strerror))
+        for fork in range(2):
+            msg = ['Forking once.', 'Forking twice.'][fork]
+            try:
+                pid = os.fork()
+                if pid > 0:
+                    # This is the parent; exit.
+                    logger(msg)
+                    os._exit(0)
+            except OSError as exc:
+                # Python raises OSError rather than returning negative numbers.
+                sys.exit(error_tmpl.format(sys=sys, exc=exc, n=fork + 1))
+            if fork == 0:
+                os.setsid()
 
         os.umask(0)
 
-        si = open(self.stdin, 'r')
-        so = open(self.stdout, 'a+')
-        se = open(self.stderr, 'a+')
+        si = open(stdin, 'r')
+        so = open(stdout, 'a+')
+        se = open(stderr, 'a+')
 
         # os.dup2(fd, fd2) will close fd2 if necessary,
         # so we don't explicitly close stdin/out/err.
@@ -422,9 +420,7 @@ class Daemonizer(SimplePlugin):
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
 
-        self.bus.log('Daemonized to PID: %s' % os.getpid())
-        self.finalized = True
-    start.priority = 65
+        logger('Daemonized to PID: %s' % os.getpid())
 
 
 class PIDFile(SimplePlugin):

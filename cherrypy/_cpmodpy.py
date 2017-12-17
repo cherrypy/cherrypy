@@ -102,6 +102,7 @@ def setup(req):
     engine.autoreload.unsubscribe()
     cherrypy.server.unsubscribe()
 
+    @engine.subscribe('log')
     def _log(msg, level):
         newlevel = apache.APLOG_ERR
         if logging.DEBUG >= level:
@@ -114,7 +115,6 @@ def setup(req):
         # http://www.modpython.org/pipermail/mod_python/2003-October/014291.html
         # Also, "When server is not specified...LogLevel does not apply..."
         apache.log_error(msg, newlevel, req.server)
-    engine.subscribe('log', _log)
 
     engine.start()
 
