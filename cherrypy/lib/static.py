@@ -5,17 +5,19 @@ import platform
 import re
 import stat
 import mimetypes
-
 from email.generator import _make_boundary as make_boundary
 from io import UnsupportedOperation
 
 from six.moves import urllib
+
+from jaraco.functools import call_aside
 
 import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy.lib import cptools, httputil, file_generator_limited
 
 
+@call_aside
 def _setup_mimetypes():
     """Pre-initialize global mimetype map."""
     if not mimetypes.inited:
@@ -24,9 +26,6 @@ def _setup_mimetypes():
     mimetypes.types_map['.ico'] = 'image/x-icon'
     mimetypes.types_map['.bz2'] = 'application/x-bzip2'
     mimetypes.types_map['.gz'] = 'application/x-gzip'
-
-
-_setup_mimetypes()
 
 
 def serve_file(path, content_type=None, disposition=None, name=None,
