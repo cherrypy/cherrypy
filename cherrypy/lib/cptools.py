@@ -590,6 +590,7 @@ def accept(media=None, debug=False):
 class MonitoredHeaderMap(_httputil.HeaderMap):
 
     def __init__(self):
+        super(MonitoredHeaderMap, self).__init__()
         self.accessed_headers = set()
 
     def __getitem__(self, key):
