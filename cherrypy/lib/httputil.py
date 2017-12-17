@@ -18,6 +18,7 @@ import six
 from six.moves import range, builtins
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
+import cherrypy
 from cherrypy._cpcompat import ntob, ntou
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import unquote_qs
@@ -305,6 +306,17 @@ def valid_status(status):
         reason = default_reason
 
     return code, reason, message
+
+
+def default_request_status():
+    """
+    The default redirect status for a request.
+
+    RFC 2616 indicates a 301 response code fits our goal; however,
+    browser support for 301 is quite messy. Use 302/303 instead. See
+    http://www.alanflavell.org.uk/www/post-redirect.html
+    """
+    return 303 if cherrypy.serving.request.protocol >= (1, 1) else 302
 
 
 # NOTE: the parse_qs functions that follow are modified version of those
