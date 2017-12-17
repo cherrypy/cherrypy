@@ -129,7 +129,6 @@ import cherrypy
 from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy._cpcompat import tonative
-from cherrypy._helper import classproperty
 from cherrypy.lib import httputil as _httputil
 
 
@@ -229,16 +228,12 @@ class HTTPRedirect(CherryPyException):
 
         CherryPyException.__init__(self, abs_urls, status)
 
-    @classproperty
-    def default_status(cls):
-        """
-        The default redirect status for the request.
-
-        RFC 2616 indicates a 301 response code fits our goal; however,
-        browser support for 301 is quite messy. Use 302/303 instead. See
-        http://www.alanflavell.org.uk/www/post-redirect.html
-        """
-        return 303 if cherrypy.serving.request.protocol >= (1, 1) else 302
+    #: The default redirect status for the request.
+    #:
+    #: RFC 2616 indicates a 301 response code fits our goal; however,
+    #: browser support for 301 is quite messy. Use 302/303 instead. See
+    #: http://www.alanflavell.org.uk/www/post-redirect.html
+    default_status = _httputil.default_request_status()
 
     @property
     def status(self):
