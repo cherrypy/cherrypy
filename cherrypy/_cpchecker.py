@@ -196,7 +196,7 @@ class Checker(object):
         """Process config and warn on each obsolete or deprecated entry."""
         for section, conf in config.items():
             if isinstance(conf, dict):
-                for k, v in conf.items():
+                for k in conf:
                     if k in self.obsolete:
                         warnings.warn('%r is obsolete. Use %r instead.\n'
                                       'section: [%s]' %
@@ -235,7 +235,7 @@ class Checker(object):
         for section, conf in app.config.items():
             is_path_section = section.startswith('/')
             if is_path_section and isinstance(conf, dict):
-                for k, v in conf.items():
+                for k in conf:
                     atoms = k.split('.')
                     if len(atoms) > 1:
                         if atoms[0] not in ns:
