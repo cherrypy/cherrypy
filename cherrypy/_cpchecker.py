@@ -295,16 +295,9 @@ class Checker(object):
                'which does not match the expected type %r.')
 
         for section, conf in config.items():
-            if isinstance(conf, dict):
-                for k, v in conf.items():
-                    if v is not None:
-                        expected_type = self.known_config_types.get(k, None)
-                        vtype = type(v)
-                        if expected_type and vtype != expected_type:
-                            warnings.warn(msg % (k, section, vtype.__name__,
-                                                 expected_type.__name__))
-            else:
-                k, v = section, conf
+            if not isinstance(conf, dict):
+                conf = {section: conf}
+            for k, v in conf.items():
                 if v is not None:
                     expected_type = self.known_config_types.get(k, None)
                     vtype = type(v)
