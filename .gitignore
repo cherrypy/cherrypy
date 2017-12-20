@@ -27,9 +27,14 @@ sphinx/source/_build
 # Py.test
 /.cache/
 
-# Eclipse, PyDev
+# Eclipse, PyDev, VS Code
 .project
 .pydevproject
+.vscode
+
+# virtualenv
+VENV
+venv
 
 # test results in junit format for Appveyor
 /junit-test-results.xml
