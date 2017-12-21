@@ -10,9 +10,9 @@ http://stackoverflow.com/questions/tagged/cherrypy
 -->
 
 * **I'm submitting a ...**
-[ ] bug report
-[ ] feature request
-[ ] question about the decisions made in the repository
+- [ ] bug report
+- [ ] feature request
+- [ ] question about the decisions made in the repository
 
 * **Do you want to request a *feature* or report a *bug*?**
 
