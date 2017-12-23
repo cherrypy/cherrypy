@@ -37,4 +37,8 @@ sphinx/source/_build
 # coverage results
 /.coverage
 /coverage.xml
+
+# test artifacts
+/graph_AppResponse_*.png
+/graph_Response_*.png
 /graph_Request_*.png
