@@ -629,20 +629,23 @@ class Autoreloader(Monitor):
         """Return a Set of sys.modules filenames to monitor."""
         files = set()
         for k, m in list(sys.modules.items()):
-            if re.match(self.match, k):
-                if (
-                    hasattr(m, '__loader__') and
-                    hasattr(m.__loader__, 'archive')
-                ):
-                    f = m.__loader__.archive
-                else:
-                    f = getattr(m, '__file__', None)
-                    if f is not None and not os.path.isabs(f):
+            if not re.match(self.match, k):
+                continue
+
+            try:
+                f = m.__loader__.archive
+            except AttributeError:
+                try:
+                    f = m.__file__
+                    if not os.path.isabs(f):
                         # ensure absolute paths so a os.chdir() in the app
                         # doesn't break me
                         f = os.path.normpath(
-                            os.path.join(_module__file__base, f))
-                files.add(f)
+                            os.path.join(_module__file__base, f)
+                        )
+                except AttributeError:
+                    continue
+            files.add(f)
         return files
 
     def run(self):
