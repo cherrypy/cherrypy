@@ -28,8 +28,6 @@ _base_envs:
     then
       rm -rf "$PYENV_ROOT"
       curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
-      eval "$(pyenv init -)"
-      eval "$(pyenv virtualenv-init -)"
     fi
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
