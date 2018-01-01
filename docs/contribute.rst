@@ -2,7 +2,7 @@ Contribute
 ----------
 
 CherryPy is a community-maintained, open-source project hosted at Github.
-The project active encourages aspiring and experienced users to dive
+The project actively encourages aspiring and experienced users to dive
 in and add their best contribution to the project.
 
 How can you contribute? Well, first search the `docs
