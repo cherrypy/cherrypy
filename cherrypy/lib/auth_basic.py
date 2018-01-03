@@ -45,9 +45,10 @@ def checkpassword_dict(user_password_dict):
     return checkpassword
 
 
-def basic_auth(realm, checkpassword, debug=False):
+def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
     """A CherryPy tool which hooks at before_handler to perform
-    HTTP Basic Access Authentication, as specified in :rfc:`2617`.
+    HTTP Basic Access Authentication, as specified in :rfc:`2617`
+    and :rfc:`7617`.
 
     If the request has an 'authorization' header with a 'Basic' scheme, this
     tool attempts to authenticate the credentials supplied in that header.  If
@@ -79,7 +80,7 @@ def basic_auth(realm, checkpassword, debug=False):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 decoded_params = base64_decode(params)
-                decoded_params = tonative(ntob(decoded_params), 'utf-8')
+                decoded_params = tonative(ntob(decoded_params), accept_charset)
                 decoded_params = unicodedata.normalize('NFC', decoded_params)
                 username, password = decoded_params.split(':', 1)
                 if checkpassword(realm, username, password):
@@ -88,8 +89,15 @@ def basic_auth(realm, checkpassword, debug=False):
                     request.login = username
                     return  # successful authentication
 
+    charset = accept_charset.upper()
+    charset_declaration = (
+        (', charset="%s"' % charset)
+        if charset != 'ISO-8859-1'
+        else ''
+    )
     # Respond with 401 status and a WWW-Authenticate header
-    cherrypy.serving.response.headers[
-        'www-authenticate'] = 'Basic realm="%s"' % realm
+    cherrypy.serving.response.headers['www-authenticate'] = (
+        'Basic realm="%s"%s' % (realm, charset_declaration)
+    )
     raise cherrypy.HTTPError(
         401, 'You are not authorized to access that resource')
