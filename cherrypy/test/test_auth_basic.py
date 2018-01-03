@@ -63,12 +63,14 @@ class BasicAuthTest(helper.CPWebCase):
             '/basic2': {
                 'tools.auth_basic.on': True,
                 'tools.auth_basic.realm': 'wonderland',
-                'tools.auth_basic.checkpassword': checkpasshash
+                'tools.auth_basic.checkpassword': checkpasshash,
+                'tools.auth_basic.accept_charset': 'ISO-8859-1',
             },
             '/basic2_u': {
                 'tools.auth_basic.on': True,
                 'tools.auth_basic.realm': 'wonderland',
-                'tools.auth_basic.checkpassword': checkpasshash_u
+                'tools.auth_basic.checkpassword': checkpasshash_u,
+                'tools.auth_basic.accept_charset': 'UTF-8',
             },
         }
 
@@ -87,7 +89,10 @@ class BasicAuthTest(helper.CPWebCase):
     def testBasic(self):
         self.getPage('/basic/')
         self.assertStatus(401)
-        self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
+        self.assertHeader(
+            'WWW-Authenticate',
+            'Basic realm="wonderland", charset="UTF-8"'
+        )
 
         self.getPage('/basic/',
                      [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')])
@@ -115,7 +120,10 @@ class BasicAuthTest(helper.CPWebCase):
     def testBasic2_u(self):
         self.getPage('/basic2_u/')
         self.assertStatus(401)
-        self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
+        self.assertHeader(
+            'WWW-Authenticate',
+            'Basic realm="wonderland", charset="UTF-8"'
+        )
 
         self.getPage('/basic2_u/',
                      [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbRgw==')])
