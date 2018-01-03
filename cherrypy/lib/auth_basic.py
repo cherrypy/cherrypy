@@ -5,7 +5,7 @@
 import binascii
 
 import cherrypy
-from cherrypy._cpcompat import base64_decode
+from cherrypy._cpcompat import base64_decode, ntob, tonative
 
 
 __doc__ = """This module provides a CherryPy 3.x tool which implements
@@ -77,7 +77,9 @@ def basic_auth(realm, checkpassword, debug=False):
         with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, msg):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
-                username, password = base64_decode(params).split(':', 1)
+                decoded_params = base64_decode(params)
+                decoded_params = tonative(ntob(decoded_params), 'utf-8')
+                username, password = decoded_params.split(':', 1)
                 if checkpassword(realm, username, password):
                     if debug:
                         cherrypy.log('Auth succeeded', 'TOOLS.AUTH_BASIC')
