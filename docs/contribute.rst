@@ -18,10 +18,6 @@ tagged with 'cherrypy'. Answer unanswered questions, add an improved
 answer, clarify an answer with a comment, or ask more meaningful
 questions there. Earn reputation and share experience.
 
-CherryPy also maintains a `StackOverflow Wiki
-<http://stackoverflow.com/documentation/cherrypy/topics>`_ where
-anyone can publish tricks and techniques and refine others.
-
 Filing Bug Reports
 ==================
 
