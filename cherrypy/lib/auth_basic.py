@@ -3,6 +3,7 @@
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
 import binascii
+import unicodedata
 
 import cherrypy
 from cherrypy._cpcompat import base64_decode, ntob, tonative
@@ -79,6 +80,7 @@ def basic_auth(realm, checkpassword, debug=False):
             if scheme.lower() == 'basic':
                 decoded_params = base64_decode(params)
                 decoded_params = tonative(ntob(decoded_params), 'utf-8')
+                decoded_params = unicodedata.normalize('NFC', decoded_params)
                 username, password = decoded_params.split(':', 1)
                 if checkpassword(realm, username, password):
                     if debug:
