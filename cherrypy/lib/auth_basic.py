@@ -68,6 +68,8 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
 
     """
 
+    fallback_charset = 'ISO-8859-1'
+
     if '"' in realm:
         raise ValueError('Realm cannot contain the " (quote) character.')
     request = cherrypy.serving.request
@@ -80,9 +82,19 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 decoded_params = base64_decode(params)
-                decoded_params = ntou(
-                    tonative(ntob(decoded_params), accept_charset)
-                )
+                decoded_params = ntob(decoded_params)
+
+                last_err = None
+                for charset in (accept_charset, fallback_charset):
+                    try:
+                        decoded_params = tonative(decoded_params, charset)
+                        break
+                    except ValueError as ve:
+                        last_err = ve
+                else:
+                    raise last_err
+
+                decoded_params = ntou(decoded_params)
                 decoded_params = unicodedata.normalize('NFC', decoded_params)
                 decoded_params = tonative(decoded_params)
                 username, password = decoded_params.split(':', 1)
@@ -95,7 +107,7 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
     charset = accept_charset.upper()
     charset_declaration = (
         (', charset="%s"' % charset)
-        if charset != 'ISO-8859-1'
+        if charset != fallback_charset
         else ''
     )
     # Respond with 401 status and a WWW-Authenticate header
