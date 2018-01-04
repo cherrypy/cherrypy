@@ -44,6 +44,12 @@ def checkpassword_dict(user_password_dict):
     return checkpassword
 
 
+def decode_utf8(s):
+    """Convert string to bytes and try to interpret it as utf-8 encoded string."""
+    s_bytes = bytes([ord(c) for c in s])
+    return s_bytes.decode('utf-8')
+
+
 def basic_auth(realm, checkpassword, debug=False):
     """A CherryPy tool which hooks at before_handler to perform
     HTTP Basic Access Authentication, as specified in :rfc:`2617`.
@@ -78,6 +84,14 @@ def basic_auth(realm, checkpassword, debug=False):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 username, password = base64_decode(params).split(':', 1)
+
+                # Attempt to decode as utf-8. This will either convert password *and* username or
+                # none of them.
+                try:
+                    username, password = decode_utf8(username), decode_utf8(password)
+                except UnicodeDecodeError:
+                    pass
+
                 if checkpassword(realm, username, password):
                     if debug:
                         cherrypy.log('Auth succeeded', 'TOOLS.AUTH_BASIC')
@@ -87,5 +101,14 @@ def basic_auth(realm, checkpassword, debug=False):
     # Respond with 401 status and a WWW-Authenticate header
     cherrypy.serving.response.headers[
         'www-authenticate'] = 'Basic realm="%s"' % realm
+
+    # Attempt to bring the browser to switch charset in conformance with RFC-7617
+    #     https://tools.ietf.org/html/rfc7617
+    #
+    # As of 2018-01-02: Firefox 57.0.2 (32-Bit), curl 7.56.1, Google-Chrome 63.0.3239.108,
+    # Internet Explorer 11.786.15063.0 and Edge 40.15063.674.0 will ignore it.
+    # cherrypy.serving.response.headers[
+    #     'www-authenticate'] = 'Basic realm="%s", charset="UTF-8"' % realm
+
     raise cherrypy.HTTPError(
         401, 'You are not authorized to access that resource')
