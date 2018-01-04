@@ -6,7 +6,7 @@ import binascii
 import unicodedata
 
 import cherrypy
-from cherrypy._cpcompat import base64_decode, ntob, tonative
+from cherrypy._cpcompat import base64_decode, ntob, ntou, tonative
 
 
 __doc__ = """This module provides a CherryPy 3.x tool which implements
@@ -80,8 +80,11 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 decoded_params = base64_decode(params)
-                decoded_params = tonative(ntob(decoded_params), accept_charset)
+                decoded_params = ntou(
+                    tonative(ntob(decoded_params), accept_charset)
+                )
                 decoded_params = unicodedata.normalize('NFC', decoded_params)
+                decoded_params = tonative(decoded_params)
                 username, password = decoded_params.split(':', 1)
                 if checkpassword(realm, username, password):
                     if debug:
