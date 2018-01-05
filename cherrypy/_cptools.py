@@ -537,6 +537,6 @@ _d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
 _d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
 _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
 _d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
-_d.params = Tool('before_handler', cptools.convert_params)
+_d.params = Tool('before_handler', cptools.convert_params, priority=15)
 
 del _d, cptools, encoding, auth, static

@@ -10,6 +10,7 @@ class ParamsTest(helper.CPWebCase):
     def setup_server():
         class Root:
             @cherrypy.expose
+            @cherrypy.tools.json_out()
             @cherrypy.tools.params()
             def resource(self, limit=None, sort=None):
                 return type(limit).__name__
@@ -21,11 +22,11 @@ class ParamsTest(helper.CPWebCase):
     def test_pass(self):
         self.getPage('/resource')
         self.assertStatus(200)
-        self.assertBody('NoneType')
+        self.assertBody('"NoneType"')
 
         self.getPage('/resource?limit=0')
         self.assertStatus(200)
-        self.assertBody('int')
+        self.assertBody('"int"')
 
     def test_error(self):
         self.getPage('/resource?limit=')
