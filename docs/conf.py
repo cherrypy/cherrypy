@@ -18,7 +18,7 @@ import importlib
 import pkg_resources
 import sys
 
-assert sys.version_info > (3,), 'Python 3 required to build docs'
+assert sys.version_info > (3, 5), 'Python 3 required to build docs'
 
 
 def try_import(mod_name):
