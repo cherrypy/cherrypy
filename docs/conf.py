@@ -54,6 +54,12 @@ prj_py_min_supported, prj_py_max_supported = map(
     lambda v: '.'.join(v), prj_py_ver_range
 )
 
+rst_epilog = f"""
+.. |project| replace:: CherryPy
+.. |min_py_supported| replace:: {prj_py_min_supported}
+.. |max_py_supported| replace:: {prj_py_max_supported}
+"""
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
