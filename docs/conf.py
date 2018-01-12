@@ -80,7 +80,8 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'https://docs.python.org/3/': None,
+    'python': ('https://docs.python.org/3', None),
+    'cheroot': ('https://cheroot.readthedocs.io/en/latest/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
