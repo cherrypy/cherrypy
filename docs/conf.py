@@ -13,6 +13,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from email import message_from_string
 import importlib
 import pkg_resources
 import sys
@@ -29,6 +30,13 @@ def try_import(mod_name):
 
 
 custom_sphinx_theme = try_import('alabaster')
+
+prj_dist = pkg_resources.get_distribution('cherrypy')
+prj_pkg_info = prj_dist.get_metadata(prj_dist.PKG_INFO)
+prj_meta = message_from_string(prj_pkg_info)
+prj_author = prj_meta['Author']
+prj_license = prj_meta['License']
+prj_description = prj_meta['Description']
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -62,7 +70,7 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
-project = pkg_resources.get_distribution('cherrypy').project_name
+project = prj_dist.project_name
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
