@@ -29,6 +29,18 @@ def try_import(mod_name):
         pass
 
 
+def get_supported_pythons(classifiers):
+    """Return min and max supported Python version from meta as tuples."""
+    PY_VER_CLASSIFIER = 'Programming Language :: Python :: '
+    vers = filter(lambda c: c.startswith(PY_VER_CLASSIFIER), classifiers)
+    vers = map(lambda c: c[len(PY_VER_CLASSIFIER):], vers)
+    vers = filter(lambda c: c[0].isdigit() and '.' in c, vers)
+    vers = map(lambda c: tuple(c.split('.')), vers)
+    vers = sorted(vers)
+    del vers[1:-1]
+    return vers
+
+
 custom_sphinx_theme = try_import('alabaster')
 
 prj_dist = pkg_resources.get_distribution('cherrypy')
@@ -37,6 +49,10 @@ prj_meta = message_from_string(prj_pkg_info)
 prj_author = prj_meta['Author']
 prj_license = prj_meta['License']
 prj_description = prj_meta['Description']
+prj_py_ver_range = get_supported_pythons(prj_meta.get_all('Classifier'))
+prj_py_min_supported, prj_py_max_supported = map(
+    lambda v: '.'.join(v), prj_py_ver_range
+)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
