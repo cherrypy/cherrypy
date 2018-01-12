@@ -54,8 +54,17 @@ prj_py_min_supported, prj_py_max_supported = map(
     lambda v: '.'.join(v), prj_py_ver_range
 )
 
+project = prj_dist.project_name
+
+github_url = 'https://github.com'
+github_repo_org = project.lower()
+github_repo_name = project.lower()
+github_repo_slug = f'{github_repo_org}/{github_repo_name}'
+github_repo_url = f'{github_url}/{github_repo_slug}'
+cr_github_repo_url = f'{github_url}/{github_repo_org}/cheroot'
+
 rst_epilog = f"""
-.. |project| replace:: CherryPy
+.. |project| replace:: {project}
 .. |min_py_supported| replace:: {prj_py_min_supported}
 .. |max_py_supported| replace:: {prj_py_max_supported}
 """
@@ -71,13 +80,23 @@ rst_epilog = f"""
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
+    'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'rst.linker',
     'jaraco.packaging.sphinx',
 ]
+
+extlinks = {
+    'issue': (f'{github_repo_url}/issues/%s', '#'),
+    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'commit': (f'{github_repo_url}/commit/%s', ''),
+    'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #'),
+    'cr-pr': (f'{cr_github_repo_url}/pulls/%s', 'Cheroot PR #'),
+    'gh': (f'{github_url}/%s', 'GitHub: '),
+}
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
@@ -92,8 +111,6 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
-
-project = prj_dist.project_name
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
