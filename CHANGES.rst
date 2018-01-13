@@ -1,7 +1,7 @@
 v13.1.0
 -------
 
-* :issue:`1231` via :issue:`pr`: CaseInsensitiveDict now re-uses the
+* :issue:`1231` via :pr:`1654`: CaseInsensitiveDict now re-uses the
   generalized functionality from ``jaraco.collections`` to
   provide a more complete interface for a CaseInsensitiveDict
   and HeaderMap.
