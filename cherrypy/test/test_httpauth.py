@@ -38,8 +38,15 @@ class HTTPAuthTest(helper.CPWebCase):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
 
+        class BasicProtected2_u:
+
+            @cherrypy.expose
+            def index(self):
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
+
         def fetch_users():
-            return {'test': 'test'}
+            return {'test': 'test', 'йюзер': 'їпароль', 'xюзер': 'їжа'}
 
         def sha_password_encrypter(password):
             return sha1(ntob(password)).hexdigest()
@@ -65,6 +72,15 @@ class HTTPAuthTest(helper.CPWebCase):
                 'tools.basic_auth.realm': 'localhost',
                 'tools.basic_auth.users': fetch_password,
                 'tools.basic_auth.encrypt': sha_password_encrypter
+            },
+            '/basic2_u': {
+                'tools.basic_auth.on': True,
+                'tools.basic_auth.realm': 'localhost',
+                'tools.basic_auth.users': {
+                    u: md5(ntob(p, 'utf-8')).hexdigest()
+                    for u, p in fetch_users().items()
+                },
+                'tools.basic_auth.accept_charset': 'UTF-8',
             }
         }
 
@@ -72,6 +88,7 @@ class HTTPAuthTest(helper.CPWebCase):
         root.digest = DigestProtected()
         root.basic = BasicProtected()
         root.basic2 = BasicProtected2()
+        root.basic2_u = BasicProtected2_u()
         cherrypy.tree.mount(root, config=conf)
 
     def testPublic(self):
@@ -103,6 +120,23 @@ class HTTPAuthTest(helper.CPWebCase):
         self.getPage('/basic2/', [('Authorization', 'Basic dGVzdDp0ZXN0')])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
+
+    def testBasic2_u(self):
+        self.getPage('/basic2_u/')
+        self.assertStatus(401)
+        self.assertHeader(
+            'WWW-Authenticate',
+            'Basic realm="localhost", charset="UTF-8"'
+        )
+
+        self.getPage('/basic2_u/',
+                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbRgw==')])
+        self.assertStatus(401)
+
+        self.getPage('/basic2_u/',
+                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbQsA==')])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello xюзер, you've been authorized.")
 
     def testDigest(self):
         self.getPage('/digest/')
