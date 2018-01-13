@@ -23,15 +23,16 @@ SUPPORTED_ALGORITHM - list of supported 'Digest' algorithms
 SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 """
 
+import binascii
 import time
 import warnings
 from hashlib import md5
+import unicodedata
 
 from six.moves.urllib.request import parse_http_list, parse_keqv_list
 
-from cherrypy._cpcompat import (
-    base64_decode, ntob,
-)
+import cherrypy
+from cherrypy._cpcompat import base64_decode, ntob, ntou, tonative
 
 
 warnings.warn(
@@ -90,13 +91,16 @@ AUTH_INT = 'auth-int'
 SUPPORTED_ALGORITHM = (MD5, MD5_SESS)
 SUPPORTED_QOP = (AUTH, AUTH_INT)
 
+FALLBACK_CHARSET = 'ISO-8859-1'
+DEFAULT_CHARSET = 'UTF-8'
+
 ##########################################################################
 # doAuth
 #
 DIGEST_AUTH_ENCODERS = {
-    MD5: lambda val: md5(ntob(val)).hexdigest(),
-    MD5_SESS: lambda val: md5(ntob(val)).hexdigest(),
-    #    SHA: lambda val: sha.new(ntob(val)).hexdigest (),
+    MD5: lambda val: md5(ntob(val, DEFAULT_CHARSET)).hexdigest(),
+    MD5_SESS: lambda val: md5(ntob(val, DEFAULT_CHARSET)).hexdigest(),
+    #    SHA: lambda val: sha.new(ntob(val), DEFAULT_CHARSET).hexdigest (),
 }
 
 
@@ -116,25 +120,48 @@ def calculateNonce(realm, algorithm=MD5):
     return encoder('%d:%s' % (time.time(), realm))
 
 
-def digestAuth(realm, algorithm=MD5, nonce=None, qop=AUTH):
+def _get_charset_declaration(charset):
+    global FALLBACK_CHARSET
+    charset = charset.upper()
+    return (
+        (', charset="%s"' % charset)
+        if charset != FALLBACK_CHARSET
+        else ''
+    )
+
+
+def digestAuth(
+    realm, algorithm=MD5, nonce=None, qop=AUTH,
+    accept_charset=DEFAULT_CHARSET[:]
+):
     """Challenges the client for a Digest authentication."""
     global SUPPORTED_ALGORITHM, DIGEST_AUTH_ENCODERS, SUPPORTED_QOP
     assert algorithm in SUPPORTED_ALGORITHM
     assert qop in SUPPORTED_QOP
 
+    HEADER_PATTERN = (
+        'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"%s'
+    )
+
     if nonce is None:
         nonce = calculateNonce(realm, algorithm)
 
-    return 'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"' % (
-        realm, nonce, algorithm, qop
+    charset_declaration = _get_charset_declaration(accept_charset)
+
+    return HEADER_PATTERN % (
+        realm, nonce, algorithm, qop, charset_declaration
     )
 
 
-def basicAuth(realm):
+def basicAuth(realm, accept_charset=DEFAULT_CHARSET[:]):
     """Challengenes the client for a Basic authentication."""
     assert '"' not in realm, "Realms cannot contain the \" (quote) character."
 
-    return 'Basic realm="%s"' % realm
+    HEADER_PATTERN = 'Basic realm="%s"%s'
+
+    charset_declaration = _get_charset_declaration(accept_charset)
+
+    return HEADER_PATTERN % (realm, charset_declaration)
 
 
 def doAuth(realm):
@@ -150,7 +177,7 @@ def doAuth(realm):
 ##########################################################################
 # Parse authorization parameters
 #
-def _parseDigestAuthorization(auth_params):
+def _parseDigestAuthorization(auth_params, accept_charset=DEFAULT_CHARSET[:]):
     # Convert the auth params to a dict
     items = parse_http_list(auth_params)
     params = parse_keqv_list(items)
@@ -174,8 +201,39 @@ def _parseDigestAuthorization(auth_params):
     return params
 
 
-def _parseBasicAuthorization(auth_params):
-    username, password = base64_decode(auth_params).split(':', 1)
+def decode_auth_params(auth_params, accept_charset=DEFAULT_CHARSET[:]):
+    """Decode auth params into user:pass with default encoding and fallback.
+
+    See: :rfc:`2617` and :rfc:`7617`.
+    """
+    global FALLBACK_CHARSET
+
+    msg = 'Bad Request'
+    with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, msg):
+        decoded_params = base64_decode(auth_params)
+        decoded_params = ntob(decoded_params)
+
+        last_err = None
+        for charset in (accept_charset, FALLBACK_CHARSET):
+            try:
+                decoded_params = tonative(decoded_params, charset)
+                break
+            except ValueError as ve:
+                last_err = ve
+        else:
+            raise last_err
+
+        decoded_params = ntou(decoded_params)
+        decoded_params = unicodedata.normalize('NFC', decoded_params)
+        decoded_params = tonative(decoded_params)
+        username, password = decoded_params.split(':', 1)
+        return username, password
+
+
+def _parseBasicAuthorization(auth_params, accept_charset=DEFAULT_CHARSET[:]):
+    username, password = decode_auth_params(
+        auth_params, accept_charset=accept_charset
+    )
     return {'username': username, 'password': password}
 
 

@@ -75,7 +75,9 @@ def check_auth(users, encrypt=None, realm=None):
     return False
 
 
-def basic_auth(realm, users, encrypt=None, debug=False):
+def basic_auth(
+    realm, users, encrypt=None, debug=False, accept_charset='utf-8'
+):
     """If auth fails, raise 401 with a basic authentication header.
 
     realm
@@ -97,8 +99,9 @@ def basic_auth(realm, users, encrypt=None, debug=False):
         return
 
     # inform the user-agent this path is protected
-    cherrypy.serving.response.headers[
-        'www-authenticate'] = httpauth.basicAuth(realm)
+    cherrypy.serving.response.headers['www-authenticate'] = (
+        httpauth.basicAuth(realm, accept_charset=accept_charset)
+    )
 
     raise cherrypy.HTTPError(
         401, 'You are not authorized to access that resource')
