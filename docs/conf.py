@@ -224,23 +224,8 @@ link_files = {
         ),
         replace=[
             dict(
-                pattern=r'((Issue|PR)\s?)?#(?P<issue_or_pr>\d+)',
-                url='{GH}/cherrypy/{project}/issues/{issue_or_pr}',
-            ),
-            dict(
                 pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
                 with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
-            ),
-            dict(
-                pattern=r'PEP[- ](?P<pep_number>\d+)',
-                url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
-            ),
-            dict(
-                # FIXME: currently this puts #v1.2.3 style version
-                # into URL, but it should be v1-2-3
-                pattern=r'cheroot v?(?P<cheroot_version>\d+(\.\d+){1,2})',
-                url='https://cheroot.readthedocs.io'
-                    '/en/latest/history.html#v{cheroot_version}',
             ),
         ],
     ),
