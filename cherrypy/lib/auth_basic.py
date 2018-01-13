@@ -21,6 +21,7 @@ as the credentials store::
     basic_auth = {'tools.auth_basic.on': True,
                   'tools.auth_basic.realm': 'earth',
                   'tools.auth_basic.checkpassword': checkpassword,
+                  'tools.auth_basic.accept_charset': 'UTF-8',
     }
     app_config = { '/' : basic_auth }
 
