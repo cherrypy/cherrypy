@@ -198,18 +198,26 @@ In order to work with the bus, the implementation
 provides the following simple API:
 
 - :meth:`cherrypy.engine.publish(channel, *args) <cherrypy.process.wspbus.Bus.publish>`:
+
  - The `channel` parameter is a string identifying the channel to
    which the message should be sent to
+
  - `*args` is the message and may contain any valid Python values or
    objects.
+
 - :meth:`cherrypy.engine.subscribe(channel, callable) <cherrypy.process.wspbus.Bus.subscribe>`:
+
  - The `channel` parameter is a string identifying the channel the
    `callable` will be registered to.
+
  - `callable` is a Python function or method which signature must
    match what will be published.
+
 - :meth:`cherrypy.engine.unsubscribe(channel, callable) <cherrypy.process.wspbus.Bus.unsubscribe>`:
+
  - The `channel` parameter is a string identifying the channel the
    `callable` was registered to.
+
  - `callable` is the Python function or method which was registered.
 
 .. _busplugins:
