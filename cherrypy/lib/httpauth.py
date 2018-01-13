@@ -24,12 +24,19 @@ SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 """
 
 import time
+import warnings
 from hashlib import md5
 
 from six.moves.urllib.request import parse_http_list, parse_keqv_list
 
 from cherrypy._cpcompat import (
     base64_decode, ntob,
+)
+
+
+warnings.warn(
+    "`httpauth` module is deprecated. Do not use.",
+    DeprecationWarning,
 )
 
 
