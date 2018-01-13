@@ -1,3 +1,11 @@
+"""
+Deprecated implementation of basic and digest auth.
+
+Look to auth_basic and auth_digest instead.
+"""
+
+import warnings
+
 import cherrypy
 from cherrypy.lib import httpauth
 
@@ -5,6 +13,11 @@ from cherrypy.lib import httpauth
 def check_auth(users, encrypt=None, realm=None):
     """If an authorization header contains credentials, return True or False.
     """
+    msg = (
+        "`basic_auth` and `digest_auth` tools are deprecated. Use "
+        "`auth_basic` and `auth_digest` instead."
+    )
+    warnings.warn(msg, DeprecationWarning)
     request = cherrypy.serving.request
     if 'authorization' in request.headers:
         # make sure the provided credentials are correctly set

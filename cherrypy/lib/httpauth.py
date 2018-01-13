@@ -1,4 +1,6 @@
 """
+Deprecated implementations of HTTP Digest Authentication
+
 This module defines functions to implement HTTP Digest Authentication
 (:rfc:`2617`).
 This has full compliance with 'Digest' and 'Basic' authentication methods. In
