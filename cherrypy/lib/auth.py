@@ -29,8 +29,8 @@ def check_auth(users, encrypt=None, realm=None):
     """
     import_httpauth()
     msg = (
-        "`basic_auth` and `digest_auth` tools are deprecated. Use "
-        "`auth_basic` and `auth_digest` instead."
+        '`basic_auth` and `digest_auth` tools are deprecated. Use '
+        '`auth_basic` and `auth_digest` instead.'
     )
     warnings.warn(msg, DeprecationWarning)
     request = cherrypy.serving.request

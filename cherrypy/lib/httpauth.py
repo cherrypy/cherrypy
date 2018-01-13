@@ -35,7 +35,7 @@ from cherrypy._cpcompat import (
 
 
 warnings.warn(
-    "`httpauth` module is deprecated. Do not use.",
+    '`httpauth` module is deprecated. Do not use.',
     DeprecationWarning,
 )
 
