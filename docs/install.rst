@@ -15,7 +15,8 @@ Installation
 Requirements
 ############
 
-|project| does not have any mandatory requirements. However certain features it comes with
+|project| does not have any mandatory env requirements. Python-based distribution
+requirements are installed automatically by ``pip``. However certain features it comes with
 will require you install certain packages. To simplify installing additional
 dependencies |project| enables you to specify extras in your requirements (e.g.
 ``cherrypy[json,routes_dispatcher,ssl]``):
