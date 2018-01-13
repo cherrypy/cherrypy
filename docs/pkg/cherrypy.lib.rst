@@ -4,14 +4,6 @@ cherrypy.lib package
 Submodules
 ----------
 
-cherrypy.lib.auth module
-------------------------
-
-.. automodule:: cherrypy.lib.auth
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy.lib.auth_basic module
 ------------------------------
 
@@ -72,14 +64,6 @@ cherrypy.lib.gctools module
 ---------------------------
 
 .. automodule:: cherrypy.lib.gctools
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cherrypy.lib.httpauth module
-----------------------------
-
-.. automodule:: cherrypy.lib.httpauth
     :members:
     :undoc-members:
     :show-inheritance:
