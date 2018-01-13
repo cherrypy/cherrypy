@@ -227,3 +227,49 @@ class HTTPAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
+
+        # Test that must pass
+        base_auth = (
+            'Digest '
+            'username="test", '
+            'realm="localhost", '
+            'nonce="%s", '
+            'uri="/digest/", '
+            'algorithm=MD5, '
+            'response="%s", '
+            'qop=auth, '
+            'nc=%s, '
+            'cnonce="1522e61005789929"'
+        )
+
+        auth = base_auth % (nonce, '', '00000001')
+        params = httpauth.parseAuthorization(auth)
+        response = httpauth._computeDigestResponse(params, 'test')
+
+        auth = base_auth % (nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth)])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello test, you've been authorized.")
+
+        # Test with unicode username that must pass
+        base_auth = (
+            'Digest '
+            'username="йюзер", '
+            'realm="localhost", '
+            'nonce="%s", '
+            'uri="/digest/", '
+            'algorithm=MD5, '
+            'response="%s", '
+            'qop=auth, '
+            'nc=%s, '
+            'cnonce="1522e61005789929"'
+        )
+
+        auth = base_auth % (nonce, '', '00000001')
+        params = httpauth.parseAuthorization(auth)
+        response = httpauth._computeDigestResponse(params, 'їпароль')
+
+        auth = base_auth % (nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth)])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello йюзер, you've been authorized.")

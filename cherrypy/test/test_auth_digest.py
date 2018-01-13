@@ -27,14 +27,14 @@ class DigestAuthTest(helper.CPWebCase):
                     cherrypy.request.login)
 
         def fetch_users():
-            return {'test': 'test'}
+            return {'test': 'test', 'йюзер': 'їпароль'}
 
         get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
         conf = {'/digest': {'tools.auth_digest.on': True,
                             'tools.auth_digest.realm': 'localhost',
                             'tools.auth_digest.get_ha1': get_ha1,
                             'tools.auth_digest.key': 'a565c27146791cfb',
-                            'tools.auth_digest.debug': 'True'}}
+                            'tools.auth_digest.debug': True}}
 
         root = Root()
         root.digest = DigestProtected()
@@ -137,3 +137,26 @@ class DigestAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth_header)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
+
+        # Test with unicode username that must pass
+        base_auth = ('Digest username="йюзер", '
+                     'realm="localhost", '
+                     'nonce="%s", '
+                     'uri="/digest/", '
+                     'algorithm=MD5, '
+                     'response="%s", '
+                     'qop=auth, '
+                     'nc=%s, '
+                     'cnonce="1522e61005789929"')
+
+        auth_header = base_auth % (
+            nonce, '11111111111111111111111111111111', '00000001')
+        auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
+        # calculate the response digest
+        ha1 = get_ha1('localhost', 'їпароль')
+        response = auth.request_digest(ha1)
+        # send response with correct response digest
+        auth_header = base_auth % (nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth_header)])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello йюзер, you've been authorized.")
