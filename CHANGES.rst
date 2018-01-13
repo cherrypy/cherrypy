@@ -1,3 +1,9 @@
+v14.2.0.dev0
+------------
+
+* :issue:`1680` via :pr:`1683`: HTTP Basic Auth supports :rfc:`7617` UTF-8
+  charset decoding where possible. Uses latin1 as a fallback.
+
 v14.1.0
 -------
 
