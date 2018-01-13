@@ -6,4 +6,4 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py33,py34,py35,py36
+    - run: tox -e py27,py34,py35,py36
