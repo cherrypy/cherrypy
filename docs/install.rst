@@ -2,7 +2,7 @@
 Installation
 ------------
 
-CherryPy is a pure Python library. This has various consequences:
+|project| is a pure Python library. This has various consequences:
 
  - It can run anywhere Python runs
  - It does not require a C compiler
@@ -15,9 +15,10 @@ CherryPy is a pure Python library. This has various consequences:
 Requirements
 ############
 
-CherryPy does not have any mandatory requirements. However certain features it comes with
+|project| does not have any mandatory env requirements. Python-based distribution
+requirements are installed automatically by ``pip``. However certain features it comes with
 will require you install certain packages. To simplify installing additional
-dependencies CherryPy enables you to specify extras in your requirements (e.g.
+dependencies |project| enables you to specify extras in your requirements (e.g.
 ``cherrypy[json,routes_dispatcher,ssl]``):
 
 - doc -- for documentation related stuff
@@ -32,13 +33,13 @@ dependencies CherryPy enables you to specify extras in your requirements (e.g.
 Supported python version
 ########################
 
-CherryPy supports Python 2.7 through to 3.5.
+|project| supports Python |min_py_supported| through to |max_py_supported|.
 
 
 Installing
 ##########
 
-CherryPy can be easily installed via common Python package managers such as setuptools or pip.
+|project| can be easily installed via common Python package managers such as setuptools or pip.
 
 .. code-block:: bash
 
@@ -49,7 +50,7 @@ CherryPy can be easily installed via common Python package managers such as setu
 
    $ pip install cherrypy
 
-You may also get the latest CherryPy version by grabbing the source code from Github:
+You may also get the latest |project| version by grabbing the source code from Github:
 
 .. code-block:: bash
 
@@ -60,7 +61,7 @@ You may also get the latest CherryPy version by grabbing the source code from Gi
 Test your installation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-CherryPy comes with a set of simple tutorials that can be executed
+|project| comes with a set of simple tutorials that can be executed
 once you have deployed the package.
 
 .. code-block:: bash
@@ -78,7 +79,6 @@ Once started the above command shows the following logs:
    [15/Feb/2014:21:51:22] ENGINE Listening for SIGUSR1.
    [15/Feb/2014:21:51:22] ENGINE Bus STARTING
    [15/Feb/2014:21:51:22] ENGINE Started monitor thread 'Autoreloader'.
-   [15/Feb/2014:21:51:22] ENGINE Started monitor thread '_TimeoutMonitor'.
    [15/Feb/2014:21:51:22] ENGINE Serving on http://127.0.0.1:8080
    [15/Feb/2014:21:51:23] ENGINE Bus STARTED
 
@@ -103,7 +103,7 @@ cherryd
 ^^^^^^^
 
 Another way to run the application is through the ``cherryd`` script
-which is installed along side CherryPy.
+which is installed along side |project|.
 
 .. note::
 

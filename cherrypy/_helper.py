@@ -308,3 +308,34 @@ def normalize_path(path):
         newpath = '/' + newpath
 
     return newpath
+
+
+####
+# Inlined from jaraco.classes 1.4.3
+# Ref #1673
+class _ClassPropertyDescriptor(object):
+    """Descript for read-only class-based property.
+
+    Turns a classmethod-decorated func into a read-only property of that class
+    type (means the value cannot be set).
+    """
+
+    def __init__(self, fget, fset=None):
+        """Instantiated by ``_helper.classproperty``."""
+        self.fget = fget
+        self.fset = fset
+
+    def __get__(self, obj, klass=None):
+        """Return property value."""
+        if klass is None:
+            klass = type(obj)
+        return self.fget.__get__(obj, klass)()
+
+
+def classproperty(func):
+    """Decorator like classmethod to implement a static class property."""
+    if not isinstance(func, (classmethod, staticmethod)):
+        func = classmethod(func)
+
+    return _ClassPropertyDescriptor(func)
+####

@@ -41,7 +41,7 @@ Here are some reasons you would want to choose CherryPy:
 
 4. Community
 
-   CherryPy has an devoted community that develops deployed CherryPy applications and are willing and ready to assist you on the CherryPy mailing list or IRC (#cherrypy on OFTC). The developers also frequent the list and often answer questions and implement features requested by the end-users.
+   CherryPy has an devoted community that develops deployed CherryPy applications and are willing and ready to assist you on the CherryPy mailing list or Gitter. The developers also frequent the list and often answer questions and implement features requested by the end-users.
 
 5. Deployability
 
@@ -71,7 +71,7 @@ using it, or simply check out products or application running it.
 
 If you would like to have your CherryPy powered website or product listed here,
 contact us via our `mailing list <http://groups.google.com/group/cherrypy-users>`_
-or IRC (#cherrypy on `OFTC <http://www.oftc.net/oftc/>`_).
+or `Gitter <https://gitter.im/cherrypy/cherrypy>`_.
 
 
 Websites running atop CherryPy

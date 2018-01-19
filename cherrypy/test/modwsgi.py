@@ -39,8 +39,10 @@ import time
 
 import portend
 
+from cheroot.test import webtest
+
 import cherrypy
-from cherrypy.test import helper, webtest
+from cherrypy.test import helper
 
 curdir = os.path.abspath(os.path.dirname(__file__))
 

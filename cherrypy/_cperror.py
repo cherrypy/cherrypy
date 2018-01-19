@@ -125,24 +125,17 @@ from xml.sax import saxutils
 import six
 from six.moves import urllib
 
-from jaraco.classes.properties import classproperty
-
 import cherrypy
 from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import text_or_bytes, ntob
 from cherrypy._cpcompat import tonative
+from cherrypy._helper import classproperty
 from cherrypy.lib import httputil as _httputil
 
 
 class CherryPyException(Exception):
 
     """A base class for CherryPy exceptions."""
-    pass
-
-
-class TimeoutError(CherryPyException):
-
-    """Exception raised when Response.timed_out is detected."""
     pass
 
 

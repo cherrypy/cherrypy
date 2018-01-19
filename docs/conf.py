@@ -13,11 +13,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from email import message_from_string
 import importlib
 import pkg_resources
 import sys
 
-assert sys.version_info > (3,), 'Python 3 required to build docs'
+assert sys.version_info > (3, 5), 'Python 3 required to build docs'
 
 
 def try_import(mod_name):
@@ -28,7 +29,45 @@ def try_import(mod_name):
         pass
 
 
+def get_supported_pythons(classifiers):
+    """Return min and max supported Python version from meta as tuples."""
+    PY_VER_CLASSIFIER = 'Programming Language :: Python :: '
+    vers = filter(lambda c: c.startswith(PY_VER_CLASSIFIER), classifiers)
+    vers = map(lambda c: c[len(PY_VER_CLASSIFIER):], vers)
+    vers = filter(lambda c: c[0].isdigit() and '.' in c, vers)
+    vers = map(lambda c: tuple(c.split('.')), vers)
+    vers = sorted(vers)
+    del vers[1:-1]
+    return vers
+
+
 custom_sphinx_theme = try_import('alabaster')
+
+prj_dist = pkg_resources.get_distribution('cherrypy')
+prj_pkg_info = prj_dist.get_metadata(prj_dist.PKG_INFO)
+prj_meta = message_from_string(prj_pkg_info)
+prj_author = prj_meta['Author']
+prj_license = prj_meta['License']
+prj_description = prj_meta['Description']
+prj_py_ver_range = get_supported_pythons(prj_meta.get_all('Classifier'))
+prj_py_min_supported, prj_py_max_supported = map(
+    lambda v: '.'.join(v), prj_py_ver_range
+)
+
+project = prj_dist.project_name
+
+github_url = 'https://github.com'
+github_repo_org = project.lower()
+github_repo_name = project.lower()
+github_repo_slug = f'{github_repo_org}/{github_repo_name}'
+github_repo_url = f'{github_url}/{github_repo_slug}'
+cr_github_repo_url = f'{github_url}/{github_repo_org}/cheroot'
+
+rst_epilog = f"""
+.. |project| replace:: {project}
+.. |min_py_supported| replace:: {prj_py_min_supported}
+.. |max_py_supported| replace:: {prj_py_max_supported}
+"""
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,16 +80,27 @@ custom_sphinx_theme = try_import('alabaster')
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.todo',
+    'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'rst.linker',
     'jaraco.packaging.sphinx',
 ]
 
+extlinks = {
+    'issue': (f'{github_repo_url}/issues/%s', '#'),
+    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'commit': (f'{github_repo_url}/commit/%s', ''),
+    'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #'),
+    'cr-pr': (f'{cr_github_repo_url}/pulls/%s', 'Cheroot PR #'),
+    'gh': (f'{github_url}/%s', 'GitHub: '),
+}
+
 intersphinx_mapping = {
-    'https://docs.python.org/3/': None,
+    'python': ('https://docs.python.org/3', None),
+    'cheroot': ('https://cheroot.readthedocs.io/en/latest/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,8 +111,6 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
-
-project = pkg_resources.get_distribution('cherrypy').project_name
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.
@@ -176,23 +224,8 @@ link_files = {
         ),
         replace=[
             dict(
-                pattern=r'((Issue|PR)\s?)?#(?P<issue_or_pr>\d+)',
-                url='{GH}/cherrypy/{project}/issues/{issue_or_pr}',
-            ),
-            dict(
                 pattern=r'^(?m)((?P<scm_version>v?\d+(\.\d+){1,2}))\n[-=]+\n',
                 with_scm='{text}\n{rev[timestamp]:%d %b %Y}\n',
-            ),
-            dict(
-                pattern=r'PEP[- ](?P<pep_number>\d+)',
-                url='https://www.python.org/dev/peps/pep-{pep_number:0>4}/',
-            ),
-            dict(
-                # FIXME: currently this puts #v1.2.3 style version
-                # into URL, but it should be v1-2-3
-                pattern=r'cheroot v?(?P<cheroot_version>\d+(\.\d+){1,2})',
-                url='https://cheroot.readthedocs.io'
-                    '/en/latest/history.html#v{cheroot_version}',
             ),
         ],
     ),

@@ -14,6 +14,9 @@ _base_envs:
   stage: &stage_test_osx_name test under OS X (last chance to fail before deploy available)
 - &stage_deploy
   stage: &stage_deploy_name upload new version of python package to PYPI (only for tagged commits)
+- _conditions:
+  - &condition_api_or_cron
+    if: type IN (api, cron)
 - &pyenv_base
   <<: *stage_test
   language: generic
@@ -28,8 +31,6 @@ _base_envs:
     then
       rm -rf "$PYENV_ROOT"
       curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
-      eval "$(pyenv init -)"
-      eval "$(pyenv virtualenv-init -)"
     fi
     eval "$(pyenv init -)"
     eval "$(pyenv virtualenv-init -)"
@@ -64,10 +65,7 @@ _base_envs:
   python: *mainstream_python
   after_failure: skip
 python:
-- 2.7
-- 3.3
 - 3.4
-- 3.5
 - 3.7-dev
 - *pypy2
 - &pypy3 pypy3.5-5.8.0
@@ -91,6 +89,8 @@ jobs:
   - <<: *pure_python_base_priority
     # mainstream here (3.6)
   - <<: *pure_python_base_priority
+    python: 2.7
+  - <<: *pure_python_base_priority
     # mainstream here (3.6)
     # run tests against the bleeding-edge cheroot
     env: TOXENV=cheroot-master
@@ -103,33 +103,15 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    python: 3.3
-    env:
-    - PYTHON_VERSION=3.3.6
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
     python: 3.4
     env:
-    - PYTHON_VERSION=3.4.6
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: 3.5
-    env:
-    - PYTHON_VERSION=3.5.3
+    - PYTHON_VERSION=3.4.4
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: *mainstream_python
     env:
     - PYTHON_VERSION=3.6.1
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: nightly
-    env:
-    - PYTHON_VERSION=3.7-dev
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
@@ -147,13 +129,6 @@ jobs:
     - TOXENV=cheroot-master
     - *env_pyenv
     - *env_path
-  - <<: *osx_python_base
-    python: *pypy2
-    env:
-    - PYTHON_VERSION=pypy2.7-5.8.0
-    - *env_pyenv
-    - *env_path
-  # pypy3.5-5.8.0 fails under OS X because it's unsupported (PR #26)
   - <<: *stage_deploy
     python: *mainstream_python
     install: skip
@@ -194,8 +169,9 @@ after_failure:
 stages:
 - *stage_lint_name
 - *stage_test_priority_name
-- *stage_test_name
+- name: *stage_test_name
+  <<: *condition_api_or_cron
 - name: *stage_test_osx_name
-  if: type IN (api, cron) OR tag IS present
+  <<: *condition_api_or_cron
 - name: *stage_deploy_name
   if: tag IS present

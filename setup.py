@@ -27,9 +27,6 @@ classifiers = [
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.1',
-    'Programming Language :: Python :: 3.2',
-    'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
@@ -56,11 +53,12 @@ packages = [
     'cherrypy.scaffold',
 ]
 
+# install requirements must not contain namespace
+# packages. See #1673
 install_requires = [
     'six>=1.11.0',
-    'cheroot>=5.8.3',
+    'cheroot>=5.9.1',
     'portend>=2.1.1',
-    'jaraco.classes',
 ]
 
 extras_require = {
@@ -118,7 +116,7 @@ setup_params = dict(
     setup_requires=[
         'setuptools_scm',
     ],
-    python_requires='>=2.7,!=3.0.*',
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
 )
 
 

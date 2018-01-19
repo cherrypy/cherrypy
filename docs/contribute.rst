@@ -2,7 +2,7 @@ Contribute
 ----------
 
 CherryPy is a community-maintained, open-source project hosted at Github.
-The project active encourages aspiring and experienced users to dive
+The project actively encourages aspiring and experienced users to dive
 in and add their best contribution to the project.
 
 How can you contribute? Well, first search the `docs
@@ -17,10 +17,6 @@ On `StackOverflow <https://stackoverflow.com>`_, there are questions
 tagged with 'cherrypy'. Answer unanswered questions, add an improved
 answer, clarify an answer with a comment, or ask more meaningful
 questions there. Earn reputation and share experience.
-
-CherryPy also maintains a `StackOverflow Wiki
-<http://stackoverflow.com/documentation/cherrypy/topics>`_ where
-anyone can publish tricks and techniques and refine others.
 
 Filing Bug Reports
 ==================

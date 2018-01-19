@@ -906,3 +906,4 @@ def expire():
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
     cherrypy.serving.response.cookie[name]['expires'] = httputil.HTTPDate(e)
+    cherrypy.serving.response.cookie[name].pop('max-age', None)
