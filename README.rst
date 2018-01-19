@@ -14,6 +14,7 @@
    :target: https://ci.appveyor.com/project/CherryPy/cherrypy/branch/master
 
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
+   :target: https://pypi.org/project/cherrypy
 
 .. image:: http://badges.github.io/stability-badges/dist/stable.svg
    :target: http://github.com/badges/stability-badges
