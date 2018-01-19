@@ -7,6 +7,9 @@
 .. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=Linux%20build%20%40%20Travis%20CI
    :target: http://travis-ci.org/cherrypy/cherrypy
 
+.. image:: https://circleci.com/gh/cherrypy/cherrypy/tree/master.svg?style=svg
+   :target: https://circleci.com/gh/cherrypy/cherrypy/tree/master
+
 .. image:: https://img.shields.io/appveyor/ci/CherryPy/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/CherryPy/cherrypy/branch/master
 
