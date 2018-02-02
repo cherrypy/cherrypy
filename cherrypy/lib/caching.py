@@ -405,10 +405,16 @@ def tee_output():
             output.append(chunk)
             yield chunk
 
-        # save the cache data
-        body = b''.join(output)
-        cherrypy._cache.put((response.status, response.headers or {},
-                             body, response.time), len(body))
+        # save the cache data, but only if the body isn't empty
+        # e.g. an uncached 304 static file response will trigger this
+        # if we don't delete the cache, an empty 304 response will
+        # be cached.
+        body = ntob('').join(output)
+        if not body:
+            cherrypy._cache.delete()
+        else:
+            cherrypy._cache.put((response.status, response.headers or {},
+                                 body, response.time), len(body))
 
     response = cherrypy.serving.response
     response.body = tee(response.body)

@@ -903,6 +903,11 @@ class Response(object):
             # and 304 (not modified) responses MUST NOT
             # include a message-body."
             dict.pop(headers, 'Content-Length', None)
+            # self.body is a generator object that must be yielded
+            # for _caching.tee_output() to finish it's job and
+            # remove orphaned threading._Event object from cache
+            for i in self.body:
+                pass
             self.body = b''
         else:
             # Responses which are not streamed should have a Content-Length,
