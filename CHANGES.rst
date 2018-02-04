@@ -1,4 +1,4 @@
-v13.2.0
+v14.0.0
 -------
 
 * #1688: Officially deprecated ``basic_auth`` and ``digest_auth``
@@ -7,6 +7,10 @@ v13.2.0
   more recent ``auth_basic`` and ``auth_digest`` tools.
   This deprecated functionality will be removed in a subsequent
   release soon.
+* Removed ``DeprecatedTool`` and the long-deprecated and disabled
+  ``tidy`` and ``nsgmls`` tools. See `the rationale
+  <https://github.com/cherrypy/cherrypy/pull/1689#issuecomment-362924962>`_
+  for this change.
 
 v13.1.0
 -------
