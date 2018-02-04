@@ -1,7 +1,7 @@
 v14.0.0
 -------
 
-* #1688: Officially deprecated ``basic_auth`` and ``digest_auth``
+* :issue:`1688`: Officially deprecated ``basic_auth`` and ``digest_auth``
   tools and the ``httpauth`` module, triggering DeprecationWarnings
   if they're used. Applications should instead adapt to use the
   more recent ``auth_basic`` and ``auth_digest`` tools.
