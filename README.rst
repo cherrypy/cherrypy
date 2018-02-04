@@ -4,6 +4,12 @@
 .. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
   :target: http://docs.cherrypy.org/en/latest/?badge=latest
 
+.. image:: https://img.shields.io/badge/StackOverflow-CherryPy-blue.svg
+   :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
+
+.. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
+   :target: https://gitter.im/cherrypy/cherrypy
+
 .. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=Linux%20build%20%40%20Travis%20CI
    :target: http://travis-ci.org/cherrypy/cherrypy
 
@@ -12,6 +18,9 @@
 
 .. image:: https://img.shields.io/appveyor/ci/CherryPy/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
    :target: https://ci.appveyor.com/project/CherryPy/cherrypy/branch/master
+
+.. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
+   :target: https://pypi.org/project/cheroot
 
 .. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
    :target: https://pypi.org/project/cherrypy
