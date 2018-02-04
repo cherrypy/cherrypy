@@ -411,6 +411,7 @@ def tee_output():
         # If the body is empty, delete the cache, because it
         # contains a stale Threading._Event object that stall
         # consecutive requests until it's timed out.
+        # If the body is empty, delete the cache, but why?
         body = b''.join(output)
         if not body:
             cherrypy._cache.delete()
