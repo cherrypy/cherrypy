@@ -2,7 +2,6 @@
 
 import cherrypy
 from cherrypy import expose, tools
-from cherrypy._cpcompat import ntob
 
 
 class ExposeExamples(object):
@@ -37,4 +36,4 @@ class ToolExamples(object):
     @cherrypy.config(**{'response.stream': True})
     @tools.response_headers(headers=[('Content-Type', 'application/data')])
     def blah(self):
-        yield ntob('blah')
+        yield b'blah'

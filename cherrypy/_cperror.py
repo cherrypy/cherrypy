@@ -572,7 +572,7 @@ def _be_ie_unfriendly(status):
         if content_length and content_length < s:
             # IN ADDITION: the response must be written to IE
             # in one chunk or it will still get replaced! Bah.
-            content = content + (ntob(' ') * (s - content_length))
+            content = content + (b' ' * (s - content_length))
         response.body = content
         response.headers['Content-Length'] = str(len(content))
 
@@ -607,13 +607,13 @@ def bare_error(extrabody=None):
     # it cannot be allowed to fail. Therefore, don't add to it!
     # In particular, don't call any other CP functions.
 
-    body = ntob('Unrecoverable error in the server.')
+    body = b'Unrecoverable error in the server.'
     if extrabody is not None:
         if not isinstance(extrabody, bytes):
             extrabody = extrabody.encode('utf-8')
-        body += ntob('\n') + extrabody
+        body += b'\n' + extrabody
 
-    return (ntob('500 Internal Server Error'),
-            [(ntob('Content-Type'), ntob('text/plain')),
-             (ntob('Content-Length'), ntob(str(len(body)), 'ISO-8859-1'))],
+    return (b'500 Internal Server Error',
+            [(b'Content-Type', b'text/plain'),
+             (b'Content-Length', ntob(str(len(body)), 'ISO-8859-1'))],
             [body])

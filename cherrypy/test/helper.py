@@ -344,7 +344,7 @@ class CPWebCase(webtest.WebCase):
         epage = re.escape(page)
         epage = epage.replace(
             esc('<pre id="traceback"></pre>'),
-            esc('<pre id="traceback">') + ntob('(.*)') + esc('</pre>'))
+            esc('<pre id="traceback">') + b'(.*)' + esc('</pre>'))
         m = re.match(epage, self.body, re.DOTALL)
         if not m:
             self._handlewebError(

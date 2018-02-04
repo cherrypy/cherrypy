@@ -6,7 +6,7 @@ from unittest import mock
 import six
 
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy.test import helper, logtest
 
 localDir = os.path.dirname(__file__)
@@ -177,7 +177,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.getPage('/slashes')
         self.assertStatus(200)
         if six.PY3:
-            self.assertLog(-1, ntob('"GET /slashed\\path HTTP/1.1"'))
+            self.assertLog(-1, b'"GET /slashed\\path HTTP/1.1"')
         else:
             self.assertLog(-1, r'"GET /slashed\\path HTTP/1.1"')
 

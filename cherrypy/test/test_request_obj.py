@@ -10,7 +10,7 @@ import six
 from six.moves.http_client import IncompleteRead
 
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy.lib import httputil
 from cherrypy.test import helper
 
@@ -728,14 +728,14 @@ class RequestObjectTests(helper.CPWebCase):
             self.getPage('/headers/ifmatch',
                          [('If-Match', ntou('=?utf-8?q?%s?=') % c)])
             # The body should be utf-8 encoded.
-            self.assertBody(ntob('\xe2\x84\xabngstr\xc3\xb6m'))
+            self.assertBody(b'\xe2\x84\xabngstr\xc3\xb6m')
             # But the Etag header should be RFC-2047 encoded (binary)
             self.assertHeader('ETag', ntou('=?utf-8?b?4oSrbmdzdHLDtm0=?='))
 
             # Test a *LONG* RFC-2047-encoded request and response header value
             self.getPage('/headers/ifmatch',
                          [('If-Match', ntou('=?utf-8?q?%s?=') % (c * 10))])
-            self.assertBody(ntob('\xe2\x84\xabngstr\xc3\xb6m') * 10)
+            self.assertBody(b'\xe2\x84\xabngstr\xc3\xb6m' * 10)
             # Note: this is different output for Python3, but it decodes fine.
             etag = self.assertHeader(
                 'ETag',
@@ -771,7 +771,7 @@ class RequestObjectTests(helper.CPWebCase):
                 self.assertBody('')
             elif m == 'TRACE':
                 # Some HTTP servers (like modpy) have their own TRACE support
-                self.assertEqual(self.body[:5], ntob('TRACE'))
+                self.assertEqual(self.body[:5], b'TRACE')
             else:
                 self.assertBody(m)
 
@@ -791,7 +791,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         # Request a PATCH method with a file body but no Content-Type.
         # See https://github.com/cherrypy/cherrypy/issues/790.
-        b = ntob('one thing on top of another')
+        b = b'one thing on top of another'
         self.persistent = True
         try:
             conn = self.HTTP_CONN
@@ -831,7 +831,7 @@ class RequestObjectTests(helper.CPWebCase):
 
         # Request a PUT method with a file body but no Content-Type.
         # See https://github.com/cherrypy/cherrypy/issues/790.
-        b = ntob('one thing on top of another')
+        b = b'one thing on top of another'
         self.persistent = True
         try:
             conn = self.HTTP_CONN
@@ -929,4 +929,4 @@ class RequestObjectTests(helper.CPWebCase):
         for x in range(20):
             self.getPage('/threadlocal/')
             results.append(self.body)
-        self.assertEqual(results, [ntob('None')] * 20)
+        self.assertEqual(results, [b'None'] * 20)

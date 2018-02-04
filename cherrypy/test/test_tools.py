@@ -14,7 +14,7 @@ from six.moves.http_client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy.test import helper, _test_decorators
 
 
@@ -75,15 +75,15 @@ class ToolTests(helper.CPWebCase):
             def nadsat(self):
                 def nadsat_it_up(body):
                     for chunk in body:
-                        chunk = chunk.replace(ntob('good'), ntob('horrorshow'))
-                        chunk = chunk.replace(ntob('piece'), ntob('lomtick'))
+                        chunk = chunk.replace(b'good', b'horrorshow')
+                        chunk = chunk.replace(b'piece', b'lomtick')
                         yield chunk
                 cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
             nadsat.priority = 0
 
             def cleanup(self):
                 # This runs after the request has been completely written out.
-                cherrypy.response.body = [ntob('razdrez')]
+                cherrypy.response.body = [b'razdrez']
                 id = cherrypy.request.params.get('id')
                 if id:
                     self.ended[id] = True
@@ -139,8 +139,8 @@ class ToolTests(helper.CPWebCase):
             def tarfile(self):
                 actual = cherrypy.request.config.get('tools.streamer.arg')
                 assert actual == 'arg value'
-                cherrypy.response.output.write(ntob('I am '))
-                cherrypy.response.output.write(ntob('a tarfile'))
+                cherrypy.response.output.write(b'I am ')
+                cherrypy.response.output.write(b'a tarfile')
 
             @cherrypy.expose
             def euro(self):
@@ -226,7 +226,7 @@ class ToolTests(helper.CPWebCase):
             # Declare Tools in detached config
             '/demo': {
                 'tools.numerify.on': True,
-                'tools.numerify.map': {ntob('pie'): ntob('3.14159')},
+                'tools.numerify.map': {b'pie': b'3.14159'},
             },
             '/demo/restricted': {
                 'request.show_tracebacks': False,

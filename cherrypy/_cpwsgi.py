@@ -13,7 +13,7 @@ import io
 import six
 
 import cherrypy as _cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy import _cperror
 from cherrypy.lib import httputil
 from cherrypy.lib import is_closable_iterator
@@ -223,7 +223,7 @@ class _TrappedResponse(object):
                 raise
 
             if self.started_response:
-                return ntob('').join(b)
+                return b''.join(b)
             else:
                 return b
 

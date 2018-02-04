@@ -35,7 +35,7 @@ class BasicAuthTest(helper.CPWebCase):
                     cherrypy.request.login)
 
         userpassdict = {'xuser': 'xpassword'}
-        userhashdict = {'xuser': md5(ntob('xpassword')).hexdigest()}
+        userhashdict = {'xuser': md5(b'xpassword').hexdigest()}
 
         def checkpasshash(realm, user, password):
             p = userhashdict.get(user)

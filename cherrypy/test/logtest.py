@@ -47,7 +47,7 @@ class LogCase(object):
 
     logfile = None
     lastmarker = None
-    markerPrefix = ntob('test suite marker: ')
+    markerPrefix = b'test suite marker: '
 
     def _handleLogError(self, msg, data, marker, pattern):
         print('')

@@ -1,5 +1,4 @@
 import cherrypy
-from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
 
 
@@ -76,8 +75,8 @@ class WSGI_Namespace_Test(helper.CPWebCase):
                 return 'HellO WoRlD!'
 
         root_conf = {'wsgi.pipeline': [('replace', Replacer)],
-                     'wsgi.replace.map': {ntob('L'): ntob('X'),
-                                          ntob('l'): ntob('r')},
+                     'wsgi.replace.map': {b'L': b'X',
+                                          b'l': b'r'},
                      }
 
         app = cherrypy.Application(Root())

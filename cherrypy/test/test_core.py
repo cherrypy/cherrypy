@@ -9,7 +9,7 @@ import types
 import six
 
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy import _cptools, tools
 from cherrypy.lib import httputil, static
 
@@ -235,7 +235,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return ['con', 'tent']
 
             def as_yield(self):
-                yield ntob('content')
+                yield b'content'
 
             @cherrypy.config(**{'tools.flatten.on': True})
             def as_dblyield(self):
@@ -279,8 +279,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             def header_list(self):
                 pass
             header_list = cherrypy.tools.append_headers(header_list=[
-                (ntob('WWW-Authenticate'), ntob('Negotiate')),
-                (ntob('WWW-Authenticate'), ntob('Basic realm="foo"')),
+                (b'WWW-Authenticate', b'Negotiate'),
+                (b'WWW-Authenticate', b'Basic realm="foo"'),
             ])(header_list)
 
             def commas(self):

@@ -117,7 +117,6 @@ import six
 
 import cherrypy
 from cherrypy import _cperror
-from cherrypy._cpcompat import ntob
 
 
 # Silence the no-handlers "warning" (stderr write!) in stdlib logging
@@ -254,7 +253,7 @@ class LogManager(object):
         if response.output_status is None:
             status = '-'
         else:
-            status = response.output_status.split(ntob(' '), 1)[0]
+            status = response.output_status.split(b' ', 1)[0]
             if six.PY3:
                 status = status.decode('ISO-8859-1')
 
