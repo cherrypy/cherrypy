@@ -405,11 +405,13 @@ def tee_output():
             output.append(chunk)
             yield chunk
 
-        # save the cache data, but only if the body isn't empty
-        # e.g. an uncached 304 static file response will trigger this
-        # if we don't delete the cache, an empty 304 response will
-        # be cached.
-        body = ntob('').join(output)
+        # Save the cache data, but only if the body isn't empty.
+        # e.g. a 304 Not Modified on a static file response will
+        # have an empty body.
+        # If the body is empty, delete the cache, because it
+        # contains a stale Threading._Event object that stall
+        # consecutive requests until it's timed out.
+        body = b''.join(output)
         if not body:
             cherrypy._cache.delete()
         else:
