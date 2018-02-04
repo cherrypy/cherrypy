@@ -1,10 +1,38 @@
+"""
+Deprecated implementation of basic and digest auth.
+
+Look to auth_basic and auth_digest instead.
+"""
+
+import warnings
+
 import cherrypy
-from cherrypy.lib import httpauth
+
+
+# import late to avoid deprecation warning on import
+httpauth = None
+
+
+def import_httpauth():
+    """
+    Late-import cherrypy.lib.httpauth into globals.
+    Then replace this function so it does nothing.
+    """
+    globals().update(
+        httpauth=__import__('cherrypy.lib.httpauth').lib.httpauth,
+        import_httpauth=lambda: None
+    )
 
 
 def check_auth(users, encrypt=None, realm=None):
     """If an authorization header contains credentials, return True or False.
     """
+    import_httpauth()
+    msg = (
+        '`basic_auth` and `digest_auth` tools are deprecated. Use '
+        '`auth_basic` and `auth_digest` instead.'
+    )
+    warnings.warn(msg, DeprecationWarning)
     request = cherrypy.serving.request
     if 'authorization' in request.headers:
         # make sure the provided credentials are correctly set
@@ -62,6 +90,7 @@ def basic_auth(realm, users, encrypt=None, debug=False):
         if None it defaults to a md5 encryption.
 
     """
+    import_httpauth()
     if check_auth(users, encrypt):
         if debug:
             cherrypy.log('Auth successful', 'TOOLS.BASIC_AUTH')
@@ -84,6 +113,7 @@ def digest_auth(realm, users, debug=False):
         A dict of the form: {username: password} or a callable returning
         a dict.
     """
+    import_httpauth()
     if check_auth(users, realm=realm):
         if debug:
             cherrypy.log('Auth successful', 'TOOLS.DIGEST_AUTH')

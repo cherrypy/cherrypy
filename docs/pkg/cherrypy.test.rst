@@ -180,14 +180,6 @@ cherrypy.test.test_http module
     :undoc-members:
     :show-inheritance:
 
-cherrypy.test.test_httpauth module
-----------------------------------
-
-.. automodule:: cherrypy.test.test_httpauth
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy.test.test_httplib module
 ---------------------------------
 
