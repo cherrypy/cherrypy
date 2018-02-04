@@ -61,6 +61,7 @@ install_requires = [
     'six>=1.11.0',
     'cheroot>=6.2.4',
     'portend>=2.1.1',
+    'more_itertools',
 ]
 
 extras_require = {

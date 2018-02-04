@@ -2,8 +2,11 @@ import sys
 import time
 
 import uuid
+
 import six
 from six.moves.http_cookies import SimpleCookie, CookieError
+
+from more_itertools.recipes import consume
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob
@@ -879,6 +882,14 @@ class Response(object):
         self.body = newbody
         return newbody
 
+    def _flush_body(self):
+        """
+        Discard self.body but consume any generator such that
+        any finalization can occur, such as is required by
+        caching.tee_output().
+        """
+        consume(iter(self.body))
+
     def finalize(self):
         """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
@@ -903,11 +914,7 @@ class Response(object):
             # and 304 (not modified) responses MUST NOT
             # include a message-body."
             dict.pop(headers, 'Content-Length', None)
-            # self.body is a generator object that must be yielded
-            # for _caching.tee_output() to finish it's job and
-            # remove orphaned threading._Event object from cache
-            for i in self.body:
-                pass
+            self._flush_body()
             self.body = b''
         else:
             # Responses which are not streamed should have a Content-Length,
