@@ -266,7 +266,10 @@ attached that config to a class which contains the page method:
 
    This behavior is only guaranteed for the default dispatcher. Other
    dispatchers may have different restrictions on where you can attach
-   ``_cp_config`` attributes.
+   ``_cp_config`` attributes. Additionally, because the dispatcher is
+   is responsible for processing ``_cp_config``, it is not possible to
+   change the dispatcher (i.e. ``request.dispatch`` is not honored at
+   this construct).
 
 This technique allows you to:
 
