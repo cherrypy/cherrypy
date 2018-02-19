@@ -224,7 +224,7 @@ class ServerStateTests(helper.CPWebCase):
 
     @pytest.mark.xfail(
         'sys.version_info > (3, 7)',
-        reason="https://github.com/cherrypy/cherrypy/issues/1693",
+        reason='https://github.com/cherrypy/cherrypy/issues/1693',
     )
     def test_4_Autoreload(self):
         # If test_3 has not been executed, the server won't be stopped,
