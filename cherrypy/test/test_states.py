@@ -223,7 +223,9 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(len(db_connection.threads), 0)
 
     @pytest.mark.xfail(
-        'sys.version_info > (3, 7)',
+        'sys.platform == "Darwin" '
+        'and sys.version_info > (3, 7) '
+        'and os.environ["TRAVIS"]',
         reason='https://github.com/cherrypy/cherrypy/issues/1693',
     )
     def test_4_Autoreload(self):
