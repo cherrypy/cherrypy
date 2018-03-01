@@ -135,7 +135,7 @@ import six
 import cheroot.server
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, ntou
+from cherrypy._cpcompat import text_or_bytes, ntou, unquote_qs
 from cherrypy.lib import httputil
 
 
@@ -470,6 +470,10 @@ class Entity(object):
                     self.filename.endswith('"')
                 ):
                     self.filename = self.filename[1:-1]
+            elif 'filename*' in disp.params:
+                # @see https://tools.ietf.org/html/rfc5987
+                fn_encoding, _, filename = disp.params['filename*'].split("'")
+                self.filename = unquote_qs(filename, fn_encoding)
 
     # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
     type = property(

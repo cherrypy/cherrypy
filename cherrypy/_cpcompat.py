@@ -100,11 +100,12 @@ HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
 
 def unquote_qs(atom, encoding, errors='strict'):
     atom_spc = atom.replace('+', ' ')
-    return (
-        urllib.parse.unquote(atom_spc, encoding=encoding, errors=errors)
-        if six.PY3 else
-        urllib.parse.unquote(atom_spc).decode(encoding, errors)
-    )
+    if six.PY3:
+        return urllib.parse.unquote(atom_spc, encoding=encoding, errors=errors)
+    else:
+        if isinstance(atom_spc, six.text_type):
+            atom_spc = str(atom_spc)
+        return urllib.parse.unquote(atom_spc).decode(encoding, errors)
 
 
 try:

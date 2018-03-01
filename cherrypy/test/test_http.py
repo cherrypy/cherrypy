@@ -1,3 +1,4 @@
+# coding: utf-8
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
 import errno
@@ -20,13 +21,32 @@ def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.
 
     files: a sequence of (name, filename, value) tuples for multipart uploads.
+    filename can be a string or a tuple ('filename string', 'encoding')
     """
     BOUNDARY = '________ThIs_Is_tHe_bouNdaRY_$'
     L = []
     for key, filename, value in files:
         L.append('--' + BOUNDARY)
-        L.append('Content-Disposition: form-data; name="%s"; filename="%s"' %
-                 (key, filename))
+
+        filename_encoding = None
+        if isinstance(filename, (list, tuple)):
+            filename, filename_encoding = filename
+        if filename_encoding:
+            if six.PY3:
+                filename = six.moves.urllib.parse.quote(
+                    filename, encoding=filename_encoding)
+            else:
+                if isinstance(filename, six.text_type):
+                    filename = filename.encode(filename_encoding)
+                filename = six.moves.urllib.parse.quote(filename)
+            filename_val = "%s''%s" % (filename_encoding, filename)
+            L.append(
+                'Content-Disposition: form-data; name="%s"; filename*=%s' %
+                (key, filename_val))
+        else:
+            L.append(
+                'Content-Disposition: form-data; name="%s"; filename="%s"' %
+                (key, filename))
         ct = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
         L.append('Content-Type: %s' % ct)
         L.append('')
@@ -160,10 +180,13 @@ class HTTPTests(helper.CPWebCase):
         '''Testing that we can handle filenames with special characters. This
         was reported as a bug in:
            https://github.com/cherrypy/cherrypy/issues/1146/
-           https://github.com/cherrypy/cherrypy/issues/1397'''
+           https://github.com/cherrypy/cherrypy/issues/1397
+           https://github.com/cherrypy/cherrypy/issues/1694'''
         # We'll upload a bunch of files with differing names.
-        fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-                  'file;name.csv', 'file; name.csv']
+        fnames = [
+            'boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
+            'file;name.csv', 'file; name.csv', ('test_łóąä.txt', 'utf-8')
+        ]
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)
@@ -181,6 +204,8 @@ class HTTPTests(helper.CPWebCase):
             self.body = response.fp.read()
             self.status = str(response.status)
             self.assertStatus(200)
+            if isinstance(fname, (tuple, list)):
+                fname = fname[0]
             self.assertBody(fname)
 
     def test_malformed_request_line(self):
