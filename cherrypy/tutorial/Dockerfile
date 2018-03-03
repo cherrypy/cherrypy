@@ -5,4 +5,3 @@ RUN pip install cherrypy
 COPY . /tutorial
 
 WORKDIR /tutorial
-
