@@ -90,7 +90,8 @@ extras_require = {
     'xcgi': ['flup'],
 
     # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-    ':sys_platform == "win32"': ['pypiwin32'],
+    ':sys_platform == "win32" and python_version != "3.4"': ['pywin32'],
+    ':sys_platform == "win32" and python_version == "3.4"': ['pywin32<222'],
 }
 """Feature flags end-users can use in dependencies"""
 
