@@ -1,3 +1,9 @@
+v14.0.1
+-------
+
+* :issue:`1700`: Improve windows pywin32 dependency declaration via
+  conditional extras.
+
 v14.0.0
 -------
 
