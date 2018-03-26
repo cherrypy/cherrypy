@@ -45,7 +45,10 @@ _base_envs:
   language: generic
   before_install:
   - brew update
-  - brew install pyenv
+  - brew install pyenv || brew upgrade pyenv
+  - &ensure_pyenv_preloaded |
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
   - *install_python
   - *switch_python
   - *python_version
