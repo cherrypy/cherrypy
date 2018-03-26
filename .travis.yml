@@ -45,8 +45,7 @@ _base_envs:
   language: generic
   before_install:
   - brew update
-  - brew install readline xz
-  - *ensure_pyenv_installed
+  - brew install pyenv
   - *install_python
   - *switch_python
   - *python_version
