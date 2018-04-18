@@ -57,7 +57,7 @@ packages = [
 # packages. See #1673
 install_requires = [
     'six>=1.11.0',
-    'cheroot>=5.9.1',
+    'cheroot>=6.2.3',
     'portend>=2.1.1',
 ]
 
