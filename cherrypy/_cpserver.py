@@ -147,6 +147,24 @@ class Server(ServerAdapter):
     protocol by adding custom classes to the cheroot.server.wsgi_gateways dict.
     """
 
+    peercreds = False
+    """If True, peer cred lookup for UNIX domain socket will put to WSGI env.
+
+    This information will then be available through WSGI env vars:
+    * X_REMOTE_PID
+    * X_REMOTE_UID
+    * X_REMOTE_GID
+    """
+
+    peercreds_resolve = False
+    """If True, username/group will be looked up in the OS from peercreds.
+
+    This information will then be available through WSGI env vars:
+    * REMOTE_USER
+    * X_REMOTE_USER
+    * X_REMOTE_GROUP
+    """
+
     def __init__(self):
         """Initialize Server instance."""
         self.bus = cherrypy.engine

@@ -74,6 +74,8 @@ class CPWSGIServer(cheroot.wsgi.Server):
             shutdown_timeout=self.server_adapter.shutdown_timeout,
             accepted_queue_size=self.server_adapter.accepted_queue_size,
             accepted_queue_timeout=self.server_adapter.accepted_queue_timeout,
+            peercreds_enabled=self.server_adapter.peercreds,
+            peercreds_resolve_enabled=self.server_adapter.peercreds_resolve,
         )
         self.ConnectionClass.RequestHandlerClass = CPWSGIHTTPRequest
 

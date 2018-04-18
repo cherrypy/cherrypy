@@ -1,3 +1,23 @@
+v14.1.0
+-------
+
+* Add support for peercreds lookup over UNIX domain socket.
+  This enables app to automatically identify "who's on the other
+  end of the wire".
+
+  This is how you enable it::
+
+    server.peercreds: True
+    server.peercreds_resolve: True
+
+  The first option will put remote numeric data to WSGI env vars:
+  app's PID, user's id and group.
+
+  Second option will resolve that into user and group names.
+
+  To prevent expensive syscalls, data is cached on per connection
+  basis.
+
 v14.0.1
 -------
 
