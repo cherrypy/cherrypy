@@ -1,7 +1,7 @@
 v14.1.0
 -------
 
-* Add support for peercreds lookup over UNIX domain socket.
+* :cr-pr:`37`: Add support for peercreds lookup over UNIX domain socket.
   This enables app to automatically identify "who's on the other
   end of the wire".
 
