@@ -77,8 +77,11 @@ class SystemLockFile(object):
         try:
             self._lock_file()
         except Exception:
-            self.fp.seek(1)
-            self.fp.close()
+            try:
+                self.fp.seek(1)
+                self.fp.close()
+            except IOError:
+                pass
             del self.fp
             raise
 
