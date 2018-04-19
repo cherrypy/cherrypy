@@ -3,7 +3,11 @@ Read and contribute to CherryPy
 
 Make sure you read the `README
 <https://github.com/cherrypy/cherrypy/blob/master/README.rst>`_. Also **ensure
-you set up pre-commit utility correctly** and TravisCI tests pass.
+you set up `pre-commit utility <https://pre-commit.com/#install>`_ correctly**
+and TravisCI tests pass::
+
+  pre-commit run --all-files  # runs the same checks as in CI locally
+  pre-commit install  # sets up itself as a pre-commit hook of your local repo
 
 Submitting Pull Requests
 ------------------------
