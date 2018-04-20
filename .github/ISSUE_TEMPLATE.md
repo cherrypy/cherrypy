@@ -4,7 +4,7 @@
 Thanks for filing an issue!  Please keep keep issues limited to bug reports,
 feature requests, and other general issues. For support questions, please feel
 free to reach out on stackoverflow:
-http://stackoverflow.com/questions/tagged/cherrypy
+https://stackoverflow.com/questions/tagged/cherrypy
 
 **** /DELETE THIS BLOCK ****  
 -->
