@@ -1,14 +1,9 @@
 # This file is part of CherryPy <http://www.cherrypy.org/>
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
+"""HTTP Basic Authentication tool.
 
-import binascii
-
-import cherrypy
-from cherrypy._cpcompat import base64_decode
-
-
-__doc__ = """This module provides a CherryPy 3.x tool which implements
+This module provides a CherryPy 3.x tool which implements
 the server-side of HTTP Basic Access Authentication, as described in
 :rfc:`2617`.
 
@@ -24,6 +19,13 @@ as the credentials store::
     app_config = { '/' : basic_auth }
 
 """
+
+import binascii
+import unicodedata
+
+import cherrypy
+from cherrypy._cpcompat import base64_decode, ntob, ntou, tonative
+
 
 __author__ = 'visteya'
 __date__ = 'April 2009'
