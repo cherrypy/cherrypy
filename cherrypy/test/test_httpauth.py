@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 from hashlib import md5, sha1
 
 import cherrypy
