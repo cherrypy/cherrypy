@@ -336,21 +336,40 @@ class HttpDigestAuthorization (object):
         return digest
 
 
-def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth,
-                     stale=False):
+def _get_charset_declaration(charset):
+    global FALLBACK_CHARSET
+    charset = charset.upper()
+    return (
+        (', charset="%s"' % charset)
+        if charset != FALLBACK_CHARSET
+        else ''
+    )
+
+
+def www_authenticate(
+    realm, key, algorithm='MD5', nonce=None, qop=qop_auth,
+    stale=False, accept_charset=DEFAULT_CHARSET[:],
+):
     """Constructs a WWW-Authenticate header for Digest authentication."""
     if qop not in valid_qops:
         raise ValueError("Unsupported value for qop: '%s'" % qop)
     if algorithm not in valid_algorithms:
         raise ValueError("Unsupported value for algorithm: '%s'" % algorithm)
 
+    HEADER_PATTERN = (
+        'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"%s%s'
+    )
+
     if nonce is None:
         nonce = synthesize_nonce(realm, key)
-    s = 'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"' % (
-        realm, nonce, algorithm, qop)
-    if stale:
-        s += ', stale="true"'
-    return s
+
+    stale_param = ', stale="true"' if stale else ''
+
+    charset_declaration = _get_charset_declaration(accept_charset)
+
+    return HEADER_PATTERN % (
+        realm, nonce, algorithm, qop, stale_param, charset_declaration,
+    )
 
 
 def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
@@ -417,7 +436,11 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
                         return
 
     # Respond with 401 status and a WWW-Authenticate header
-    header = www_authenticate(realm, key, stale=nonce_is_stale)
+    header = www_authenticate(
+        realm, key,
+        stale=nonce_is_stale,
+        accept_charset=accept_charset,
+    )
     if debug:
         TRACE(header)
     cherrypy.serving.response.headers['WWW-Authenticate'] = header
