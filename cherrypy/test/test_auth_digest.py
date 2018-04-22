@@ -5,6 +5,7 @@
 
 import cherrypy
 from cherrypy.lib import auth_digest
+from cherrypy._cpcompat import ntob
 
 from cherrypy.test import helper
 
@@ -48,27 +49,23 @@ class DigestAuthTest(helper.CPWebCase):
 
     def testPublic(self):
         self.getPage('/')
-        self.assertStatus('200 OK')
+        assert self.status == '200 OK'
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-        self.assertBody('This is public.')
+        assert self.body == b'This is public.'
 
     def testDigest(self):
         self.getPage('/digest/')
-        self.assertStatus(401)
+        assert self.status_code == 401
 
-        value = None
-        for k, v in self.headers:
-            if k.lower() == 'www-authenticate':
-                if v.startswith('Digest'):
-                    value = v
-                    break
 
-        if value is None:
-            self._handlewebError(
-                'Digest authentification scheme was not found')
+        www_auth_digest = tuple(filter(
+            lambda kv: kv[0].lower() == 'www-authenticate'
+            and kv[1].startswith('Digest '),
+            self.headers,
+        ))
+        assert len(www_auth_digest) == 1, 'Digest authentification scheme was not found'
 
-        value = value[7:]
-        items = value.split(', ')
+        items = www_auth_digest[0][-1][7:].split(', ')
         tokens = {}
         for item in items:
             key, value = item.split('=')
@@ -77,25 +74,20 @@ class DigestAuthTest(helper.CPWebCase):
         missing_msg = '%s is missing'
         bad_value_msg = "'%s' was expecting '%s' but found '%s'"
         nonce = None
-        if 'realm' not in tokens:
-            self._handlewebError(missing_msg % 'realm')
-        elif tokens['realm'] != '"localhost"':
-            self._handlewebError(bad_value_msg %
-                                 ('realm', '"localhost"', tokens['realm']))
-        if 'nonce' not in tokens:
-            self._handlewebError(missing_msg % 'nonce')
-        else:
-            nonce = tokens['nonce'].strip('"')
-        if 'algorithm' not in tokens:
-            self._handlewebError(missing_msg % 'algorithm')
-        elif tokens['algorithm'] != '"MD5"':
-            self._handlewebError(bad_value_msg %
-                                 ('algorithm', '"MD5"', tokens['algorithm']))
-        if 'qop' not in tokens:
-            self._handlewebError(missing_msg % 'qop')
-        elif tokens['qop'] != '"auth"':
-            self._handlewebError(bad_value_msg %
-                                 ('qop', '"auth"', tokens['qop']))
+        assert 'realm' in tokens, missing_msg % 'realm'
+        assert tokens['realm'] == '"localhost"', bad_value_msg % (
+            'realm', '"localhost"', tokens['realm'],
+        )
+        assert 'nonce' in tokens, missing_msg % 'nonce'
+        nonce = tokens['nonce'].strip('"')
+        assert 'algorithm' in tokens, missing_msg % 'algorithm'
+        assert tokens['algorithm'] == '"MD5"', bad_value_msg % (
+            'algorithm', '"MD5"', tokens['algorithm'],
+        )
+        assert 'qop' in tokens, missing_msg % 'qop'
+        assert tokens['qop'] == '"auth"', bad_value_msg % (
+            'qop', '"auth"', tokens['qop'],
+        )
 
         # Test user agent response with a wrong value for 'realm'
         base_auth = ('Digest username="test", '
@@ -117,8 +109,7 @@ class DigestAuthTest(helper.CPWebCase):
         # send response with correct response digest, but wrong realm
         auth_header = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth_header)])
-        self.assertStatus(401)
-        self.assertHeader('WWW-Authenticate')
+        assert self.status_code == 401
         www_auth_unicode = tuple(filter(
             lambda kv: kv[0].lower() == 'www-authenticate'
             and kv[1].endswith(', charset="UTF-8"'),
@@ -141,13 +132,13 @@ class DigestAuthTest(helper.CPWebCase):
             nonce, '11111111111111111111111111111111', '00000001')
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-        ha1 = get_ha1('localhost', 'test')
+        ha1 = get_ha1(auth.realm, 'test')
         response = auth.request_digest(ha1)
         # send response with correct response digest
         auth_header = base_auth % (nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth_header)])
-        self.assertStatus('200 OK')
-        self.assertBody("Hello test, you've been authorized.")
+        assert self.status == '200 OK'
+        assert self.body == b"Hello test, you've been authorized."
 
         # Test with unicode username that must pass
         base_auth = ('Digest username="%s", '
@@ -172,5 +163,5 @@ class DigestAuthTest(helper.CPWebCase):
         # send response with correct response digest
         auth_header = base_auth % (encoded_user, nonce, response, '00000001')
         self.getPage('/digest/', [('Authorization', auth_header)])
-        self.assertStatus('200 OK')
-        self.assertBody("Hello йюзер, you've been authorized.")
+        assert self.status == '200 OK'
+        assert self.body == ntob("Hello йюзер, you've been authorized.", 'utf-8')
