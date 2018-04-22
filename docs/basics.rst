@@ -752,9 +752,10 @@ encoded.
 Authentication
 ##############
 
-CherryPy provides support for two very simple authentication mechanisms,
-both described in :rfc:`2617`: Basic and Digest. They are most commonly
-known to trigger a browser's popup asking users their name
+CherryPy provides support for two very simple HTTP-based
+authentication mechanisms, described in :rfc:`7616` and :rfc:`7617`
+(which obsoletes :rfc:`2617`): Basic and Digest. They are most
+commonly known to trigger a browser's popup asking users their name
 and password.
 
 Basic
@@ -822,6 +823,36 @@ basic one explained above.
    }
 
    cherrypy.quickstart(myapp, '/', conf)
+
+SO_PEERCRED
+^^^^^^^^^^^
+
+There's also a low-level authentication for UNIX file and abstract
+sockets. This is how you enable it:
+
+.. code-block:: ini
+
+   [global]
+   server.peercreds: True
+   server.peercreds_resolve: True
+   server.socket_file: /var/run/cherrypy.sock
+
+``server.peercreds`` enables looking up the connected process ID,
+user ID and group ID. They'll be accessible as WSGI environment
+variables::
+
+    * ``X_REMOTE_PID``
+
+    * ``X_REMOTE_UID``
+
+    * ``X_REMOTE_GID``
+
+``server.peercreds_resolve`` resolves that into user name and group
+name. They'll be accessible as WSGI environment variables::
+
+    * ``X_REMOTE_USER`` and ``REMOTE_USER``
+
+    * ``X_REMOTE_GROUP``
 
 Favicon
 #######
