@@ -142,8 +142,10 @@ def H(s):
 
 def _try_decode_map_values(param_map, charset):
     global FALLBACK_CHARSET
+
     def to_native_or_none(v, enc):
         return tonative(v, enc) if v is not None else v
+
     for enc in (charset, FALLBACK_CHARSET):
         try:
             return {
