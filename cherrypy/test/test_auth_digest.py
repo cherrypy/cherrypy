@@ -8,6 +8,15 @@ from cherrypy.lib import auth_digest
 
 from cherrypy.test import helper
 
+from six.moves.urllib.parse import quote as urlencode
+
+
+def _fetch_users():
+    return {'test': 'test', 'йюзер': 'їпароль'}
+
+
+get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
+
 
 class DigestAuthTest(helper.CPWebCase):
 
@@ -26,15 +35,12 @@ class DigestAuthTest(helper.CPWebCase):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
 
-        def fetch_users():
-            return {'test': 'test'}
-
-        get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
         conf = {'/digest': {'tools.auth_digest.on': True,
                             'tools.auth_digest.realm': 'localhost',
                             'tools.auth_digest.get_ha1': get_ha1,
                             'tools.auth_digest.key': 'a565c27146791cfb',
-                            'tools.auth_digest.debug': 'True'}}
+                            'tools.auth_digest.debug': True,
+                            'tools.auth_digest.accept_charset': 'UTF-8'}}
 
         root = Root()
         root.digest = DigestProtected()
@@ -91,8 +97,6 @@ class DigestAuthTest(helper.CPWebCase):
             self._handlewebError(bad_value_msg %
                                  ('qop', '"auth"', tokens['qop']))
 
-        get_ha1 = auth_digest.get_ha1_dict_plain({'test': 'test'})
-
         # Test user agent response with a wrong value for 'realm'
         base_auth = ('Digest username="test", '
                      'realm="wrong realm", '
@@ -137,3 +141,29 @@ class DigestAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth_header)])
         self.assertStatus('200 OK')
         self.assertBody("Hello test, you've been authorized.")
+
+        # Test with unicode username that must pass
+        base_auth = ('Digest username="%s", '
+                     'realm="localhost", '
+                     'nonce="%s", '
+                     'uri="/digest/", '
+                     'algorithm=MD5, '
+                     'response="%s", '
+                     'qop=auth, '
+                     'nc=%s, '
+                     'cnonce="1522e61005789929"')
+
+        encoded_user = urlencode('йюзер', 'utf-8')
+        auth_header = base_auth % (
+            encoded_user, nonce,
+            '11111111111111111111111111111111', '00000001',
+        )
+        auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
+        # calculate the response digest
+        ha1 = get_ha1(auth.realm, 'йюзер')
+        response = auth.request_digest(ha1)
+        # send response with correct response digest
+        auth_header = base_auth % (encoded_user, nonce, response, '00000001')
+        self.getPage('/digest/', [('Authorization', auth_header)])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello йюзер, you've been authorized.")
