@@ -25,6 +25,8 @@ jobs:
     - run: pip install tox tox-pyenv
     - checkout
     - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
+    - store_test_results:
+      path: .test-results
 
   linux-build:
     docker:
@@ -34,6 +36,8 @@ jobs:
     - checkout
     - run: pip install tox
     - run: tox -e py27,py34,py35,py36
+    - store_test_results:
+      path: .test-results
 
 workflows:
   version: 2
