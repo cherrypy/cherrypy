@@ -11,6 +11,12 @@ from cherrypy.test import helper
 from six.moves.urllib.parse import quote as urlencode
 
 
+def _fetch_users():
+    return {'test': 'test', 'йюзер': 'їпароль'}
+
+get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
+
+
 class DigestAuthTest(helper.CPWebCase):
 
     @staticmethod
@@ -28,10 +34,6 @@ class DigestAuthTest(helper.CPWebCase):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
 
-        def fetch_users():
-            return {'test': 'test', 'йюзер': 'їпароль'}
-
-        get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
         conf = {'/digest': {'tools.auth_digest.on': True,
                             'tools.auth_digest.realm': 'localhost',
                             'tools.auth_digest.get_ha1': get_ha1,
@@ -93,8 +95,6 @@ class DigestAuthTest(helper.CPWebCase):
         elif tokens['qop'] != '"auth"':
             self._handlewebError(bad_value_msg %
                                  ('qop', '"auth"', tokens['qop']))
-
-        get_ha1 = auth_digest.get_ha1_dict_plain({'test': 'test', 'йюзер': 'їпароль'})
 
         # Test user agent response with a wrong value for 'realm'
         base_auth = ('Digest username="test", '
