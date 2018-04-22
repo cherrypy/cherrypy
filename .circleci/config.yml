@@ -27,6 +27,8 @@ jobs:
     - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
     - store_test_results:
         path: .test-results
+    - store_artifacts:
+        path: .test-results
 
   linux-build:
     docker:
@@ -37,6 +39,8 @@ jobs:
     - run: pip install tox
     - run: tox -e py27,py34,py35,py36
     - store_test_results:
+        path: .test-results
+    - store_artifacts:
         path: .test-results
 
 workflows:
