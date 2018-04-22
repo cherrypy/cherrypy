@@ -15,6 +15,7 @@ of plaintext passwords as the credentials store::
                    'tools.auth_digest.realm': 'wonderland',
                    'tools.auth_digest.get_ha1': get_ha1,
                    'tools.auth_digest.key': 'a565c27146791cfb',
+                   'tools.auth_digest.accept_charset': 'UTF-8',
     }
     app_config = { '/' : digest_auth }
 """
