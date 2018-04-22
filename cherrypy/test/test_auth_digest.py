@@ -14,6 +14,7 @@ from six.moves.urllib.parse import quote as urlencode
 def _fetch_users():
     return {'test': 'test', 'йюзер': 'їпароль'}
 
+
 get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
 
 
