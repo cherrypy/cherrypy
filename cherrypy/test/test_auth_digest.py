@@ -57,13 +57,13 @@ class DigestAuthTest(helper.CPWebCase):
         self.getPage('/digest/')
         assert self.status_code == 401
 
-
+        msg = 'Digest authentification scheme was not found'
         www_auth_digest = tuple(filter(
             lambda kv: kv[0].lower() == 'www-authenticate'
             and kv[1].startswith('Digest '),
             self.headers,
         ))
-        assert len(www_auth_digest) == 1, 'Digest authentification scheme was not found'
+        assert len(www_auth_digest) == 1, msg
 
         items = www_auth_digest[0][-1][7:].split(', ')
         tokens = {}
@@ -98,7 +98,10 @@ class DigestAuthTest(helper.CPWebCase):
         # calculate the response digest
         ha1 = get_ha1(auth.realm, auth.username)
         response = auth.request_digest(ha1)
-        auth_header = base_auth % (encoded_user, realm, nonce, response, '00000001')
+        auth_header = base_auth % (
+            encoded_user, realm,
+            nonce, response, '00000001',
+        )
         self.getPage('/digest/', [('Authorization', auth_header)])
 
     def test_wrong_realm(self):
@@ -114,4 +117,6 @@ class DigestAuthTest(helper.CPWebCase):
     def test_unicode_user(self):
         self._test_parametric_digest(username='йюзер', realm='localhost')
         assert self.status == '200 OK'
-        assert self.body == ntob("Hello йюзер, you've been authorized.", 'utf-8')
+        assert self.body == ntob(
+            "Hello йюзер, you've been authorized.", 'utf-8',
+        )
