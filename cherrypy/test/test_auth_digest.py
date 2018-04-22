@@ -119,10 +119,12 @@ class DigestAuthTest(helper.CPWebCase):
         self.getPage('/digest/', [('Authorization', auth_header)])
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate')
-        www_auth_val = next(filter(
-            lambda kv: kv[0].lower() == 'www-authenticate', self.headers
-        ))[-1]
-        assert 'charset="UTF-8"' in www_auth_val
+        www_auth_unicode = tuple(filter(
+            lambda kv: kv[0].lower() == 'www-authenticate'
+                       and kv[1].endswith(', charset="UTF-8"'),
+            self.headers,
+        ))
+        assert len(www_auth_unicode) == 1
 
         # Test that must pass
         base_auth = ('Digest username="test", '
