@@ -780,7 +780,8 @@ SSL or within a closed network.
       '/protected/area': {
           'tools.auth_basic.on': True,
           'tools.auth_basic.realm': 'localhost',
-          'tools.auth_basic.checkpassword': validate_password
+          'tools.auth_basic.checkpassword': validate_password,
+          'tools.auth_basic.accept_charset': 'UTF-8',
        }
    }
 
@@ -815,7 +816,8 @@ basic one explained above.
            'tools.auth_digest.on': True,
            'tools.auth_digest.realm': 'localhost',
            'tools.auth_digest.get_ha1': auth_digest.get_ha1_dict_plain(USERS),
-           'tools.auth_digest.key': 'a565c27146791cfb'
+           'tools.auth_digest.key': 'a565c27146791cfb',
+           'tools.auth_digest.accept_charset': 'UTF-8',
       }
    }
 

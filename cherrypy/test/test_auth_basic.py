@@ -34,12 +34,24 @@ class BasicAuthTest(helper.CPWebCase):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
 
+        class BasicProtected2_u:
+
+            @cherrypy.expose
+            def index(self):
+                return "Hello %s, you've been authorized." % (
+                    cherrypy.request.login)
+
         userpassdict = {'xuser': 'xpassword'}
         userhashdict = {'xuser': md5(b'xpassword').hexdigest()}
+        userhashdict_u = {'xюзер': md5(ntob('їжа', 'utf-8')).hexdigest()}
 
         def checkpasshash(realm, user, password):
             p = userhashdict.get(user)
             return p and p == md5(ntob(password)).hexdigest() or False
+
+        def checkpasshash_u(realm, user, password):
+            p = userhashdict_u.get(user)
+            return p and p == md5(ntob(password, 'utf-8')).hexdigest() or False
 
         basic_checkpassword_dict = auth_basic.checkpassword_dict(userpassdict)
         conf = {
@@ -51,13 +63,21 @@ class BasicAuthTest(helper.CPWebCase):
             '/basic2': {
                 'tools.auth_basic.on': True,
                 'tools.auth_basic.realm': 'wonderland',
-                'tools.auth_basic.checkpassword': checkpasshash
+                'tools.auth_basic.checkpassword': checkpasshash,
+                'tools.auth_basic.accept_charset': 'ISO-8859-1',
+            },
+            '/basic2_u': {
+                'tools.auth_basic.on': True,
+                'tools.auth_basic.realm': 'wonderland',
+                'tools.auth_basic.checkpassword': checkpasshash_u,
+                'tools.auth_basic.accept_charset': 'UTF-8',
             },
         }
 
         root = Root()
         root.basic = BasicProtected()
         root.basic2 = BasicProtected2()
+        root.basic2_u = BasicProtected2_u()
         cherrypy.tree.mount(root, config=conf)
 
     def testPublic(self):
@@ -69,7 +89,10 @@ class BasicAuthTest(helper.CPWebCase):
     def testBasic(self):
         self.getPage('/basic/')
         self.assertStatus(401)
-        self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
+        self.assertHeader(
+            'WWW-Authenticate',
+            'Basic realm="wonderland", charset="UTF-8"'
+        )
 
         self.getPage('/basic/',
                      [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')])
@@ -93,3 +116,20 @@ class BasicAuthTest(helper.CPWebCase):
                      [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3Jk')])
         self.assertStatus('200 OK')
         self.assertBody("Hello xuser, you've been authorized.")
+
+    def testBasic2_u(self):
+        self.getPage('/basic2_u/')
+        self.assertStatus(401)
+        self.assertHeader(
+            'WWW-Authenticate',
+            'Basic realm="wonderland", charset="UTF-8"'
+        )
+
+        self.getPage('/basic2_u/',
+                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbRgw==')])
+        self.assertStatus(401)
+
+        self.getPage('/basic2_u/',
+                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbQsA==')])
+        self.assertStatus('200 OK')
+        self.assertBody("Hello xюзер, you've been authorized.")
