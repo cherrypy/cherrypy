@@ -26,7 +26,7 @@ jobs:
     - checkout
     - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
     - store_test_results:
-      path: .test-results
+        path: .test-results
 
   linux-build:
     docker:
