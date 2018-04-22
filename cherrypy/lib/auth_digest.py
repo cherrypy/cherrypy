@@ -19,12 +19,22 @@ of plaintext passwords as the credentials store::
     app_config = { '/' : digest_auth }
 """
 
+import time
+from hashlib import md5
+
+from six.moves.urllib.parse import unquote_to_bytes
+from six.moves.urllib.request import parse_http_list, parse_keqv_list
+
+import cherrypy
+from cherrypy._cpcompat import ntob, tonative
+
+
 __author__ = 'visteya'
 __date__ = 'April 2009'
 
 
 def md5_hex(s):
-    return md5(ntob(s)).hexdigest()
+    return md5(ntob(s, 'utf-8')).hexdigest()
 
 
 qop_auth = 'auth'
@@ -32,6 +42,9 @@ qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
 
 valid_algorithms = ('MD5', 'MD5-sess')
+
+FALLBACK_CHARSET = 'ISO-8859-1'
+DEFAULT_CHARSET = 'UTF-8'
 
 
 def TRACE(msg):
@@ -127,6 +140,22 @@ def H(s):
     return md5_hex(s)
 
 
+def _try_decode_map_values(param_map, charset):
+    global FALLBACK_CHARSET
+    def to_native_or_none(v, enc):
+        return tonative(v, enc) if v is not None else v
+    for enc in (charset, FALLBACK_CHARSET):
+        try:
+            return {
+                k: to_native_or_none(v, enc)
+                for k, v in param_map.items()
+            }
+        except ValueError as ve:
+            last_err = ve
+    else:
+        raise last_err
+
+
 class HttpDigestAuthorization (object):
 
     """Class to parse a Digest Authorization header and perform re-calculation
@@ -136,7 +165,10 @@ class HttpDigestAuthorization (object):
     def errmsg(self, s):
         return 'Digest Authorization header: %s' % s
 
-    def __init__(self, auth_header, http_method, debug=False):
+    def __init__(
+        self, auth_header, http_method,
+        debug=False, accept_charset=DEFAULT_CHARSET[:],
+    ):
         self.http_method = http_method
         self.debug = debug
         scheme, params = auth_header.split(' ', 1)
@@ -149,6 +181,11 @@ class HttpDigestAuthorization (object):
         # make a dict of the params
         items = parse_http_list(params)
         paramsd = parse_keqv_list(items)
+        paramsd = {
+            k: unquote_to_bytes(v)
+            for k, v in paramsd.items()
+        }
+        paramsd = _try_decode_map_values(paramsd, accept_charset)
 
         self.realm = paramsd.get('realm')
         self.username = paramsd.get('username')
@@ -316,7 +353,7 @@ def www_authenticate(realm, key, algorithm='MD5', nonce=None, qop=qop_auth,
     return s
 
 
-def digest_auth(realm, get_ha1, key, debug=False):
+def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     """A CherryPy tool which hooks at before_handler to perform
     HTTP Digest Access Authentication, as specified in :rfc:`2617`.
 
@@ -351,7 +388,9 @@ def digest_auth(realm, get_ha1, key, debug=False):
         msg = 'The Authorization header could not be parsed.'
         with cherrypy.HTTPError.handle(ValueError, 400, msg):
             auth = HttpDigestAuthorization(
-                auth_header, request.method, debug=debug)
+                auth_header, request.method,
+                debug=debug, accept_charset=accept_charset,
+            )
 
         if debug:
             TRACE(str(auth))
