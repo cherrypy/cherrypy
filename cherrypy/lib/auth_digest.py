@@ -1,17 +1,9 @@
 # This file is part of CherryPy <http://www.cherrypy.org/>
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
+"""HTTP Digest Authentication tool.
 
-import time
-from hashlib import md5
-
-from six.moves.urllib.request import parse_http_list, parse_keqv_list
-
-import cherrypy
-from cherrypy._cpcompat import ntob
-
-
-__doc__ = """An implementation of the server-side of HTTP Digest Access
+An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
 Example usage, using the built-in get_ha1_dict_plain function which uses a dict
