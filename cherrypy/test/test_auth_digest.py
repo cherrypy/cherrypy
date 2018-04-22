@@ -121,7 +121,7 @@ class DigestAuthTest(helper.CPWebCase):
         self.assertHeader('WWW-Authenticate')
         www_auth_unicode = tuple(filter(
             lambda kv: kv[0].lower() == 'www-authenticate'
-                       and kv[1].endswith(', charset="UTF-8"'),
+            and kv[1].endswith(', charset="UTF-8"'),
             self.headers,
         ))
         assert len(www_auth_unicode) == 1
