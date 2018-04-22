@@ -22,7 +22,7 @@ https://stackoverflow.com/questions/tagged/cherrypy
 
 
 
-* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem**.
+* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
 
 
 
