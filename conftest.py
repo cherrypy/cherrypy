@@ -1,6 +1,4 @@
-"""
-test configuration for pytest
-"""
+"""test configuration for pytest."""
 
 
 collect_ignore = [
