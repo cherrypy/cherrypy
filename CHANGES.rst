@@ -1,5 +1,12 @@
+v15.0.0
+-------
+
+* :issue:`1708`: Removed components from webtest that were
+  removed in the refactoring of cheroot.test.webtest for
+  cheroot 6.1.0.
+
 v14.2.0
-------------
+-------
 
 * :issue:`1680` via :pr:`1683`: HTTP Basic Auth supports :rfc:`7617` UTF-8
   charset decoding where possible. Uses latin1 as a fallback.
