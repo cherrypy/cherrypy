@@ -12,6 +12,8 @@ suite because it must import cherrypy late (after
 removing sys.path[0]).
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -30,10 +32,16 @@ def data_file_path(request):
 
 
 @pytest.fixture(autouse=True, scope='session')
-def remove_sys_path_0():
-    'pytest adds cwd to sys.path[0]'
-    print('removing', sys.path[0])
-    del sys.path[0]
+def remove_paths_to_checkout():
+    """Remove paths to ./cherrypy"""
+    to_remove = [
+        path
+        for path in sys.path
+        if os.path.isdir(path)
+        and os.path.samefile(path, os.path.curdir)
+    ]
+    print("Removing", to_remove)
+    list(map(sys.path.remove, to_remove))
     assert 'cherrypy' not in sys.modules
 
 
