@@ -77,28 +77,32 @@ class Root:
         return resp
 
 
-cherrypy.config.update({
-    'log.error.file': '',
-    'environment': 'production',
-    'server.socket_host': '127.0.0.1',
-    'server.socket_port': 54583,
-    'server.max_request_header_size': 0,
-    'server.max_request_body_size': 0,
-})
+def init():
 
-# Cheat mode on ;)
-del cherrypy.config['tools.log_tracebacks.on']
-del cherrypy.config['tools.log_headers.on']
-del cherrypy.config['tools.trailing_slash.on']
+    cherrypy.config.update({
+        'log.error.file': '',
+        'environment': 'production',
+        'server.socket_host': '127.0.0.1',
+        'server.socket_port': 54583,
+        'server.max_request_header_size': 0,
+        'server.max_request_body_size': 0,
+    })
 
-appconf = {
-    '/static': {
-        'tools.staticdir.on': True,
-        'tools.staticdir.dir': 'static',
-        'tools.staticdir.root': curdir,
-    },
-}
-app = cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf)
+    # Cheat mode on ;)
+    del cherrypy.config['tools.log_tracebacks.on']
+    del cherrypy.config['tools.log_headers.on']
+    del cherrypy.config['tools.trailing_slash.on']
+
+    appconf = {
+        '/static': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static',
+            'tools.staticdir.root': curdir,
+        },
+    }
+    globals().update(
+        app=cherrypy.tree.mount(Root(), SCRIPT_NAME, appconf),
+    )
 
 
 class NullRequest:
@@ -353,6 +357,8 @@ def run_modpython(use_wsgi=False):
 
 
 if __name__ == '__main__':
+    init()
+
     longopts = ['cpmodpy', 'modpython', 'null', 'notests',
                 'help', 'ab=', 'apache=']
     try:
