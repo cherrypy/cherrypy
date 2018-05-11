@@ -84,7 +84,6 @@ cherrypy.config.update({
     'server.socket_port': 54583,
     'server.max_request_header_size': 0,
     'server.max_request_body_size': 0,
-    'engine.timeout_monitor.frequency': 0,
 })
 
 # Cheat mode on ;)
