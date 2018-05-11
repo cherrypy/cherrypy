@@ -40,7 +40,7 @@ def remove_paths_to_checkout():
         if os.path.isdir(path)
         and os.path.samefile(path, os.path.curdir)
     ]
-    print("Removing", to_remove)
+    print('Removing', to_remove)
     list(map(sys.path.remove, to_remove))
     assert 'cherrypy' not in sys.modules
 
