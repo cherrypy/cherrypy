@@ -24,6 +24,8 @@ are generally either modules or instances of the tools.Tool class.
 
 import sys
 
+import six
+
 import cherrypy
 from cherrypy._helper import expose
 
@@ -37,7 +39,7 @@ def _getargs(func):
     """Return the names of all static arguments to the given function."""
     # Use this instead of importing inspect for less mem overhead.
     import types
-    if sys.version_info >= (3, 0):
+    if six.PY3:
         if isinstance(func, types.MethodType):
             func = func.__func__
         co = func.__code__
