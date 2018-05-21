@@ -1,3 +1,10 @@
+v15+dev
+-------
+
+* :issue:`1688`: Removed  ``basic_auth`` and ``digest_auth`` tools and
+  the ``httpauth`` module, which have been officially deprecated earlier
+  in v14.0.0.
+
 v15.0.0
 -------
 

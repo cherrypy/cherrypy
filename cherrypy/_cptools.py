@@ -27,7 +27,7 @@ import sys
 import cherrypy
 from cherrypy._helper import expose
 
-from cherrypy.lib import cptools, encoding, auth, static, jsontools
+from cherrypy.lib import cptools, encoding, static, jsontools
 from cherrypy.lib import sessions as _sessions, xmlrpcutil as _xmlrpc
 from cherrypy.lib import caching as _caching
 from cherrypy.lib import auth_basic, auth_digest
@@ -494,8 +494,6 @@ _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
 _d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 _d.referer = Tool('before_request_body', cptools.referer)
-_d.basic_auth = Tool('on_start_resource', auth.basic_auth)
-_d.digest_auth = Tool('on_start_resource', auth.digest_auth)
 _d.trailing_slash = Tool('before_handler', cptools.trailing_slash, priority=60)
 _d.flatten = Tool('before_finalize', cptools.flatten)
 _d.accept = Tool('on_start_resource', cptools.accept)
@@ -507,4 +505,4 @@ _d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
 _d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
 _d.params = Tool('before_handler', cptools.convert_params, priority=15)
 
-del _d, cptools, encoding, auth, static
+del _d, cptools, encoding, static
