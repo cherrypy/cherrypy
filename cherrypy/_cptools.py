@@ -22,8 +22,6 @@ Tools may be implemented as any object with a namespace. The builtins
 are generally either modules or instances of the tools.Tool class.
 """
 
-import sys
-
 import six
 
 import cherrypy
