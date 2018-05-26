@@ -35,7 +35,7 @@ class PageHandler(object):
         return cherrypy.serving.request.args
 
     @args.setter
-    def set_args(self, args):
+    def args(self, args):
         cherrypy.serving.request.args = args
         return cherrypy.serving.request.args
 
@@ -45,7 +45,7 @@ class PageHandler(object):
         return cherrypy.serving.request.kwargs
 
     @kwargs.setter
-    def set_kwargs(self, kwargs):
+    def kwargs(self, kwargs):
         cherrypy.serving.request.kwargs = kwargs
         return cherrypy.serving.request.kwargs
 
@@ -233,7 +233,7 @@ class LateParamPageHandler(PageHandler):
         return kwargs
 
     @kwargs.setter
-    def _set_kwargs(self, kwargs):
+    def kwargs(self, kwargs):
         cherrypy.serving.request.kwargs = kwargs
         self._kwargs = kwargs
 

@@ -41,7 +41,7 @@ class Server(ServerAdapter):
         return self._socket_host
 
     @socket_host.setter
-    def _set_socket_host(self, value):
+    def socket_host(self, value):
         if value == '':
             raise ValueError("The empty string ('') is not an allowed value. "
                              "Use '0.0.0.0' instead to listen on all active "
@@ -204,7 +204,7 @@ class Server(ServerAdapter):
         return (self.socket_host, self.socket_port)
 
     @bind_addr.setter
-    def _set_bind_addr(self, value):
+    def bind_addr(self, value):
         if value is None:
             self.socket_file = None
             self.socket_host = None

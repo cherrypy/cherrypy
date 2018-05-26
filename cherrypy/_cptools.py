@@ -76,7 +76,7 @@ class Tool(object):
         raise AttributeError(_attr_error)
 
     @on.setter
-    def _set_on(self, value):
+    def on(self, value):
         raise AttributeError(_attr_error)
 
     def _setargs(self):

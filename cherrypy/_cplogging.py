@@ -350,7 +350,7 @@ class LogManager(object):
         return bool(has_h)
 
     @screen.setter
-    def _set_screen(self, newvalue):
+    def screen(self, newvalue):
         self._set_screen_handler(self.error_log, newvalue, stream=sys.stderr)
         self._set_screen_handler(self.access_log, newvalue, stream=sys.stdout)
 
@@ -390,7 +390,7 @@ class LogManager(object):
         return ''
 
     @error_file.setter
-    def _set_error_file(self, newvalue):
+    def error_file(self, newvalue):
         self._set_file_handler(self.error_log, newvalue)
 
     @property
@@ -406,7 +406,7 @@ class LogManager(object):
         return ''
 
     @access_file.setter
-    def _set_access_file(self, newvalue):
+    def access_file(self, newvalue):
         self._set_file_handler(self.access_log, newvalue)
 
     # ------------------------- WSGI handlers ------------------------- #
@@ -434,7 +434,7 @@ class LogManager(object):
         return bool(self._get_builtin_handler(self.error_log, 'wsgi'))
 
     @wsgi.setter
-    def _set_wsgi(self, newvalue):
+    def wsgi(self, newvalue):
         self._set_wsgi_handler(self.error_log, newvalue)
 
 

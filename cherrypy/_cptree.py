@@ -107,7 +107,7 @@ class Application(object):
         return cherrypy.serving.request.wsgi_environ['SCRIPT_NAME'].rstrip('/')
 
     @script_name.setter
-    def _set_script_name(self, value):
+    def script_name(self, value):
         if value:
             value = value.rstrip('/')
         self._script_name = value

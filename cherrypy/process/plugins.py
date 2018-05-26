@@ -239,7 +239,7 @@ class DropPrivileges(SimplePlugin):
         return self._uid
 
     @uid.setter
-    def _set_uid(self, val):
+    def uid(self, val):
         if val is not None:
             if pwd is None:
                 self.bus.log('pwd module not available; ignoring uid.',
@@ -255,7 +255,7 @@ class DropPrivileges(SimplePlugin):
         return self._gid
 
     @gid.setter
-    def _set_gid(self, val):
+    def gid(self, val):
         if val is not None:
             if grp is None:
                 self.bus.log('grp module not available; ignoring gid.',
@@ -275,7 +275,7 @@ class DropPrivileges(SimplePlugin):
         return self._umask
 
     @umask.setter
-    def _set_umask(self, val):
+    def umask(self, val):
         if val is not None:
             try:
                 os.umask

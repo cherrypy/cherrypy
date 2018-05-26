@@ -95,7 +95,7 @@ class Win32Bus(wspbus.Bus):
         return self._state
 
     @state.setter
-    def _set_state(self, value):
+    def state(self, value):
         self._state = value
         event = self._get_state_event(value)
         win32event.PulseEvent(event)

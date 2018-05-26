@@ -134,7 +134,7 @@ class Session(object):
         return self._id
 
     @id.setter
-    def _set_id(self, value):
+    def id(self, value):
         self._id = value
         for o in self.id_observers:
             o(value)
