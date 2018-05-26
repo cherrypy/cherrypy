@@ -620,9 +620,6 @@ class Request(object):
 
         return response
 
-    # Uncomment for stage debugging
-    # stage = property(lambda self: self._stage, lambda self, v: print(v))
-
     def respond(self, path_info):
         """Generate a response for the resource at self.path_info. (Core)"""
         try:
@@ -769,28 +766,6 @@ class Request(object):
             inst = sys.exc_info()[1]
             inst.set_response()
             cherrypy.serving.response.finalize()
-
-    # ------------------------- Properties ------------------------- #
-
-    def _get_body_params(self):
-        warnings.warn(
-            'body_params is deprecated in CherryPy 3.2, will be removed in '
-            'CherryPy 3.3.',
-            DeprecationWarning
-        )
-        return self.body.params
-    body_params = property(_get_body_params,
-                           doc="""
-    If the request Content-Type is 'application/x-www-form-urlencoded' or
-    multipart, this will be a dict of the params pulled from the entity
-    body; that is, it will be the portion of request.params that come
-    from the message body (sometimes called "POST params", although they
-    can be sent with various HTTP method verbs). This value is set between
-    the 'before_request_body' and 'before_handler' hooks (assuming that
-    process_request_body is True).
-
-    Deprecated in 3.2, will be removed for 3.3 in favor of
-    :attr:`request.body.params<cherrypy._cprequest.RequestBody.params>`.""")
 
 
 class ResponseBody(object):

@@ -5,6 +5,14 @@ v15+dev
   the ``httpauth`` module, which have been officially deprecated earlier
   in v14.0.0.
 
+* Removed deprecated properties::
+
+  - ``cherrypy._cpreqbody.Entity.type`` deprecated in favor of
+    :py:attr:`cherrypy._cpreqbody.Entity.content_type`
+
+  - ``cherrypy._cprequest.Request.body_params`` deprecated in favor of
+    py:attr:`cherrypy._cprequest.RequestBody.params`
+
 v15.0.0
 -------
 

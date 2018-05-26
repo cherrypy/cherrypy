@@ -471,13 +471,6 @@ class Entity(object):
                 ):
                     self.filename = self.filename[1:-1]
 
-    # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
-    type = property(
-        lambda self: self.content_type,
-        doc='A deprecated alias for '
-            ':attr:`content_type<cherrypy._cpreqbody.Entity.content_type>`.'
-    )
-
     def read(self, size=None, fp_out=None):
         return self.fp.read(size, fp_out)
 
