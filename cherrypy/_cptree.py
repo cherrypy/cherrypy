@@ -84,7 +84,7 @@ class Application(object):
     @property
     def script_name(self):
         """The URI "mount point" for this app.
-        
+
         A mount point is that portion of the URI which is constant for all URIs
         that are serviced by this application; it does not include scheme,
         host, or proxy ("virtual host") portions of the URI.

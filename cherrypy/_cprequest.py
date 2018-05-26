@@ -1,6 +1,5 @@
 import sys
 import time
-import warnings
 
 import uuid
 import six
