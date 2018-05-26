@@ -90,14 +90,15 @@ class Win32Bus(wspbus.Bus):
             self.events[state] = event
             return event
 
-    def _get_state(self):
+    @property
+    def state(self):
         return self._state
 
+    @state.setter
     def _set_state(self, value):
         self._state = value
         event = self._get_state_event(value)
         win32event.PulseEvent(event)
-    state = property(_get_state, _set_state)
 
     def wait(self, state, interval=0.1, channel=None):
         """Wait for the given state(s), KeyboardInterrupt or SystemExit.

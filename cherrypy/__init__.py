@@ -234,12 +234,12 @@ class _ThreadLocalProxy(object):
         child = getattr(serving, self.__attrname__)
         delattr(child, name)
 
-    def _get_dict(self):
+    @property
+    def __dict__(self):
         child = getattr(serving, self.__attrname__)
         d = child.__class__.__dict__.copy()
         d.update(child.__dict__)
         return d
-    __dict__ = property(_get_dict)
 
     def __getitem__(self, key):
         child = getattr(serving, self.__attrname__)
