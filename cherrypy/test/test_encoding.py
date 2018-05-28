@@ -360,6 +360,11 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/utf8', [('Accept-Charset', 'us-ascii, ISO-8859-1')])
         self.assertStatus('406 Not Acceptable')
 
+        # Test malformed quality value, which should raise 400.
+        self.getPage('/mao_zedong', [('Accept-Charset',
+                                      'ISO-8859-1,utf-8;q=0.7,*;q=0.7)')])
+        self.assertStatus('400 Bad Request')
+
     def testGzip(self):
         zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
