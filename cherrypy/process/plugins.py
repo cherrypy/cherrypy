@@ -627,27 +627,40 @@ class Autoreloader(Monitor):
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
-        files = set()
-
         search_mod_names = filter(re.compile(self.match).match, sys.modules)
-        for name in search_mod_names:
-            m = sys.modules[name]
+        mods = map(sys.modules.get, search_mod_names)
+        return set(filter(None, map(self._file_for_module, mods)))
 
-            try:
-                f = m.__loader__.archive
-            except AttributeError:
-                try:
-                    f = m.__file__
-                    if not os.path.isabs(f):
-                        # ensure absolute paths so a os.chdir() in the app
-                        # doesn't break me
-                        f = os.path.normpath(
-                            os.path.join(_module__file__base, f)
-                        )
-                except AttributeError:
-                    continue
-            files.add(f)
-        return files
+    @classmethod
+    def _file_for_module(cls, module):
+        """Return the relevant file for the module."""
+        return (
+            cls._archive_for_zip_module(module)
+            or cls._file_for_file_module(module)
+        )
+
+    @staticmethod
+    def _archive_for_zip_module(module):
+        """Return the archive filename for the module if relevant."""
+        try:
+            return module.__loader__.archive
+        except AttributeError:
+            pass
+
+    @classmethod
+    def _file_for_file_module(cls, module):
+        """Return the file for the module."""
+        try:
+            return cls._make_absolute(module.__file__)
+        except AttributeError:
+            pass
+
+    @staticmethod
+    def _make_absolute(filename):
+        """Ensure filename is absolute to avoid effect of os.chdir."""
+        return filename if os.path.isabs(filename) else (
+            os.path.normpath(os.path.join(_module__file__base, filename))
+        )
 
     def run(self):
         """Reload the process if registered files have been modified."""
