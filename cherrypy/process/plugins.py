@@ -651,7 +651,7 @@ class Autoreloader(Monitor):
     def _file_for_file_module(cls, module):
         """Return the file for the module."""
         try:
-            return cls._make_absolute(module.__file__)
+            return module.__file__ and cls._make_absolute(module.__file__)
         except AttributeError:
             pass
 
