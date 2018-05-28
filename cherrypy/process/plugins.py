@@ -628,9 +628,10 @@ class Autoreloader(Monitor):
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
         files = set()
-        for k, m in list(sys.modules.items()):
-            if not re.match(self.match, k):
-                continue
+
+        search_mod_names = filter(re.compile(self.match).match, sys.modules)
+        for name in search_mod_names:
+            m = sys.modules[name]
 
             try:
                 f = m.__loader__.archive
