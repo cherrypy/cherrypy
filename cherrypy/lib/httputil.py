@@ -205,10 +205,19 @@ class AcceptElement(HeaderElement):
             val = val.value
         try:
             return float(val)
-        # Fail client requests with invalid quality value
-        # https://github.com/cherrypy/cherrypy/issues/1370
-        except ValueError:
-            raise cherrypy.HTTPError(400)
+        except ValueError as val_err:
+            """Fail client requests with invalid quality value.
+
+            Ref: https://github.com/cherrypy/cherrypy/issues/1370
+            """
+            six.raise_from(
+                cherrypy.HTTPError(
+                    400,
+                    'Malformed HTTP header: `{}`'.
+                    format(str(self)),
+                ),
+                val_err,
+            )
 
     def __cmp__(self, other):
         diff = builtins.cmp(self.qvalue, other.qvalue)
