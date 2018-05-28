@@ -18,6 +18,7 @@ import six
 from six.moves import range, builtins
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
+import cherrypy
 from cherrypy._cpcompat import ntob, ntou
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import unquote_qs
@@ -202,7 +203,21 @@ class AcceptElement(HeaderElement):
         val = self.params.get('q', '1')
         if isinstance(val, HeaderElement):
             val = val.value
-        return float(val)
+        try:
+            return float(val)
+        except ValueError as val_err:
+            """Fail client requests with invalid quality value.
+
+            Ref: https://github.com/cherrypy/cherrypy/issues/1370
+            """
+            six.raise_from(
+                cherrypy.HTTPError(
+                    400,
+                    'Malformed HTTP header: `{}`'.
+                    format(str(self)),
+                ),
+                val_err,
+            )
 
     def __cmp__(self, other):
         diff = builtins.cmp(self.qvalue, other.qvalue)
