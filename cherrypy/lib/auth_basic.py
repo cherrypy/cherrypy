@@ -112,13 +112,9 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
 
 
 def _try_decode(subject, charsets):
-    last_err = None
-    for charset in charsets:
+    for charset in charsets[:-1]:
         try:
-            subject = tonative(subject, charset)
-            break
-        except ValueError as ve:
-            last_err = ve
-    else:
-        raise last_err
-    return subject
+            return tonative(subject, charset)
+        except ValueError:
+            pass
+    return tonative(subject, charsets[-1])
