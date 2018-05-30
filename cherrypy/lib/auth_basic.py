@@ -23,9 +23,10 @@ as the credentials store::
 
 import binascii
 import unicodedata
+import base64
 
 import cherrypy
-from cherrypy._cpcompat import base64_decode, ntob, ntou, tonative
+from cherrypy._cpcompat import ntou, tonative
 
 
 __author__ = 'visteya'
@@ -84,8 +85,7 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
                 charsets = accept_charset, fallback_charset
-                decoded_params = base64_decode(params)
-                decoded_params = ntob(decoded_params)
+                decoded_params = base64.b64decode(params.encode('ascii'))
                 decoded_params = _try_decode(decoded_params, charsets)
                 decoded_params = ntou(decoded_params)
                 decoded_params = unicodedata.normalize('NFC', decoded_params)
