@@ -117,6 +117,7 @@ Note that you have to explicitly set
 and not simply return an error message as a result.
 """
 
+import io
 import contextlib
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
@@ -532,7 +533,7 @@ def get_error_page(status, **kwargs):
                     return result
             else:
                 # Load the template from this path.
-                template = tonative(open(error_page, 'rb').read())
+                template = io.open(error_page, newline='').read()
         except Exception:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']
