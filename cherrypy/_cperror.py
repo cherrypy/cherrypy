@@ -206,18 +206,18 @@ class HTTPRedirect(CherryPyException):
         if isinstance(urls, text_or_bytes):
             urls = [urls]
 
-        abs_urls = []
-        for url in urls:
-            url = tonative(url, encoding or self.encoding)
-
+        self.urls = abs_urls = [
             # Note that urljoin will "do the right thing" whether url is:
             #  1. a complete URL with host (e.g. "http://www.example.com/test")
             #  2. a URL relative to root (e.g. "/dummy")
             #  3. a URL relative to the current path
             # Note that any query string in cherrypy.request is discarded.
-            url = urllib.parse.urljoin(cherrypy.url(), url)
-            abs_urls.append(url)
-        self.urls = abs_urls
+            urllib.parse.urljoin(
+                cherrypy.url(),
+                tonative(url, encoding or self.encoding),
+            )
+            for url in urls
+        ]
 
         status = (
             int(status)
