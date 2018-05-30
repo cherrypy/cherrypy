@@ -11,6 +11,11 @@ provides
 two functions: 'ntob', which translates native strings (of type 'str') into
 byte strings regardless of Python version, and 'ntou', which translates native
 strings to unicode strings.
+
+Try not to use the compatibility functions 'ntob', 'ntou', 'tonative'.
+They were created with Python 2.3-2.5 compatibility in mind.
+Instead, use unicode literals (from __future__) and bytes literals
+and their .encode/.decode methods as needed.
 """
 
 import re
@@ -20,6 +25,7 @@ import base64
 
 import six
 from six.moves import urllib
+
 
 if six.PY3:
     def ntob(n, encoding='ISO-8859-1'):
