@@ -13,6 +13,8 @@ v15+dev
   - ``cherrypy._cprequest.Request.body_params`` deprecated in favor of
     py:attr:`cherrypy._cprequest.RequestBody.params`
 
+* :issue:`1377`: In _cp_native server, set ``req.status`` using bytes.
+
 v15.0.0
 -------
 
