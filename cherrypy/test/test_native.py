@@ -1,4 +1,4 @@
-"""Docstring."""
+"""Test the native server."""
 
 import pytest
 from requests_toolbelt import sessions
