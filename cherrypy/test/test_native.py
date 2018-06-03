@@ -8,7 +8,7 @@ import cherrypy._cpnative_server
 
 pytestmark = pytest.mark.skipif(
     'sys.platform == "win32"',
-    reason="tests fail on Windows",
+    reason='tests fail on Windows',
 )
 
 
