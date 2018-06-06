@@ -408,10 +408,10 @@ def tee_output():
         # Save the cache data, but only if the body isn't empty.
         # e.g. a 304 Not Modified on a static file response will
         # have an empty body.
-        # If the body is empty, delete the cache, because it
-        # contains a stale Threading._Event object that stall
-        # consecutive requests until it's timed out.
-        # If the body is empty, delete the cache, but why?
+        # If the body is empty, delete the cache because it
+        # contains a stale Threading._Event object that will
+        # stall all consecutive requests until the _Event times
+        # out
         body = b''.join(output)
         if not body:
             cherrypy._cache.delete()
