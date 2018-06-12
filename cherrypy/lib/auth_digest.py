@@ -191,7 +191,7 @@ class HttpDigestAuthorization(object):
         items = parse_http_list(params)
         paramsd = parse_keqv_list(items)
         paramsd = {
-            k: unquote_to_bytes(v)
+            k: unquote_to_bytes(v) if k != "uri" else v
             for k, v in paramsd.items()
         }
         paramsd = _try_decode_map_values(paramsd, accept_charset)
