@@ -25,7 +25,6 @@ repos:
     #-   id: check-docstring-first
     -   id: check-json
         include: .mention-bot
-    -   id: pretty-format-json
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
