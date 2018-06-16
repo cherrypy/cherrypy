@@ -55,7 +55,7 @@ _base_envs:
   before_cache:
   - brew --cache
   script:
-  - travis_retry tox
+  - travis_retry python -m tox
 - &pure_python_base
   <<: *stage_test
   python: &mainstream_python 3.6
@@ -154,9 +154,10 @@ cache:
   - $HOME/.cache/pre-commit
   - $HOME/Library/Caches/Homebrew
 install:
-- pip install tox "setuptools>=28.2"
+- python -m pip install tox "setuptools>=28.2"
+- python -m tox --notest  # Pre-populate a virtualenv with dependencies
 script:
-- tox
+- python -m tox
 after_failure:
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns
