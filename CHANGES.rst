@@ -1,4 +1,4 @@
-v15+dev
+v16.0.0
 -------
 
 * :issue:`1688`: Removed  ``basic_auth`` and ``digest_auth`` tools and
@@ -14,6 +14,13 @@ v15+dev
     py:attr:`cherrypy._cprequest.RequestBody.params`
 
 * :issue:`1377`: In _cp_native server, set ``req.status`` using bytes.
+
+* :issue:`1697`: Fixed error on Python 3.7 with AutoReloader when
+  ``__file__`` is None.
+
+* :issue:`1713`: Fix warning emitted during test run.
+
+* :issue:`1370`: Fail with HTTP 400 for invalid headers.
 
 v15.0.0
 -------
