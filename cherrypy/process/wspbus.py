@@ -375,23 +375,9 @@ class Bus(object):
         else:
             states = [state]
 
-        def _wait():
-            while self.state not in states:
-                time.sleep(interval)
-                self.publish(channel)
-
-        # From http://psyco.sourceforge.net/psycoguide/bugs.html:
-        # "The compiled machine code does not include the regular polling
-        # done by Python, meaning that a KeyboardInterrupt will not be
-        # detected before execution comes back to the regular Python
-        # interpreter. Your program cannot be interrupted if caught
-        # into an infinite Psyco-compiled loop."
-        try:
-            sys.modules['psyco'].cannotcompile(_wait)
-        except (KeyError, AttributeError):
-            pass
-
-        _wait()
+        while self.state not in states:
+            time.sleep(interval)
+            self.publish(channel)
 
     def _do_execv(self):
         """Re-execute the current process.
