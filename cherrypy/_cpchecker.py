@@ -44,7 +44,7 @@ class Checker(object):
                 warnings.formatwarning = oldformatwarning
 
     def formatwarning(self, message, category, filename, lineno, line=None):
-        """Function to format a warning."""
+        """Format a warning."""
         return 'CherryPy Checker:\n%s\n\n' % message
 
     # This value should be set inside _cpconfig.

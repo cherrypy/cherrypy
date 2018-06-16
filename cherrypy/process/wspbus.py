@@ -249,7 +249,7 @@ class Bus(object):
         return output
 
     def _clean_exit(self):
-        """An atexit handler which asserts the Bus is not running."""
+        """Assert that the Bus is not running in atexit handler callback."""
         if self.state != states.EXITING:
             warnings.warn(
                 'The main thread is exiting, but the Bus is in the %r state; '

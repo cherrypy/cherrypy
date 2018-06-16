@@ -133,7 +133,7 @@ setup_params = dict(
 
 
 def main():
-    """Package installation entry point."""
+    """Run setup as a package installation entry point."""
     setuptools.setup(**setup_params)
 
 

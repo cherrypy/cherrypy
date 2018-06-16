@@ -28,7 +28,7 @@ class Server(ServerAdapter):
     _socket_host = '127.0.0.1'
 
     @property
-    def socket_host(self):
+    def socket_host(self):  # noqa: D401; irrelevant for properties
         """The hostname or IP address on which to listen for connections.
 
         Host values may be any IPv4 or IPv6 address, or any valid hostname.
