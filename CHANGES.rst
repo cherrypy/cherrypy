@@ -13,6 +13,8 @@ v16.0.0
   - ``cherrypy._cprequest.Request.body_params`` deprecated in favor of
     py:attr:`cherrypy._cprequest.RequestBody.params`
 
+* :issue:`1377`: In _cp_native server, set ``req.status`` using bytes.
+
 * :issue:`1697`: Fixed error on Python 3.7 with AutoReloader when
   ``__file__`` is None.
 

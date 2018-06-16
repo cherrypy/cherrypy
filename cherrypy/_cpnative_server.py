@@ -95,7 +95,7 @@ class NativeGateway(cheroot.server.Gateway):
         req = self.req
 
         # Set response status
-        req.status = str(status or '500 Server Error')
+        req.status = status or b'500 Server Error'
 
         # Set response headers
         for header, value in headers:

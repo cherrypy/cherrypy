@@ -86,6 +86,7 @@ extras_require = {
         'pytest-sugar',
         'backports.unittest_mock',
         'path.py',
+        'requests_toolbelt',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
