@@ -24,7 +24,6 @@ import time
 import functools
 from hashlib import md5
 
-from six.moves.urllib.parse import unquote_to_bytes
 from six.moves.urllib.request import parse_http_list, parse_keqv_list
 
 import cherrypy
@@ -142,15 +141,12 @@ def H(s):
     return md5_hex(s)
 
 
-def _try_decode_map_values(param_map, charset):
+def _try_decode_header(header, charset):
     global FALLBACK_CHARSET
 
     for enc in (charset, FALLBACK_CHARSET):
         try:
-            return {
-                k: tonative(v, enc)
-                for k, v in param_map.items()
-            }
+            return tonative(ntob(tonative(header, 'latin1'), 'latin1'), enc)
         except ValueError as ve:
             last_err = ve
     else:
@@ -183,18 +179,13 @@ class HttpDigestAuthorization(object):
         if not self.matches(auth_header):
             raise ValueError('Authorization scheme is not "Digest"')
 
-        scheme, params = auth_header.split(' ', 1)
+        self.auth_header = _try_decode_header(auth_header, accept_charset)
 
-        self.auth_header = auth_header
+        scheme, params = self.auth_header.split(' ', 1)
 
         # make a dict of the params
         items = parse_http_list(params)
         paramsd = parse_keqv_list(items)
-        paramsd = {
-            k: unquote_to_bytes(v) if k != "uri" else v
-            for k, v in paramsd.items()
-        }
-        paramsd = _try_decode_map_values(paramsd, accept_charset)
 
         self.realm = paramsd.get('realm')
         self.username = paramsd.get('username')
