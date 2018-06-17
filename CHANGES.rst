@@ -1,3 +1,10 @@
+v16.0.1
+-------
+
+* :issue:`1719`: Digest-auth tool will now return a status
+  code of 401 for when a scheme other than 'digest' is
+  indicated.
+
 v16.0.0
 -------
 
