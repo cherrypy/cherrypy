@@ -403,7 +403,9 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
 
     auth_header = request.headers.get('authorization')
     nonce_is_stale = False
-    if auth_header is not None:
+
+    try:
+        assert auth_header is not None
         msg = 'The Authorization header could not be parsed.'
         with cherrypy.HTTPError.handle(ValueError, 400, msg):
             auth = HttpDigestAuthorization(
@@ -414,35 +416,41 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         if debug:
             TRACE(str(auth))
 
-        if auth.validate_nonce(realm, key):
-            ha1 = get_ha1(realm, auth.username)
-            if ha1 is not None:
-                # note that for request.body to be available we need to
-                # hook in at before_handler, not on_start_resource like
-                # 3.1.x digest_auth does.
-                digest = auth.request_digest(ha1, entity_body=request.body)
-                if digest == auth.response:  # authenticated
-                    if debug:
-                        TRACE('digest matches auth.response')
-                    # Now check if nonce is stale.
-                    # The choice of ten minutes' lifetime for nonce is somewhat
-                    # arbitrary
-                    nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
-                    if not nonce_is_stale:
-                        request.login = auth.username
-                        if debug:
-                            TRACE('authentication of %s successful' %
-                                  auth.username)
-                        return
+        assert auth.validate_nonce(realm, key)
 
-    # Respond with 401 status and a WWW-Authenticate header
-    header = www_authenticate(
-        realm, key,
-        stale=nonce_is_stale,
-        accept_charset=accept_charset,
-    )
-    if debug:
-        TRACE(header)
-    cherrypy.serving.response.headers['WWW-Authenticate'] = header
-    raise cherrypy.HTTPError(
-        401, 'You are not authorized to access that resource')
+        ha1 = get_ha1(realm, auth.username)
+
+        assert ha1 is not None
+
+        # note that for request.body to be available we need to
+        # hook in at before_handler, not on_start_resource like
+        # 3.1.x digest_auth does.
+        digest = auth.request_digest(ha1, entity_body=request.body)
+        assert digest == auth.response
+
+        # authenticated
+        if debug:
+            TRACE('digest matches auth.response')
+        # Now check if nonce is stale.
+        # The choice of ten minutes' lifetime for nonce is somewhat
+        # arbitrary
+        nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
+        assert not nonce_is_stale
+
+        request.login = auth.username
+        if debug:
+            TRACE('authentication of %s successful' %
+                  auth.username)
+
+    except AssertionError:
+        # Respond with 401 status and a WWW-Authenticate header
+        header = www_authenticate(
+            realm, key,
+            stale=nonce_is_stale,
+            accept_charset=accept_charset,
+        )
+        if debug:
+            TRACE(header)
+        cherrypy.serving.response.headers['WWW-Authenticate'] = header
+        raise cherrypy.HTTPError(
+            401, 'You are not authorized to access that resource')
