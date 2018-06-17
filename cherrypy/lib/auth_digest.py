@@ -163,8 +163,15 @@ class HttpDigestAuthorization(object):
     re-calculation of the digest.
     """
 
+    scheme = 'digest'
+
     def errmsg(self, s):
         return 'Digest Authorization header: %s' % s
+
+    @classmethod
+    def matches(cls, header):
+        scheme, _, _ = header.partition(' ')
+        return scheme.lower() == cls.scheme
 
     def __init__(
         self, auth_header, http_method,
@@ -172,10 +179,11 @@ class HttpDigestAuthorization(object):
     ):
         self.http_method = http_method
         self.debug = debug
-        scheme, params = auth_header.split(' ', 1)
-        self.scheme = scheme.lower()
-        if self.scheme != 'digest':
+
+        if not self.matches(auth_header):
             raise ValueError('Authorization scheme is not "Digest"')
+
+        scheme, params = auth_header.split(' ', 1)
 
         self.auth_header = auth_header
 
@@ -407,8 +415,9 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     respond_401 = functools.partial(
         _respond_401, realm, key, accept_charset, debug)
 
-    if auth_header is None:
+    if not HttpDigestAuthorization.matches(auth_header or ''):
         respond_401()
+
     msg = 'The Authorization header could not be parsed.'
     with cherrypy.HTTPError.handle(ValueError, 400, msg):
         auth = HttpDigestAuthorization(
