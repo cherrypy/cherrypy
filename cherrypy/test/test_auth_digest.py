@@ -120,3 +120,10 @@ class DigestAuthTest(helper.CPWebCase):
         assert self.body == ntob(
             "Hello йюзер, you've been authorized.", 'utf-8',
         )
+
+    def test_wrong_scheme(self):
+        basic_auth = {
+            'Authorization': 'Basic foo:bar',
+        }
+        self.getPage('/digest/', headers=list(basic_auth.items()))
+        assert self.status_code == 401
