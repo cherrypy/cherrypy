@@ -445,8 +445,7 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
 
     request.login = auth.username
     if debug:
-        TRACE('authentication of %s successful' %
-              auth.username)
+        TRACE('authentication of %s successful' % auth.username)
 
 
 def _respond_401(realm, key, accept_charset, debug, **kwargs):
