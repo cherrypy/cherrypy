@@ -21,6 +21,7 @@ of plaintext passwords as the credentials store::
 """
 
 import time
+import functools
 from hashlib import md5
 
 from six.moves.urllib.parse import unquote_to_bytes
@@ -402,10 +403,12 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     request = cherrypy.serving.request
 
     auth_header = request.headers.get('authorization')
-    nonce_is_stale = False
+
+    respond_401 = functools.partial(
+        _respond_401, realm, key, accept_charset, debug)
 
     if auth_header is None:
-        _respond_401(realm, key, accept_charset, debug, nonce_is_stale)
+        respond_401()
     msg = 'The Authorization header could not be parsed.'
     with cherrypy.HTTPError.handle(ValueError, 400, msg):
         auth = HttpDigestAuthorization(
@@ -417,19 +420,19 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         TRACE(str(auth))
 
     if not auth.validate_nonce(realm, key):
-        _respond_401(realm, key, accept_charset, debug, nonce_is_stale)
+        respond_401()
 
     ha1 = get_ha1(realm, auth.username)
 
     if ha1 is None:
-        _respond_401(realm, key, accept_charset, debug, nonce_is_stale)
+        respond_401()
 
     # note that for request.body to be available we need to
     # hook in at before_handler, not on_start_resource like
     # 3.1.x digest_auth does.
     digest = auth.request_digest(ha1, entity_body=request.body)
     if digest != auth.response:
-        _respond_401(realm, key, accept_charset, debug, nonce_is_stale)
+        respond_401()
 
     # authenticated
     if debug:
@@ -437,9 +440,8 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     # Now check if nonce is stale.
     # The choice of ten minutes' lifetime for nonce is somewhat
     # arbitrary
-    nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
-    if nonce_is_stale:
-        _respond_401(realm, key, accept_charset, debug, nonce_is_stale)
+    if auth.is_nonce_stale(max_age_seconds=600):
+        respond_401(stale=True)
 
     request.login = auth.username
     if debug:
@@ -447,14 +449,14 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
               auth.username)
 
 
-def _respond_401(realm, key, accept_charset, debug, stale):
+def _respond_401(realm, key, accept_charset, debug, **kwargs):
     """
     Respond with 401 status and a WWW-Authenticate header
     """
     header = www_authenticate(
         realm, key,
-        stale=stale,
         accept_charset=accept_charset,
+        **kwargs
     )
     if debug:
         TRACE(header)
