@@ -21,7 +21,6 @@ and their .encode/.decode methods as needed.
 import re
 import sys
 import threading
-import base64
 
 import six
 from six.moves import urllib
@@ -92,12 +91,6 @@ else:
 def assert_native(n):
     if not isinstance(n, str):
         raise TypeError('n must be a native str (got %s)' % type(n).__name__)
-
-
-def base64_decode(n, encoding='ISO-8859-1'):
-    """Return the native string base64-decoded (as a native string)."""
-    decoded = base64.decodestring(n.encode('ascii'))
-    return tonative(decoded, encoding)
 
 
 # Some platforms don't expose HTTPSConnection, so handle it separately
