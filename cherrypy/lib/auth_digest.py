@@ -156,10 +156,10 @@ def _try_decode_map_values(param_map, charset):
         raise last_err
 
 
-class HttpDigestAuthorization (object):
-
-    """Class to parse a Digest Authorization header and perform re-calculation
-    of the digest.
+class HttpDigestAuthorization(object):
+    """
+    Parses a Digest Authorization header and performs
+    re-calculation of the digest.
     """
 
     def errmsg(self, s):
@@ -373,7 +373,7 @@ def www_authenticate(
 
 
 def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
-    """A CherryPy tool which hooks at before_handler to perform
+    """A CherryPy tool that hooks at before_handler to perform
     HTTP Digest Access Authentication, as specified in :rfc:`2617`.
 
     If the request has an 'authorization' header with a 'Digest' scheme,
@@ -386,7 +386,7 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         A string containing the authentication realm.
 
     get_ha1
-        A callable which looks up a username in a credentials store
+        A callable that looks up a username in a credentials store
         and returns the HA1 string, which is defined in the RFC to be
         MD5(username : realm : password).  The function's signature is:
         ``get_ha1(realm, username)``
