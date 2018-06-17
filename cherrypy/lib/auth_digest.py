@@ -405,7 +405,8 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     nonce_is_stale = False
 
     try:
-        assert auth_header is not None
+        if auth_header is None:
+            raise AssertionError()
         msg = 'The Authorization header could not be parsed.'
         with cherrypy.HTTPError.handle(ValueError, 400, msg):
             auth = HttpDigestAuthorization(
@@ -416,17 +417,20 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         if debug:
             TRACE(str(auth))
 
-        assert auth.validate_nonce(realm, key)
+        if not auth.validate_nonce(realm, key):
+            raise AssertionError()
 
         ha1 = get_ha1(realm, auth.username)
 
-        assert ha1 is not None
+        if ha1 is None:
+            raise AssertionError()
 
         # note that for request.body to be available we need to
         # hook in at before_handler, not on_start_resource like
         # 3.1.x digest_auth does.
         digest = auth.request_digest(ha1, entity_body=request.body)
-        assert digest == auth.response
+        if digest != auth.response:
+            raise AssertionError()
 
         # authenticated
         if debug:
@@ -435,7 +439,8 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         # The choice of ten minutes' lifetime for nonce is somewhat
         # arbitrary
         nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
-        assert not nonce_is_stale
+        if nonce_is_stale:
+            raise AssertionError()
 
         request.login = auth.username
         if debug:
