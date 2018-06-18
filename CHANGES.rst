@@ -4,9 +4,6 @@ v16.0.2
 * :issue:`1716`: Fixed handling of url-encoded parameters in
   digest authentication handling, correcting regression in v14.2.0.
 
-v16.0.1
--------
-
 * :issue:`1719`: Digest-auth tool will now return a status
   code of 401 for when a scheme other than 'digest' is
   indicated.
