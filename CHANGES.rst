@@ -1,3 +1,9 @@
+v16.0.2
+-------
+
+* :issue:`1716`: Fixed handling of url-encoded parameters in
+  digest authentication handling, correcting regression in v14.2.0.
+
 v16.0.1
 -------
 
