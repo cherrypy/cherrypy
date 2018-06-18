@@ -13,7 +13,7 @@ from cherrypy.test import helper
 
 
 def _fetch_users():
-    return {'test': 'test', 'йюзер': 'їпароль'}
+    return {'test': 'test', '☃йюзер': 'їпароль'}
 
 
 get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
@@ -120,10 +120,10 @@ class DigestAuthTest(helper.CPWebCase):
         assert self.body == b"Hello test, you've been authorized."
 
     def test_unicode_user(self):
-        self._test_parametric_digest(username='йюзер', realm='localhost')
+        self._test_parametric_digest(username='☃йюзер', realm='localhost')
         assert self.status == '200 OK'
         assert self.body == ntob(
-            "Hello йюзер, you've been authorized.", 'utf-8',
+            "Hello ☃йюзер, you've been authorized.", 'utf-8',
         )
 
     def test_wrong_scheme(self):
