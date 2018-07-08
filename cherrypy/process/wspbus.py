@@ -469,7 +469,7 @@ class Bus(object):
 
             try:
                 c_ind = _argv.index('-c')
-                if m_ind < argv_len - 1 and _argv[c_ind + 1] == '-c':
+                if c_ind < argv_len - 1 and _argv[c_ind + 1] == '-c':
                     is_command = True
             except (IndexError, ValueError):
                 c_ind = None
