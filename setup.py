@@ -55,15 +55,10 @@ packages = [
     'cherrypy.scaffold',
 ]
 
-# install requirements must not contain namespace
-# packages. See #1673
 install_requires = [
     'six>=1.11.0',
     'cheroot>=6.2.4',
     'portend>=2.1.1',
-
-    # temporary workaround for #1722
-    'tempora<1.13',
 ]
 
 extras_require = {
@@ -90,7 +85,6 @@ extras_require = {
         'backports.unittest_mock',
         'path.py',
         'requests_toolbelt',
-        'jaraco.packaging',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],

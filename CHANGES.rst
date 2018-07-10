@@ -1,3 +1,11 @@
+v17.0.0
+-------
+
+* :issue:`1673`: CherryPy now allows namespace packages for
+  its dependencies. Environments that cannot handle namespace
+  packgaes like py2exe will need to add such support or pin to
+  older CherryPy versions.
+
 v16.0.3
 -------
 
