@@ -1,3 +1,9 @@
+v16.0.3
+-------
+
+* :issue:`1722`: Pinned the ``tempora`` dependency against
+  version 1.13 to avoid pulling in namespace packages.
+
 v16.0.2
 -------
 
