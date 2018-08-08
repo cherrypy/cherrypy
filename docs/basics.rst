@@ -903,4 +903,4 @@ You can also use a file to configure it:
            return "Hello World!"
 
     if __name__ == '__main__':
-        cherrypy.quickstart(HelloWorld(), '/', app.conf)
+        cherrypy.quickstart(HelloWorld(), '/', "app.conf")
