@@ -20,9 +20,9 @@ _base_envs:
 - &pyenv_base
   <<: *stage_test
   language: generic
-  python: &pypy2 pypy2.7-5.8.0
+  python: &pypy2 pypy2.7-5.10.0
   env:
-  - PYTHON_VERSION=pypy2.7-5.8.0
+  - PYTHON_VERSION=pypy2.7-5.10.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   before_install:
@@ -45,15 +45,17 @@ _base_envs:
   language: generic
   before_install:
   - brew update
-  - brew install readline xz
-  - *ensure_pyenv_installed
+  - brew install pyenv || brew upgrade pyenv
+  - &ensure_pyenv_preloaded |
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
   - *install_python
   - *switch_python
   - *python_version
   before_cache:
   - brew --cache
   script:
-  - travis_retry tox
+  - travis_retry python -m tox
 - &pure_python_base
   <<: *stage_test
   python: &mainstream_python 3.6
@@ -68,7 +70,7 @@ python:
 - 3.4
 - 3.7-dev
 - *pypy2
-- &pypy3 pypy3.5-5.8.0
+- &pypy3 pypy3.5-5.10.0
 jobs:
   fast_finish: true
   allow_failures:
@@ -150,9 +152,10 @@ cache:
   - $HOME/.cache/pre-commit
   - $HOME/Library/Caches/Homebrew
 install:
-- pip install tox "setuptools>=28.2"
+- python -m pip install tox "setuptools>=28.2"
+- python -m tox --notest  # Pre-populate a virtualenv with dependencies
 script:
-- tox
+- python -m tox
 after_failure:
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns

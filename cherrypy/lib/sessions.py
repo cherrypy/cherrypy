@@ -128,14 +128,16 @@ class Session(object):
     id_observers = None
     "A list of callbacks to which to pass new id's."
 
-    def _get_id(self):
+    @property
+    def id(self):
+        """Return the current session id."""
         return self._id
 
-    def _set_id(self, value):
+    @id.setter
+    def id(self, value):
         self._id = value
         for o in self.id_observers:
             o(value)
-    id = property(_get_id, _set_id, doc='The current session ID.')
 
     timeout = 60
     'Number of minutes after which to delete session data.'

@@ -1,3 +1,91 @@
+v17.0.0
+-------
+
+* :issue:`1673`: CherryPy now allows namespace packages for
+  its dependencies. Environments that cannot handle namespace
+  packgaes like py2exe will need to add such support or pin to
+  older CherryPy versions.
+
+v16.0.3
+-------
+
+* :issue:`1722`: Pinned the ``tempora`` dependency against
+  version 1.13 to avoid pulling in namespace packages.
+
+v16.0.2
+-------
+
+* :issue:`1716`: Fixed handling of url-encoded parameters in
+  digest authentication handling, correcting regression in v14.2.0.
+
+* :issue:`1719`: Digest-auth tool will now return a status
+  code of 401 for when a scheme other than 'digest' is
+  indicated.
+
+v16.0.0
+-------
+
+* :issue:`1688`: Removed  ``basic_auth`` and ``digest_auth`` tools and
+  the ``httpauth`` module, which have been officially deprecated earlier
+  in v14.0.0.
+
+* Removed deprecated properties::
+
+  - ``cherrypy._cpreqbody.Entity.type`` deprecated in favor of
+    :py:attr:`cherrypy._cpreqbody.Entity.content_type`
+
+  - ``cherrypy._cprequest.Request.body_params`` deprecated in favor of
+    py:attr:`cherrypy._cprequest.RequestBody.params`
+
+* :issue:`1377`: In _cp_native server, set ``req.status`` using bytes.
+
+* :issue:`1697`: Fixed error on Python 3.7 with AutoReloader when
+  ``__file__`` is None.
+
+* :issue:`1713`: Fix warning emitted during test run.
+
+* :issue:`1370`: Fail with HTTP 400 for invalid headers.
+
+v15.0.0
+-------
+
+* :issue:`1708`: Removed components from webtest that were
+  removed in the refactoring of cheroot.test.webtest for
+  cheroot 6.1.0.
+
+v14.2.0
+-------
+
+* :issue:`1680` via :pr:`1683`: Basic Auth and Digest Auth
+  tools now support :rfc:`7617` UTF-8 charset decoding where
+  possible, using latin-1 as a fallback.
+
+v14.1.0
+-------
+
+* :cr-pr:`37`: Add support for peercreds lookup over UNIX domain socket.
+  This enables app to automatically identify "who's on the other
+  end of the wire".
+
+  This is how you enable it::
+
+    server.peercreds: True
+    server.peercreds_resolve: True
+
+  The first option will put remote numeric data to WSGI env vars:
+  app's PID, user's id and group.
+
+  Second option will resolve that into user and group names.
+
+  To prevent expensive syscalls, data is cached on per connection
+  basis.
+
+v14.0.1
+-------
+
+* :issue:`1700`: Improve windows pywin32 dependency declaration via
+  conditional extras.
+
 v14.0.0
 -------
 
@@ -236,7 +324,7 @@ v8.6.0
 
 * :issue:`1538` and :issue:`1090`: Removed cruft from the setup script and
   instead rely on `include_package_data
-  <http://setuptools.readthedocs.io/en/latest/setuptools.html?highlight=include_package_data#new-and-changed-setup-keywords>`_
+  <https://setuptools.readthedocs.io/en/latest/setuptools.html?highlight=include_package_data#new-and-changed-setup-keywords>`_
   to ensure the relevant files are included in the package.
   Note, this change does cause LICENSE.md no longer to
   be included in the installed package.

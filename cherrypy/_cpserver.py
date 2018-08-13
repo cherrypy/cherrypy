@@ -27,26 +27,26 @@ class Server(ServerAdapter):
 
     _socket_host = '127.0.0.1'
 
-    def _get_socket_host(self):
-        return self._socket_host
-
-    def _set_socket_host(self, value):
-        if value == '':
-            raise ValueError("The empty string ('') is not an allowed value. "
-                             "Use '0.0.0.0' instead to listen on all active "
-                             'interfaces (INADDR_ANY).')
-        self._socket_host = value
-    socket_host = property(
-        _get_socket_host,
-        _set_socket_host,
-        doc="""The hostname or IP address on which to listen for connections.
+    @property
+    def socket_host(self):  # noqa: D401; irrelevant for properties
+        """The hostname or IP address on which to listen for connections.
 
         Host values may be any IPv4 or IPv6 address, or any valid hostname.
         The string 'localhost' is a synonym for '127.0.0.1' (or '::1', if
         your hosts file prefers IPv6). The string '0.0.0.0' is a special
         IPv4 entry meaning "any active interface" (INADDR_ANY), and '::'
         is the similar IN6ADDR_ANY for IPv6. The empty string or None are
-        not allowed.""")
+        not allowed.
+        """
+        return self._socket_host
+
+    @socket_host.setter
+    def socket_host(self, value):
+        if value == '':
+            raise ValueError("The empty string ('') is not an allowed value. "
+                             "Use '0.0.0.0' instead to listen on all active "
+                             'interfaces (INADDR_ANY).')
+        self._socket_host = value
 
     socket_file = None
     """If given, the name of the UNIX socket to use instead of TCP/IP.
@@ -147,6 +147,24 @@ class Server(ServerAdapter):
     protocol by adding custom classes to the cheroot.server.wsgi_gateways dict.
     """
 
+    peercreds = False
+    """If True, peer cred lookup for UNIX domain socket will put to WSGI env.
+
+    This information will then be available through WSGI env vars:
+    * X_REMOTE_PID
+    * X_REMOTE_UID
+    * X_REMOTE_GID
+    """
+
+    peercreds_resolve = False
+    """If True, username/group will be looked up in the OS from peercreds.
+
+    This information will then be available through WSGI env vars:
+    * REMOTE_USER
+    * X_REMOTE_USER
+    * X_REMOTE_GROUP
+    """
+
     def __init__(self):
         """Initialize Server instance."""
         self.bus = cherrypy.engine
@@ -173,14 +191,20 @@ class Server(ServerAdapter):
         super(Server, self).start()
     start.priority = 75
 
-    def _get_bind_addr(self):
+    @property
+    def bind_addr(self):
+        """Return bind address.
+
+        A (host, port) tuple for TCP sockets or a str for Unix domain sockts.
+        """
         if self.socket_file:
             return self.socket_file
         if self.socket_host is None and self.socket_port is None:
             return None
         return (self.socket_host, self.socket_port)
 
-    def _set_bind_addr(self, value):
+    @bind_addr.setter
+    def bind_addr(self, value):
         if value is None:
             self.socket_file = None
             self.socket_host = None
@@ -197,11 +221,6 @@ class Server(ServerAdapter):
                 raise ValueError('bind_addr must be a (host, port) tuple '
                                  '(for TCP sockets) or a string (for Unix '
                                  'domain sockets), not %r' % value)
-    bind_addr = property(
-        _get_bind_addr,
-        _set_bind_addr,
-        doc='A (host, port) tuple for TCP sockets or '
-            'a str for Unix domain sockets.')
 
     def base(self):
         """Return the base for this server.

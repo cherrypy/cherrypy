@@ -26,13 +26,14 @@ sphinx/source/_build
 
 # Py.test
 /.cache/
+/.pytest_cache/
 
 # Eclipse, PyDev
 .project
 .pydevproject
 
 # test results in junit format for Appveyor
-/junit-test-results.xml
+/.test-results/pytest/results.xml
 
 # coverage results
 /.coverage

@@ -233,10 +233,13 @@ class DropPrivileges(SimplePlugin):
         self.gid = gid
         self.umask = umask
 
-    def _get_uid(self):
+    @property
+    def uid(self):
+        """The uid under which to run. Availability: Unix."""
         return self._uid
 
-    def _set_uid(self, val):
+    @uid.setter
+    def uid(self, val):
         if val is not None:
             if pwd is None:
                 self.bus.log('pwd module not available; ignoring uid.',
@@ -245,13 +248,14 @@ class DropPrivileges(SimplePlugin):
             elif isinstance(val, text_or_bytes):
                 val = pwd.getpwnam(val)[2]
         self._uid = val
-    uid = property(_get_uid, _set_uid,
-                   doc='The uid under which to run. Availability: Unix.')
 
-    def _get_gid(self):
+    @property
+    def gid(self):
+        """The gid under which to run. Availability: Unix."""
         return self._gid
 
-    def _set_gid(self, val):
+    @gid.setter
+    def gid(self, val):
         if val is not None:
             if grp is None:
                 self.bus.log('grp module not available; ignoring gid.',
@@ -260,13 +264,18 @@ class DropPrivileges(SimplePlugin):
             elif isinstance(val, text_or_bytes):
                 val = grp.getgrnam(val)[2]
         self._gid = val
-    gid = property(_get_gid, _set_gid,
-                   doc='The gid under which to run. Availability: Unix.')
 
-    def _get_umask(self):
+    @property
+    def umask(self):
+        """The default permission mode for newly created files and directories.
+
+        Usually expressed in octal format, for example, ``0644``.
+        Availability: Unix, Windows.
+        """
         return self._umask
 
-    def _set_umask(self, val):
+    @umask.setter
+    def umask(self, val):
         if val is not None:
             try:
                 os.umask
@@ -275,15 +284,6 @@ class DropPrivileges(SimplePlugin):
                              level=30)
                 val = None
         self._umask = val
-    umask = property(
-        _get_umask,
-        _set_umask,
-        doc="""The default permission mode for newly created files and
-        directories.
-
-        Usually expressed in octal format, for example, ``0644``.
-        Availability: Unix, Windows.
-        """)
 
     def start(self):
         # uid/gid
@@ -627,26 +627,40 @@ class Autoreloader(Monitor):
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
-        files = set()
-        for k, m in list(sys.modules.items()):
-            if not re.match(self.match, k):
-                continue
+        search_mod_names = filter(re.compile(self.match).match, sys.modules)
+        mods = map(sys.modules.get, search_mod_names)
+        return set(filter(None, map(self._file_for_module, mods)))
 
-            try:
-                f = m.__loader__.archive
-            except AttributeError:
-                try:
-                    f = m.__file__
-                    if not os.path.isabs(f):
-                        # ensure absolute paths so a os.chdir() in the app
-                        # doesn't break me
-                        f = os.path.normpath(
-                            os.path.join(_module__file__base, f)
-                        )
-                except AttributeError:
-                    continue
-            files.add(f)
-        return files
+    @classmethod
+    def _file_for_module(cls, module):
+        """Return the relevant file for the module."""
+        return (
+            cls._archive_for_zip_module(module)
+            or cls._file_for_file_module(module)
+        )
+
+    @staticmethod
+    def _archive_for_zip_module(module):
+        """Return the archive filename for the module if relevant."""
+        try:
+            return module.__loader__.archive
+        except AttributeError:
+            pass
+
+    @classmethod
+    def _file_for_file_module(cls, module):
+        """Return the file for the module."""
+        try:
+            return module.__file__ and cls._make_absolute(module.__file__)
+        except AttributeError:
+            pass
+
+    @staticmethod
+    def _make_absolute(filename):
+        """Ensure filename is absolute to avoid effect of os.chdir."""
+        return filename if os.path.isabs(filename) else (
+            os.path.normpath(os.path.join(_module__file__base, filename))
+        )
 
     def run(self):
         """Reload the process if registered files have been modified."""

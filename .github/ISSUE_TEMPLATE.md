@@ -4,7 +4,7 @@
 Thanks for filing an issue!  Please keep keep issues limited to bug reports,
 feature requests, and other general issues. For support questions, please feel
 free to reach out on stackoverflow:
-http://stackoverflow.com/questions/tagged/cherrypy
+https://stackoverflow.com/questions/tagged/cherrypy
 
 **** /DELETE THIS BLOCK ****  
 -->
@@ -22,7 +22,7 @@ http://stackoverflow.com/questions/tagged/cherrypy
 
 
 
-* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem**.
+* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
 
 
 

@@ -44,7 +44,9 @@ classifiers = [
 ]
 author = 'CherryPy Team'
 author_email = 'team@cherrypy.org'
-url = 'http://www.cherrypy.org'
+url = 'https://www.cherrypy.org'
+repo_slug = 'cherrypy/{}'.format(name)
+repo_url = 'https://github.com/{}'.format(repo_slug)
 cp_license = 'BSD'
 packages = [
     'cherrypy', 'cherrypy.lib',
@@ -53,11 +55,9 @@ packages = [
     'cherrypy.scaffold',
 ]
 
-# install requirements must not contain namespace
-# packages. See #1673
 install_requires = [
     'six>=1.11.0',
-    'cheroot>=5.9.1',
+    'cheroot>=6.2.4',
     'portend>=2.1.1',
 ]
 
@@ -84,13 +84,15 @@ extras_require = {
         'pytest-sugar',
         'backports.unittest_mock',
         'path.py',
+        'requests_toolbelt',
     ],
     # Enables memcached session support via `cherrypy[memcached_session]`:
     'memcached_session': ['python-memcached>=1.58'],
     'xcgi': ['flup'],
 
-    # http://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-    ':sys_platform == "win32"': ['pypiwin32'],
+    # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
+    ':sys_platform == "win32" and python_version != "3.4"': ['pywin32'],
+    ':sys_platform == "win32" and python_version == "3.4"': ['pypiwin32==219'],
 }
 """Feature flags end-users can use in dependencies"""
 
@@ -107,6 +109,14 @@ setup_params = dict(
     author=author,
     author_email=author_email,
     url=url,
+    project_urls={
+        'CI: AppVeyor': 'https://ci.appveyor.com/project/{}'.format(repo_slug),
+        'CI: Travis': 'https://travis-ci.org/{}'.format(repo_slug),
+        'CI: Circle': 'https://circleci.com/gh/{}'.format(repo_slug),
+        'Docs: RTD': 'https://docs.cherrypy.org',
+        'GitHub: issues': '{}/issues'.format(repo_url),
+        'GitHub: repo': repo_url,
+    },
     license=cp_license,
     packages=packages,
     entry_points={'console_scripts': ['cherryd = cherrypy.__main__:run']},
@@ -121,7 +131,7 @@ setup_params = dict(
 
 
 def main():
-    """Package installation entry point."""
+    """Run setup as a package installation entry point."""
     setuptools.setup(**setup_params)
 
 

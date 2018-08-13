@@ -338,20 +338,21 @@ class LogManager(object):
         elif h:
             log.handlers.remove(h)
 
-    def _get_screen(self):
+    @property
+    def screen(self):
+        """Turn stderr/stdout logging on or off.
+
+        If you set this to True, it'll add the appropriate StreamHandler for
+        you. If you set it to False, it will remove the handler.
+        """
         h = self._get_builtin_handler
         has_h = h(self.error_log, 'screen') or h(self.access_log, 'screen')
         return bool(has_h)
 
-    def _set_screen(self, newvalue):
+    @screen.setter
+    def screen(self, newvalue):
         self._set_screen_handler(self.error_log, newvalue, stream=sys.stderr)
         self._set_screen_handler(self.access_log, newvalue, stream=sys.stdout)
-    screen = property(_get_screen, _set_screen,
-                      doc="""Turn stderr/stdout logging on or off.
-
-        If you set this to True, it'll add the appropriate StreamHandler for
-        you. If you set it to False, it will remove the handler.
-        """)
 
     # -------------------------- File handlers -------------------------- #
 
@@ -376,35 +377,37 @@ class LogManager(object):
                 h.close()
                 log.handlers.remove(h)
 
-    def _get_error_file(self):
+    @property
+    def error_file(self):
+        """The filename for self.error_log.
+
+        If you set this to a string, it'll add the appropriate FileHandler for
+        you. If you set it to ``None`` or ``''``, it will remove the handler.
+        """
         h = self._get_builtin_handler(self.error_log, 'file')
         if h:
             return h.baseFilename
         return ''
 
-    def _set_error_file(self, newvalue):
+    @error_file.setter
+    def error_file(self, newvalue):
         self._set_file_handler(self.error_log, newvalue)
-    error_file = property(_get_error_file, _set_error_file,
-                          doc="""The filename for self.error_log.
+
+    @property
+    def access_file(self):
+        """The filename for self.access_log.
 
         If you set this to a string, it'll add the appropriate FileHandler for
         you. If you set it to ``None`` or ``''``, it will remove the handler.
-        """)
-
-    def _get_access_file(self):
+        """
         h = self._get_builtin_handler(self.access_log, 'file')
         if h:
             return h.baseFilename
         return ''
 
-    def _set_access_file(self, newvalue):
+    @access_file.setter
+    def access_file(self, newvalue):
         self._set_file_handler(self.access_log, newvalue)
-    access_file = property(_get_access_file, _set_access_file,
-                           doc="""The filename for self.access_log.
-
-        If you set this to a string, it'll add the appropriate FileHandler for
-        you. If you set it to ``None`` or ``''``, it will remove the handler.
-        """)
 
     # ------------------------- WSGI handlers ------------------------- #
 
@@ -419,19 +422,20 @@ class LogManager(object):
         elif h:
             log.handlers.remove(h)
 
-    def _get_wsgi(self):
-        return bool(self._get_builtin_handler(self.error_log, 'wsgi'))
-
-    def _set_wsgi(self, newvalue):
-        self._set_wsgi_handler(self.error_log, newvalue)
-    wsgi = property(_get_wsgi, _set_wsgi,
-                    doc="""Write errors to wsgi.errors.
+    @property
+    def wsgi(self):
+        """Write errors to wsgi.errors.
 
         If you set this to True, it'll add the appropriate
         :class:`WSGIErrorHandler<cherrypy._cplogging.WSGIErrorHandler>` for you
         (which writes errors to ``wsgi.errors``).
         If you set it to False, it will remove the handler.
-        """)
+        """
+        return bool(self._get_builtin_handler(self.error_log, 'wsgi'))
+
+    @wsgi.setter
+    def wsgi(self, newvalue):
+        self._set_wsgi_handler(self.error_log, newvalue)
 
 
 class WSGIErrorHandler(logging.Handler):

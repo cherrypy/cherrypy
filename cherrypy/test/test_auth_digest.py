@@ -2,11 +2,21 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:expandtab:fileencoding=utf-8
 
+import six
+
 
 import cherrypy
 from cherrypy.lib import auth_digest
+from cherrypy._cpcompat import ntob
 
 from cherrypy.test import helper
+
+
+def _fetch_users():
+    return {'test': 'test', '☃йюзер': 'їпароль'}
+
+
+get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
 
 
 class DigestAuthTest(helper.CPWebCase):
@@ -22,19 +32,16 @@ class DigestAuthTest(helper.CPWebCase):
         class DigestProtected:
 
             @cherrypy.expose
-            def index(self):
+            def index(self, *args, **kwargs):
                 return "Hello %s, you've been authorized." % (
                     cherrypy.request.login)
 
-        def fetch_users():
-            return {'test': 'test'}
-
-        get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(fetch_users())
         conf = {'/digest': {'tools.auth_digest.on': True,
                             'tools.auth_digest.realm': 'localhost',
                             'tools.auth_digest.get_ha1': get_ha1,
                             'tools.auth_digest.key': 'a565c27146791cfb',
-                            'tools.auth_digest.debug': 'True'}}
+                            'tools.auth_digest.debug': True,
+                            'tools.auth_digest.accept_charset': 'UTF-8'}}
 
         root = Root()
         root.digest = DigestProtected()
@@ -42,98 +49,86 @@ class DigestAuthTest(helper.CPWebCase):
 
     def testPublic(self):
         self.getPage('/')
-        self.assertStatus('200 OK')
+        assert self.status == '200 OK'
         self.assertHeader('Content-Type', 'text/html;charset=utf-8')
-        self.assertBody('This is public.')
+        assert self.body == b'This is public.'
 
-    def testDigest(self):
-        self.getPage('/digest/')
-        self.assertStatus(401)
+    def _test_parametric_digest(self, username, realm):
+        test_uri = '/digest/?@/=%2F%40&%f0%9f%99%88=path'
 
-        value = None
-        for k, v in self.headers:
-            if k.lower() == 'www-authenticate':
-                if v.startswith('Digest'):
-                    value = v
-                    break
+        self.getPage(test_uri)
+        assert self.status_code == 401
 
-        if value is None:
-            self._handlewebError(
-                'Digest authentification scheme was not found')
+        msg = 'Digest authentification scheme was not found'
+        www_auth_digest = tuple(filter(
+            lambda kv: kv[0].lower() == 'www-authenticate'
+            and kv[1].startswith('Digest '),
+            self.headers,
+        ))
+        assert len(www_auth_digest) == 1, msg
 
-        value = value[7:]
-        items = value.split(', ')
+        items = www_auth_digest[0][-1][7:].split(', ')
         tokens = {}
         for item in items:
             key, value = item.split('=')
             tokens[key.lower()] = value
 
-        missing_msg = '%s is missing'
-        bad_value_msg = "'%s' was expecting '%s' but found '%s'"
-        nonce = None
-        if 'realm' not in tokens:
-            self._handlewebError(missing_msg % 'realm')
-        elif tokens['realm'] != '"localhost"':
-            self._handlewebError(bad_value_msg %
-                                 ('realm', '"localhost"', tokens['realm']))
-        if 'nonce' not in tokens:
-            self._handlewebError(missing_msg % 'nonce')
-        else:
-            nonce = tokens['nonce'].strip('"')
-        if 'algorithm' not in tokens:
-            self._handlewebError(missing_msg % 'algorithm')
-        elif tokens['algorithm'] != '"MD5"':
-            self._handlewebError(bad_value_msg %
-                                 ('algorithm', '"MD5"', tokens['algorithm']))
-        if 'qop' not in tokens:
-            self._handlewebError(missing_msg % 'qop')
-        elif tokens['qop'] != '"auth"':
-            self._handlewebError(bad_value_msg %
-                                 ('qop', '"auth"', tokens['qop']))
+        assert tokens['realm'] == '"localhost"'
+        assert tokens['algorithm'] == '"MD5"'
+        assert tokens['qop'] == '"auth"'
+        assert tokens['charset'] == '"UTF-8"'
 
-        get_ha1 = auth_digest.get_ha1_dict_plain({'test': 'test'})
+        nonce = tokens['nonce'].strip('"')
 
         # Test user agent response with a wrong value for 'realm'
-        base_auth = ('Digest username="test", '
-                     'realm="wrong realm", '
+        base_auth = ('Digest username="%s", '
+                     'realm="%s", '
                      'nonce="%s", '
-                     'uri="/digest/", '
+                     'uri="%s", '
                      'algorithm=MD5, '
                      'response="%s", '
                      'qop=auth, '
                      'nc=%s, '
                      'cnonce="1522e61005789929"')
 
+        encoded_user = username
+        if six.PY3:
+            encoded_user = encoded_user.encode('utf-8')
+        encoded_user = encoded_user.decode('latin1')
         auth_header = base_auth % (
-            nonce, '11111111111111111111111111111111', '00000001')
+            encoded_user, realm, nonce, test_uri,
+            '11111111111111111111111111111111', '00000001',
+        )
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
-        ha1 = get_ha1(auth.realm, 'test')
+        ha1 = get_ha1(auth.realm, auth.username)
         response = auth.request_digest(ha1)
+        auth_header = base_auth % (
+            encoded_user, realm, nonce, test_uri,
+            response, '00000001',
+        )
+        self.getPage(test_uri, [('Authorization', auth_header)])
+
+    def test_wrong_realm(self):
         # send response with correct response digest, but wrong realm
-        auth_header = base_auth % (nonce, response, '00000001')
-        self.getPage('/digest/', [('Authorization', auth_header)])
-        self.assertStatus(401)
+        self._test_parametric_digest(username='test', realm='wrong realm')
+        assert self.status_code == 401
 
-        # Test that must pass
-        base_auth = ('Digest username="test", '
-                     'realm="localhost", '
-                     'nonce="%s", '
-                     'uri="/digest/", '
-                     'algorithm=MD5, '
-                     'response="%s", '
-                     'qop=auth, '
-                     'nc=%s, '
-                     'cnonce="1522e61005789929"')
+    def test_ascii_user(self):
+        self._test_parametric_digest(username='test', realm='localhost')
+        assert self.status == '200 OK'
+        assert self.body == b"Hello test, you've been authorized."
 
-        auth_header = base_auth % (
-            nonce, '11111111111111111111111111111111', '00000001')
-        auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
-        # calculate the response digest
-        ha1 = get_ha1('localhost', 'test')
-        response = auth.request_digest(ha1)
-        # send response with correct response digest
-        auth_header = base_auth % (nonce, response, '00000001')
-        self.getPage('/digest/', [('Authorization', auth_header)])
-        self.assertStatus('200 OK')
-        self.assertBody("Hello test, you've been authorized.")
+    def test_unicode_user(self):
+        self._test_parametric_digest(username='☃йюзер', realm='localhost')
+        assert self.status == '200 OK'
+        assert self.body == ntob(
+            "Hello ☃йюзер, you've been authorized.", 'utf-8',
+        )
+
+    def test_wrong_scheme(self):
+        basic_auth = {
+            'Authorization': 'Basic foo:bar',
+        }
+        self.getPage('/digest/', headers=list(basic_auth.items()))
+        assert self.status_code == 401

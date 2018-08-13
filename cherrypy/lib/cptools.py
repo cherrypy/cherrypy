@@ -211,8 +211,8 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
             cherrypy.log('Testing remote %r:%r' % (remote, xff), 'TOOLS.PROXY')
         if xff:
             if remote == 'X-Forwarded-For':
-                # Bug #1268
-                xff = xff.split(',')[0].strip()
+                # Grab the first IP in a comma-separated list. Ref #1268.
+                xff = next(ip.strip() for ip in xff.split(','))
             request.remote.ip = xff
 
 
