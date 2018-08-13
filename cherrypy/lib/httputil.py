@@ -21,7 +21,7 @@ from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
 from cherrypy._cpcompat import text_or_bytes
-from cherrypy._cpcompat import unquote_qs
+from cherrypy._cpcompat import unquote_plus
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -360,8 +360,8 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
             else:
                 continue
         if len(nv[1]) or keep_blank_values:
-            name = unquote_qs(nv[0], encoding)
-            value = unquote_qs(nv[1], encoding)
+            name = unquote_plus(nv[0], encoding, errors='strict')
+            value = unquote_plus(nv[1], encoding, errors='strict')
             if name in d:
                 if not isinstance(d[name], list):
                     d[name] = [d[name]]

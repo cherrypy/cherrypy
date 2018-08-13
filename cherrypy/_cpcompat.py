@@ -109,10 +109,6 @@ unquote_plus = urllib.parse.unquote_plus if six.PY3 else _unquote_plus_compat
 unquote = urllib.parse.unquote if six.PY3 else _unquote_compat
 
 
-def unquote_qs(atom, encoding, errors='strict'):
-    return unquote_plus(atom, encoding, errors)
-
-
 try:
     # Prefer simplejson
     import simplejson as json
