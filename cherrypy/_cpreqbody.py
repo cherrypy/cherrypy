@@ -472,8 +472,8 @@ class Entity(object):
                     self.filename = self.filename[1:-1]
             if 'filename*' in disp.params:
                 # @see https://tools.ietf.org/html/rfc5987
-                fn_encoding, _, filename = disp.params['filename*'].split("'")
-                self.filename = unquote_qs(filename, fn_encoding)
+                encoding, lang, filename = disp.params['filename*'].split("'")
+                self.filename = unquote_qs(filename, encoding)
 
     # The 'type' attribute is deprecated in 3.2; remove it in 3.3.
     type = property(
