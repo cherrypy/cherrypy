@@ -470,7 +470,7 @@ class Entity(object):
                     self.filename.endswith('"')
                 ):
                     self.filename = self.filename[1:-1]
-            elif 'filename*' in disp.params:
+            if 'filename*' in disp.params:
                 # @see https://tools.ietf.org/html/rfc5987
                 fn_encoding, _, filename = disp.params['filename*'].split("'")
                 self.filename = unquote_qs(filename, fn_encoding)
