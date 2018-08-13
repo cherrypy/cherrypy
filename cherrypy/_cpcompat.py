@@ -97,13 +97,20 @@ def assert_native(n):
 HTTPSConnection = getattr(six.moves.http_client, 'HTTPSConnection', None)
 
 
+def _unquote_plus_compat(string, encoding='utf-8', errors='replace'):
+    return urllib.parse.unquote_plus(string).decode(encoding, errors)
+
+
+def _unquote_compat(string, encoding='utf-8', errors='replace'):
+    return urllib.parse.unquote(string).decode(encoding, errors)
+
+
+unquote_plus = urllib.parse.unquote_plus if six.PY3 else _unquote_plus_compat
+unquote = urllib.parse.unquote if six.PY3 else _unquote_compat
+
+
 def unquote_qs(atom, encoding, errors='strict'):
-    atom_spc = atom.replace('+', ' ')
-    return (
-        urllib.parse.unquote(atom_spc, encoding=encoding, errors=errors)
-        if six.PY3 else
-        urllib.parse.unquote(atom_spc).decode(encoding, errors)
-    )
+    return unquote_plus(atom, encoding, errors)
 
 
 try:
