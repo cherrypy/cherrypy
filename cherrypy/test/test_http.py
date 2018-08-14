@@ -210,8 +210,6 @@ class HTTPTests(helper.CPWebCase):
             self.body = response.fp.read()
             self.status = str(response.status)
             self.assertStatus(200)
-            if isinstance(fname, (tuple, list)):
-                fname = fname[0]
             self.assertBody(fname)
 
     def test_malformed_request_line(self):
