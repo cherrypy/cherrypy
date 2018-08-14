@@ -12,9 +12,29 @@ from six.moves.http_client import HTTPConnection
 from six.moves import urllib
 
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection
+from cherrypy._cpcompat import HTTPSConnection, quote
 
 from cherrypy.test import helper
+
+
+def is_ascii(string):
+    try:
+        string.encode('ascii')
+        return True
+    except Exception:
+        pass
+    return False
+
+
+def encode_filename(filename):
+    if is_ascii(filename):
+        return 'filename', '"{filename}"'.format(**locals())
+    encoded = quote(filename, encoding='utf-8')
+    return 'filename*', "'".join((
+        'UTF-8',
+        '',  # lang
+        encoded,
+    ))
 
 
 def encode_multipart_formdata(files):
@@ -28,25 +48,10 @@ def encode_multipart_formdata(files):
     for key, filename, value in files:
         L.append('--' + BOUNDARY)
 
-        filename_encoding = None
-        if isinstance(filename, (list, tuple)):
-            filename, filename_encoding = filename
-        if filename_encoding:
-            if six.PY3:
-                filename = six.moves.urllib.parse.quote(
-                    filename, encoding=filename_encoding)
-            else:
-                if isinstance(filename, six.text_type):
-                    filename = filename.encode(filename_encoding)
-                filename = six.moves.urllib.parse.quote(filename)
-            filename_val = "%s''%s" % (filename_encoding, filename)
-            L.append(
-                'Content-Disposition: form-data; name="%s"; filename*=%s' %
-                (key, filename_val))
-        else:
-            L.append(
-                'Content-Disposition: form-data; name="%s"; filename="%s"' %
-                (key, filename))
+        fn_key, encoded = encode_filename(filename)
+        tmpl = \
+            'Content-Disposition: form-data; name="{key}"; {fn_key}={encoded}'
+        L.append(tmpl.format(**locals()))
         ct = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
         L.append('Content-Type: %s' % ct)
         L.append('')
@@ -185,7 +190,7 @@ class HTTPTests(helper.CPWebCase):
         # We'll upload a bunch of files with differing names.
         fnames = [
             'boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-            'file;name.csv', 'file; name.csv', ('test_łóąä.txt', 'utf-8')
+            'file;name.csv', 'file; name.csv', u'test_łóąä.txt',
         ]
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]

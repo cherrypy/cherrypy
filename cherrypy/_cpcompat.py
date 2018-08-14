@@ -105,9 +105,13 @@ def _unquote_compat(string, encoding='utf-8', errors='replace'):
     return urllib.parse.unquote(string).decode(encoding, errors)
 
 
+def _quote_compat(string, encoding='utf-8', errors='replace'):
+    return urllib.parse.quote(string.encode(encoding, errors))
+
+
 unquote_plus = urllib.parse.unquote_plus if six.PY3 else _unquote_plus_compat
 unquote = urllib.parse.unquote if six.PY3 else _unquote_compat
-
+quote = urllib.parse.quote if six.PY3 else _quote_compat
 
 try:
     # Prefer simplejson
