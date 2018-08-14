@@ -135,7 +135,7 @@ import six
 import cheroot.server
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, ntou
+from cherrypy._cpcompat import text_or_bytes, ntou, unquote
 from cherrypy.lib import httputil
 
 
@@ -470,6 +470,10 @@ class Entity(object):
                     self.filename.endswith('"')
                 ):
                     self.filename = self.filename[1:-1]
+            if 'filename*' in disp.params:
+                # @see https://tools.ietf.org/html/rfc5987
+                encoding, lang, filename = disp.params['filename*'].split("'")
+                self.filename = unquote(str(filename), encoding)
 
     def read(self, size=None, fp_out=None):
         return self.fp.read(size, fp_out)

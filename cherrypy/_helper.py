@@ -57,7 +57,7 @@ def expose(func=None, alias=None):
 
 
 def popargs(*args, **kwargs):
-    """A decorator for _cp_dispatch.
+    """Decorate _cp_dispatch.
 
     (cherrypy.dispatch.Dispatcher.dispatch_method_name)
 
@@ -321,7 +321,10 @@ class _ClassPropertyDescriptor(object):
     """
 
     def __init__(self, fget, fset=None):
-        """Instantiated by ``_helper.classproperty``."""
+        """Initialize a class property descriptor.
+
+        Instantiated by ``_helper.classproperty``.
+        """
         self.fget = fget
         self.fset = fset
 
@@ -332,7 +335,7 @@ class _ClassPropertyDescriptor(object):
         return self.fget.__get__(obj, klass)()
 
 
-def classproperty(func):
+def classproperty(func):  # noqa: D401; irrelevant for properties
     """Decorator like classmethod to implement a static class property."""
     if not isinstance(func, (classmethod, staticmethod)):
         func = classmethod(func)

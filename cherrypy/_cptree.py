@@ -82,7 +82,7 @@ class Application(object):
     """
 
     @property
-    def script_name(self):
+    def script_name(self):  # noqa: D401; irrelevant for properties
         """The URI "mount point" for this app.
 
         A mount point is that portion of the URI which is constant for all URIs
@@ -261,7 +261,7 @@ class Tree(object):
         self.apps[script_name] = wsgi_callable
 
     def script_name(self, path=None):
-        """The script_name of the app at the given path, or None.
+        """Return the script_name of the app at the given path, or None.
 
         If path is None, cherrypy.request is used.
         """

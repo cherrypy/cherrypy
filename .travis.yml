@@ -1,8 +1,9 @@
+conditions: v1
+
 language: python
 os: linux
 dist: trusty
 sudo: false
-group: edge
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -55,16 +56,21 @@ _base_envs:
   before_cache:
   - brew --cache
   script:
-  - travis_retry tox
+  - travis_retry python -m tox
+- &python_3_7_mixture
+  python: &mainstream_python 3.7
+  dist: xenial
+  group:
+  sudo: true
 - &pure_python_base
   <<: *stage_test
-  python: &mainstream_python 3.6
+  <<: *python_3_7_mixture
 - &pure_python_base_priority
   <<: *pure_python_base
   <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
-  python: *mainstream_python
+  python: 3.6
   after_failure: skip
 python:
 - 3.4
@@ -79,8 +85,6 @@ jobs:
   # TODO: fix tests
   - python: *pypy3
   - env: TOXENV=pre-commit-pep257
-  - os: osx
-    python: 3.7-dev
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
@@ -91,11 +95,11 @@ jobs:
   - <<: *lint_python_base
     env: TOXENV=setup-check
   - <<: *pure_python_base_priority
-    # mainstream here (3.6)
+    # mainstream here (3.7)
   - <<: *pure_python_base_priority
     python: 2.7
   - <<: *pure_python_base_priority
-    # mainstream here (3.6)
+    # mainstream here (3.7)
     # run tests against the bleeding-edge cheroot
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
@@ -125,16 +129,16 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    # mainstream here (3.6)
+    # mainstream here (3.7)
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.6.1
+    - PYTHON_VERSION=3.7.0
     # run tests against the bleeding-edge cheroot
     - TOXENV=cheroot-master
     - *env_pyenv
     - *env_path
   - <<: *stage_deploy
-    python: *mainstream_python
+    <<: *python_3_7_mixture
     install: skip
     script: skip
     deploy:
@@ -145,7 +149,7 @@ jobs:
         all_branches: true
         python: *mainstream_python
       user: jaraco
-      distributions: release
+      distributions: dists
       password:
         secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
 cache:
@@ -154,9 +158,10 @@ cache:
   - $HOME/.cache/pre-commit
   - $HOME/Library/Caches/Homebrew
 install:
-- pip install tox "setuptools>=28.2"
+- python -m pip install tox "setuptools>=28.2"
+- python -m tox --notest  # Pre-populate a virtualenv with dependencies
 script:
-- tox
+- python -m tox
 after_failure:
 - echo "Here's a list of installed Python packages:"
 - pip list --format=columns

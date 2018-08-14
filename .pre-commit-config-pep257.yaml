@@ -1,5 +1,5 @@
 repos:
--   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
-    sha: f464d46
+-   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
+    sha: v2.1.1
     hooks:
-    -   id: pep257
+    -   id: pydocstyle

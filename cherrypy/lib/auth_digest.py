@@ -21,9 +21,9 @@ of plaintext passwords as the credentials store::
 """
 
 import time
+import functools
 from hashlib import md5
 
-from six.moves.urllib.parse import unquote_to_bytes
 from six.moves.urllib.request import parse_http_list, parse_keqv_list
 
 import cherrypy
@@ -141,29 +141,33 @@ def H(s):
     return md5_hex(s)
 
 
-def _try_decode_map_values(param_map, charset):
+def _try_decode_header(header, charset):
     global FALLBACK_CHARSET
 
     for enc in (charset, FALLBACK_CHARSET):
         try:
-            return {
-                k: tonative(v, enc)
-                for k, v in param_map.items()
-            }
+            return tonative(ntob(tonative(header, 'latin1'), 'latin1'), enc)
         except ValueError as ve:
             last_err = ve
     else:
         raise last_err
 
 
-class HttpDigestAuthorization (object):
-
-    """Class to parse a Digest Authorization header and perform re-calculation
-    of the digest.
+class HttpDigestAuthorization(object):
     """
+    Parses a Digest Authorization header and performs
+    re-calculation of the digest.
+    """
+
+    scheme = 'digest'
 
     def errmsg(self, s):
         return 'Digest Authorization header: %s' % s
+
+    @classmethod
+    def matches(cls, header):
+        scheme, _, _ = header.partition(' ')
+        return scheme.lower() == cls.scheme
 
     def __init__(
         self, auth_header, http_method,
@@ -171,21 +175,17 @@ class HttpDigestAuthorization (object):
     ):
         self.http_method = http_method
         self.debug = debug
-        scheme, params = auth_header.split(' ', 1)
-        self.scheme = scheme.lower()
-        if self.scheme != 'digest':
+
+        if not self.matches(auth_header):
             raise ValueError('Authorization scheme is not "Digest"')
 
-        self.auth_header = auth_header
+        self.auth_header = _try_decode_header(auth_header, accept_charset)
+
+        scheme, params = self.auth_header.split(' ', 1)
 
         # make a dict of the params
         items = parse_http_list(params)
         paramsd = parse_keqv_list(items)
-        paramsd = {
-            k: unquote_to_bytes(v)
-            for k, v in paramsd.items()
-        }
-        paramsd = _try_decode_map_values(paramsd, accept_charset)
 
         self.realm = paramsd.get('realm')
         self.username = paramsd.get('username')
@@ -373,7 +373,7 @@ def www_authenticate(
 
 
 def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
-    """A CherryPy tool which hooks at before_handler to perform
+    """A CherryPy tool that hooks at before_handler to perform
     HTTP Digest Access Authentication, as specified in :rfc:`2617`.
 
     If the request has an 'authorization' header with a 'Digest' scheme,
@@ -386,7 +386,7 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         A string containing the authentication realm.
 
     get_ha1
-        A callable which looks up a username in a credentials store
+        A callable that looks up a username in a credentials store
         and returns the HA1 string, which is defined in the RFC to be
         MD5(username : realm : password).  The function's signature is:
         ``get_ha1(realm, username)``
@@ -402,44 +402,60 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     request = cherrypy.serving.request
 
     auth_header = request.headers.get('authorization')
-    nonce_is_stale = False
-    if auth_header is not None:
-        msg = 'The Authorization header could not be parsed.'
-        with cherrypy.HTTPError.handle(ValueError, 400, msg):
-            auth = HttpDigestAuthorization(
-                auth_header, request.method,
-                debug=debug, accept_charset=accept_charset,
-            )
 
-        if debug:
-            TRACE(str(auth))
+    respond_401 = functools.partial(
+        _respond_401, realm, key, accept_charset, debug)
 
-        if auth.validate_nonce(realm, key):
-            ha1 = get_ha1(realm, auth.username)
-            if ha1 is not None:
-                # note that for request.body to be available we need to
-                # hook in at before_handler, not on_start_resource like
-                # 3.1.x digest_auth does.
-                digest = auth.request_digest(ha1, entity_body=request.body)
-                if digest == auth.response:  # authenticated
-                    if debug:
-                        TRACE('digest matches auth.response')
-                    # Now check if nonce is stale.
-                    # The choice of ten minutes' lifetime for nonce is somewhat
-                    # arbitrary
-                    nonce_is_stale = auth.is_nonce_stale(max_age_seconds=600)
-                    if not nonce_is_stale:
-                        request.login = auth.username
-                        if debug:
-                            TRACE('authentication of %s successful' %
-                                  auth.username)
-                        return
+    if not HttpDigestAuthorization.matches(auth_header or ''):
+        respond_401()
 
-    # Respond with 401 status and a WWW-Authenticate header
+    msg = 'The Authorization header could not be parsed.'
+    with cherrypy.HTTPError.handle(ValueError, 400, msg):
+        auth = HttpDigestAuthorization(
+            auth_header, request.method,
+            debug=debug, accept_charset=accept_charset,
+        )
+
+    if debug:
+        TRACE(str(auth))
+
+    if not auth.validate_nonce(realm, key):
+        respond_401()
+
+    ha1 = get_ha1(realm, auth.username)
+
+    if ha1 is None:
+        respond_401()
+
+    # note that for request.body to be available we need to
+    # hook in at before_handler, not on_start_resource like
+    # 3.1.x digest_auth does.
+    digest = auth.request_digest(ha1, entity_body=request.body)
+    if digest != auth.response:
+        respond_401()
+
+    # authenticated
+    if debug:
+        TRACE('digest matches auth.response')
+    # Now check if nonce is stale.
+    # The choice of ten minutes' lifetime for nonce is somewhat
+    # arbitrary
+    if auth.is_nonce_stale(max_age_seconds=600):
+        respond_401(stale=True)
+
+    request.login = auth.username
+    if debug:
+        TRACE('authentication of %s successful' % auth.username)
+
+
+def _respond_401(realm, key, accept_charset, debug, **kwargs):
+    """
+    Respond with 401 status and a WWW-Authenticate header
+    """
     header = www_authenticate(
         realm, key,
-        stale=nonce_is_stale,
         accept_charset=accept_charset,
+        **kwargs
     )
     if debug:
         TRACE(header)

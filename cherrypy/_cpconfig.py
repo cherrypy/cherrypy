@@ -165,7 +165,7 @@ class Config(reprconf.Config):
 
     @staticmethod
     def __call__(*args, **kwargs):
-        """Decorator for page handlers to set _cp_config."""
+        """Decorate for page handlers to set _cp_config."""
         if args:
             raise TypeError(
                 'The cherrypy.config decorator does not accept positional '

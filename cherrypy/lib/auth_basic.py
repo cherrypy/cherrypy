@@ -23,9 +23,10 @@ as the credentials store::
 
 import binascii
 import unicodedata
+import base64
 
 import cherrypy
-from cherrypy._cpcompat import base64_decode, ntob, ntou, tonative
+from cherrypy._cpcompat import ntou, tonative
 
 
 __author__ = 'visteya'
@@ -83,19 +84,9 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
         with cherrypy.HTTPError.handle((ValueError, binascii.Error), 400, msg):
             scheme, params = auth_header.split(' ', 1)
             if scheme.lower() == 'basic':
-                decoded_params = base64_decode(params)
-                decoded_params = ntob(decoded_params)
-
-                last_err = None
-                for charset in (accept_charset, fallback_charset):
-                    try:
-                        decoded_params = tonative(decoded_params, charset)
-                        break
-                    except ValueError as ve:
-                        last_err = ve
-                else:
-                    raise last_err
-
+                charsets = accept_charset, fallback_charset
+                decoded_params = base64.b64decode(params.encode('ascii'))
+                decoded_params = _try_decode(decoded_params, charsets)
                 decoded_params = ntou(decoded_params)
                 decoded_params = unicodedata.normalize('NFC', decoded_params)
                 decoded_params = tonative(decoded_params)
@@ -118,3 +109,12 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
     )
     raise cherrypy.HTTPError(
         401, 'You are not authorized to access that resource')
+
+
+def _try_decode(subject, charsets):
+    for charset in charsets[:-1]:
+        try:
+            return tonative(subject, charset)
+        except ValueError:
+            pass
+    return tonative(subject, charsets[-1])

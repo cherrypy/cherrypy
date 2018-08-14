@@ -25,17 +25,16 @@ repos:
     #-   id: check-docstring-first
     -   id: check-json
         include: .mention-bot
-    -   id: pretty-format-json
     -   id: check-symlinks
     -   id: check-yaml
     -   id: detect-private-key
         exclude: cherrypy/test/test.pem
     -   id: requirements-txt-fixer
 
--   repo: git://github.com/FalconSocial/pre-commit-mirrors-pep257
-    sha: f464d46
+-   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
+    sha: v2.1.1
     hooks:
-    -   id: pep257
+    -   id: pydocstyle
         exclude: |
             (?x)
             tests/dist|
