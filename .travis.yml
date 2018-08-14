@@ -4,7 +4,6 @@ language: python
 os: linux
 dist: trusty
 sudo: false
-group: edge
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
