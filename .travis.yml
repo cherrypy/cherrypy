@@ -58,9 +58,14 @@ _base_envs:
   - brew --cache
   script:
   - travis_retry python -m tox
+- &python_3_7_mixture
+  python: &mainstream_python 3.7
+  dist: xenial
+  group:
+  sudo: true
 - &pure_python_base
   <<: *stage_test
-  python: &mainstream_python 3.6
+  <<: *python_3_7_mixture
 - &pure_python_base_priority
   <<: *pure_python_base
   <<: *stage_test_priority
@@ -91,11 +96,11 @@ jobs:
   - <<: *lint_python_base
     env: TOXENV=setup-check
   - <<: *pure_python_base_priority
-    # mainstream here (3.6)
+    # mainstream here (3.7)
   - <<: *pure_python_base_priority
     python: 2.7
   - <<: *pure_python_base_priority
-    # mainstream here (3.6)
+    # mainstream here (3.7)
     # run tests against the bleeding-edge cheroot
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
@@ -125,16 +130,16 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    # mainstream here (3.6)
+    # mainstream here (3.7)
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.6.1
+    - PYTHON_VERSION=3.7.0
     # run tests against the bleeding-edge cheroot
     - TOXENV=cheroot-master
     - *env_pyenv
     - *env_path
   - <<: *stage_deploy
-    python: *mainstream_python
+    <<: *python_3_7_mixture
     install: skip
     script: skip
     deploy:
