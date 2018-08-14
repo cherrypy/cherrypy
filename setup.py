@@ -100,7 +100,7 @@ extras_require = {
 # end arguments for setup
 ###############################################################################
 
-setup_params = dict(
+params = dict(
     name=name,
     use_scm_version=True,
     description=desc,
@@ -130,10 +130,4 @@ setup_params = dict(
 )
 
 
-def main():
-    """Run setup as a package installation entry point."""
-    setuptools.setup(**setup_params)
-
-
-if __name__ == '__main__':
-    main()
+__name__ == '__main__' and setuptools.setup(**params)
