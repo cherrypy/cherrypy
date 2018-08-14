@@ -57,7 +57,6 @@ params = dict(
         'GitHub: issues': '{}/issues'.format(repo_url),
         'GitHub: repo': repo_url,
     },
-    license='BSD',
     packages=[
         'cherrypy', 'cherrypy.lib',
         'cherrypy.tutorial', 'cherrypy.test',
