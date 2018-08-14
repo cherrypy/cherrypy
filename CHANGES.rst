@@ -1,3 +1,9 @@
+v17.1.0
+-------
+
+* :issue:`1694`: Add support for accepting uploaded files
+  with non-ascii filenames per RFC 5987.
+
 v17.0.0
 -------
 

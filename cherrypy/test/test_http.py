@@ -1,3 +1,4 @@
+# coding: utf-8
 """Tests for managing HTTP issues (malformed requests, etc)."""
 
 import errno
@@ -11,22 +12,53 @@ from six.moves.http_client import HTTPConnection
 from six.moves import urllib
 
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection
+from cherrypy._cpcompat import HTTPSConnection, quote
 
 from cherrypy.test import helper
+
+
+def is_ascii(text):
+    """
+    Return True if the text encodes as ascii.
+    """
+    try:
+        text.encode('ascii')
+        return True
+    except Exception:
+        pass
+    return False
+
+
+def encode_filename(filename):
+    """
+    Given a filename to be used in a multipart/form-data,
+    encode the name. Return the key and encoded filename.
+    """
+    if is_ascii(filename):
+        return 'filename', '"{filename}"'.format(**locals())
+    encoded = quote(filename, encoding='utf-8')
+    return 'filename*', "'".join((
+        'UTF-8',
+        '',  # lang
+        encoded,
+    ))
 
 
 def encode_multipart_formdata(files):
     """Return (content_type, body) ready for httplib.HTTP instance.
 
     files: a sequence of (name, filename, value) tuples for multipart uploads.
+    filename can be a string or a tuple ('filename string', 'encoding')
     """
     BOUNDARY = '________ThIs_Is_tHe_bouNdaRY_$'
     L = []
     for key, filename, value in files:
         L.append('--' + BOUNDARY)
-        L.append('Content-Disposition: form-data; name="%s"; filename="%s"' %
-                 (key, filename))
+
+        fn_key, encoded = encode_filename(filename)
+        tmpl = \
+            'Content-Disposition: form-data; name="{key}"; {fn_key}={encoded}'
+        L.append(tmpl.format(**locals()))
         ct = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
         L.append('Content-Type: %s' % ct)
         L.append('')
@@ -160,10 +192,14 @@ class HTTPTests(helper.CPWebCase):
         '''Testing that we can handle filenames with special characters. This
         was reported as a bug in:
            https://github.com/cherrypy/cherrypy/issues/1146/
-           https://github.com/cherrypy/cherrypy/issues/1397'''
+           https://github.com/cherrypy/cherrypy/issues/1397/
+           https://github.com/cherrypy/cherrypy/issues/1694/
+        '''
         # We'll upload a bunch of files with differing names.
-        fnames = ['boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-                  'file;name.csv', 'file; name.csv']
+        fnames = [
+            'boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
+            'file;name.csv', 'file; name.csv', u'test_łóąä.txt',
+        ]
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
             content_type, body = encode_multipart_formdata(files)
