@@ -1,13 +1,8 @@
 #! /usr/bin/env python
 """CherryPy package setuptools installer."""
 
-import io
-
 import setuptools
 
-
-with io.open('README.rst', encoding='utf-8') as strm:
-    long_desc = strm.read()
 
 name = 'CherryPy'
 repo_slug = 'cherrypy/{}'.format(name.lower())
@@ -20,7 +15,6 @@ params = dict(
     description='Object-Oriented HTTP framework',
     author='CherryPy Team',
     author_email='team@cherrypy.org',
-    long_description=long_desc,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
