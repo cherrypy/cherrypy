@@ -405,10 +405,19 @@ def tee_output():
             output.append(chunk)
             yield chunk
 
-        # save the cache data
+        # Save the cache data, but only if the body isn't empty.
+        # e.g. a 304 Not Modified on a static file response will
+        # have an empty body.
+        # If the body is empty, delete the cache because it
+        # contains a stale Threading._Event object that will
+        # stall all consecutive requests until the _Event times
+        # out
         body = b''.join(output)
-        cherrypy._cache.put((response.status, response.headers or {},
-                             body, response.time), len(body))
+        if not body:
+            cherrypy._cache.delete()
+        else:
+            cherrypy._cache.put((response.status, response.headers or {},
+                                 body, response.time), len(body))
 
     response = cherrypy.serving.response
     response.body = tee(response.body)
