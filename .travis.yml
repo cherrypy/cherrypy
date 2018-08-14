@@ -1,3 +1,5 @@
+conditions: v1
+
 language: python
 os: linux
 dist: trusty
