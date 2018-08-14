@@ -70,7 +70,7 @@ _base_envs:
   <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
-  python: *mainstream_python
+  <<: *python_3_7_mixture
   after_failure: skip
 python:
 - 3.4
