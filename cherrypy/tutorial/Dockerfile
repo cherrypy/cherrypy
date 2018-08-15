@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3-alpine
 
 RUN pip install cherrypy
 
