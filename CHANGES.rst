@@ -7,7 +7,7 @@ v17.2.0
 v17.1.0
 -------
 
-* :issue:`1694`: Add support for accepting uploaded files
+* :issue:`1694` via :pr:`1695`: Add support for accepting uploaded files
   with non-ascii filenames per RFC 5987.
 
 v17.0.0
@@ -27,19 +27,19 @@ v16.0.3
 v16.0.2
 -------
 
-* :issue:`1716`: Fixed handling of url-encoded parameters in
-  digest authentication handling, correcting regression in v14.2.0.
+* :issue:`1716` via :pr:`1717`: Fixed handling of url-encoded parameters
+  in digest authentication handling, correcting regression in v14.2.0.
 
-* :issue:`1719`: Digest-auth tool will now return a status
-  code of 401 for when a scheme other than 'digest' is
+* :issue:`1719` via :commit:`1d41828`: Digest-auth tool will now return
+  a status code of 401 for when a scheme other than 'digest' is
   indicated.
 
 v16.0.0
 -------
 
-* :issue:`1688`: Removed  ``basic_auth`` and ``digest_auth`` tools and
-  the ``httpauth`` module, which have been officially deprecated earlier
-  in v14.0.0.
+* :issue:`1688` via :commit:`38ad1da`: Removed  ``basic_auth`` and
+  ``digest_auth`` tools and the ``httpauth`` module, which have been
+  officially deprecated earlier in v14.0.0.
 
 * Removed deprecated properties::
 
@@ -51,12 +51,14 @@ v16.0.0
 
 * :issue:`1377`: In _cp_native server, set ``req.status`` using bytes.
 
-* :issue:`1697`: Fixed error on Python 3.7 with AutoReloader when
-  ``__file__`` is None.
+* :issue:`1697` via :commit:`841f795`: Fixed error on Python 3.7 with
+  AutoReloader when ``__file__`` is ``None``.
 
-* :issue:`1713`: Fix warning emitted during test run.
+* :issue:`1713` via :commit:`15aa80d`: Fix warning emitted during
+  test run.
 
-* :issue:`1370`: Fail with HTTP 400 for invalid headers.
+* :issue:`1370` via :commit:`38f199c`: Fail with HTTP 400 for invalid
+  headers.
 
 v15.0.0
 -------
