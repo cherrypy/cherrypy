@@ -1,7 +1,7 @@
 v17.2.0
 -------
 
-* :issue:`1690`: Prevent orphaned Event object in cached
+* :issue:`1690` via :pr:`1692`: Prevent orphaned Event object in cached
   304 response.
 
 v17.1.0
