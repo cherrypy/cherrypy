@@ -1,7 +1,7 @@
 """Tests for various MIME issues, including the safe_multipart Tool."""
 
 import cherrypy
-from cherrypy._cpcompat import ntob, ntou
+from cherrypy._cpcompat import ntou
 from cherrypy.test import helper
 
 
@@ -107,28 +107,28 @@ class SafeMultipartHandlingTest(helper.CPWebCase):
             ('Connection', 'Keep-Alive'),
             ('Cache-Control', 'no-cache'),
         ]
-        filedata = ntob('<?xml version="1.0" encoding="UTF-8"?>\r\n'
-                        '<projectDescription>\r\n'
-                        '</projectDescription>\r\n')
-        body = (ntob(
-            '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
-            'Content-Disposition: form-data; name="Filename"\r\n'
-            '\r\n'
-            '.project\r\n'
-            '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
-            'Content-Disposition: form-data; '
-            'name="Filedata"; filename=".project"\r\n'
-            'Content-Type: application/octet-stream\r\n'
-            '\r\n') +
+        filedata = (b'<?xml version="1.0" encoding="UTF-8"?>\r\n'
+                    b'<projectDescription>\r\n'
+                    b'</projectDescription>\r\n')
+        body = (
+            b'------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
+            b'Content-Disposition: form-data; name="Filename"\r\n'
+            b'\r\n'
+            b'.project\r\n'
+            b'------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
+            b'Content-Disposition: form-data; '
+            b'name="Filedata"; filename=".project"\r\n'
+            b'Content-Type: application/octet-stream\r\n'
+            b'\r\n' +
             filedata +
-            ntob('\r\n'
-                 '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
-                 'Content-Disposition: form-data; name="Upload"\r\n'
-                 '\r\n'
-                 'Submit Query\r\n'
-                 # Flash apps omit the trailing \r\n on the last line:
-                 '------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6--'
-                 ))
+            b'\r\n'
+            b'------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6\r\n'
+            b'Content-Disposition: form-data; name="Upload"\r\n'
+            b'\r\n'
+            b'Submit Query\r\n'
+            # Flash apps omit the trailing \r\n on the last line:
+            b'------------KM7Ij5cH2KM7Ef1gL6ae0ae0cH2gL6--'
+        )
         self.getPage('/flashupload', headers, 'POST', body)
         self.assertBody('Upload: Submit Query, Filename: .project, '
                         'Filedata: %r' % filedata)

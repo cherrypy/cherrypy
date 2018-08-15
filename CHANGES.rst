@@ -1,3 +1,23 @@
+v14.0.1
+-------
+
+* :issue:`1700`: Improve windows pywin32 dependency declaration via
+  conditional extras.
+
+v14.0.0
+-------
+
+* :issue:`1688`: Officially deprecated ``basic_auth`` and ``digest_auth``
+  tools and the ``httpauth`` module, triggering DeprecationWarnings
+  if they're used. Applications should instead adapt to use the
+  more recent ``auth_basic`` and ``auth_digest`` tools.
+  This deprecated functionality will be removed in a subsequent
+  release soon.
+* Removed ``DeprecatedTool`` and the long-deprecated and disabled
+  ``tidy`` and ``nsgmls`` tools. See `the rationale
+  <https://github.com/cherrypy/cherrypy/pull/1689#issuecomment-362924962>`_
+  for this change.
+
 v13.1.0
 -------
 

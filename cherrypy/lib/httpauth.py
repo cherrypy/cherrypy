@@ -1,4 +1,6 @@
 """
+Deprecated implementations of HTTP Digest Authentication
+
 This module defines functions to implement HTTP Digest Authentication
 (:rfc:`2617`).
 This has full compliance with 'Digest' and 'Basic' authentication methods. In
@@ -22,12 +24,19 @@ SUPPORTED_QOP - list of supported 'Digest' 'qop'.
 """
 
 import time
+import warnings
 from hashlib import md5
 
 from six.moves.urllib.request import parse_http_list, parse_keqv_list
 
 from cherrypy._cpcompat import (
     base64_decode, ntob,
+)
+
+
+warnings.warn(
+    '`httpauth` module is deprecated. Do not use.',
+    DeprecationWarning,
 )
 
 

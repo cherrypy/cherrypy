@@ -23,7 +23,6 @@ are generally either modules or instances of the tools.Tool class.
 """
 
 import sys
-import warnings
 
 import cherrypy
 from cherrypy._helper import expose
@@ -473,27 +472,6 @@ class Toolbox(object):
         return decorator
 
 
-class DeprecatedTool(Tool):
-
-    _name = None
-    warnmsg = 'This Tool is deprecated.'
-
-    def __init__(self, point, warnmsg=None):
-        self.point = point
-        if warnmsg is not None:
-            self.warnmsg = warnmsg
-
-    def __call__(self, *args, **kwargs):
-        warnings.warn(self.warnmsg)
-
-        def tool_decorator(f):
-            return f
-        return tool_decorator
-
-    def _setup(self):
-        warnings.warn(self.warnmsg)
-
-
 default_toolbox = _d = Toolbox('tools')
 _d.session_auth = SessionAuthTool(cptools.session_auth)
 _d.allow = Tool('on_start_resource', cptools.allow)
@@ -514,16 +492,6 @@ _d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
 _d.caching = CachingTool('before_handler', _caching.get, 'caching')
 _d.expires = Tool('before_finalize', _caching.expires)
-_d.tidy = DeprecatedTool(
-    'before_finalize',
-    'The tidy tool has been removed from the standard distribution of '
-    'CherryPy. The most recent version can be found at '
-    'http://tools.cherrypy.org/browser.')
-_d.nsgmls = DeprecatedTool(
-    'before_finalize',
-    'The nsgmls tool has been removed from the standard distribution of '
-    'CherryPy. The most recent version can be found at '
-    'http://tools.cherrypy.org/browser.')
 _d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
 _d.referer = Tool('before_request_body', cptools.referer)
 _d.basic_auth = Tool('on_start_resource', auth.basic_auth)

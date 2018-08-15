@@ -45,7 +45,7 @@ class HTTPAuthTest(helper.CPWebCase):
             return sha1(ntob(password)).hexdigest()
 
         def fetch_password(username):
-            return sha1(ntob('test')).hexdigest()
+            return sha1(b'test').hexdigest()
 
         conf = {
             '/digest': {
@@ -57,7 +57,7 @@ class HTTPAuthTest(helper.CPWebCase):
                 'tools.basic_auth.on': True,
                 'tools.basic_auth.realm': 'localhost',
                 'tools.basic_auth.users': {
-                    'test': md5(ntob('test')).hexdigest()
+                    'test': md5(b'test').hexdigest()
                 }
             },
             '/basic2': {

@@ -204,7 +204,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
 
                 def file_ranges():
                     # Apache compatibility:
-                    yield ntob('\r\n')
+                    yield b'\r\n'
 
                     for start, stop in r:
                         if debug:
@@ -223,12 +223,12 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                         gen = file_generator_limited(fileobj, stop - start)
                         for chunk in gen:
                             yield chunk
-                        yield ntob('\r\n')
+                        yield b'\r\n'
                     # Final boundary
                     yield ntob('--' + boundary + '--', 'ascii')
 
                     # Apache compatibility:
-                    yield ntob('\r\n')
+                    yield b'\r\n'
                 response.body = file_ranges()
             return response.body
         else:

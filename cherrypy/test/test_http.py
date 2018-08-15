@@ -11,7 +11,7 @@ from six.moves.http_client import HTTPConnection
 from six.moves import urllib
 
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection, ntob
+from cherrypy._cpcompat import HTTPSConnection
 
 from cherrypy.test import helper
 
@@ -106,7 +106,7 @@ class HTTPTests(helper.CPWebCase):
         self.body = response.fp.read()
         self.status = str(response.status)
         self.assertStatus(200)
-        self.assertBody(ntob('Hello world!'))
+        self.assertBody(b'Hello world!')
 
         # Now send a message that has no Content-Length, but does send a body.
         # Verify that CP times out the socket and responds
@@ -189,7 +189,7 @@ class HTTPTests(helper.CPWebCase):
 
         # Test missing version in Request-Line
         c = self.make_connection()
-        c._output(ntob('GET /'))
+        c._output(b'geT /')
         c._send_output()
         if hasattr(c, 'strict'):
             response = c.response_class(c.sock, strict=c.strict, method='GET')
@@ -199,7 +199,7 @@ class HTTPTests(helper.CPWebCase):
             response = c.response_class(c.sock, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
-        self.assertEqual(response.fp.read(22), ntob('Malformed Request-Line'))
+        self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
         c.close()
 
     def test_request_line_split_issue_1220(self):
@@ -221,7 +221,7 @@ class HTTPTests(helper.CPWebCase):
         c.putrequest('GET', '/')
         c.putheader('Content-Type', 'text/plain')
         # See https://github.com/cherrypy/cherrypy/issues/941
-        c._output(ntob('Re, 1.2.3.4#015#012'))
+        c._output(b're, 1.2.3.4#015#012')
         c.endheaders()
 
         response = c.getresponse()
@@ -255,14 +255,14 @@ class HTTPTests(helper.CPWebCase):
     def test_garbage_in(self):
         # Connect without SSL regardless of server.scheme
         c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
-        c._output(ntob('gjkgjklsgjklsgjkljklsg'))
+        c._output(b'gjkgjklsgjklsgjkljklsg')
         c._send_output()
         response = c.response_class(c.sock, method='GET')
         try:
             response.begin()
             self.assertEqual(response.status, 400)
             self.assertEqual(response.fp.read(22),
-                             ntob('Malformed Request-Line'))
+                             b'Malformed Request-Line')
             c.close()
         except socket.error:
             e = sys.exc_info()[1]

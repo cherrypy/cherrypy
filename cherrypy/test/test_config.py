@@ -8,7 +8,6 @@ import unittest
 import six
 
 import cherrypy
-import cherrypy._cpcompat as compat
 
 from cherrypy.test import helper
 
@@ -241,7 +240,7 @@ class ConfigTests(helper.CPWebCase):
         self.getPage('/plain', method='POST', headers=[
             ('Content-Type', 'application/x-www-form-urlencoded'),
             ('Content-Length', '13')],
-            body=compat.ntob('\xff\xfex\x00=\xff\xfea\x00b\x00c\x00'))
+            body=b'\xff\xfex\x00=\xff\xfea\x00b\x00c\x00')
         self.assertBody('abc')
 
 

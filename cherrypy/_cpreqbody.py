@@ -135,7 +135,7 @@ import six
 import cheroot.server
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, ntob, ntou
+from cherrypy._cpcompat import text_or_bytes, ntou
 from cherrypy.lib import httputil
 
 
@@ -147,14 +147,14 @@ def process_urlencoded(entity):
     for charset in entity.attempt_charsets:
         try:
             params = {}
-            for aparam in qs.split(ntob('&')):
-                for pair in aparam.split(ntob(';')):
+            for aparam in qs.split(b'&'):
+                for pair in aparam.split(b';'):
                     if not pair:
                         continue
 
-                    atoms = pair.split(ntob('='), 1)
+                    atoms = pair.split(b'=', 1)
                     if len(atoms) == 1:
-                        atoms.append(ntob(''))
+                        atoms.append(b'')
 
                     key = unquote_plus(atoms[0]).decode(charset)
                     value = unquote_plus(atoms[1]).decode(charset)
@@ -633,17 +633,17 @@ class Part(Entity):
                 # No more data--illegal end of headers
                 raise EOFError('Illegal end of headers.')
 
-            if line == ntob('\r\n'):
+            if line == b'\r\n':
                 # Normal end of headers
                 break
-            if not line.endswith(ntob('\r\n')):
+            if not line.endswith(b'\r\n'):
                 raise ValueError('MIME requires CRLF terminators: %r' % line)
 
-            if line[0] in ntob(' \t'):
+            if line[0] in b' \t':
                 # It's a continuation line.
                 v = line.strip().decode('ISO-8859-1')
             else:
-                k, v = line.split(ntob(':'), 1)
+                k, v = line.split(b':', 1)
                 k = k.strip().decode('ISO-8859-1')
                 v = v.strip().decode('ISO-8859-1')
 
@@ -664,8 +664,8 @@ class Part(Entity):
         object that supports the 'write' method; all bytes read will be
         written to the fp, and that fp is returned.
         """
-        endmarker = self.boundary + ntob('--')
-        delim = ntob('')
+        endmarker = self.boundary + b'--'
+        delim = b''
         prev_lf = True
         lines = []
         seen = 0
@@ -673,7 +673,7 @@ class Part(Entity):
             line = self.fp.readline(1 << 16)
             if not line:
                 raise EOFError('Illegal end of multipart body.')
-            if line.startswith(ntob('--')) and prev_lf:
+            if line.startswith(b'--') and prev_lf:
                 strippedline = line.strip()
                 if strippedline == self.boundary:
                     break
@@ -683,16 +683,16 @@ class Part(Entity):
 
             line = delim + line
 
-            if line.endswith(ntob('\r\n')):
-                delim = ntob('\r\n')
+            if line.endswith(b'\r\n'):
+                delim = b'\r\n'
                 line = line[:-2]
                 prev_lf = True
-            elif line.endswith(ntob('\n')):
-                delim = ntob('\n')
+            elif line.endswith(b'\n'):
+                delim = b'\n'
                 line = line[:-1]
                 prev_lf = True
             else:
-                delim = ntob('')
+                delim = b''
                 prev_lf = False
 
             if fp_out is None:
@@ -706,7 +706,7 @@ class Part(Entity):
                 fp_out.write(line)
 
         if fp_out is None:
-            result = ntob('').join(lines)
+            result = b''.join(lines)
             return result
         else:
             fp_out.seek(0)
@@ -750,7 +750,7 @@ class SizedReader:
         self.fp = fp
         self.length = length
         self.maxbytes = maxbytes
-        self.buffer = ntob('')
+        self.buffer = b''
         self.bufsize = bufsize
         self.bytes_read = 0
         self.done = False
@@ -786,7 +786,7 @@ class SizedReader:
         if remaining == 0:
             self.finish()
             if fp_out is None:
-                return ntob('')
+                return b''
             else:
                 return None
 
@@ -796,7 +796,7 @@ class SizedReader:
         if self.buffer:
             if remaining is inf:
                 data = self.buffer
-                self.buffer = ntob('')
+                self.buffer = b''
             else:
                 data = self.buffer[:remaining]
                 self.buffer = self.buffer[remaining:]
@@ -845,7 +845,7 @@ class SizedReader:
                 fp_out.write(data)
 
         if fp_out is None:
-            return ntob('').join(chunks)
+            return b''.join(chunks)
 
     def readline(self, size=None):
         """Read a line from the request body and return it."""
@@ -857,7 +857,7 @@ class SizedReader:
             data = self.read(chunksize)
             if not data:
                 break
-            pos = data.find(ntob('\n')) + 1
+            pos = data.find(b'\n') + 1
             if pos:
                 chunks.append(data[:pos])
                 remainder = data[pos:]
@@ -866,7 +866,7 @@ class SizedReader:
                 break
             else:
                 chunks.append(data)
-        return ntob('').join(chunks)
+        return b''.join(chunks)
 
     def readlines(self, sizehint=None):
         """Read lines from the request body and return them."""
@@ -895,12 +895,12 @@ class SizedReader:
 
             try:
                 for line in self.fp.read_trailer_lines():
-                    if line[0] in ntob(' \t'):
+                    if line[0] in b' \t':
                         # It's a continuation line.
                         v = line.strip()
                     else:
                         try:
-                            k, v = line.split(ntob(':'), 1)
+                            k, v = line.split(b':', 1)
                         except ValueError:
                             raise ValueError('Illegal header line.')
                         k = k.strip().title()
@@ -909,7 +909,7 @@ class SizedReader:
                     if k in cheroot.server.comma_separated_headers:
                         existing = self.trailers.get(k)
                         if existing:
-                            v = ntob(', ').join((existing, v))
+                            v = b', '.join((existing, v))
                     self.trailers[k] = v
             except Exception:
                 e = sys.exc_info()[1]

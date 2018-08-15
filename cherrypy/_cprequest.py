@@ -900,7 +900,7 @@ class Response(object):
                 raise TypeError("Chunk %s is not of type 'bytes'." %
                                 repr(chunk))
             newbody.append(chunk)
-        newbody = ntob('').join(newbody)
+        newbody = b''.join(newbody)
 
         self.body = newbody
         return newbody
@@ -916,7 +916,7 @@ class Response(object):
 
         self.status = '%s %s' % (code, reason)
         self.output_status = ntob(str(code), 'ascii') + \
-            ntob(' ') + headers.encode(reason)
+            b' ' + headers.encode(reason)
 
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
@@ -929,7 +929,7 @@ class Response(object):
             # and 304 (not modified) responses MUST NOT
             # include a message-body."
             dict.pop(headers, 'Content-Length', None)
-            self.body = ntob('')
+            self.body = b''
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.

@@ -41,7 +41,7 @@ import six
 
 import cherrypy
 from cherrypy.lib import cptools, httputil
-from cherrypy._cpcompat import ntob, Event
+from cherrypy._cpcompat import Event
 
 
 class Cache(object):
@@ -406,7 +406,7 @@ def tee_output():
             yield chunk
 
         # save the cache data
-        body = ntob('').join(output)
+        body = b''.join(output)
         cherrypy._cache.put((response.status, response.headers or {},
                              body, response.time), len(body))
 

@@ -91,10 +91,10 @@ extensions = [
 
 extlinks = {
     'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pulls/%s', 'PR #'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
     'commit': (f'{github_repo_url}/commit/%s', ''),
     'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #'),
-    'cr-pr': (f'{cr_github_repo_url}/pulls/%s', 'Cheroot PR #'),
+    'cr-pr': (f'{cr_github_repo_url}/pull/%s', 'Cheroot PR #'),
     'gh': (f'{github_url}/%s', 'GitHub: '),
 }
 
