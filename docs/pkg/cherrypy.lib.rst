@@ -84,14 +84,6 @@ cherrypy.lib.jsontools module
     :undoc-members:
     :show-inheritance:
 
-cherrypy.lib.lockfile module
-----------------------------
-
-.. automodule:: cherrypy.lib.lockfile
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cherrypy.lib.locking module
 ---------------------------
 
