@@ -1,5 +1,5 @@
 CherryPy Tutorials
-------------------------------------------------------------------------
+------------------
 
 This is a series of tutorials explaining how to develop dynamic web
 applications using CherryPy. A couple of notes:
