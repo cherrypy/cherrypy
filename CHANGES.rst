@@ -1,8 +1,8 @@
 v17.3.0
 -------
 
-* :issue:`1193`: Rely on zc.lockfile for session concurrency
-  support.
+* :issue:`1193` via :pr:`1729`: Rely on zc.lockfile for
+  session concurrency support.
 
 v17.2.0
 -------
