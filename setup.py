@@ -65,6 +65,8 @@ params = dict(
         'cheroot>=6.2.4',
         'portend>=2.1.1',
         'more_itertools',
+        'zc.lockfile',
+        'contextlib2',
     ],
     extras_require={
         'docs': [
