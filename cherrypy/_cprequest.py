@@ -774,9 +774,8 @@ class ResponseBody(object):
 
     """The body of the HTTP response (the response entity)."""
 
-    if six.PY3:
-        unicode_err = ('Page handlers MUST return bytes. Use tools.encode '
-                       'if you wish to return unicode.')
+    unicode_err = ('Page handlers MUST return bytes. Use tools.encode '
+                   'if you wish to return unicode.')
 
     def __get__(self, obj, objclass=None):
         if obj is None:
@@ -787,7 +786,7 @@ class ResponseBody(object):
 
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
-        if six.PY3 and isinstance(value, str):
+        if isinstance(value, six.text_type):
             raise ValueError(self.unicode_err)
 
         if isinstance(value, text_or_bytes):
@@ -799,10 +798,10 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif six.PY3 and isinstance(value, list):
+        elif isinstance(value, list):
             # every item in a list must be bytes...
             for i, item in enumerate(value):
-                if isinstance(item, str):
+                if isinstance(item, six.text_type):
                     raise ValueError(self.unicode_err)
         # Don't use isinstance here; io.IOBase which has an ABC takes
         # 1000 times as long as, say, isinstance(value, str)
