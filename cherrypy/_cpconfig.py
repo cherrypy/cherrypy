@@ -270,16 +270,11 @@ def _engine_namespace_handler(k, v):
     elif '.' in k:
         plugin, attrname = k.split('.', 1)
         plugin = getattr(engine, plugin)
-        if attrname == 'on':
-            if v and hasattr(getattr(plugin, 'subscribe', None), '__call__'):
-                plugin.subscribe()
-                return
-            elif (
-                (not v) and
-                hasattr(getattr(plugin, 'unsubscribe', None), '__call__')
-            ):
-                plugin.unsubscribe()
-                return
+        op = 'subscribe' if v else 'unsubscribe'
+        sub_unsub = getattr(plugin, op, None)
+        if attrname == 'on' and callable(sub_unsub):
+            sub_unsub()
+            return
         setattr(plugin, attrname, v)
     else:
         setattr(engine, k, v)
