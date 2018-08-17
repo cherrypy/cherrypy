@@ -142,7 +142,7 @@ def hooks_namespace(k, v):
     # Little-known fact you only get from reading source ;)
     hookpoint = k.split('.', 1)[0]
     if isinstance(v, text_or_bytes):
-        v = cherrypy.lib.attributes(v)
+        v = cherrypy.lib.reprconf.attributes(v)
     if not isinstance(v, Hook):
         v = Hook(v)
     cherrypy.serving.request.hooks[hookpoint].append(v)
