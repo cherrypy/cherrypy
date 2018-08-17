@@ -63,8 +63,9 @@ import sys
 
 import six
 
+from more_itertools import always_iterable
+
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
 
@@ -268,11 +269,8 @@ def send_response(req, status, headers, body, stream=False):
         req.flush()
 
     # Set response body
-    if isinstance(body, text_or_bytes):
-        req.write(body)
-    else:
-        for seg in body:
-            req.write(seg)
+    for seg in always_iterable(body):
+        req.write(seg)
 
 
 # --------------- Startup tools for CherryPy + mod_python --------------- #
