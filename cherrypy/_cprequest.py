@@ -6,7 +6,7 @@ import uuid
 import six
 from six.moves.http_cookies import SimpleCookie, CookieError
 
-from more_itertools.recipes import consume
+from more_itertools import consume
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes, ntob
