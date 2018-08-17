@@ -123,14 +123,19 @@ from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import reprconf
 
 
+def _if_filename_register_autoreload(ob):
+    """Register for autoreload if ob is a string (presumed filename)."""
+    is_filename = isinstance(ob, text_or_bytes)
+    is_filename and cherrypy.engine.autoreload.files.add(ob)
+
+
 def merge(base, other):
     """Merge one app config (from a dict, file, or filename) into another.
 
     If the given config is a filename, it will be appended to
     the list of files to monitor for "autoreload" changes.
     """
-    if isinstance(other, text_or_bytes):
-        cherrypy.engine.autoreload.files.add(other)
+    _if_filename_register_autoreload(other)
 
     # Load other into base
     for section, value_map in reprconf.Parser.load(other).items():
@@ -148,9 +153,7 @@ class Config(reprconf.Config):
 
     def update(self, config):
         """Update self from a dict, file or filename."""
-        if isinstance(config, text_or_bytes):
-            # Filename
-            cherrypy.engine.autoreload.files.add(config)
+        _if_filename_register_autoreload(config)
         super(Config, self).update(config)
 
     def _apply(self, config):
