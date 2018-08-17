@@ -800,9 +800,8 @@ class ResponseBody(object):
                 value = []
         elif isinstance(value, list):
             # every item in a list must be bytes...
-            for i, item in enumerate(value):
-                if isinstance(item, six.text_type):
-                    raise ValueError(self.unicode_err)
+            if any(isinstance(item, six.text_type) for item in value):
+                raise ValueError(self.unicode_err)
         # Don't use isinstance here; io.IOBase which has an ABC takes
         # 1000 times as long as, say, isinstance(value, str)
         elif hasattr(value, 'read'):
