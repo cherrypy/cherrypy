@@ -9,7 +9,7 @@ from six.moves.http_cookies import SimpleCookie, CookieError
 from more_itertools import consume
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy import _cpreqbody
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil, file_generator, reprconf
@@ -141,7 +141,7 @@ def hooks_namespace(k, v):
     # hookpoint per path (e.g. "hooks.before_handler.1").
     # Little-known fact you only get from reading source ;)
     hookpoint = k.split('.', 1)[0]
-    if isinstance(v, text_or_bytes):
+    if isinstance(v, six.string_types):
         v = cherrypy.lib.reprconf.attributes(v)
     if not isinstance(v, Hook):
         v = Hook(v)
