@@ -22,7 +22,7 @@ from cherrypy._cpcompat import text_or_bytes
 from six.moves import configparser
 from six.moves import builtins
 
-import operator as _operator
+import operator
 import sys
 
 
@@ -460,13 +460,13 @@ class _Builder3:
         return op(left, right)
 
     def build_Add(self, o):
-        return _operator.add
+        return operator.add
 
     def build_Mult(self, o):
-        return _operator.mul
+        return operator.mul
 
     def build_USub(self, o):
-        return _operator.neg
+        return operator.neg
 
     def build_Attribute(self, o):
         parent = self.build(o.value)
