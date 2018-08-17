@@ -164,13 +164,8 @@ class Config(reprconf.Config):
         super(Config, self)._apply(config)
 
     @staticmethod
-    def __call__(*args, **kwargs):
+    def __call__(**kwargs):
         """Decorate for page handlers to set _cp_config."""
-        if args:
-            raise TypeError(
-                'The cherrypy.config decorator does not accept positional '
-                'arguments; you must use keyword arguments.')
-
         def tool_decorator(f):
             _Vars(f).setdefault('_cp_config', {}).update(kwargs)
             return f
