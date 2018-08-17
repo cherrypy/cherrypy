@@ -263,11 +263,11 @@ def _engine_namespace_handler(k, v):
     """Config handler for the "engine" namespace."""
     engine = cherrypy.engine
 
-    if k == 'SIGHUP':
-        engine.subscribe('SIGHUP', v)
-    elif k == 'SIGTERM':
-        engine.subscribe('SIGTERM', v)
-    elif '.' in k:
+    if k in {'SIGHUP', 'SIGTERM'}:
+        engine.subscribe(k, v)
+        return
+
+    if '.' in k:
         plugin, attrname = k.split('.', 1)
         plugin = getattr(engine, plugin)
         op = 'subscribe' if v else 'unsubscribe'
