@@ -868,19 +868,9 @@ class Response(object):
 
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
-        if isinstance(self.body, text_or_bytes):
-            return self.body
-
-        newbody = []
-        for chunk in self.body:
-            if six.PY3 and not isinstance(chunk, bytes):
-                raise TypeError("Chunk %s is not of type 'bytes'." %
-                                repr(chunk))
-            newbody.append(chunk)
-        newbody = b''.join(newbody)
-
-        self.body = newbody
-        return newbody
+        new_body = b''.join(self.body)
+        self.body = new_body
+        return new_body
 
     def _flush_body(self):
         """
