@@ -151,7 +151,7 @@ class Config(reprconf.Config):
         if isinstance(config, text_or_bytes):
             # Filename
             cherrypy.engine.autoreload.files.add(config)
-        reprconf.Config.update(self, config)
+        super(Config, self).update(config)
 
     def _apply(self, config):
         """Update self from a dict."""
@@ -161,7 +161,7 @@ class Config(reprconf.Config):
             config = config['global']
         if 'tools.staticdir.dir' in config:
             config['tools.staticdir.section'] = 'global'
-        reprconf.Config._apply(self, config)
+        super(Config, self)._apply(config)
 
     @staticmethod
     def __call__(*args, **kwargs):
