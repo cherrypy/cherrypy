@@ -135,7 +135,7 @@ import six
 import cheroot.server
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, ntou, unquote
+from cherrypy._cpcompat import ntou, unquote
 from cherrypy.lib import httputil
 
 
@@ -718,7 +718,7 @@ class Part(Entity):
             self.file = self.read_into_file()
         else:
             result = self.read_lines_to_boundary()
-            if isinstance(result, text_or_bytes):
+            if isinstance(result, bytes):
                 self.value = result
             else:
                 self.file = result
