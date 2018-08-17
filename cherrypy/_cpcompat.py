@@ -133,7 +133,7 @@ else:
     json_encode = _json_encode
 
 
-text_or_bytes = six.text_type, six.binary_type
+text_or_bytes = six.text_type, bytes
 
 
 if sys.version_info >= (3, 3):
