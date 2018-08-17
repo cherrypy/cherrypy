@@ -37,15 +37,6 @@ import sys
 from six.moves import builtins
 
 
-def as_dict(config):
-    """Return a dict from 'config' whether it is a dict, file, or filename."""
-    if isinstance(config, text_or_bytes):
-        config = Parser().dict_from_file(config)
-    elif hasattr(config, 'read'):
-        config = Parser().dict_from_file(config)
-    return config
-
-
 class NamespaceSet(dict):
 
     """A dict of config namespace names and handlers.
@@ -146,16 +137,8 @@ class Config(dict):
         dict.update(self, self.defaults)
 
     def update(self, config):
-        """Update self from a dict, file or filename."""
-        if isinstance(config, text_or_bytes):
-            # Filename
-            config = Parser().dict_from_file(config)
-        elif hasattr(config, 'read'):
-            # Open file object
-            config = Parser().dict_from_file(config)
-        else:
-            config = config.copy()
-        self._apply(config)
+        """Update self from a dict, file, or filename."""
+        self._apply(Parser.load(config))
 
     def _apply(self, config):
         """Update self from a dict."""
@@ -223,6 +206,17 @@ class Parser(ConfigParser):
         else:
             self.read(file)
         return self.as_dict()
+
+    @classmethod
+    def load(self, input):
+        """Resolve 'input' to dict from a dict, file, or filename."""
+        is_file = (
+            # Filename
+            isinstance(input, text_or_bytes)
+            # Open file object
+            or hasattr(input, 'read')
+        )
+        return Parser().dict_from_file(input) if is_file else input.copy()
 
 
 # public domain "unrepr" implementation, found on the web and then improved.
