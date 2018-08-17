@@ -126,9 +126,11 @@ from xml.sax import saxutils
 import six
 from six.moves import urllib
 
+from more_itertools import always_iterable
+
 import cherrypy
 from cherrypy._cpcompat import escape_html
-from cherrypy._cpcompat import text_or_bytes, ntob
+from cherrypy._cpcompat import ntob
 from cherrypy._cpcompat import tonative
 from cherrypy._helper import classproperty
 from cherrypy.lib import httputil as _httputil
@@ -204,9 +206,6 @@ class HTTPRedirect(CherryPyException):
     """The encoding when passed urls are not native strings"""
 
     def __init__(self, urls, status=None, encoding=None):
-        if isinstance(urls, text_or_bytes):
-            urls = [urls]
-
         self.urls = abs_urls = [
             # Note that urljoin will "do the right thing" whether url is:
             #  1. a complete URL with host (e.g. "http://www.example.com/test")
@@ -217,7 +216,7 @@ class HTTPRedirect(CherryPyException):
                 cherrypy.url(),
                 tonative(url, encoding or self.encoding),
             )
-            for url in urls
+            for url in always_iterable(urls)
         ]
 
         status = (
