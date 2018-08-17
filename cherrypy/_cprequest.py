@@ -789,7 +789,7 @@ class ResponseBody(object):
         if isinstance(value, six.text_type):
             raise ValueError(self.unicode_err)
 
-        if isinstance(value, text_or_bytes):
+        if isinstance(value, bytes):
             # strings get wrapped in a list because iterating over a single
             # item list is much faster than iterating over every character
             # in a long string.
