@@ -26,11 +26,6 @@ try:
 except ImportError:
     from ConfigParser import ConfigParser
 
-try:
-    text_or_bytes
-except NameError:
-    text_or_bytes = str
-
 import operator as _operator
 import sys
 
