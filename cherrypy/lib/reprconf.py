@@ -19,17 +19,11 @@ and the handler must be either a callable or a context manager.
 """
 
 from cherrypy._cpcompat import text_or_bytes
-
-try:
-    # Python 3.0+
-    from configparser import ConfigParser
-except ImportError:
-    from ConfigParser import ConfigParser
+from six.moves import configparser
+from six.moves import builtins
 
 import operator as _operator
 import sys
-
-from six.moves import builtins
 
 
 class NamespaceSet(dict):
@@ -152,7 +146,7 @@ class Config(dict):
         self.namespaces({k: v})
 
 
-class Parser(ConfigParser):
+class Parser(configparser.ConfigParser):
 
     """Sub-class of ConfigParser that keeps the case of options and that
     raises an exception if the file cannot be read.
