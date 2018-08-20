@@ -12,7 +12,7 @@ import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy import _cpreqbody
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httputil, file_generator, reprconf, encoding
+from cherrypy.lib import httputil, reprconf, encoding
 
 
 class Hook(object):
