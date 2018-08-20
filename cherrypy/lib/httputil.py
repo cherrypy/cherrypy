@@ -20,7 +20,6 @@ from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
-from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import unquote_plus
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
@@ -522,8 +521,8 @@ class HeaderMap(CaseInsensitiveDict):
             if isinstance(k, six.text_type):
                 k = cls.encode(k)
 
-            if not isinstance(v, text_or_bytes):
-                v = str(v)
+            if not isinstance(v, six.string_types):
+                v = six.text_type(v)
 
             if isinstance(v, six.text_type):
                 v = cls.encode(v)
