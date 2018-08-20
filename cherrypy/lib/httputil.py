@@ -15,7 +15,7 @@ from cgi import parse_header
 from email.header import decode_header
 
 import six
-from six.moves import range, builtins
+from six.moves import range, builtins, map
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
 
 import cherrypy
@@ -521,20 +521,17 @@ class HeaderMap(CaseInsensitiveDict):
             if not isinstance(v, six.string_types):
                 v = six.text_type(v)
 
-            if isinstance(k, six.text_type):
-                k = cls.encode(k)
+            yield tuple(map(cls.encode_header_item, (k, v)))
 
-            if isinstance(v, six.text_type):
-                v = cls.encode(v)
+    @classmethod
+    def encode_header_item(cls, item):
+        if isinstance(item, six.text_type):
+            item = cls.encode(item)
 
-            # See header_translate_* constants above.
-            # Replace only if you really know what you're doing.
-            k = k.translate(header_translate_table,
-                            header_translate_deletechars)
-            v = v.translate(header_translate_table,
-                            header_translate_deletechars)
-
-            yield (k, v)
+        # See header_translate_* constants above.
+        # Replace only if you really know what you're doing.
+        return item.translate(
+            header_translate_table, header_translate_deletechars)
 
     @classmethod
     def encode(cls, v):
