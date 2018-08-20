@@ -220,19 +220,7 @@ class ResponseEncoder:
         response = cherrypy.serving.response
         self.body = self.oldhandler(*args, **kwargs)
 
-        if isinstance(self.body, text_or_bytes):
-            # strings get wrapped in a list because iterating over a single
-            # item list is much faster than iterating over every character
-            # in a long string.
-            if self.body:
-                self.body = [self.body]
-            else:
-                # [''] doesn't evaluate to False, so replace it with [].
-                self.body = []
-        elif hasattr(self.body, 'read'):
-            self.body = file_generator(self.body)
-        elif self.body is None:
-            self.body = []
+        self.body = prepare_iter(self.body)
 
         ct = response.headers.elements('Content-Type')
         if self.debug:
@@ -268,6 +256,29 @@ class ResponseEncoder:
                 response.headers['Content-Type'] = str(ct)
 
         return self.body
+
+
+def prepare_iter(value):
+    """
+    Ensure response body is iterable and resolves to False when empty.
+    """
+    if isinstance(value, text_or_bytes):
+        # strings get wrapped in a list because iterating over a single
+        # item list is much faster than iterating over every character
+        # in a long string.
+        if value:
+            value = [value]
+        else:
+            # [''] doesn't evaluate to False, so replace it with [].
+            value = []
+    # Don't use isinstance here; io.IOBase which has an ABC takes
+    # 1000 times as long as, say, isinstance(value, str)
+    elif hasattr(value, 'read'):
+        value = file_generator(value)
+    elif value is None:
+        value = []
+    return value
+
 
 # GZIP
 

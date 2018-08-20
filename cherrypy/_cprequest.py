@@ -12,7 +12,7 @@ import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy import _cpreqbody
 from cherrypy._cperror import format_exc, bare_error
-from cherrypy.lib import httputil, file_generator, reprconf
+from cherrypy.lib import httputil, file_generator, reprconf, encoding
 
 
 class Hook(object):
@@ -793,22 +793,7 @@ class ResponseBody(object):
             if any(isinstance(item, six.text_type) for item in value):
                 raise ValueError(self.unicode_err)
 
-        if isinstance(value, bytes):
-            # strings get wrapped in a list because iterating over a single
-            # item list is much faster than iterating over every character
-            # in a long string.
-            if value:
-                value = [value]
-            else:
-                # [''] doesn't evaluate to False, so replace it with [].
-                value = []
-        # Don't use isinstance here; io.IOBase which has an ABC takes
-        # 1000 times as long as, say, isinstance(value, str)
-        elif hasattr(value, 'read'):
-            value = file_generator(value)
-        elif value is None:
-            value = []
-        obj._body = value
+        obj._body = encoding.prepare_iter(value)
 
 
 class Response(object):
