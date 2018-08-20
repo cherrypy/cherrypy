@@ -1,3 +1,11 @@
+v17.4.0
+-------
+
+* :commit:`a95e619f`: When setting Response Body, reject Unicode
+  values, making behavior on Python 2 same as on Python 3.
+
+* Other inconsequential refactorings.
+
 v17.3.0
 -------
 
