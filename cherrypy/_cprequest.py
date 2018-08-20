@@ -788,6 +788,10 @@ class ResponseBody(object):
         # Convert the given value to an iterable object.
         if isinstance(value, six.text_type):
             raise ValueError(self.unicode_err)
+        elif isinstance(value, list):
+            # every item in a list must be bytes...
+            if any(isinstance(item, six.text_type) for item in value):
+                raise ValueError(self.unicode_err)
 
         if isinstance(value, bytes):
             # strings get wrapped in a list because iterating over a single
@@ -798,10 +802,6 @@ class ResponseBody(object):
             else:
                 # [''] doesn't evaluate to False, so replace it with [].
                 value = []
-        elif isinstance(value, list):
-            # every item in a list must be bytes...
-            if any(isinstance(item, six.text_type) for item in value):
-                raise ValueError(self.unicode_err)
         # Don't use isinstance here; io.IOBase which has an ABC takes
         # 1000 times as long as, say, isinstance(value, str)
         elif hasattr(value, 'read'):
