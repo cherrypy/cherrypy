@@ -518,11 +518,11 @@ class HeaderMap(CaseInsensitiveDict):
         transmitting on the wire for HTTP.
         """
         for k, v in header_items:
-            if isinstance(k, six.text_type):
-                k = cls.encode(k)
-
             if not isinstance(v, six.string_types):
                 v = six.text_type(v)
+
+            if isinstance(k, six.text_type):
+                k = cls.encode(k)
 
             if isinstance(v, six.text_type):
                 v = cls.encode(v)
