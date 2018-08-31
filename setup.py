@@ -100,7 +100,7 @@ params = dict(
         # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
         ':sys_platform == "win32" and python_version != "3.4"': ['pywin32'],
         ':sys_platform == "win32" and python_version == "3.4"':
-            ['pypiwin32==219'],
+            ['pypiwin32==223'],
     },
     setup_requires=[
         'setuptools_scm',
