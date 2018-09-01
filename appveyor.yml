@@ -3,7 +3,6 @@ environment:
   - PYTHON: "C:\\Python36-x64"
   - PYTHON: "C:\\Python35-x64"
   - PYTHON: "C:\\Python34-x64"
-  - PYTHON: "C:\\Python27-x64"
 
 install:
 # symlink python from a directory with a space
