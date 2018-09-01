@@ -4,6 +4,8 @@ v18.0.0
 * :issue:`1730`: Drop support for Python 2.7. CherryPy 17 will
   remain an LTS release for bug and security fixes.
 
+* Drop support for Python 3.4.
+
 v17.4.0
 -------
 

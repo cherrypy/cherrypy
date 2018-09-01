@@ -25,7 +25,6 @@ params = dict(
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -96,14 +95,12 @@ params = dict(
         'xcgi': ['flup'],
 
         # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-        ':sys_platform == "win32" and python_version != "3.4"': ['pywin32'],
-        ':sys_platform == "win32" and python_version == "3.4"':
-            ['pypiwin32==219'],
+        ':sys_platform == "win32"': ['pywin32'],
     },
     setup_requires=[
         'setuptools_scm',
     ],
-    python_requires='>=3.4',
+    python_requires='>=3.5',
 )
 
 
