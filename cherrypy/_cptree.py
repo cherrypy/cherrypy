@@ -3,7 +3,6 @@
 import os
 
 import cherrypy
-from cherrypy._cpcompat import ntou
 from cherrypy import _cpconfig, _cplogging, _cprequest, _cpwsgi, tools
 from cherrypy.lib import httputil, reprconf
 

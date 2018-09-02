@@ -1,6 +1,5 @@
 import sys
 import imp
-import types
 import importlib
 
 import cherrypy
