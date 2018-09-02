@@ -149,7 +149,7 @@ html_theme_options = {
     'github_repo': project.lower(),
     'github_button': True,
     'github_banner': True,
-    'github_type': 'watch',
+    'github_type': 'star',
     'github_count': True,
     'travis_button': True,
     'codecov_button': True,
