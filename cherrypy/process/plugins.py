@@ -6,8 +6,7 @@ import signal as _signal
 import sys
 import time
 import threading
-
-from six.moves import _thread
+import _thread
 
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy._cpcompat import ntob, Timer

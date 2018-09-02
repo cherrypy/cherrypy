@@ -3,8 +3,6 @@
 import os
 from unittest import mock
 
-import six
-
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy.test import helper, logtest
@@ -109,9 +107,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
     @mock.patch(
         'cherrypy._cplogging.LogManager.access_log_format',
-        '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}'
-        if six.PY3 else
-        '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}" {o}',
     )
     def testCustomLogFormat(self):
         """Test a customized access_log_format string, which is a
@@ -126,9 +122,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
     @mock.patch(
         'cherrypy._cplogging.LogManager.access_log_format',
-        '{h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}'
-        if six.PY3 else
-        '%(h)s %(l)s %(u)s %(z)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(o)s'
+        '{h} {l} {u} {z} "{r}" {s} {b} "{f}" "{a}" {o}',
     )
     def testTimezLogFormat(self):
         """Test a customized access_log_format string, which is a
@@ -150,7 +144,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
 
     @mock.patch(
         'cherrypy._cplogging.LogManager.access_log_format',
-        '{i}' if six.PY3 else '%(i)s'
+        '{i}',
     )
     def testUUIDv4ParameterLogFormat(self):
         """Test rendering of UUID4 within access log."""
@@ -163,11 +157,8 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage('/uni_code')
         self.assertStatus(200)
-        if six.PY3:
-            # The repr of a bytestring in six.PY3 includes a b'' prefix
-            self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
-        else:
-            self.assertLog(-1, repr(tartaros.encode('utf8'))[1:-1])
+        # The repr of a bytestring includes a b'' prefix
+        self.assertLog(-1, repr(tartaros.encode('utf8'))[2:-1])
         # Test the erebos value. Included inline for your enlightenment.
         # Note the 'r' prefix--those backslashes are literals.
         self.assertLog(-1, r'\xce\x88\xcf\x81\xce\xb5\xce\xb2\xce\xbf\xcf\x82')
@@ -176,10 +167,7 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.markLog()
         self.getPage('/slashes')
         self.assertStatus(200)
-        if six.PY3:
-            self.assertLog(-1, b'"GET /slashed\\path HTTP/1.1"')
-        else:
-            self.assertLog(-1, r'"GET /slashed\\path HTTP/1.1"')
+        self.assertLog(-1, b'"GET /slashed\\path HTTP/1.1"')
 
         # Test whitespace in output.
         self.markLog()

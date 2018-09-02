@@ -3,8 +3,7 @@ import signal
 import time
 import unittest
 import warnings
-
-from six.moves.http_client import BadStatusLine
+from http.client import BadStatusLine
 
 import pytest
 import portend

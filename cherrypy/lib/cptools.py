@@ -3,9 +3,7 @@
 import logging
 import re
 from hashlib import md5
-
-import six
-from six.moves import urllib
+import urllib.parse
 
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes
@@ -307,7 +305,7 @@ class SessionAuth(object):
 
     def login_screen(self, from_page='..', username='', error_msg='',
                      **kwargs):
-        return (six.text_type("""<html><body>
+        return (str("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="username" value="%(username)s" size="10" />

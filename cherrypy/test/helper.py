@@ -13,7 +13,6 @@ import warnings
 
 import portend
 import pytest
-import six
 
 from cheroot.test import webtest
 
@@ -93,7 +92,7 @@ class LocalSupervisor(Supervisor):
 
         cherrypy.engine.exit()
 
-        servers_copy = list(six.iteritems(getattr(cherrypy, 'servers', {})))
+        servers_copy = list(getattr(cherrypy, 'servers', {}).items())
         for name, server in servers_copy:
             server.unsubscribe()
             del cherrypy.servers[name]
@@ -449,7 +448,7 @@ server.ssl_private_key: r'%s'
             'extra': extra,
         }
         with io.open(self.config_file, 'w', encoding='utf-8') as f:
-            f.write(six.text_type(conf))
+            f.write(str(conf))
 
     def start(self, imports=None):
         """Start cherryd in a subprocess."""

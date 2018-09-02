@@ -3,8 +3,7 @@ import threading
 import time
 import socket
 import importlib
-
-from six.moves.http_client import HTTPConnection
+from http.client import HTTPConnection
 
 import pytest
 from path import Path

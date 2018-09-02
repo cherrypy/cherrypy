@@ -7,10 +7,7 @@ import time
 import types
 import unittest
 import operator
-
-import six
-from six.moves import range, map
-from six.moves.http_client import IncompleteRead
+from http.client import IncompleteRead
 
 import cherrypy
 from cherrypy import tools
@@ -52,7 +49,7 @@ class ToolTests(helper.CPWebCase):
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get('map', {})
-                    cherrypy.request.numerify_map = list(six.iteritems(m))
+                    cherrypy.request.numerify_map = list(m.items())
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
 
                 def critical():
@@ -105,10 +102,7 @@ class ToolTests(helper.CPWebCase):
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
-                if six.PY3:
-                    r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
-                else:
-                    r.body = [chr((ord(x) + scale) % 256) for x in r.body[0]]
+                r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
@@ -179,7 +173,7 @@ class ToolTests(helper.CPWebCase):
             """
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
-                for value in six.itervalues(dct):
+                for value in dct.values():
                     if isinstance(value, types.FunctionType):
                         cherrypy.expose(value)
                 setattr(root, name.lower(), cls())
@@ -346,7 +340,7 @@ class ToolTests(helper.CPWebCase):
         self.getPage('/demo/err_in_onstart')
         self.assertErrorPage(502)
         tmpl = "AttributeError: 'str' object has no attribute '{attr}'"
-        expected_msg = tmpl.format(attr='items' if six.PY3 else 'iteritems')
+        expected_msg = tmpl.format(attr='items')
         self.assertInBody(expected_msg)
 
     def testCombinedTools(self):
@@ -377,11 +371,7 @@ class ToolTests(helper.CPWebCase):
         # but it proves the priority was changed.
         self.getPage('/decorated_euro/subpath',
                      headers=[('Accept-Encoding', 'gzip')])
-        if six.PY3:
-            self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
-        else:
-            self.assertInBody(''.join([chr((ord(x) + 3) % 256)
-                              for x in zbuf.getvalue()]))
+        self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
 
     def testBareHooks(self):
         content = 'bit of a pain in me gulliver'
@@ -446,8 +436,8 @@ class SessionAuthTest(unittest.TestCase):
         username and password were unicode.
         """
         sa = cherrypy.lib.cptools.SessionAuth()
-        res = sa.login_screen(None, username=six.text_type('nobody'),
-                              password=six.text_type('anypass'))
+        res = sa.login_screen(None, username=str('nobody'),
+                              password=str('anypass'))
         self.assertTrue(isinstance(res, bytes))
 
 

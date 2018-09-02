@@ -119,12 +119,10 @@ and not simply return an error message as a result.
 
 import io
 import contextlib
+import urllib.parse
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
 from xml.sax import saxutils
-
-import six
-from six.moves import urllib
 
 from more_itertools import always_iterable
 
@@ -496,7 +494,7 @@ def get_error_page(status, **kwargs):
     if kwargs.get('version') is None:
         kwargs['version'] = cherrypy.__version__
 
-    for k, v in six.iteritems(kwargs):
+    for k, v in kwargs.items():
         if v is None:
             kwargs[k] = ''
         else:
@@ -520,13 +518,13 @@ def get_error_page(status, **kwargs):
                 if cherrypy.lib.is_iterator(result):
                     from cherrypy.lib.encoding import UTF8StreamEncoder
                     return UTF8StreamEncoder(result)
-                elif isinstance(result, six.text_type):
+                elif isinstance(result, str):
                     return result.encode('utf-8')
                 else:
                     if not isinstance(result, bytes):
                         raise ValueError(
                             'error page function did not '
-                            'return a bytestring, six.text_type or an '
+                            'return a bytestring, str or an '
                             'iterator - returned object of type %s.'
                             % (type(result).__name__))
                     return result

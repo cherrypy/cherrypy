@@ -3,8 +3,6 @@ import imp
 import types
 import importlib
 
-import six
-
 import cherrypy
 from cherrypy.test import helper
 
@@ -39,8 +37,6 @@ class TutorialTest(helper.CPWebCase):
         root = getattr(module, root_name)
         conf = getattr(module, 'tutconf')
         class_types = type,
-        if six.PY2:
-            class_types += types.ClassType,
         if isinstance(root, class_types):
             root = root()
         cherrypy.tree.mount(root, config=conf)

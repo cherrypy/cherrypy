@@ -81,8 +81,6 @@ import warnings
 import subprocess
 import functools
 
-import six
-
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -436,7 +434,7 @@ class Bus(object):
         :seealso: http://stackoverflow.com/a/28414807/595220
         """
         try:
-            char_p = ctypes.c_char_p if six.PY2 else ctypes.c_wchar_p
+            char_p = ctypes.c_wchar_p
 
             argv = ctypes.POINTER(char_p)()
             argc = ctypes.c_int()

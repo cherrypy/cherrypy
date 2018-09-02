@@ -3,9 +3,7 @@ from itertools import count
 import os
 import threading
 import time
-
-from six.moves import range
-from six.moves import urllib
+import urllib.parse
 
 import pytest
 

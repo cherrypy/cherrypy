@@ -193,8 +193,6 @@ import sys
 import threading
 import time
 
-import six
-
 import cherrypy
 from cherrypy._cpcompat import json
 
@@ -613,7 +611,7 @@ table.stats2 th {
         """Return ([headers], [rows]) for the given collection."""
         # E.g., the 'Requests' dict.
         headers = []
-        vals = six.itervalues(v)
+        vals = v.values()
         for record in vals:
             for k3 in record:
                 format = formatting.get(k3, missing)

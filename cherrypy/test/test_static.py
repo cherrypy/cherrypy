@@ -5,10 +5,8 @@ import os
 import sys
 import platform
 import tempfile
-
-from six import text_type as str
-from six.moves import urllib
-from six.moves.http_client import HTTPConnection
+import urllib.parse
+from http.client import HTTPConnection
 
 import pytest
 import py.path

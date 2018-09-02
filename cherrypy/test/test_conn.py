@@ -4,10 +4,8 @@ import errno
 import socket
 import sys
 import time
-
-import six
-from six.moves import urllib
-from six.moves.http_client import BadStatusLine, HTTPConnection, NotConnected
+import urllib.parse
+from http.client import BadStatusLine, HTTPConnection, NotConnected
 
 import pytest
 
@@ -91,7 +89,7 @@ def setup_server():
                 body = [body]
             newbody = []
             for chunk in body:
-                if isinstance(chunk, six.text_type):
+                if isinstance(chunk, str):
                     chunk = chunk.encode('ISO-8859-1')
                 newbody.append(chunk)
             return newbody
@@ -441,8 +439,7 @@ class PipelineTests(helper.CPWebCase):
             # ``conn.sock``. Until that bug get's fixed we will
             # monkey patch the ``response`` instance.
             # https://bugs.python.org/issue23377
-            if six.PY3:
-                response.fp = conn.sock.makefile('rb', 0)
+            response.fp = conn.sock.makefile('rb', 0)
             response.begin()
             body = response.read(13)
             self.assertEqual(response.status, 200)

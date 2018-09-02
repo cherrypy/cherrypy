@@ -113,8 +113,6 @@ import logging
 import os
 import sys
 
-import six
-
 import cherrypy
 from cherrypy import _cperror
 
@@ -155,11 +153,7 @@ class LogManager(object):
     access_log = None
     """The actual :class:`logging.Logger` instance for access messages."""
 
-    access_log_format = (
-        '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
-        if six.PY3 else
-        '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
-    )
+    access_log_format = '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
 
     logger_root = None
     """The "top-level" logger name.
@@ -254,8 +248,7 @@ class LogManager(object):
             status = '-'
         else:
             status = response.output_status.split(b' ', 1)[0]
-            if six.PY3:
-                status = status.decode('ISO-8859-1')
+            status = status.decode('ISO-8859-1')
 
         atoms = {'h': remote.name or remote.ip,
                  'l': '-',
@@ -270,7 +263,7 @@ class LogManager(object):
                  'i': request.unique_id,
                  'z': LazyRfc3339UtcTime(),
                  }
-        if six.PY3:
+        if True:
             for k, v in atoms.items():
                 if not isinstance(v, str):
                     v = str(v)
@@ -290,23 +283,6 @@ class LogManager(object):
             try:
                 self.access_log.log(
                     logging.INFO, self.access_log_format.format(**atoms))
-            except Exception:
-                self(traceback=True)
-        else:
-            for k, v in atoms.items():
-                if isinstance(v, six.text_type):
-                    v = v.encode('utf8')
-                elif not isinstance(v, str):
-                    v = str(v)
-                # Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
-                # and backslash for us. All we have to do is strip the quotes.
-                v = repr(v)[1:-1]
-                # Escape double-quote.
-                atoms[k] = v.replace('"', '\\"')
-
-            try:
-                self.access_log.log(
-                    logging.INFO, self.access_log_format % atoms)
             except Exception:
                 self(traceback=True)
 

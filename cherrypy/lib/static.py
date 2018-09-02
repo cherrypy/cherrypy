@@ -5,11 +5,10 @@ import platform
 import re
 import stat
 import mimetypes
+import urllib.parse
 
 from email.generator import _make_boundary as make_boundary
 from io import UnsupportedOperation
-
-from six.moves import urllib
 
 import cherrypy
 from cherrypy._cpcompat import ntob

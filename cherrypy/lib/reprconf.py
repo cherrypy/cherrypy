@@ -18,12 +18,12 @@ by adding a named handler to Config.namespaces. The name can be any string,
 and the handler must be either a callable or a context manager.
 """
 
-from cherrypy._cpcompat import text_or_bytes
-from six.moves import configparser
-from six.moves import builtins
-
+import configparser
+import builtins
 import operator
 import sys
+
+from cherrypy._cpcompat import text_or_bytes
 
 
 class NamespaceSet(dict):
@@ -62,9 +62,9 @@ class NamespaceSet(dict):
 
         # I chose __enter__ and __exit__ so someday this could be
         # rewritten using Python 2.5's 'with' statement:
-        # for ns, handler in six.iteritems(self):
+        # for ns, handler in self.items():
         #     with handler as callable:
-        #         for k, v in six.iteritems(ns_confs.get(ns, {})):
+        #         for k, v in ns_confs.get(ns, {}).items():
         #             callable(k, v)
         for ns, handler in self.items():
             exit = getattr(handler, '__exit__', None)

@@ -1,7 +1,6 @@
 """Helper functions for CP apps."""
 
-import six
-from six.moves import urllib
+import urllib.parse
 
 from cherrypy._cpcompat import text_or_bytes
 
@@ -26,9 +25,6 @@ def expose(func=None, alias=None):
     import sys
     import types
     decoratable_types = types.FunctionType, types.MethodType, type,
-    if six.PY2:
-        # Old-style classes are type types.ClassType.
-        decoratable_types += types.ClassType,
     if isinstance(func, decoratable_types):
         if alias is None:
             # @expose

@@ -58,7 +58,6 @@ params = dict(
     entry_points={'console_scripts': ['cherryd = cherrypy.__main__:run']},
     include_package_data=True,
     install_requires=[
-        'six>=1.11.0',
         'cheroot>=6.2.4',
         'portend>=2.1.1',
         'more_itertools',

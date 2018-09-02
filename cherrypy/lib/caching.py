@@ -37,8 +37,6 @@ import sys
 import threading
 import time
 
-import six
-
 import cherrypy
 from cherrypy.lib import cptools, httputil
 from cherrypy._cpcompat import Event
@@ -199,7 +197,7 @@ class MemoryCache(Cache):
             now = time.time()
             # Must make a copy of expirations so it doesn't change size
             # during iteration
-            items = list(six.iteritems(self.expirations))
+            items = list(self.expirations.items())
             for expiration_time, objects in items:
                 if expiration_time <= now:
                     for obj_size, uri, sel_header_values in objects:

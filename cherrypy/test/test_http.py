@@ -6,10 +6,8 @@ import mimetypes
 import socket
 import sys
 from unittest import mock
-
-import six
-from six.moves.http_client import HTTPConnection
-from six.moves import urllib
+import urllib.parse
+from http.client import HTTPConnection
 
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection, quote
@@ -105,14 +103,12 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            if six.PY3:
-                                curchar = chr(curchar)
+                            curchar = chr(curchar)
                             summary.append('%s * %d' % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    if six.PY3:
-                        curchar = chr(curchar)
+                    curchar = chr(curchar)
                     summary.append('%s * %d' % (curchar, count))
                 return ', '.join(summary)
 

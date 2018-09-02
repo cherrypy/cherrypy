@@ -106,9 +106,8 @@ import os
 import time
 import threading
 import binascii
+import pickle
 
-import six
-from six.moves import cPickle as pickle
 import contextlib2
 
 import zc.lockfile
@@ -117,10 +116,6 @@ import cherrypy
 from cherrypy.lib import httputil
 from cherrypy.lib import locking
 from cherrypy.lib import is_iterator
-
-
-if six.PY2:
-    FileNotFoundError = OSError
 
 
 missing = object()
@@ -410,7 +405,7 @@ class RamSession(Session):
         """Clean up expired sessions."""
 
         now = self.now()
-        for _id, (data, expiration_time) in list(six.iteritems(self.cache)):
+        for _id, (data, expiration_time) in list(self.cache.items()):
             if expiration_time <= now:
                 try:
                     del self.cache[_id]

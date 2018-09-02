@@ -10,13 +10,11 @@ to a public caning.
 import functools
 import email.utils
 import re
+import builtins
 from binascii import b2a_base64
 from cgi import parse_header
 from email.header import decode_header
-
-import six
-from six.moves import range, builtins, map
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
@@ -143,7 +141,7 @@ class HeaderElement(object):
         return self.value < other.value
 
     def __str__(self):
-        p = [';%s=%s' % (k, v) for k, v in six.iteritems(self.params)]
+        p = [';%s=%s' % (k, v) for k, v in self.params.items()]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
@@ -209,14 +207,11 @@ class AcceptElement(HeaderElement):
 
             Ref: https://github.com/cherrypy/cherrypy/issues/1370
             """
-            six.raise_from(
-                cherrypy.HTTPError(
-                    400,
-                    'Malformed HTTP header: `{}`'.
-                    format(str(self)),
-                ),
-                val_err,
-            )
+            raise cherrypy.HTTPError(
+                400,
+                'Malformed HTTP header: `{}`'.
+                format(str(self)),
+            ) from val_err
 
     def __cmp__(self, other):
         diff = builtins.cmp(self.qvalue, other.qvalue)
@@ -295,7 +290,7 @@ def valid_status(status):
         status = 200
 
     code, reason = status, None
-    if isinstance(status, six.string_types):
+    if isinstance(status, str):
         code, _, reason = status.partition(' ')
         reason = reason.strip() or None
 
@@ -518,14 +513,14 @@ class HeaderMap(CaseInsensitiveDict):
         transmitting on the wire for HTTP.
         """
         for k, v in header_items:
-            if not isinstance(v, six.string_types):
-                v = six.text_type(v)
+            if not isinstance(v, str):
+                v = str(v)
 
             yield tuple(map(cls.encode_header_item, (k, v)))
 
     @classmethod
     def encode_header_item(cls, item):
-        if isinstance(item, six.text_type):
+        if isinstance(item, str):
             item = cls.encode(item)
 
         # See header_translate_* constants above.
