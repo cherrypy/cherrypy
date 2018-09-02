@@ -278,11 +278,11 @@ def valid_status(status):
     If status has no reason-phrase is supplied, a default reason-
     phrase will be provided.
 
-    >>> from six.moves import http_client
-    >>> from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
-    >>> valid_status(http_client.ACCEPTED) == (
-    ...     int(http_client.ACCEPTED),
-    ... ) + BaseHTTPRequestHandler.responses[http_client.ACCEPTED]
+    >>> import http.client
+    >>> from http.server import BaseHTTPRequestHandler
+    >>> valid_status(http.client.ACCEPTED) == (
+    ...     int(http.client.ACCEPTED),
+    ... ) + BaseHTTPRequestHandler.responses[http.client.ACCEPTED]
     True
     """
 
