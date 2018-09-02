@@ -62,7 +62,6 @@ params = dict(
         'portend>=2.1.1',
         'more_itertools',
         'zc.lockfile',
-        'contextlib2',
     ],
     extras_require={
         'docs': [
