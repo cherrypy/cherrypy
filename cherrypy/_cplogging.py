@@ -263,28 +263,27 @@ class LogManager(object):
                  'i': request.unique_id,
                  'z': LazyRfc3339UtcTime(),
                  }
-        if True:
-            for k, v in atoms.items():
-                if not isinstance(v, str):
-                    v = str(v)
-                v = v.replace('"', '\\"').encode('utf8')
-                # Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
-                # and backslash for us. All we have to do is strip the quotes.
-                v = repr(v)[2:-1]
+        for k, v in atoms.items():
+            if not isinstance(v, str):
+                v = str(v)
+            v = v.replace('"', '\\"').encode('utf8')
+            # Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
+            # and backslash for us. All we have to do is strip the quotes.
+            v = repr(v)[2:-1]
 
-                # in python 3.0 the repr of bytes (as returned by encode)
-                # uses double \'s.  But then the logger escapes them yet, again
-                # resulting in quadruple slashes.  Remove the extra one here.
-                v = v.replace('\\\\', '\\')
+            # in python 3.0 the repr of bytes (as returned by encode)
+            # uses double \'s.  But then the logger escapes them yet, again
+            # resulting in quadruple slashes.  Remove the extra one here.
+            v = v.replace('\\\\', '\\')
 
-                # Escape double-quote.
-                atoms[k] = v
+            # Escape double-quote.
+            atoms[k] = v
 
-            try:
-                self.access_log.log(
-                    logging.INFO, self.access_log_format.format(**atoms))
-            except Exception:
-                self(traceback=True)
+        try:
+            self.access_log.log(
+                logging.INFO, self.access_log_format.format(**atoms))
+        except Exception:
+            self(traceback=True)
 
     def time(self):
         """Return now() in Apache Common Log Format (no timezone)."""

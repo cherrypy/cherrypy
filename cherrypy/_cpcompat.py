@@ -24,29 +24,30 @@ import urllib.parse
 import http.client
 
 
-if True:
-    def ntob(n, encoding='ISO-8859-1'):
-        """Return the given native string as a byte string in the given
-        encoding.
-        """
-        assert_native(n)
-        # In Python 3, the native string type is unicode
-        return n.encode(encoding)
+def ntob(n, encoding='ISO-8859-1'):
+    """Return the given native string as a byte string in the given
+    encoding.
+    """
+    assert_native(n)
+    # In Python 3, the native string type is unicode
+    return n.encode(encoding)
 
-    def ntou(n, encoding='ISO-8859-1'):
-        """Return the given native string as a unicode string with the given
-        encoding.
-        """
-        assert_native(n)
-        # In Python 3, the native string type is unicode
-        return n
 
-    def tonative(n, encoding='ISO-8859-1'):
-        """Return the given string as a native string in the given encoding."""
-        # In Python 3, the native string type is unicode
-        if isinstance(n, bytes):
-            return n.decode(encoding)
-        return n
+def ntou(n, encoding='ISO-8859-1'):
+    """Return the given native string as a unicode string with the given
+    encoding.
+    """
+    assert_native(n)
+    # In Python 3, the native string type is unicode
+    return n
+
+
+def tonative(n, encoding='ISO-8859-1'):
+    """Return the given string as a native string in the given encoding."""
+    # In Python 3, the native string type is unicode
+    if isinstance(n, bytes):
+        return n.decode(encoding)
+    return n
 
 
 def assert_native(n):
@@ -73,11 +74,10 @@ json_decode = json.JSONDecoder().decode
 _json_encode = json.JSONEncoder().iterencode
 
 
-if True:
-    # Encode to bytes on Python 3
-    def json_encode(value):
-        for chunk in _json_encode(value):
-            yield chunk.encode('utf-8')
+# Encode to bytes on Python 3
+def json_encode(value):
+    for chunk in _json_encode(value):
+        yield chunk.encode('utf-8')
 
 
 text_or_bytes = str, bytes

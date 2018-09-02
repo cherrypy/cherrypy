@@ -1,4 +1,5 @@
 import sys
+import socket
 
 from xmlrpc.client import (
     DateTime, Fault,
@@ -9,13 +10,11 @@ import cherrypy
 from cherrypy import _cptools
 from cherrypy.test import helper
 
-if True:
-    HTTPSTransport = SafeTransport
+HTTPSTransport = SafeTransport
 
-    # Python 3.0's SafeTransport still mistakenly checks for socket.ssl
-    import socket
-    if not hasattr(socket, 'ssl'):
-        socket.ssl = True
+# Python 3.0's SafeTransport still mistakenly checks for socket.ssl
+if not hasattr(socket, 'ssl'):
+    socket.ssl = True
 
 
 def setup_server():

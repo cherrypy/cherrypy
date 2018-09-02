@@ -114,13 +114,12 @@ class Server(ServerAdapter):
     ssl_ciphers = None
     """The ciphers list of SSL."""
 
-    if True:
-        ssl_module = 'builtin'
-        """The name of a registered SSL adaptation module to use with
-        the builtin WSGI server. Builtin options are: 'builtin' (to
-        use the SSL library built into recent versions of Python).
-        You may also register your own classes in the
-        cheroot.server.ssl_adapters dict."""
+    ssl_module = 'builtin'
+    """The name of a registered SSL adaptation module to use with
+    the builtin WSGI server. Builtin options are: 'builtin' (to
+    use the SSL library built into recent versions of Python).
+    You may also register your own classes in the
+    cheroot.server.ssl_adapters dict."""
 
     statistics = False
     """Turns statistics-gathering on or off for aware HTTP servers."""
