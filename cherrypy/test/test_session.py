@@ -395,8 +395,11 @@ class SessionTest(helper.CPWebCase):
         t.join()
 
 
-try:
-    importlib.import_module('memcache')
+def is_memcached_available():
+    try:
+        importlib.import_module('memcache')
+    except ImportError:
+        return False
 
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
@@ -410,102 +413,99 @@ try:
             s.settimeout(1.0)
             s.connect((host, port))
             s.close()
+            return True
         except socket.error:
             if s:
                 s.close()
-            raise
-        break
-except (ImportError, socket.error):
-    class MemcachedSessionTest(helper.CPWebCase):
-        setup_server = staticmethod(setup_server)
 
-        def test(self):
-            return self.skip('memcached not reachable ')
-else:
-    class MemcachedSessionTest(helper.CPWebCase):
-        setup_server = staticmethod(setup_server)
+    return False
 
-        def test_0_Session(self):
-            self.getPage(
-                '/set_session_cls/cherrypy.lib.sessions.MemcachedSession'
-            )
 
-            self.getPage('/testStr')
-            self.assertBody('1')
-            self.getPage('/testGen', self.cookies)
-            self.assertBody('2')
-            self.getPage('/testStr', self.cookies)
-            self.assertBody('3')
-            self.getPage('/length', self.cookies)
-            self.assertErrorPage(500)
-            self.assertInBody('NotImplementedError')
-            self.getPage('/delkey?key=counter', self.cookies)
-            self.assertStatus(200)
+@pytest.mark.skipif(is_memcached_available(), 'memcached not reachable')
+class MemcachedSessionTest(helper.CPWebCase):
+    setup_server = staticmethod(setup_server)
 
-            # Wait for the session.timeout (1 second)
-            time.sleep(1.25)
-            self.getPage('/')
-            self.assertBody('1')
+    def test_0_Session(self):
+        self.getPage(
+            '/set_session_cls/cherrypy.lib.sessions.MemcachedSession'
+        )
 
-            # Test session __contains__
-            self.getPage('/keyin?key=counter', self.cookies)
-            self.assertBody('True')
+        self.getPage('/testStr')
+        self.assertBody('1')
+        self.getPage('/testGen', self.cookies)
+        self.assertBody('2')
+        self.getPage('/testStr', self.cookies)
+        self.assertBody('3')
+        self.getPage('/length', self.cookies)
+        self.assertErrorPage(500)
+        self.assertInBody('NotImplementedError')
+        self.getPage('/delkey?key=counter', self.cookies)
+        self.assertStatus(200)
 
-            # Test session delete
-            self.getPage('/delete', self.cookies)
-            self.assertBody('done')
+        # Wait for the session.timeout (1 second)
+        time.sleep(1.25)
+        self.getPage('/')
+        self.assertBody('1')
 
-        def test_1_Concurrency(self):
-            client_thread_count = 5
-            request_count = 30
+        # Test session __contains__
+        self.getPage('/keyin?key=counter', self.cookies)
+        self.assertBody('True')
 
-            # Get initial cookie
-            self.getPage('/')
-            self.assertBody('1')
-            cookies = self.cookies
+        # Test session delete
+        self.getPage('/delete', self.cookies)
+        self.assertBody('done')
 
-            data_dict = {}
+    def test_1_Concurrency(self):
+        client_thread_count = 5
+        request_count = 30
 
-            def request(index):
-                for i in range(request_count):
-                    self.getPage('/', cookies)
-                    # Uncomment the following line to prove threads overlap.
-                    # sys.stdout.write("%d " % index)
-                if not self.body.isdigit():
-                    self.fail(self.body)
-                data_dict[index] = int(self.body)
+        # Get initial cookie
+        self.getPage('/')
+        self.assertBody('1')
+        cookies = self.cookies
 
-            # Start <request_count> concurrent requests from
-            # each of <client_thread_count> clients
-            ts = []
-            for c in range(client_thread_count):
-                data_dict[c] = 0
-                t = threading.Thread(target=request, args=(c,))
-                ts.append(t)
-                t.start()
+        data_dict = {}
 
-            for t in ts:
-                t.join()
+        def request(index):
+            for i in range(request_count):
+                self.getPage('/', cookies)
+                # Uncomment the following line to prove threads overlap.
+                # sys.stdout.write("%d " % index)
+            if not self.body.isdigit():
+                self.fail(self.body)
+            data_dict[index] = int(self.body)
 
-            hitcount = max(data_dict.values())
-            expected = 1 + (client_thread_count * request_count)
-            self.assertEqual(hitcount, expected)
+        # Start <request_count> concurrent requests from
+        # each of <client_thread_count> clients
+        ts = []
+        for c in range(client_thread_count):
+            data_dict[c] = 0
+            t = threading.Thread(target=request, args=(c,))
+            ts.append(t)
+            t.start()
 
-        def test_3_Redirect(self):
-            # Start a new session
-            self.getPage('/testStr')
-            self.getPage('/iredir', self.cookies)
-            self.assertBody('MemcachedSession')
+        for t in ts:
+            t.join()
 
-        def test_5_Error_paths(self):
-            self.getPage('/unknown/page')
-            self.assertErrorPage(
-                404, "The path '/unknown/page' was not found.")
+        hitcount = max(data_dict.values())
+        expected = 1 + (client_thread_count * request_count)
+        self.assertEqual(hitcount, expected)
 
-            # Note: this path is *not* the same as above. The above
-            # takes a normal route through the session code; this one
-            # skips the session code's before_handler and only calls
-            # before_finalize (save) and on_end (close). So the session
-            # code has to survive calling save/close without init.
-            self.getPage('/restricted', self.cookies, method='POST')
-            self.assertErrorPage(405, response_codes[405][1])
+    def test_3_Redirect(self):
+        # Start a new session
+        self.getPage('/testStr')
+        self.getPage('/iredir', self.cookies)
+        self.assertBody('MemcachedSession')
+
+    def test_5_Error_paths(self):
+        self.getPage('/unknown/page')
+        self.assertErrorPage(
+            404, "The path '/unknown/page' was not found.")
+
+        # Note: this path is *not* the same as above. The above
+        # takes a normal route through the session code; this one
+        # skips the session code's before_handler and only calls
+        # before_finalize (save) and on_end (close). So the session
+        # code has to survive calling save/close without init.
+        self.getPage('/restricted', self.cookies, method='POST')
+        self.assertErrorPage(405, response_codes[405][1])
