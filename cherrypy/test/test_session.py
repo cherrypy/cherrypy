@@ -2,7 +2,6 @@ import os
 import threading
 import time
 import socket
-import importlib
 from http.client import HTTPConnection
 
 import pytest
@@ -396,11 +395,6 @@ class SessionTest(helper.CPWebCase):
 
 
 def is_memcached_available():
-    try:
-        importlib.import_module('memcache')
-    except ImportError:
-        return False
-
     host, port = '127.0.0.1', 11211
     for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
                                   socket.SOCK_STREAM):
@@ -425,6 +419,7 @@ def is_memcached_available():
     not is_memcached_available(),
     reason='memcached not reachable',
 )
+@pytest.mark.importorskip('memcache')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
