@@ -4,6 +4,8 @@ language: python
 os: linux
 dist: trusty
 sudo: false
+services:
+- memcached
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -18,6 +20,8 @@ _base_envs:
 - _conditions:
   - &condition_api_or_cron
     if: type IN (api, cron)
+- &no_memcached
+  services: []
 - &pyenv_base
   <<: *stage_test
   language: generic
@@ -68,6 +72,7 @@ _base_envs:
   <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
+  <<: *no_memcached
   python: 3.6
   after_failure: skip
 python:
@@ -126,6 +131,7 @@ jobs:
     - *env_path
   - <<: *stage_deploy
     <<: *python_3_7_mixture
+    <<: *no_memcached
     install: skip
     script: skip
     deploy:
