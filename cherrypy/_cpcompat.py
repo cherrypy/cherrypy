@@ -18,9 +18,6 @@ Instead, use unicode literals (from __future__) and bytes literals
 and their .encode/.decode methods as needed.
 """
 
-import sys
-import threading
-import urllib.parse
 import http.client
 
 
@@ -60,12 +57,3 @@ HTTPSConnection = getattr(http.client, 'HTTPSConnection', None)
 
 
 text_or_bytes = str, bytes
-
-
-if sys.version_info >= (3, 3):
-    Timer = threading.Timer
-    Event = threading.Event
-else:
-    # Python 3.2 and earlier
-    Timer = threading._Timer
-    Event = threading._Event
