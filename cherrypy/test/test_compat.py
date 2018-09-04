@@ -1,5 +1,4 @@
-"""Test Python 2/3 compatibility module."""
-from __future__ import unicode_literals
+"""Test compatibility module."""
 
 import unittest
 
