@@ -115,27 +115,26 @@ except ImportError:
 import re
 import sys
 import tempfile
-try:
-    from urllib import unquote_plus
-except ImportError:
-    def unquote_plus(bs):
-        """Bytes version of urllib.parse.unquote_plus."""
-        bs = bs.replace(b'+', b' ')
-        atoms = bs.split(b'%')
-        for i in range(1, len(atoms)):
-            item = atoms[i]
-            try:
-                pct = int(item[:2], 16)
-                atoms[i] = bytes([pct]) + item[2:]
-            except ValueError:
-                pass
-        return b''.join(atoms)
 
 import cheroot.server
 
 import cherrypy
 from cherrypy._cpcompat import ntou, unquote
 from cherrypy.lib import httputil
+
+
+def unquote_plus(bs):
+    """Bytes version of urllib.parse.unquote_plus."""
+    bs = bs.replace(b'+', b' ')
+    atoms = bs.split(b'%')
+    for i in range(1, len(atoms)):
+        item = atoms[i]
+        try:
+            pct = int(item[:2], 16)
+            atoms[i] = bytes([pct]) + item[2:]
+        except ValueError:
+            pass
+    return b''.join(atoms)
 
 
 # ------------------------------- Processors -------------------------------- #
