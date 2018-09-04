@@ -421,7 +421,10 @@ def is_memcached_available():
     return False
 
 
-@pytest.mark.skipif(is_memcached_available(), reason='memcached not reachable')
+@pytest.mark.skipif(
+    not is_memcached_available(),
+    reason='memcached not reachable',
+)
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
