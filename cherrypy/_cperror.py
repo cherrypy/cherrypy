@@ -123,11 +123,11 @@ import urllib.parse
 from sys import exc_info as _exc_info
 from traceback import format_exception as _format_exception
 from xml.sax import saxutils
+import html
 
 from more_itertools import always_iterable
 
 import cherrypy
-from cherrypy._cpcompat import escape_html
 from cherrypy._cpcompat import ntob
 from cherrypy._cpcompat import tonative
 from cherrypy._helper import classproperty
@@ -272,7 +272,7 @@ class HTTPRedirect(CherryPyException):
             }[status]
             msg += '<a href=%s>%s</a>.'
             msgs = [
-                msg % (saxutils.quoteattr(u), escape_html(u))
+                msg % (saxutils.quoteattr(u), html.escape(u, quote=False))
                 for u in self.urls
             ]
             response.body = ntob('<br />\n'.join(msgs), 'utf-8')
@@ -498,7 +498,7 @@ def get_error_page(status, **kwargs):
         if v is None:
             kwargs[k] = ''
         else:
-            kwargs[k] = escape_html(kwargs[k])
+            kwargs[k] = html.escape(kwargs[k], quote=False)
 
     # Use a custom template or callable for the error page?
     pages = cherrypy.serving.request.error_page
