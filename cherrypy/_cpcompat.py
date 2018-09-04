@@ -63,22 +63,6 @@ unquote_plus = urllib.parse.unquote_plus
 unquote = urllib.parse.unquote
 quote = urllib.parse.quote
 
-try:
-    # Prefer simplejson
-    import simplejson as json
-except ImportError:
-    import json
-
-
-json_decode = json.JSONDecoder().decode
-_json_encode = json.JSONEncoder().iterencode
-
-
-# Encode to bytes on Python 3
-def json_encode(value):
-    for chunk in _json_encode(value):
-        yield chunk.encode('utf-8')
-
 
 text_or_bytes = str, bytes
 

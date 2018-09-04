@@ -9,14 +9,12 @@ import pytest
 from path import Path
 
 import cherrypy
-from cherrypy._cpcompat import (
-    json_decode,
-    HTTPSConnection,
-)
+from cherrypy._cpcompat import HTTPSConnection
 from cherrypy.lib import sessions
 from cherrypy.lib import reprconf
 from cherrypy.lib.httputil import response_codes
 from cherrypy.test import helper
+from cherrypy import _json as json
 
 localDir = os.path.dirname(__file__)
 
@@ -173,7 +171,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        self.assertDictEqual(json_decode(self.body),
+        self.assertDictEqual(json.decode(self.body),
                              {'counter': 3, 'aha': 'foo'})
         self.getPage('/length', self.cookies)
         self.assertBody('2')

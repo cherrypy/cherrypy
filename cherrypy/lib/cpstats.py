@@ -194,7 +194,7 @@ import threading
 import time
 
 import cherrypy
-from cherrypy._cpcompat import json
+from cherrypy._json import json
 
 # ------------------------------- Statistics -------------------------------- #
 
