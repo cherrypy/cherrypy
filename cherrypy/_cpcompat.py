@@ -59,11 +59,6 @@ def assert_native(n):
 HTTPSConnection = getattr(http.client, 'HTTPSConnection', None)
 
 
-unquote_plus = urllib.parse.unquote_plus
-unquote = urllib.parse.unquote
-quote = urllib.parse.quote
-
-
 text_or_bytes = str, bytes
 
 

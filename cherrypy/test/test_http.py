@@ -10,7 +10,7 @@ import urllib.parse
 from http.client import HTTPConnection
 
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection, quote
+from cherrypy._cpcompat import HTTPSConnection
 
 from cherrypy.test import helper
 
@@ -34,7 +34,7 @@ def encode_filename(filename):
     """
     if is_ascii(filename):
         return 'filename', '"{filename}"'.format(**locals())
-    encoded = quote(filename, encoding='utf-8')
+    encoded = urllib.parse.quote(filename, encoding='utf-8')
     return 'filename*', "'".join((
         'UTF-8',
         '',  # lang
