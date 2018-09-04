@@ -495,7 +495,7 @@ else:
             # Start a new session
             self.getPage('/testStr')
             self.getPage('/iredir', self.cookies)
-            self.assertBody('memcached')
+            self.assertBody('MemcachedSession')
 
         def test_5_Error_paths(self):
             self.getPage('/unknown/page')
