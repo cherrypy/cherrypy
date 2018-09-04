@@ -426,7 +426,7 @@ else:
         setup_server = staticmethod(setup_server)
 
         def test_0_Session(self):
-            self.getPage('/set_session_cls/cherrypy.Sessions.MemcachedSession')
+            self.getPage('/set_session_cls/cherrypy.sessions.MemcachedSession')
 
             self.getPage('/testStr')
             self.assertBody('1')
