@@ -4,7 +4,7 @@ import sys
 import time
 from uuid import UUID
 
-from cherrypy._cpcompat import text_or_bytes, ntob
+from cherrypy._cpcompat import text_or_bytes
 
 
 try:
@@ -103,7 +103,9 @@ class LogCase(object):
         self.lastmarker = key
 
         open(self.logfile, 'ab+').write(
-            ntob('%s%s\n' % (self.markerPrefix, key), 'utf-8'))
+            b'%s%s\n'
+            % (self.markerPrefix, key.encode('utf-8'))
+        )
 
     def _read_marked_region(self, marker=None):
         """Return lines from self.logfile in the marked region.
