@@ -1,7 +1,11 @@
 """Basic tests for the CherryPy core: request handling."""
 
+import logging
 import os
 from unittest import mock
+
+import pytest
+import requests  # FIXME: Temporary using it directly, better switch
 
 import cherrypy
 from cherrypy._cpcompat import ntou
@@ -14,6 +18,25 @@ error_log = os.path.join(localDir, 'error.log')
 # Some unicode strings.
 tartaros = ntou('\u03a4\u1f71\u03c1\u03c4\u03b1\u03c1\u03bf\u03c2', 'escape')
 erebos = ntou('\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com', 'escape')
+
+
+@pytest.fixture
+def server():
+    setup_server()
+    cherrypy.engine.start()
+
+    yield
+
+    shutdown_server()
+
+
+def shutdown_server():
+    cherrypy.engine.exit()
+
+    servers_copy = list(getattr(cherrypy, 'servers', {}).items())
+    for name, server in servers_copy:
+        server.unsubscribe()
+        del cherrypy.servers[name]
 
 
 def setup_server():
@@ -177,21 +200,13 @@ class AccessLogTests(helper.CPWebCase, logtest.LogCase):
         self.assertLog(-1, r'"Browzuh (1.0\r\n\t\t.3)"')
 
 
-class ErrorLogTests(helper.CPWebCase, logtest.LogCase):
-    setup_server = staticmethod(setup_server)
+def test_tracebacks(server, caplog):
+    with caplog.at_level(logging.ERROR, logger='cherrypy.error'):
+        resp = requests.get('http://127.0.0.1:8080/error')
 
-    logfile = error_log
+    rec = caplog.records[0]
+    exc_cls, exc_msg = rec.exc_info[0], rec.message
 
-    def testTracebacks(self):
-        # Test that tracebacks get written to the error log.
-        self.markLog()
-        ignore = helper.webtest.ignored_exceptions
-        ignore.append(ValueError)
-        try:
-            self.getPage('/error')
-            self.assertInBody('raise ValueError()')
-            self.assertLog(0, 'HTTP')
-            self.assertLog(1, 'Traceback (most recent call last):')
-            self.assertLog(-2, 'raise ValueError()')
-        finally:
-            ignore.pop()
+    assert 'raise ValueError()' in resp.text
+    assert 'HTTP' in exc_msg
+    assert exc_cls is ValueError
