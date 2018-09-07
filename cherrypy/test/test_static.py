@@ -409,11 +409,6 @@ class StaticTest(helper.CPWebCase):
         finally:
             os.remove(filepath)
 
-    py27_on_windows = (
-        platform.system() == 'Windows' and
-        sys.version_info < (3,)
-    )
-    @pytest.mark.xfail(py27_on_windows, reason='#1544')  # noqa: E301
     def test_unicode(self):
         ensure_unicode_filesystem()
         with self.unicode_file():
