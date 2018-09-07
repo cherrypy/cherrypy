@@ -152,8 +152,9 @@ class StaticTest(helper.CPWebCase):
         vhost = cherrypy._cpwsgi.VirtualHost(rootApp, {'virt.net': testApp})
         cherrypy.tree.graft(vhost)
 
-    @staticmethod
-    def teardown_server():
+    @classmethod
+    def teardown_class(cls):
+        super(cls, cls).teardown_class()
         for f in (has_space_filepath, bigfile_filepath):
             f.remove_p()
 
