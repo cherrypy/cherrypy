@@ -414,15 +414,14 @@ class StaticTest(helper.CPWebCase):
     def test_unicode(self):
         ensure_unicode_filesystem()
         self.unicode_file()
-        if True:
-            url = ntou('/static/Слава Україні.html', 'utf-8')
-            # quote function requires str
-            url = tonative(url, 'utf-8')
-            url = urllib.parse.quote(url)
-            self.getPage(url)
+        url = ntou('/static/Слава Україні.html', 'utf-8')
+        # quote function requires str
+        url = tonative(url, 'utf-8')
+        url = urllib.parse.quote(url)
+        self.getPage(url)
 
-            expected = ntou('Героям Слава!', 'utf-8')
-            self.assertInBody(expected)
+        expected = ntou('Героям Слава!', 'utf-8')
+        self.assertInBody(expected)
 
 
 def error_page_404(status, message, traceback, version):
