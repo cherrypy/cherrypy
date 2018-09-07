@@ -53,6 +53,7 @@ BIGFILE_SIZE = 32 * MB
 
 
 class StaticTest(helper.CPWebCase):
+    files_to_remove = []
 
     @staticmethod
     def setup_server():
@@ -155,7 +156,9 @@ class StaticTest(helper.CPWebCase):
     @classmethod
     def teardown_class(cls):
         super(cls, cls).teardown_class()
-        for f in (has_space_filepath, bigfile_filepath):
+        files_to_remove = has_space_filepath, bigfile_filepath
+        files_to_remove += tuple(cls.files_to_remove)
+        for f in files_to_remove:
             f.remove_p()
 
     def test_static(self):
@@ -395,17 +398,13 @@ class StaticTest(helper.CPWebCase):
         self.getPage('/static/\x00')
         self.assertStatus('404 Not Found')
 
-    @staticmethod
-    @contextlib.contextmanager
-    def unicode_file():
+    @classmethod
+    def unicode_file(cls):
         filename = ntou('Слава Україні.html', 'utf-8')
-        filepath = os.path.join(curdir, 'static', filename)
-        with io.open(filepath, 'w', encoding='utf-8') as strm:
+        filepath = curdir / 'static' / filename
+        with filepath.open('w', encoding='utf-8')as strm:
             strm.write(ntou('Героям Слава!', 'utf-8'))
-        try:
-            yield
-        finally:
-            os.remove(filepath)
+        cls.files_to_remove.append(filepath)
 
     py27_on_windows = (
         platform.system() == 'Windows' and
@@ -414,7 +413,8 @@ class StaticTest(helper.CPWebCase):
     @pytest.mark.xfail(py27_on_windows, reason='#1544')  # noqa: E301
     def test_unicode(self):
         ensure_unicode_filesystem()
-        with self.unicode_file():
+        self.unicode_file()
+        if True:
             url = ntou('/static/Слава Україні.html', 'utf-8')
             # quote function requires str
             url = tonative(url, 'utf-8')
