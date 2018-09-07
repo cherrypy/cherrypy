@@ -10,6 +10,7 @@ from http.client import HTTPConnection
 
 import pytest
 import py.path
+import path
 
 import cherrypy
 from cherrypy.lib import static
@@ -40,9 +41,9 @@ def ensure_unicode_filesystem():
         tmpdir.remove()
 
 
-curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
-has_space_filepath = os.path.join(curdir, 'static', 'has space.html')
-bigfile_filepath = os.path.join(curdir, 'static', 'bigfile.log')
+curdir = path.Path(__file__).dirname()
+has_space_filepath = curdir / 'static' / 'has space.html'
+bigfile_filepath = curdir / 'static' / 'bigfile.log'
 
 # The file size needs to be big enough such that half the size of it
 # won't be socket-buffered (or server-buffered) all in one go. See
@@ -154,11 +155,7 @@ class StaticTest(helper.CPWebCase):
     @staticmethod
     def teardown_server():
         for f in (has_space_filepath, bigfile_filepath):
-            if os.path.exists(f):
-                try:
-                    os.unlink(f)
-                except Exception:
-                    pass
+            f.remove_p()
 
     def test_static(self):
         self.getPage('/static/index.html')
