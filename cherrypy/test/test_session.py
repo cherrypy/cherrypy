@@ -6,6 +6,7 @@ from http.client import HTTPConnection
 
 import pytest
 from path import Path
+from more_itertools import consume
 
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection
@@ -15,7 +16,7 @@ from cherrypy.lib.httputil import response_codes
 from cherrypy.test import helper
 from cherrypy import _json as json
 
-localDir = os.path.dirname(__file__)
+localDir = Path(__file__).dirname()
 
 
 def http_methods_allowed(methods=['GET', 'HEAD']):
@@ -140,10 +141,13 @@ class SessionTest(helper.CPWebCase):
 
     def tearDown(self):
         # Clean up sessions.
-        for fname in os.listdir(localDir):
-            if fname.startswith(sessions.FileSession.SESSION_PREFIX):
-                path = Path(localDir) / fname
-                path.remove_p()
+        consume(
+            file.remove_p()
+            for file in localDir.listdir()
+            if file.basename().startswith(
+                sessions.FileSession.SESSION_PREFIX
+            )
+        )
 
     @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
