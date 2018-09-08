@@ -1,3 +1,11 @@
+v18.0.1
+-------
+
+* :issue:`1738` via :pr:`1736`: Restore support for 'bytes'
+  in response headers.
+
+* Substantial removal of Python 2 compatibility code.
+
 v18.0.0
 -------
 
