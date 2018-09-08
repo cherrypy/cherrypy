@@ -139,8 +139,10 @@ def setup_server():
 class SessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
-    def tearDown(self):
-        # Clean up sessions.
+    @classmethod
+    def teardown_class(cls):
+        """Clean up sessions."""
+        super(cls, cls).teardown_class()
         consume(
             file.remove_p()
             for file in localDir.listdir()
