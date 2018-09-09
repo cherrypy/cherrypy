@@ -157,8 +157,8 @@ class StaticTest(helper.CPWebCase):
         super(cls, cls).teardown_class()
         files_to_remove = has_space_filepath, bigfile_filepath
         files_to_remove += tuple(cls.files_to_remove)
-        for f in files_to_remove:
-            f.remove_p()
+        for file in files_to_remove:
+            file.remove_p()
 
     def test_static(self):
         self.getPage('/static/index.html')
