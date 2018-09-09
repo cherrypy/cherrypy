@@ -1,4 +1,5 @@
 import os
+import platform
 import threading
 import time
 from http.client import HTTPConnection
@@ -442,6 +443,10 @@ def memcached_configured(memcached_instance, monkeypatch):
     )
 
 
+@pytest.mark.skipif(
+    platform.system() == 'Windows',
+    'pytest-services helper does not work under Windows',
+)
 @pytest.mark.usefixtures('memcached_configured')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
