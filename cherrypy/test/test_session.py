@@ -1,7 +1,6 @@
 import os
 import threading
 import time
-import importlib
 from http.client import HTTPConnection
 
 import pytest
@@ -442,19 +441,8 @@ def memcached_configured(memcached_instance, monkeypatch):
     )
 
 
-def importable(mod_name):
-    try:
-        importlib.import_module(mod_name)
-    except Exception:
-        return False
-    return True
-
-
 @pytest.mark.usefixtures('memcached_configured')
-@pytest.mark.skipif(
-    not importable('memcache'),
-    reason='Python memcache module unavailable',
-)
+@pytest.importorskip('memcache')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
