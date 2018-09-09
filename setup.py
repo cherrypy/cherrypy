@@ -87,6 +87,7 @@ params = dict(
             'backports.unittest_mock',
             'path.py',
             'requests_toolbelt',
+            'pytest-services',
         ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],

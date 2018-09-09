@@ -7,6 +7,7 @@ from http.client import HTTPConnection
 import pytest
 from path import Path
 from more_itertools import consume
+import portend
 
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection
@@ -400,31 +401,48 @@ class SessionTest(helper.CPWebCase):
         t.join()
 
 
-def is_memcached_available():
-    host, port = '127.0.0.1', 11211
-    for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC,
-                                  socket.SOCK_STREAM):
-        af, socktype, proto, canonname, sa = res
-        s = None
+@pytest.fixture(scope='session')
+def memcached_service(request, watcher_getter):
+    """
+    Start up an instance of memcached.
+    """
+    port = portend.find_available_local_port()
+
+    def is_occupied():
         try:
-            s = socket.socket(af, socktype, proto)
-            # See http://groups.google.com/group/cherrypy-users/
-            #        browse_frm/thread/bbfe5eb39c904fe0
-            s.settimeout(1.0)
-            s.connect((host, port))
-            s.close()
+            portend.Checker().assert_free('localhost', port)
+        except Exception:
             return True
-        except socket.error:
-            if s:
-                s.close()
+        return False
 
-    return False
+    proc = watcher_getter(
+        name='memcached',
+        arguments=['-p', str(port)],
+        checker=is_occupied,
+        request=request,
+    )
+    return locals()
 
 
-@pytest.mark.skipif(
-    not is_memcached_available(),
-    reason='memcached not reachable',
-)
+@pytest.fixture(scope='session')
+def memcached_instance(request):
+    try:
+        return request.getfixturevalue('memcached_service')
+    except Exception:
+        pytest.skip("memcached not available")
+
+
+@pytest.fixture
+def memcached_configured(memcached_instance, monkeypatch):
+    server = 'localhost:{port}'.format_map(memcached_instance)
+    monkeypatch.setattr(
+        sessions.MemcachedSession,
+        'servers',
+        [server],
+    )
+
+
+@pytest.mark.usefixtures('memcached_configured')
 @pytest.mark.importorskip('memcache')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
