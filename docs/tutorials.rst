@@ -1285,7 +1285,7 @@ the python program is started directly. We can simply change the following lines
 .. code-block:: python
    :lineno-start: 17
 
-   if __name__ == '__main__':   #pragma no cover
+   if __name__ == '__main__':  # pragma: no cover
        cherrypy.quickstart(StringGenerator())
 
 When you rerun the code coverage, it should show 100% now.
