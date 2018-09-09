@@ -401,11 +401,18 @@ class SessionTest(helper.CPWebCase):
 
 
 @pytest.fixture(scope='session')
-def memcached_instance(request, watcher_getter):
+def memcached_instance(request):
     """
     Start up an instance of memcached.
     """
     pytest.importorskip('memcache')
+
+    try:
+        watcher_getter = request.getfixturevalue('watcher_getter')
+    except AttributeError as err:
+        if str(err) != 'You have to install memcached executable.':
+            raise
+        pytest.skip('memcached not available')
 
     port = portend.find_available_local_port()
 
