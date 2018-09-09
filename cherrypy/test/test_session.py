@@ -441,8 +441,8 @@ def memcached_configured(memcached_instance, monkeypatch):
     )
 
 
-@pytest.mark.usefixtures('memcached_configured')
 @pytest.importorskip('memcache')
+@pytest.mark.usefixtures('memcached_configured')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
