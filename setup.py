@@ -89,7 +89,7 @@ params = dict(
             'requests_toolbelt',
         ],
         'testing:sys_platform != "win32"': [
-            'pytest-services[memcached]',
+            'pytest-services',
         ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],
