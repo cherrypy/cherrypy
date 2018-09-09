@@ -618,7 +618,7 @@ class MemcachedSession(Session):
     # This is a separate set of locks per session id.
     locks = {}
 
-    servers = ['127.0.0.1:11211']
+    servers = ['localhost:11211']
 
     @classmethod
     def setup(cls, **kwargs):
