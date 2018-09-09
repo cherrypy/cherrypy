@@ -407,12 +407,16 @@ def is_memcached_present():
     return bool(executable)
 
 
+@pytest.fixture()
+def memcached_client_present():
+    pytest.importorskip('memcache')
+
+
 @pytest.fixture(scope='session')
 def memcached_instance(request, watcher_getter):
     """
     Start up an instance of memcached.
     """
-    pytest.importorskip('memcache')
     is_memcached_present() or pytest.skip('memcached not available')
 
     port = portend.find_available_local_port()
@@ -447,6 +451,7 @@ def memcached_configured(memcached_instance, monkeypatch):
     platform.system() == 'Windows',
     reason='pytest-services helper does not work under Windows',
 )
+@pytest.mark.usefixtures('memcached_client_present')
 @pytest.mark.usefixtures('memcached_configured')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
