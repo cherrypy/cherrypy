@@ -10,6 +10,7 @@ import sys
 import time
 import unittest
 import warnings
+import contextlib
 
 import portend
 import pytest
@@ -522,20 +523,5 @@ server.ssl_private_key: r'%s'
         self._proc.wait()
 
     def _join_daemon(self):
-        try:
-            try:
-                # Mac, UNIX
-                os.wait()
-            except AttributeError:
-                # Windows
-                try:
-                    pid = self.get_pid()
-                except IOError:
-                    # Assume the subprocess deleted the pidfile on shutdown.
-                    pass
-                else:
-                    os.waitpid(pid, 0)
-        except OSError:
-            x = sys.exc_info()[1]
-            if x.args != (10, 'No child processes'):
-                raise
+        with contextlib.suppress(IOError):
+            os.waitpid(self.get_pid(), 0)
