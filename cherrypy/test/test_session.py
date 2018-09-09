@@ -423,7 +423,7 @@ def memcached_configured(memcached_connection, monkeypatch):
     monkeypatch.setattr(
         sessions.MemcachedSession,
         'servers',
-        [str(memcached_connection)],
+        [memcached_connection],
     )
 
 
