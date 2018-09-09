@@ -1273,14 +1273,14 @@ To get code coverage, simply run
 
 .. code-block:: bash
 
-   $ pytest --cov=tut12 --cov-report term-missing test_tut02.py
+   $ pytest --cov=tut12 --cov-report term-missing test_tut12.py
 
 .. note::
 
    To add coverage support to pytest, you'll need to install it by ``pip install pytest-cov``
 
 This tells us that one line is missing. Of course it is because that is only executed when
-the python program is started directly. We can simply change the following lines in tut02.py:
+the python program is started directly. We can simply change the following lines in tut12.py:
 
 .. code-block:: python
    :lineno-start: 17
