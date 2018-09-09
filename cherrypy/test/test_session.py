@@ -409,7 +409,7 @@ def memcached_instance(request):
 
     try:
         watcher_getter = request.getfixturevalue('watcher_getter')
-    except AttributeError as err:
+    except AssertionError as err:
         if str(err) != 'You have to install memcached executable.':
             raise
         pytest.skip('memcached not available')
