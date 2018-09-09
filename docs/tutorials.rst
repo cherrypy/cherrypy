@@ -1289,3 +1289,7 @@ the python program is started directly. We can simply change the following lines
        cherrypy.quickstart(StringGenerator())
 
 When you rerun the code coverage, it should show 100% now.
+
+.. note::
+
+   When using in CI, you might want to integrate `Codecov <https://codecov.io>`_, `Landscape <https://landscape.io>`_ or `Coveralls <https://coveralls.io/>`_ into your project to store and track coverage data over time.
