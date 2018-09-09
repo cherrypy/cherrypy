@@ -3,6 +3,7 @@ import threading
 import time
 from http.client import HTTPConnection
 
+from distutils.spawn import find_executable
 import pytest
 from path import Path
 from more_itertools import consume
@@ -417,13 +418,21 @@ def memcached_instance(request, watcher_getter):
         return False
 
     try:
+        name = 'memcached'
+        executable = find_executable(name)
+        if not executable:
+            raise ValueError(
+                'You have to install {name} executable.'.
+                format(**locals())
+            )
+
         proc = watcher_getter(
-            name='memcached',
+            name=name,
             arguments=['-p', str(port)],
             checker=is_occupied,
             request=request,
         )
-    except AssertionError as err:
+    except ValueError as err:
         if str(err) != 'You have to install memcached executable.':
             raise
         pytest.skip('memcached not available')
