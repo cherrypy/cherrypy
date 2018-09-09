@@ -1202,7 +1202,7 @@ they work along with the CherryPy :ref:`engine <cpengine>`
 and extend it with your operations.
 
 Tutorial 12: Using pytest and code coverage
-###################################
+###########################################
 
 Pytest
 ^^^^^^
@@ -1230,7 +1230,7 @@ Let's revisit :ref:`Tutorial 2 <tut02>`.
    if __name__ == '__main__':
        cherrypy.quickstart(StringGenerator())
 
-Save this into a file named `tut02.py`.
+Save this into a file named `tut12.py`.
 
 Now make the test file:
 
@@ -1240,7 +1240,7 @@ Now make the test file:
     import cherrypy
     from cherrypy.test import helper
 
-    from tut02 import StringGenerator
+    from tut12 import StringGenerator
 
     class SimpleCPTest(helper.CPWebCase):
         @staticmethod
@@ -1254,15 +1254,15 @@ Now make the test file:
             self.getPage("/generate")
             self.assertStatus('200 OK')
 
-Save this into a file named 'test_tut02.py' and run
+Save this into a file named 'test_tut12.py' and run
 
 .. code-block:: bash
 
-   $ pytest -v test_tut02.py
+   $ pytest -v test_tut12.py
 
 .. note::
 
-   If you don't have pytest installed, you'll need to install it by pip install pytest
+   If you don't have pytest installed, you'll need to install it by ``pip install pytest``
 
 We now have a neat way that we can exercise our application making tests.
 
@@ -1273,14 +1273,14 @@ To get code coverage, simply run
 
 .. code-block:: bash
 
-   $ pytest --cov=tut02 --cov-report term-missing test_tut02.py
+   $ pytest --cov=tut12 --cov-report term-missing test_tut02.py
 
 .. note::
 
-   To add coverage support to pytest, you'll need to install it by pip install pytest-cov
+   To add coverage support to pytest, you'll need to install it by ``pip install pytest-cov``
 
-This tells us that one line is missing.   Of course it is because that is only executed when
-the python program is started directly.   We can simply change the following lines in tut02.py:
+This tells us that one line is missing. Of course it is because that is only executed when
+the python program is started directly. We can simply change the following lines in tut02.py:
 
 .. code-block:: python
    :lineno-start: 17
