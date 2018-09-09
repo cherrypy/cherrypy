@@ -401,10 +401,12 @@ class SessionTest(helper.CPWebCase):
 
 
 @pytest.fixture(scope='session')
-def memcached_service(request, watcher_getter):
+def memcached_instance(request, watcher_getter):
     """
     Start up an instance of memcached.
     """
+    pytest.importorskip('memcache')
+
     port = portend.find_available_local_port()
 
     def is_occupied():
@@ -423,14 +425,6 @@ def memcached_service(request, watcher_getter):
     return locals()
 
 
-@pytest.fixture(scope='session')
-def memcached_instance(request):
-    try:
-        return request.getfixturevalue('memcached_service')
-    except Exception:
-        pytest.skip('memcached not available')
-
-
 @pytest.fixture
 def memcached_configured(memcached_instance, monkeypatch):
     server = 'localhost:{port}'.format_map(memcached_instance)
@@ -441,7 +435,6 @@ def memcached_configured(memcached_instance, monkeypatch):
     )
 
 
-@pytest.importorskip('memcache')
 @pytest.mark.usefixtures('memcached_configured')
 class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
