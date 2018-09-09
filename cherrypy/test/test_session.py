@@ -401,12 +401,18 @@ class SessionTest(helper.CPWebCase):
         t.join()
 
 
+def is_memcached_present():
+    executable = find_executable('memcached')
+    return bool(executable)
+
+
 @pytest.fixture(scope='session')
 def memcached_instance(request, watcher_getter):
     """
     Start up an instance of memcached.
     """
     pytest.importorskip('memcache')
+    is_memcached_present() or pytest.skip('memcached not available')
 
     port = portend.find_available_local_port()
 
@@ -417,27 +423,13 @@ def memcached_instance(request, watcher_getter):
             return True
         return False
 
-    try:
-        name = 'memcached'
-        executable = find_executable(name)
-        if not executable:
-            raise ValueError(
-                'You have to install {name} executable.'.
-                format(**locals())
-            )
-
-        proc = watcher_getter(
-            name=name,
-            arguments=['-p', str(port)],
-            checker=is_occupied,
-            request=request,
-        )
-    except ValueError as err:
-        if str(err) != 'You have to install memcached executable.':
-            raise
-        pytest.skip('memcached not available')
-    else:
-        return locals()
+    proc = watcher_getter(
+        name='memcached',
+        arguments=['-p', str(port)],
+        checker=is_occupied,
+        request=request,
+    )
+    return locals()
 
 
 @pytest.fixture
