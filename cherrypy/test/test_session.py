@@ -429,7 +429,7 @@ def memcached_instance(request):
     try:
         return request.getfixturevalue('memcached_service')
     except Exception:
-        pytest.skip("memcached not available")
+        pytest.skip('memcached not available')
 
 
 @pytest.fixture
