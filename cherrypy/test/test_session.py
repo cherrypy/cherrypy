@@ -442,7 +442,10 @@ def memcached_instance(request, watcher_getter, memcached_server_present):
 
 
 @pytest.fixture
-def memcached_configured(memcached_instance, monkeypatch, memcached_client_present):
+def memcached_configured(
+    memcached_instance, monkeypatch,
+    memcached_client_present,
+):
     server = 'localhost:{port}'.format_map(memcached_instance)
     monkeypatch.setattr(
         sessions.MemcachedSession,
