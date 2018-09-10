@@ -8,6 +8,7 @@ from distutils.spawn import find_executable
 import pytest
 from path import Path
 from more_itertools import consume
+import portend
 
 import cherrypy
 from cherrypy._cpcompat import HTTPSConnection
@@ -406,7 +407,7 @@ def is_memcached_present():
     return bool(executable)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def memcached_server_present():
     is_memcached_present() or pytest.skip('memcached not available')
 
@@ -416,14 +417,37 @@ def memcached_client_present():
     pytest.importorskip('memcache')
 
 
+@pytest.fixture(scope='session')
+def memcached_instance(request, watcher_getter, memcached_server_present):
+    """
+    Start up an instance of memcached.
+    """
+
+    port = portend.find_available_local_port()
+
+    def is_occupied():
+        try:
+            portend.Checker().assert_free('localhost', port)
+        except Exception:
+            return True
+        return False
+
+    proc = watcher_getter(
+        name='memcached',
+        arguments=['-p', str(port)],
+        checker=is_occupied,
+        request=request,
+    )
+    return locals()
+
+
 @pytest.fixture
-@pytest.mark.usefixtures('memcached_client_present')
-@pytest.mark.usefixtures('memcached_server_present')
-def memcached_configured(memcached_connection, monkeypatch):
+def memcached_configured(memcached_instance, monkeypatch, memcached_client_present):
+    server = 'localhost:{port}'.format_map(memcached_instance)
     monkeypatch.setattr(
         sessions.MemcachedSession,
         'servers',
-        [memcached_connection],
+        [server],
     )
 
 
