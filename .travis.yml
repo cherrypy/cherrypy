@@ -76,7 +76,7 @@ _base_envs:
   python: 3.6
   after_failure: skip
 python:
-- 3.4
+- 3.5
 - 3.7-dev
 - &pypy3 pypy3.5-5.10.0
 jobs:
@@ -103,9 +103,9 @@ jobs:
   - <<: *pure_python_base_priority
     python: nightly
   - <<: *osx_python_base
-    python: 3.4
+    python: 3.5
     env:
-    - PYTHON_VERSION=3.4.4
+    - PYTHON_VERSION=3.5.5
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
