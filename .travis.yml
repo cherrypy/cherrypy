@@ -111,7 +111,7 @@ jobs:
   - <<: *osx_python_base
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.6.1
+    - PYTHON_VERSION=3.6.5
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
