@@ -40,8 +40,6 @@ jobs:
     - run: tox -e py35,py36,py37
     - store_test_results:
         path: .test-results
-    - store_test_results:
-        path: .test-results/pytest
     - store_artifacts:
         path: .test-results
 
