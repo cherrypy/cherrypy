@@ -626,7 +626,7 @@ class Autoreloader(Monitor):
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
-        search_mod_names = filter(re.compile(self.match).match, sys.modules)
+        search_mod_names = filter(re.compile(self.match).match, sys.modules[:])
         mods = map(sys.modules.get, search_mod_names)
         return set(filter(None, map(self._file_for_module, mods)))
 
