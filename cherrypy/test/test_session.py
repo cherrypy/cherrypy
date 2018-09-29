@@ -171,8 +171,8 @@ class SessionTest(helper.CPWebCase):
         cookie_parts = dict([p.strip().split('=')
                              for p in self.cookies[0][1].split(';')])
         # Assert there is an 'expires' param
-        self.assertEqual(set(cookie_parts.keys()),
-                         set(['session_id', 'expires', 'Path']))
+        expected_cookie_keys = {'session_id', 'expires', 'Path', 'Max-Age'}
+        assert set(cookie_parts.keys()) == expected_cookie_keys
         self.getPage('/testGen', self.cookies)
         self.assertBody('2')
         self.getPage('/testStr', self.cookies)
