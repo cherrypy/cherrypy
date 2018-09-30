@@ -183,7 +183,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/length', self.cookies)
         assert self.body == b'2'
         self.getPage('/delkey?key=counter', self.cookies)
-        assert self.status == 200
+        assert self.status_code == 200
 
         self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self.getPage('/testStr')
@@ -193,7 +193,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         assert self.body == b'3'
         self.getPage('/delkey?key=counter', self.cookies)
-        assert self.status == 200
+        assert self.status_code == 200
 
         # Wait for the session.timeout (1 second)
         time.sleep(2)
@@ -475,7 +475,7 @@ class MemcachedSessionTest(helper.CPWebCase):
         self.assertErrorPage(500)
         assert b'NotImplementedError' in self.body
         self.getPage('/delkey?key=counter', self.cookies)
-        assert self.status == 200
+        assert self.status_code == 200
 
         # Wait for the session.timeout (1 second)
         time.sleep(1.25)
