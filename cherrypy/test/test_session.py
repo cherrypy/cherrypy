@@ -164,59 +164,59 @@ class SessionTest(helper.CPWebCase):
         assert self.body == b'{"aha": "foo"}'
         c = self.cookies[0]
         self.getPage('/data', self.cookies)
-        self.assertEqual(self.cookies[0], c)
+        self.cookies[0] == c
 
         self.getPage('/testStr')
-        self.assertBody('1')
+        assert self.body == b'1'
         cookie_parts = dict([p.strip().split('=')
                              for p in self.cookies[0][1].split(';')])
         # Assert there is an 'expires' param
         expected_cookie_keys = {'session_id', 'expires', 'Path', 'Max-Age'}
         assert set(cookie_parts.keys()) == expected_cookie_keys
         self.getPage('/testGen', self.cookies)
-        self.assertBody('2')
+        assert self.body == b'2'
         self.getPage('/testStr', self.cookies)
-        self.assertBody('3')
+        assert self.body == b'3'
         self.getPage('/data', self.cookies)
-        self.assertDictEqual(json.decode(self.body.decode('utf-8')),
-                             {'counter': 3, 'aha': 'foo'})
+        expected_data = {'counter': 3, 'aha': 'foo'}
+        assert json.decode(self.body.decode('utf-8')) == expected_data
         self.getPage('/length', self.cookies)
-        self.assertBody('2')
+        assert self.body == b'2'
         self.getPage('/delkey?key=counter', self.cookies)
-        self.assertStatus(200)
+        assert self.status == 200
 
         self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self.getPage('/testStr')
-        self.assertBody('1')
+        assert self.body == b'1'
         self.getPage('/testGen', self.cookies)
-        self.assertBody('2')
+        assert self.body == b'2'
         self.getPage('/testStr', self.cookies)
-        self.assertBody('3')
+        assert self.body == b'3'
         self.getPage('/delkey?key=counter', self.cookies)
-        self.assertStatus(200)
+        assert self.status == 200
 
         # Wait for the session.timeout (1 second)
         time.sleep(2)
         self.getPage('/')
-        self.assertBody('1')
+        assert self.body == b'1'
         self.getPage('/length', self.cookies)
-        self.assertBody('1')
+        assert self.body == b'1'
 
         # Test session __contains__
         self.getPage('/keyin?key=counter', self.cookies)
-        self.assertBody('True')
+        assert self.body == b'True'
         cookieset1 = self.cookies
 
         # Make a new session and test __len__ again
         self.getPage('/')
         self.getPage('/length', self.cookies)
-        self.assertBody('2')
+        assert self.body == b'2'
 
         # Test session delete
         self.getPage('/delete', self.cookies)
-        self.assertBody('done')
+        assert self.body == b'done'
         self.getPage('/delete', cookieset1)
-        self.assertBody('done')
+        assert self.body == b'done'
 
         def f():
             return [
@@ -224,13 +224,13 @@ class SessionTest(helper.CPWebCase):
                 for x in os.listdir(localDir)
                 if x.startswith('session-')
             ]
-        self.assertEqual(f(), [])
+        assert f() == []
 
         # Wait for the cleanup thread to delete remaining session files
         self.getPage('/')
-        self.assertNotEqual(f(), [])
+        assert f() != []
         time.sleep(2)
-        self.assertEqual(f(), [])
+        assert f() == []
 
     def test_1_Ram_Concurrency(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
@@ -246,7 +246,7 @@ class SessionTest(helper.CPWebCase):
 
         # Get initial cookie
         self.getPage('/')
-        self.assertBody('1')
+        assert self.body == b'1'
         cookies = self.cookies
 
         data_dict = {}
@@ -288,13 +288,13 @@ class SessionTest(helper.CPWebCase):
 
         for e in errors:
             print(e)
-        self.assertEqual(hitcount, expected)
+        assert hitcount == expected
 
     def test_3_Redirect(self):
         # Start a new session
         self.getPage('/testStr')
         self.getPage('/iredir', self.cookies)
-        self.assertBody('FileSession')
+        assert self.body == b'FileSession'
 
     def test_4_File_deletion(self):
         # Start a new session
@@ -322,9 +322,9 @@ class SessionTest(helper.CPWebCase):
         # grab the cookie ID
         id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         self.getPage('/regen')
-        self.assertBody('logged in')
+        assert self.body == b'logged in'
         id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
-        self.assertNotEqual(id1, id2)
+        assert id1 != id2
 
         self.getPage('/testStr')
         # grab the cookie ID
@@ -335,8 +335,8 @@ class SessionTest(helper.CPWebCase):
                           'session_id=maliciousid; '
                           'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
         id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
-        self.assertNotEqual(id1, id2)
-        self.assertNotEqual(id2, 'maliciousid')
+        assert id1 != id2
+        assert id2 != 'maliciousid'
 
     def test_7_session_cookies(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
@@ -346,18 +346,18 @@ class SessionTest(helper.CPWebCase):
         cookie_parts = dict([p.strip().split('=')
                             for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
-        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
+        assert set(cookie_parts.keys()) == {'temp', 'Path'}
         id1 = cookie_parts['temp']
-        self.assertEqual(list(sessions.RamSession.cache), [id1])
+        assert list(sessions.RamSession.cache) == [id1]
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
         cookie_parts = dict([p.strip().split('=')
                             for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
-        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
-        self.assertBody(id1)
-        self.assertEqual(list(sessions.RamSession.cache), [id1])
+        assert set(cookie_parts.keys()) == {'temp', 'Path'}
+        assert self.body.decode('utf-8') == id1
+        assert list(sessions.RamSession.cache) == [id1]
 
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
@@ -365,12 +365,11 @@ class SessionTest(helper.CPWebCase):
         cookie_parts = dict([p.strip().split('=')
                             for p in self.cookies[0][1].split(';')])
         # Assert there is no 'expires' param
-        self.assertEqual(set(cookie_parts.keys()), set(['temp', 'Path']))
+        assert set(cookie_parts.keys()) == {'temp', 'Path'}
         # Assert a new id has been generated...
         id2 = cookie_parts['temp']
-        self.assertNotEqual(id1, id2)
-        self.assertEqual(set(sessions.RamSession.cache.keys()),
-                         set([id1, id2]))
+        assert id1 != id2
+        assert set(sessions.RamSession.cache.keys()) == {id1, id2}
 
         # Wait for the session.timeout on both sessions
         time.sleep(2.5)
@@ -467,29 +466,29 @@ class MemcachedSessionTest(helper.CPWebCase):
         )
 
         self.getPage('/testStr')
-        self.assertBody('1')
+        assert self.body == b'1'
         self.getPage('/testGen', self.cookies)
-        self.assertBody('2')
+        assert self.body == b'2'
         self.getPage('/testStr', self.cookies)
-        self.assertBody('3')
+        assert self.body == b'3'
         self.getPage('/length', self.cookies)
         self.assertErrorPage(500)
-        self.assertInBody('NotImplementedError')
+        assert b'NotImplementedError' in self.body
         self.getPage('/delkey?key=counter', self.cookies)
-        self.assertStatus(200)
+        assert self.status == 200
 
         # Wait for the session.timeout (1 second)
         time.sleep(1.25)
         self.getPage('/')
-        self.assertBody('1')
+        assert self.body == b'1'
 
         # Test session __contains__
         self.getPage('/keyin?key=counter', self.cookies)
-        self.assertBody('True')
+        assert self.body == b'True'
 
         # Test session delete
         self.getPage('/delete', self.cookies)
-        self.assertBody('done')
+        assert self.body == b'done'
 
     def test_1_Concurrency(self):
         client_thread_count = 5
@@ -497,7 +496,7 @@ class MemcachedSessionTest(helper.CPWebCase):
 
         # Get initial cookie
         self.getPage('/')
-        self.assertBody('1')
+        assert self.body == b'1'
         cookies = self.cookies
 
         data_dict = {}
@@ -525,13 +524,13 @@ class MemcachedSessionTest(helper.CPWebCase):
 
         hitcount = max(data_dict.values())
         expected = 1 + (client_thread_count * request_count)
-        self.assertEqual(hitcount, expected)
+        assert hitcount == expected
 
     def test_3_Redirect(self):
         # Start a new session
         self.getPage('/testStr')
         self.getPage('/iredir', self.cookies)
-        self.assertBody('MemcachedSession')
+        assert self.body == b'MemcachedSession'
 
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
