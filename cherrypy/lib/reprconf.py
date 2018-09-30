@@ -335,6 +335,8 @@ class _Builder:
     def build_NameConstant(self, o):
         return o.value
 
+    build_Constant = build_NameConstant  # Python 3.8 change
+
     def build_UnaryOp(self, o):
         op, operand = map(self.build, [o.op, o.operand])
         return op(operand)
