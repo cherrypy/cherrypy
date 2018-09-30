@@ -47,9 +47,10 @@ def setup_server():
             cherrypy.session.cache.clear()
 
         @cherrypy.expose
+        @cherrypy.tools.json_out()
         def data(self):
             cherrypy.session['aha'] = 'foo'
-            return repr(cherrypy.session._data)
+            return cherrypy.session._data
 
         @cherrypy.expose
         def testGen(self):
@@ -153,7 +154,6 @@ class SessionTest(helper.CPWebCase):
             )
         )
 
-    @pytest.mark.xfail(reason='#1534')
     def test_0_Session(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
@@ -161,7 +161,7 @@ class SessionTest(helper.CPWebCase):
         # Test that a normal request gets the same id in the cookies.
         # Note: this wouldn't work if /data didn't load the session.
         self.getPage('/data')
-        self.assertBody("{'aha': 'foo'}")
+        assert self.body == b'{"aha": "foo"}'
         c = self.cookies[0]
         self.getPage('/data', self.cookies)
         self.assertEqual(self.cookies[0], c)
@@ -178,7 +178,7 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr', self.cookies)
         self.assertBody('3')
         self.getPage('/data', self.cookies)
-        self.assertDictEqual(json.decode(self.body),
+        self.assertDictEqual(json.decode(self.body.decode('utf-8')),
                              {'counter': 3, 'aha': 'foo'})
         self.getPage('/length', self.cookies)
         self.assertBody('2')
