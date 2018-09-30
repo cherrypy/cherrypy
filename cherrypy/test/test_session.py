@@ -288,6 +288,7 @@ class SessionTest(helper.CPWebCase):
 
         for e in errors:
             print(e)
+        assert len(errors) == 0
         assert hitcount == expected
 
     def test_3_Redirect(self):
