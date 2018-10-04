@@ -6,4 +6,8 @@ COPY . /tutorial
 
 WORKDIR /tutorial
 
-CMD ["python", "tut01_helloworld.py"]
+ENTRYPOINT ["python"]
+
+CMD ["tut01_helloworld.py"]
+
+EXPOSE 8080
