@@ -15,6 +15,9 @@
 .. image:: https://img.shields.io/badge/StackOverflow-CherryPy-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
 
+.. image:: https://img.shields.io/badge/Mailing%20list-cherrypy--users-orange.svg
+   :target: https://groups.google.com/group/cherrypy-users
+
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
    :target: https://gitter.im/cherrypy/cherrypy
 
