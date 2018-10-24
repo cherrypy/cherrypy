@@ -57,7 +57,7 @@
 <script>
   var py2_death = moment('2020-04-12').toDate()
 
-  countdown(py2_death, update_time_left)
+  countdown(py2_death, update_time_left, ~(countdown.SECONDS | countdown.MILLISECONDS))
 
   function update_time_left(moments_left, timer_id) {
     document.querySelector('#python27eol time').innerHTML = moments_left.toHTML("em")
