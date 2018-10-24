@@ -9,32 +9,32 @@ https://stackoverflow.com/questions/tagged/cherrypy
 **** /DELETE THIS BLOCK ****  
 -->
 
-* **I'm submitting a ...**
+**I'm submitting a ...**
 - [ ] bug report
 - [ ] feature request
 - [ ] question about the decisions made in the repository
 
-* **Do you want to request a *feature* or report a *bug*?**
+**Do you want to request a *feature* or report a *bug*?**
 
 
 
-* **What is the current behavior?**
+**What is the current behavior?**
 
 
 
-* **If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
+**If the current behavior is a bug, please provide the steps to reproduce and if possible a screenshots and logs of the problem. If you can, show us your code.**
 
 
 
-* **What is the expected behavior?**
+**What is the expected behavior?**
 
 
 
-* **What is the motivation / use case for changing the behavior?**
+**What is the motivation / use case for changing the behavior?**
 
 
 
-* **Please tell us about your environment:**
+**Please tell us about your environment:**
 
 - Cheroot version: X.X.X
 - CherryPy version: X.X.X
@@ -44,4 +44,4 @@ https://stackoverflow.com/questions/tagged/cherrypy
 
 
 
-* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)
+**Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, e.g. stackoverflow, gitter, etc.)
