@@ -518,7 +518,7 @@ class HeaderMap(CaseInsensitiveDict):
         transmitting on the wire for HTTP.
         """
         for k, v in header_items:
-            if not isinstance(v, six.string_types):
+            if not isinstance(v, six.string_types) and not isinstance(v, six.binary_type):
                 v = six.text_type(v)
 
             yield tuple(map(cls.encode_header_item, (k, v)))
