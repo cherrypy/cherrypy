@@ -45,11 +45,32 @@
 
   @media screen and (max-width: 875px) {
     #python27eol p {
-      padding: 0;
+      padding: 0 !important;
+    }
+
+    body {
+      margin: inherit !important;
+      padding: inherit !important;
     }
 
     div.body {
-      min-width: 100%;
+      min-width: inherit !important;
+      width: 100% !important;
+    }
+
+    div.documentwrapper {
+      margin: inherit !important;
+    }
+
+    div.bodywrapper {
+      margin: 20px 30px !important;
+      padding-top: 190px !important;
+    }
+
+    div.sphinxsidebar {
+      margin: inherit !important;
+      padding: inherit !important;
+      width: 100% !important;
     }
   }
 </style>
