@@ -50,6 +50,8 @@ class EncodingTests(helper.CPWebCase):
                 cherrypy.response.cookie['candy']['domain'] = 'cherrypy.org'
                 cherrypy.response.headers[
                     'Some-Header'] = 'My d\xc3\xb6g has fleas'
+                cherrypy.response.headers[
+                    'Bytes-Header'] = b'Bytes given header'
                 return 'Any content'
 
             @cherrypy.expose
@@ -424,3 +426,8 @@ class EncodingTests(helper.CPWebCase):
     def test_UnicodeHeaders(self):
         self.getPage('/cookies_and_headers')
         self.assertBody('Any content')
+
+    def test_BytesHeaders(self):
+        self.getPage('/cookies_and_headers')
+        self.assertBody('Any content')
+        self.assertHeader('Bytes-Header', 'Bytes given header')
