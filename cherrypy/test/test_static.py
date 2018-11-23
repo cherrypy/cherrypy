@@ -19,6 +19,10 @@ from cherrypy.test import helper
 
 @pytest.fixture
 def unicode_filesystem(tmpdir):
+    _check_unicode_filesystem(tmpdir)
+
+
+def _check_unicode_filesystem(tmpdir):
     filename = tmpdir / ntou('☃', 'utf-8')
     tmpl = 'File system encoding ({encoding}) cannot support unicode filenames'
     msg = tmpl.format(encoding=sys.getfilesystemencoding())
@@ -35,7 +39,7 @@ def ensure_unicode_filesystem():
     """
     tmpdir = py.path.local(tempfile.mkdtemp())
     try:
-        unicode_filesystem(tmpdir)
+        _check_unicode_filesystem(tmpdir)
     finally:
         tmpdir.remove()
 
