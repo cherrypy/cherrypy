@@ -1,3 +1,9 @@
+v17.4.1
+-------
+
+* :issue:`1738` via :pr:`1755`: Restore support for 'bytes'
+  in response headers (backport from v18.0.1).
+
 v17.4.0
 -------
 
