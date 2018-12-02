@@ -6,9 +6,11 @@ import re
 import stat
 import mimetypes
 import urllib.parse
+import datetime
 
 from email.generator import _make_boundary as make_boundary
 from io import UnsupportedOperation
+from email.utils import parsedate
 
 import cherrypy
 from cherrypy._cpcompat import ntob
@@ -174,7 +176,21 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 cherrypy.log(message, 'TOOLS.STATIC')
             raise cherrypy.HTTPError(416, message)
 
-        if r:
+        IF_RANGE_IN_PAST = False
+
+        if request.headers.get('If-Range'):
+            # Per RFC:
+            # The If-Range HTTP request header makes a range request conditional:
+            # if the condition is fulfilled, the range request will be issued
+            # and the server sends back a 206 Partial Content answer with
+            # the appropriate body. If the condition is not fulfilled,
+            # the full resource is sent back, with a 200 OK status.
+            if datetime.datetime(*parsedate(request.headers.get('If-Range'))[:6]) \
+                    < datetime.datetime.now():
+                IF_RANGE_IN_PAST = True
+
+
+        if r and not IF_RANGE_IN_PAST:
             if len(r) == 1:
                 # Return a single-part response.
                 start, stop = r[0]
@@ -232,7 +248,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             return response.body
         else:
             if debug:
-                cherrypy.log('No byteranges requested', 'TOOLS.STATIC')
+                cherrypy.log('No byteranges requested or If-Range is in the past', 'TOOLS.STATIC')
 
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
