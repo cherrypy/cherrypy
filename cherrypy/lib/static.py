@@ -1,6 +1,6 @@
 """Module with helpers for serving static files."""
 
-import datetime
+from datetime import datetime
 import os
 import platform
 import re
@@ -177,16 +177,18 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             raise cherrypy.HTTPError(416, message)
 
         is_if_range_in_past = False
+        if_range_header = request.headers.get('If-Range')
 
-        if request.headers.get('If-Range'):
+        if if_range_header:
             # Per RFC:
-            # The If-Range HTTP request header makes a range request conditional:
-            # if the condition is fulfilled, the range request will be issued
-            # and the server sends back a 206 Partial Content answer with
+            # The If-Range HTTP request header makes a range request
+            # conditional: if the condition is fulfilled, the range
+            # request will be issued and the server sends back
+            # a 206 Partial Content answer with
             # the appropriate body. If the condition is not fulfilled,
             # the full resource is sent back, with a 200 OK status.
-            if datetime.datetime(*parsedate(request.headers.get('If-Range'))[:6]) \
-                    < datetime.datetime.now():
+            # Ref: https://tools.ietf.org/html/rfc7233#section-3.2
+            if datetime(*parsedate(if_range_header)[:6]) < datetime.now():
                 is_if_range_in_past = True
 
 
