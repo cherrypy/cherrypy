@@ -248,7 +248,11 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             return response.body
         else:
             if debug:
-                cherrypy.log('No byteranges requested or If-Range is in the past', 'TOOLS.STATIC')
+                log_msg = (
+                    'If-Range is in the past' if is_if_range_in_past
+                    else 'No byteranges requested'
+                )
+                cherrypy.log(log_msg, 'TOOLS.STATIC')
 
     # Set Content-Length and use an iterable (file object)
     #   this way CP won't load the whole file in memory
