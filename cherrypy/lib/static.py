@@ -191,7 +191,6 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             if datetime(*parsedate(if_range_header)[:6]) < datetime.now():
                 is_if_range_in_past = True
 
-
         if r and not is_if_range_in_past:
             if len(r) == 1:
                 # Return a single-part response.
