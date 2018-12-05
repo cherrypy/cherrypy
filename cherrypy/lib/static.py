@@ -176,7 +176,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 cherrypy.log(message, 'TOOLS.STATIC')
             raise cherrypy.HTTPError(416, message)
 
-        IF_RANGE_IN_PAST = False
+        is_if_range_in_past = False
 
         if request.headers.get('If-Range'):
             # Per RFC:
@@ -187,10 +187,10 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
             # the full resource is sent back, with a 200 OK status.
             if datetime.datetime(*parsedate(request.headers.get('If-Range'))[:6]) \
                     < datetime.datetime.now():
-                IF_RANGE_IN_PAST = True
+                is_if_range_in_past = True
 
 
-        if r and not IF_RANGE_IN_PAST:
+        if r and not is_if_range_in_past:
             if len(r) == 1:
                 # Return a single-part response.
                 start, stop = r[0]
