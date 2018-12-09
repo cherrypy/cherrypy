@@ -47,19 +47,19 @@ class Cache(object):
 
     def get(self):
         """Return the current variant if in the cache, else None."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def put(self, obj, size):
         """Store the current variant in the cache."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def delete(self):
         """Remove ALL cached variants of the current resource."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def clear(self):
         """Reset the cache to its initial, empty state."""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 # ------------------------------ Memory Cache ------------------------------- #
