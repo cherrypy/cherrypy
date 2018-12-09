@@ -5,9 +5,6 @@ repos:
     -   id: trailing-whitespace
         exclude: cherrypy/test/static/index.html
     -   id: flake8
-        args:
-        # W503 ignored for https://github.com/PyCQA/pycodestyle/issues/498
-        - --ignore=W503
     -   id: check-merge-conflict
     -   id: double-quote-string-fixer
     -   id: end-of-file-fixer
