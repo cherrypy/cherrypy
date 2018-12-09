@@ -1,3 +1,9 @@
+v18.1.0
+-------
+
+* :issue:`1758` via :pr:`1759`: In the bus, when awaiting a
+  state change, only publish after the state has changed.
+
 v18.0.1
 -------
 
