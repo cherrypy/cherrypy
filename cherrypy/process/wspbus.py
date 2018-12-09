@@ -81,6 +81,8 @@ import warnings
 import subprocess
 import functools
 
+from more_itertools import always_iterable
+
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -368,10 +370,7 @@ class Bus(object):
 
     def wait(self, state, interval=0.1, channel=None):
         """Poll for the given state(s) at intervals; publish to channel."""
-        if isinstance(state, (tuple, list)):
-            states = state
-        else:
-            states = [state]
+        states = set(always_iterable(state))
 
         while self.state not in states:
             time.sleep(interval)
