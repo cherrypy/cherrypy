@@ -28,7 +28,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
             self.bus.log('Could not SetConsoleCtrlHandler (error %r)' %
                          win32api.GetLastError(), level=40)
         else:
-            self.bus.log('Set handler for console events.', level=40)
+            self.bus.log('Set handler for console events.', level=20)
             self.is_set = True
 
     def stop(self):
@@ -46,7 +46,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
             self.bus.log('Could not remove SetConsoleCtrlHandler (error %r)' %
                          win32api.GetLastError(), level=40)
         else:
-            self.bus.log('Removed handler for console events.', level=40)
+            self.bus.log('Removed handler for console events.', level=20)
             self.is_set = False
 
     def handle(self, event):
