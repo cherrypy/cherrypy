@@ -167,7 +167,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     request = cherrypy.serving.request
     if request.protocol >= (1, 1):
         response.headers['Accept-Ranges'] = 'bytes'
-        r = httputil.get_ranges(request.headers.get('Range'), content_length)
+        r = httputil.passes_if_range_check(request) and httputil.get_ranges(request.headers.get('Range'), content_length)
         if r == []:
             response.headers['Content-Range'] = 'bytes */%s' % content_length
             message = ('Invalid Range (first-byte-pos greater than '
@@ -176,7 +176,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 cherrypy.log(message, 'TOOLS.STATIC')
             raise cherrypy.HTTPError(416, message)
 
-        if r and not httputil.passes_if_range_check(request):
+        if r:
             if len(r) == 1:
                 # Return a single-part response.
                 start, stop = r[0]
@@ -235,7 +235,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
         else:
             if debug:
                 log_msg = (
-                    'If-Range is in the past' if is_if_range_in_past
+                    'If-Range is in the past' if resource_expired
                     else 'No byteranges requested'
                 )
                 cherrypy.log(log_msg, 'TOOLS.STATIC')

@@ -69,7 +69,7 @@ def protocol_from_http(protocol_str):
 
 
 def passes_if_range_check(request):
-    """Return true if the request has If-Range header, and it passes the conditions contained in the header.
+    """Return true if the request does not have an If-Range header, or it passes the conditions contained in the header.
     In this case, the Range header should be observed. False if other, with the Range header discarded."""
     if_range_header = request.headers.get('If-Range')
     if if_range_header:
@@ -84,10 +84,14 @@ def passes_if_range_check(request):
         try:
             if datetime(*parsedate(if_range_header)[:6]) < datetime.now():
                 return True
+            else:
+                return False
         except TypeError:
             # Fixme: TypeError indicates that the value is an ETag. We don't support ETag at the moment.
             return False
-    return False
+    else:
+        # Return True when there is no If-Range, since it technically fufills all conditions
+        return True
 
 def get_ranges(headervalue, content_length):
     """Return a list of (start, stop) indices from a Range header, or None.
