@@ -405,7 +405,7 @@ and wrap your entire CherryPy application with it:
        headers = cherrypy.response.headers
        headers['X-Frame-Options'] = 'DENY'
        headers['X-XSS-Protection'] = '1; mode=block'
-       headers['Content-Security-Policy'] = "default-src='self'"
+       headers['Content-Security-Policy'] = "default-src 'self';"
 
 .. note::
 
