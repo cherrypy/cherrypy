@@ -15,11 +15,11 @@ applications using CherryPy. A couple of notes:
   probably want to use a separate template package (like Cheetah,
   CherryTemplate or XML/XSL).
 
-- For convinience cherrypy tutorials are provided in a docker container, if you
-  are not familiar with docker go through the `Getting started guide
-  https://docs.docker.com/get-started/`_ first, then come back and try the
-  examples below. All commands must be run within the `cherrypy/tutorials`
-  directory
+- For convinience cherrypy tutorials are provided in a docker container,
+  if you are not familiar with docker go through the `Getting started
+  guide <https://docs.docker.com/get-started/>`_ first, then come back
+  and try the examples below. All commands must be run within the
+  `cherrypy/tutorials` directory
 
 To run docker from the latest image in docker hub run:
 
@@ -34,7 +34,7 @@ filename of the tutorial you wish to run like this:
 
   $ docker run -p 8080:8080 cherrypy/cherrypy tut02_expose_methods.py
 
-Now you can browse to `<http://localhost:8080>`
+Now you can browse to http://localhost:8080
 
 We also provide a docker-compose.yml so you can just run:
 
@@ -42,6 +42,13 @@ We also provide a docker-compose.yml so you can just run:
 
   $ docker-compose up
 
+Same as with plain docker you can specify the filename of any tutorial to
+docker-compose with an environment variable:
+
+.. code-block:: bash
+
+  $ CHERRYPY_APP=tut02_expose_methods.py docker-compose up
+
 Compose is a tool for defining and running multi-container Docker
 applications. To learn more about Compose refer to the `getting
-started https://docs.docker.com/compose/gettingstarted/`_
+started <https://docs.docker.com/compose/gettingstarted/>`_
