@@ -90,7 +90,7 @@ class HookMap(dict):
 
     def run(self, point):
         """Execute all registered Hooks (callbacks) for the given point."""
-        exc = None
+        raising = False
         hooks = self[point]
         hooks.sort()
         for hook in hooks:
@@ -99,18 +99,18 @@ class HookMap(dict):
             # but proceed on to the next hook. The only way
             # to stop all processing from one of these hooks is
             # to raise SystemExit and stop the whole server.
-            if exc is None or hook.failsafe:
+            if not raising or hook.failsafe:
                 try:
                     hook()
                 except (KeyboardInterrupt, SystemExit):
                     raise
                 except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
                         cherrypy.InternalRedirect):
-                    exc = sys.exc_info()[1]
+                    raising = True
                 except Exception:
-                    exc = sys.exc_info()[1]
+                    raising = True
                     cherrypy.log(traceback=True, severity=40)
-        if exc:
+        if raising:
             raise
 
     def __copy__(self):
