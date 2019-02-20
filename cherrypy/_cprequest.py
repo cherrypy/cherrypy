@@ -111,7 +111,7 @@ class HookMap(dict):
                     exc = sys.exc_info()[1]
                     cherrypy.log(traceback=True, severity=40)
         if exc:
-            raise exc
+            raise
 
     def __copy__(self):
         newmap = self.__class__()
