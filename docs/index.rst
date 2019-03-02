@@ -1,5 +1,5 @@
 
-CherryPy - A Minimalist Python Web Framework
+CherryPy — A Minimalist Python Web Framework
 ============================================
 
 .. toctree::
