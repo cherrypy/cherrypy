@@ -374,7 +374,7 @@ class Bus(object):
 
         while self.state not in states:
             time.sleep(interval)
-        self.publish(channel)
+            self.publish(channel)
 
     def _do_execv(self):
         """Re-execute the current process.
