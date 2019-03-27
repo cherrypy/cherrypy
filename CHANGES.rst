@@ -1,3 +1,9 @@
+v18.1.1
+-------
+
+* :pr:`1774` reverts :pr:`1759` as new evidence emerged that
+  the original behavior was intentional. Re-opens :issue:`1758`.
+
 v18.1.0
 -------
 
