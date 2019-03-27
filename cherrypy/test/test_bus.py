@@ -1,6 +1,6 @@
 import threading
 import time
-import unittest
+import unittest.mock
 
 from cherrypy.process import wspbus
 
@@ -179,18 +179,32 @@ class BusMethodTests(unittest.TestCase):
             time.sleep(0.2)
             getattr(b, method)()
 
-        for method, states in [('start', [b.states.STARTED]),
-                               ('stop', [b.states.STOPPED]),
-                               ('start',
-                                [b.states.STARTING, b.states.STARTED]),
-                               ('exit', [b.states.EXITING]),
-                               ]:
+        flow = [
+            ('start', [b.states.STARTED]),
+            ('stop', [b.states.STOPPED]),
+            ('start', [b.states.STARTING, b.states.STARTED]),
+            ('exit', [b.states.EXITING]),
+        ]
+
+        for method, states in flow:
             threading.Thread(target=f, args=(method,)).start()
             b.wait(states)
 
             # The wait method MUST wait for the given state(s).
             if b.state not in states:
                 self.fail('State %r not in %r' % (b.state, states))
+
+    def test_wait_publishes_periodically(self):
+        bus = wspbus.Bus()
+        callback = unittest.mock.MagicMock()
+        bus.subscribe('main', callback)
+
+        def set_start():
+            time.sleep(0.05)
+            bus.start()
+        threading.Thread(target=set_start).start()
+        bus.wait(bus.states.STARTED, interval=0.01, channel='main')
+        assert callback.call_count > 3
 
     def test_block(self):
         b = wspbus.Bus()
