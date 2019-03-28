@@ -20,7 +20,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
 
     def start(self):
         if self.is_set:
-            self.bus.log('Handler for console events already set.', level=40)
+            self.bus.log('Handler for console events already set.', level=20)
             return
 
         result = win32api.SetConsoleCtrlHandler(self.handle, 1)
@@ -33,7 +33,7 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
 
     def stop(self):
         if not self.is_set:
-            self.bus.log('Handler for console events already off.', level=40)
+            self.bus.log('Handler for console events already off.', level=20)
             return
 
         try:
