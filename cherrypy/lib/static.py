@@ -167,41 +167,42 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     request = cherrypy.serving.request
     if request.protocol >= (1, 1):
         response.headers['Accept-Ranges'] = 'bytes'
-        r = httputil.passes_if_range_check(request) and httputil.get_ranges(request.headers.get('Range'), content_length)
-        if r == []:
-            response.headers['Content-Range'] = 'bytes */%s' % content_length
-            message = ('Invalid Range (first-byte-pos greater than '
-                       'Content-Length)')
-            if debug:
-                cherrypy.log(message, 'TOOLS.STATIC')
-            raise cherrypy.HTTPError(416, message)
-
-        if r:
-            if len(r) == 1:
-                # Return a single-part response.
-                start, stop = r[0]
-                if stop > content_length:
-                    stop = content_length
-                r_len = stop - start
+        if httputil.passes_if_range_check(request.headers.get('Range')):
+            r = httputil.get_ranges(request.headers.get('Range'), content_length)
+            if r == []:
+                response.headers['Content-Range'] = 'bytes */%s' % content_length
+                message = ('Invalid Range (first-byte-pos greater than '
+                           'Content-Length)')
                 if debug:
-                    cherrypy.log(
-                        'Single part; start: %r, stop: %r' % (start, stop),
-                        'TOOLS.STATIC')
-                response.status = '206 Partial Content'
-                response.headers['Content-Range'] = (
-                    'bytes %s-%s/%s' % (start, stop - 1, content_length))
-                response.headers['Content-Length'] = r_len
-                fileobj.seek(start)
-                response.body = file_generator_limited(fileobj, r_len)
-            else:
-                # Return a multipart/byteranges response.
-                response.status = '206 Partial Content'
-                boundary = make_boundary()
-                ct = 'multipart/byteranges; boundary=%s' % boundary
-                response.headers['Content-Type'] = ct
-                if 'Content-Length' in response.headers:
-                    # Delete Content-Length header so finalize() recalcs it.
-                    del response.headers['Content-Length']
+                    cherrypy.log(message, 'TOOLS.STATIC')
+                raise cherrypy.HTTPError(416, message)
+
+            if r:
+                if len(r) == 1:
+                    # Return a single-part response.
+                    start, stop = r[0]
+                    if stop > content_length:
+                        stop = content_length
+                    r_len = stop - start
+                    if debug:
+                        cherrypy.log(
+                            'Single part; start: %r, stop: %r' % (start, stop),
+                            'TOOLS.STATIC')
+                    response.status = '206 Partial Content'
+                    response.headers['Content-Range'] = (
+                        'bytes %s-%s/%s' % (start, stop - 1, content_length))
+                    response.headers['Content-Length'] = r_len
+                    fileobj.seek(start)
+                    response.body = file_generator_limited(fileobj, r_len)
+                else:
+                    # Return a multipart/byteranges response.
+                    response.status = '206 Partial Content'
+                    boundary = make_boundary()
+                    ct = 'multipart/byteranges; boundary=%s' % boundary
+                    response.headers['Content-Type'] = ct
+                    if 'Content-Length' in response.headers:
+                        # Delete Content-Length header so finalize() recalcs it.
+                        del response.headers['Content-Length']
 
                 def file_ranges():
                     # Apache compatibility:
