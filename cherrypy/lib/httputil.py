@@ -69,7 +69,7 @@ def protocol_from_http(protocol_str):
 
 
 def passes_if_range_check(if_range_header):
-    """Determines if an If-Range header is present and passes its conditions"""
+    """Determines if an If-Range header is present and passes its conditions."""
     if if_range_header:
         # Per RFC:
         # The If-Range HTTP request header makes a range request
