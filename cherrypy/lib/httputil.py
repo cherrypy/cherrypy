@@ -69,8 +69,7 @@ def protocol_from_http(protocol_str):
 
 
 def passes_if_range_check(request):
-    """Return true if the request does not have an If-Range header, or it passes the conditions contained in the header.
-    In this case, the Range header should be observed. False if other, with the Range header discarded."""
+    """Determines if an If-Range header is present and passes its conditions"""
     if_range_header = request.headers.get('If-Range')
     if if_range_header:
         # Per RFC:
