@@ -1,15 +1,12 @@
 """Module with helpers for serving static files."""
 
-from datetime import datetime
+import mimetypes
 import os
 import platform
 import re
 import stat
-import mimetypes
 import urllib.parse
-
 from email.generator import _make_boundary as make_boundary
-from email.utils import parsedate
 from io import UnsupportedOperation
 
 import cherrypy
