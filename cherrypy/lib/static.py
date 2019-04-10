@@ -164,7 +164,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     request = cherrypy.serving.request
     if request.protocol >= (1, 1):
         response.headers['Accept-Ranges'] = 'bytes'
-        if httputil.passes_if_range_check(request.headers.get('Range')):
+        if httputil.matches_if_range_check(request.headers.get('Range')):
             r = httputil.get_ranges(request.headers.get('Range'), content_length)
             if r == []:
                 response.headers['Content-Range'] = 'bytes */%s' % content_length
