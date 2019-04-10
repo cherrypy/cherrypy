@@ -6,6 +6,7 @@ import platform
 import re
 import stat
 import urllib.parse
+
 from email.generator import _make_boundary as make_boundary
 from io import UnsupportedOperation
 
