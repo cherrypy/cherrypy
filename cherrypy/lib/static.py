@@ -174,7 +174,8 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 content_length
             )
             if r == []:
-                response.headers['Content-Range'] = 'bytes */%s' % content_length
+                response.headers['Content-Range'] = ('bytes '
+                                                     '*/%s' % content_length)
                 message = ('Invalid Range (first-byte-pos greater than '
                            'Content-Length)')
                 if debug:
@@ -234,13 +235,14 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                     # Apache compatibility:
                     yield b'\r\n'
                 response.body = file_ranges()
+            else:
+                if debug:
+                    log_msg = 'No byteranges requested'
+                    cherrypy.log(log_msg, 'TOOLS.STATIC')
             return response.body
         else:
             if debug:
-                log_msg = (
-                    'If-Range is in the past' if not if_range_valid
-                    else 'No byteranges requested'
-                )
+                log_msg = 'If-Range is in the past'
                 cherrypy.log(log_msg, 'TOOLS.STATIC')
 
     # Set Content-Length and use an iterable (file object)
