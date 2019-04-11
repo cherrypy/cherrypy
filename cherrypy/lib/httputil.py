@@ -69,7 +69,7 @@ def protocol_from_http(protocol_str):
 
 
 def matches_if_range_check(if_range_header):
-    """Determines if an If-Range header is present and passes its conditions"""
+    """Determines if an If-Range header is present and passes its conditions."""
     if not if_range_header:
         return True
     # Per RFC:
