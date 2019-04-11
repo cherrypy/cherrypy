@@ -68,7 +68,9 @@ def protocol_from_http(protocol_str):
 
 
 def matches_if_range_check(if_range_header):
-    """Determines if an If-Range header is present and passes its conditions."""
+    """
+    Determines if an If-Range header is present and passes its conditions.
+    """
     if not if_range_header:
         return True
     # Per RFC:
@@ -80,9 +82,11 @@ def matches_if_range_check(if_range_header):
     # the full resource is sent back, with a 200 OK status.
     # Ref: https://tools.ietf.org/html/rfc7233#section-3.2
     try:
-        return datetime(*email.utils.parsedate(if_range_header)[:6]) < datetime.now()
+        return (datetime(*email.utils.parsedate(if_range_header)[:6])
+                < datetime.now())
     except TypeError:
-        # Fixme: TypeError indicates that the value is an ETag. We don't support ETag at the moment.
+        # Fixme: TypeError indicates that the value is an ETag.
+        # We don't support ETag at the moment.
         return False
 
 
