@@ -201,9 +201,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                     boundary = make_boundary()
                     ct = 'multipart/byteranges; boundary={}'.format(boundary)
                     response.headers['Content-Type'] = ct
-                    if 'Content-Length' in response.headers:
-                        # Delete Content-Length header so finalize() recalcs it.
-                        del response.headers['Content-Length']
+                    response.headers.pop('Content-Length', None)
 
                 def file_ranges():
                     # Apache compatibility:
