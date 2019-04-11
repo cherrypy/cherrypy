@@ -197,7 +197,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                     # Return a multipart/byteranges response.
                     response.status = '206 Partial Content'
                     boundary = make_boundary()
-                    ct = 'multipart/byteranges; boundary=%s' % boundary
+                    ct = 'multipart/byteranges; boundary={}'.format(boundary)
                     response.headers['Content-Type'] = ct
                     if 'Content-Length' in response.headers:
                         # Delete Content-Length header so finalize() recalcs it.
