@@ -839,7 +839,7 @@ sockets. This is how you enable it:
 
 ``server.peercreds`` enables looking up the connected process ID,
 user ID and group ID. They'll be accessible as WSGI environment
-variables::
+variables:
 
     * ``X_REMOTE_PID``
 
@@ -848,7 +848,7 @@ variables::
     * ``X_REMOTE_GID``
 
 ``server.peercreds_resolve`` resolves that into user name and group
-name. They'll be accessible as WSGI environment variables::
+name. They'll be accessible as WSGI environment variables:
 
     * ``X_REMOTE_USER`` and ``REMOTE_USER``
 
