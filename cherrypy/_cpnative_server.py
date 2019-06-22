@@ -9,6 +9,7 @@ import cheroot.server
 import cherrypy
 from cherrypy._cperror import format_exc, bare_error
 from cherrypy.lib import httputil
+from ._cpcompat import tonative
 
 
 class NativeGateway(cheroot.server.Gateway):
@@ -21,21 +22,25 @@ class NativeGateway(cheroot.server.Gateway):
         req = self.req
         try:
             # Obtain a Request object from CherryPy
-            local = req.server.bind_addr
+            local = req.server.bind_addr  # FIXME: handle UNIX sockets
+            local = tonative(local[0]), local[1]
             local = httputil.Host(local[0], local[1], '')
-            remote = req.conn.remote_addr, req.conn.remote_port
+            remote = tonative(req.conn.remote_addr), req.conn.remote_port
             remote = httputil.Host(remote[0], remote[1], '')
 
-            scheme = req.scheme
-            sn = cherrypy.tree.script_name(req.uri or '/')
+            scheme = tonative(req.scheme)
+            sn = cherrypy.tree.script_name(tonative(req.uri or '/'))
             if sn is None:
                 self.send_response('404 Not Found', [], [''])
             else:
                 app = cherrypy.tree.apps[sn]
-                method = req.method
-                path = req.path
-                qs = req.qs or ''
-                headers = req.inheaders.items()
+                method = tonative(req.method)
+                path = tonative(req.path)
+                qs = tonative(req.qs or '')
+                headers = (
+                    (tonative(h), tonative(v))
+                    for h, v in req.inheaders.items()
+                )
                 rfile = req.rfile
                 prev = None
 
@@ -52,8 +57,11 @@ class NativeGateway(cheroot.server.Gateway):
                         # Run the CherryPy Request object and obtain the
                         # response
                         try:
-                            request.run(method, path, qs,
-                                        req.request_protocol, headers, rfile)
+                            request.run(
+                                method, path, qs,
+                                tonative(req.request_protocol),
+                                headers, rfile,
+                            )
                             break
                         except cherrypy.InternalRedirect:
                             ir = sys.exc_info()[1]
