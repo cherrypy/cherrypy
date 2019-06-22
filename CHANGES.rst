@@ -1,3 +1,9 @@
+v18.1.2 (unreleased)
+--------------------
+
+* Fixed :issue:`1377` via :pr:`1785`: Restore a native WSGI-less
+  HTTP server support.
+
 v18.1.1
 -------
 
