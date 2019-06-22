@@ -1,3 +1,9 @@
+v17.4.2 (unreleased)
+--------------------
+
+* Fixed :issue:`1377` by backporting :pr:`1785` via :pr:`1786`:
+  Restore a native WSGI-less HTTP server support.
+
 v17.4.1
 -------
 
