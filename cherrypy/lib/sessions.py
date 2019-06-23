@@ -107,7 +107,6 @@ import time
 import threading
 import binascii
 import pickle
-import contextlib
 
 import zc.lockfile
 
