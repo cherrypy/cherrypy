@@ -1,8 +1,9 @@
-v18.1.2 (unreleased)
---------------------
+v18.1.2
+-------
 
 * Fixed :issue:`1377` via :pr:`1785`: Restore a native WSGI-less
   HTTP server support.
+* :pr:`1769`: Reduce log level for non-error events in win32.py
 
 v18.1.1
 -------
