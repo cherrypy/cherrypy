@@ -33,8 +33,8 @@ v18.0.0
 
 * Drop support for Python 3.4.
 
-v17.4.2 (unreleased)
---------------------
+v17.4.2
+-------
 
 * Fixed :issue:`1377` by backporting :pr:`1785` via :pr:`1786`:
   Restore a native WSGI-less HTTP server support.
