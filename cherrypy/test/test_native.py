@@ -32,4 +32,7 @@ def cp_native_server(request):
 
 def test_basic_request(cp_native_server):
     """A request to a native server should succeed."""
-    cp_native_server.get('/')
+    resp = cp_native_server.get('/')
+    assert resp.ok
+    assert resp.status_code == 200
+    assert resp.text == 'Hello World!'
