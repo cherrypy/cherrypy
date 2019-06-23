@@ -32,6 +32,11 @@ v18.0.0
   remain an LTS release for bug and security fixes.
 
 * Drop support for Python 3.4.
+v17.4.2 (unreleased)
+--------------------
+
+* Fixed :issue:`1377` by backporting :pr:`1785` via :pr:`1786`:
+  Restore a native WSGI-less HTTP server support.
 
 v17.4.1
 -------
