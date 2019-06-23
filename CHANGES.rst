@@ -32,6 +32,7 @@ v18.0.0
   remain an LTS release for bug and security fixes.
 
 * Drop support for Python 3.4.
+
 v17.4.2 (unreleased)
 --------------------
 
