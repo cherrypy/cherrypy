@@ -222,7 +222,7 @@ class SessionTest(helper.CPWebCase):
             return [
                 x
                 for x in os.listdir(localDir)
-                if x.startswith('session-')
+                if x.startswith('session-') and not x.endswith('.lock')
             ]
         assert f() == []
 
