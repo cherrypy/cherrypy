@@ -85,6 +85,7 @@ jobs:
   # TODO: fix tests
   - python: *pypy3
   - env: TOXENV=pre-commit-pep257
+  - python: nightly
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
