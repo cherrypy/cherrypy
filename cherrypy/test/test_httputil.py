@@ -62,14 +62,17 @@ def test_valid_status(status, expected_status):
 @pytest.mark.parametrize(
     'status_code,error_msg',
     [
-        ('hey', "Illegal response status from server ('hey' is non-numeric)."),
+        (
+            'hey',
+            r"Illegal response status from server \('hey' is non-numeric\)."
+        ),
         (
             {'hey': 'hi'},
-            'Illegal response status from server '
-            "({'hey': 'hi'} is non-numeric).",
+            r'Illegal response status from server '
+            r"\(\{'hey': 'hi'\} is non-numeric\).",
         ),
-        (1, 'Illegal response status from server (1 is out of range).'),
-        (600, 'Illegal response status from server (600 is out of range).'),
+        (1, r'Illegal response status from server \(1 is out of range\).'),
+        (600, r'Illegal response status from server \(600 is out of range\).'),
     ]
 )
 def test_invalid_status(status_code, error_msg):
