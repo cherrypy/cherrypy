@@ -74,7 +74,5 @@ def test_valid_status(status, expected_status):
 )
 def test_invalid_status(status_code, error_msg):
     """Check that invalid status cause certain errors."""
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError, match=error_msg):
         httputil.valid_status(status_code)
-
-    assert error_msg in str(excinfo)
