@@ -34,6 +34,7 @@ user:
                                               POST should not raise this error
 305      Use Proxy                            Confirm with the user
 307      Temporary Redirect                   Confirm with the user
+308      Permanent Redirect                   No confirmation
 =====    =================================    ===========
 
 However, browsers have historically implemented these restrictions poorly;
@@ -254,7 +255,7 @@ class HTTPRedirect(CherryPyException):
         response = cherrypy.serving.response
         response.status = status = self.status
 
-        if status in (300, 301, 302, 303, 307):
+        if status in (300, 301, 302, 303, 307, 308):
             response.headers['Content-Type'] = 'text/html;charset=utf-8'
             # "The ... URI SHOULD be given by the Location field
             # in the response."
@@ -269,6 +270,7 @@ class HTTPRedirect(CherryPyException):
                 302: 'This resource resides temporarily at ',
                 303: 'This resource can be found at ',
                 307: 'This resource has moved temporarily to ',
+                308: 'This resource has been moved to ',
             }[status]
             msg += '<a href=%s>%s</a>.'
             msgs = [
