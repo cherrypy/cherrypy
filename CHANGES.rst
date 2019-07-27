@@ -1,3 +1,9 @@
+v18.2.0dev
+----------
+
+* :pr:`1794`: Add native support for ``308 Permanent Redirect``
+  usable via ``raise cherrypy.HTTPRedirect('/new_uri', 308)``.
+
 v18.1.2
 -------
 
