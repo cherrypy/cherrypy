@@ -385,6 +385,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(307)
 
+        self.getPage('/redirect/by_code?code=308')
+        self.assertMatchesBody(
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+        self.assertStatus(308)
+
         self.getPage('/redirect/nomodify')
         self.assertBody('')
         self.assertStatus(304)
