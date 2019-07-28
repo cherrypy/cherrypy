@@ -9,7 +9,7 @@ Not Modified if possible, or serve the cached response otherwise. It also sets
 request.cached to True if serving a cached representation, and sets
 request.cacheable to False (so it doesn't get cached again).
 
-If POST, PUT or DELETE requests are made for a cached resource, they
+If POST, PUT, PATCH or DELETE requests are made for a cached resource, they
 invalidate (delete) any cached response.
 
 Usage
@@ -265,10 +265,10 @@ class MemoryCache(Cache):
         self.store.pop(uri, None)
 
 
-def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
+def get(invalid_methods=('POST', 'PUT', 'PATCH', 'DELETE'), debug=False, **kwargs):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
 
-    If POST, PUT or DELETE:
+    If POST, PUT, PATCH or DELETE:
         * invalidates (deletes) any cached response for this resource
         * sets request.cached = False
         * sets request.cacheable = False
