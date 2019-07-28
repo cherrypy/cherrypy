@@ -34,7 +34,7 @@ user:
                                               POST should not raise this error
 305      Use Proxy                            Confirm with the user
 307      Temporary Redirect                   Confirm with the user
-308      Moved Permanently                    Confirm with the user
+308      Permanent Redirect                   No confirmation
 =====    =================================    ===========
 
 However, browsers have historically implemented these restrictions poorly;
@@ -270,7 +270,7 @@ class HTTPRedirect(CherryPyException):
                 302: 'This resource resides temporarily at ',
                 303: 'This resource can be found at ',
                 307: 'This resource has moved temporarily to ',
-                308: 'This resource has permanently moved to ',
+                308: 'This resource has been moved to ',
             }[status]
             msg += '<a href=%s>%s</a>.'
             msgs = [
