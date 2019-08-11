@@ -4,6 +4,8 @@ import sys
 import time
 from uuid import UUID
 
+import pytest
+
 from cherrypy._cpcompat import text_or_bytes
 
 
@@ -43,6 +45,7 @@ class LogCase(object):
         unique enough from normal log output to use for marker identification.
     """
 
+    interactive = False
     logfile = None
     lastmarker = None
     markerPrefix = b'test suite marker: '
@@ -52,7 +55,7 @@ class LogCase(object):
         print('    ERROR: %s' % msg)
 
         if not self.interactive:
-            raise self.failureException(msg)
+            raise pytest.fail(msg)
 
         p = ('    Show: '
              '[L]og [M]arker [P]attern; '
@@ -84,7 +87,7 @@ class LogCase(object):
                 # return without raising the normal exception
                 return
             elif i == 'R':
-                raise self.failureException(msg)
+                raise pytest.fail(msg)
             elif i == 'X':
                 self.exit()
             sys.stdout.write(p + ' ')
