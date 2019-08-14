@@ -2,7 +2,6 @@ import os
 import signal
 import time
 import unittest
-import warnings
 from http.client import BadStatusLine
 
 import pytest
@@ -457,13 +456,13 @@ class WaitTests(unittest.TestCase):
         inaddr_any = '0.0.0.0'
 
         # Wait on the free port that's unbound
-        with warnings.catch_warnings(record=True) as w:
+        with pytest.warns(
+                UserWarning,
+                match='Unable to verify that the server is bound on ',
+        ) as w:
             with servers._safe_wait(inaddr_any, free_port):
                 portend.occupied(inaddr_any, free_port, timeout=1)
-            self.assertEqual(len(w), 1)
-            self.assertTrue(isinstance(w[0], warnings.WarningMessage))
-            self.assertTrue(
-                'Unable to verify that the server is bound on ' in str(w[0]))
+        assert len(w) == 1
 
         # The wait should still raise an IO error if INADDR_ANY was
         #  not supplied.
