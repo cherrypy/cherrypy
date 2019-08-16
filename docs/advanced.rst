@@ -641,6 +641,26 @@ You can then run the test using `py.test <http://pytest.org/latest/>`_ as follow
    $ py.test -s test_echo_app.py
 
 The ``-s`` is necessary because the CherryPy class also wraps stdin and stdout.
+Without the flag, tests may hang on failed assertions waiting for an input.
+
+Another option to avoid this problem, (if, for example, you are running tests
+inside an IDE) is to disable the interactive mode that's enabled by default.
+It can be disabled setting the ``WEBTEST_INTERACTIVE`` environment variable to
+``False`` or ``0``.
+
+If you don't want to change environment variables to simply run a suite of tests
+you could also subclass the :class:`helper class <cherrypy.test.helper.CPWebCase>`,
+set ``helper.CPWebCase.interactive = False`` in the class and then derive all
+your test classes from your custom class:
+
+.. code-block:: python
+
+    import cherrypy
+    from cherrypy.test import helper
+
+    class TestsBase(helper.CPWebCase):
+
+        helper.CPWebCase.interactive = False
 
 .. note::
 
