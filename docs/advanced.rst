@@ -670,3 +670,13 @@ your test classes from your custom class:
    If you want to really unit test your CherryPy application, meaning without
    having to start a server, you may want to have a look at
    this `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_.
+
+.. note::
+
+   The :class:`helper class <cherrypy.test.helper.CPWebCase>` derives from
+   :class:`unittest.TestCase` class. For this reason, running from
+   `pytest <https://pytest.org/>`_,
+   there are some limitations with respect to standard  ``pytest`` tests,
+   especially if you are grouping the tests in test classes.
+   You can find more details at `this page
+   <pytest-docs:unittest.html#pytest-features-in-unittest-testcase-subclasses>`_.
