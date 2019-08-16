@@ -101,6 +101,7 @@ extlinks = {
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'cheroot': ('https://cheroot.cherrypy.org/en/latest/', None),
+    'pytest-docs': ('https://docs.pytest.org/en/latest/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
