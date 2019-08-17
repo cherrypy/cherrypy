@@ -39,8 +39,7 @@ def shutdown_server():
     cherrypy.engine.exit()
     cherrypy.engine.block()
 
-    servers_copy = list(getattr(cherrypy, 'servers', {}).items())
-    for name, server in servers_copy:
+    for name, server in getattr(cherrypy, 'servers', {}).copy().items():
         server.unsubscribe()
         del cherrypy.servers[name]
 

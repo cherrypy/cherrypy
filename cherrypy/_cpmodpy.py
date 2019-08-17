@@ -195,7 +195,7 @@ def handler(req):
             path = req.uri
             qs = req.args or ''
             reqproto = req.protocol
-            headers = list(req.headers_in.items())
+            headers = list(req.headers_in.copy().items())
             rfile = _ReadOnlyRequest(req)
             prev = None
 

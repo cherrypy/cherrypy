@@ -23,7 +23,7 @@ def downgrade_wsgi_ux_to_1x(environ):
     env1x = {}
 
     url_encoding = environ[ntou('wsgi.url_encoding')]
-    for k, v in list(environ.items()):
+    for k, v in environ.copy().items():
         if k in [ntou('PATH_INFO'), ntou('SCRIPT_NAME'), ntou('QUERY_STRING')]:
             v = v.encode(url_encoding)
         elif isinstance(v, str):

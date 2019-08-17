@@ -196,8 +196,7 @@ class MemoryCache(Cache):
             now = time.time()
             # Must make a copy of expirations so it doesn't change size
             # during iteration
-            items = list(self.expirations.items())
-            for expiration_time, objects in items:
+            for expiration_time, objects in self.expirations.copy().items():
                 if expiration_time <= now:
                     for obj_size, uri, sel_header_values in objects:
                         try:

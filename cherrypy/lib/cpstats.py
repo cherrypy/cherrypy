@@ -205,7 +205,7 @@ if not hasattr(logging, 'statistics'):
 def extrapolate_statistics(scope):
     """Return an extrapolated copy of the given scope."""
     c = {}
-    for k, v in list(scope.items()):
+    for k, v in scope.copy().items():
         if isinstance(v, dict):
             v = extrapolate_statistics(v)
         elif isinstance(v, (list, tuple)):
