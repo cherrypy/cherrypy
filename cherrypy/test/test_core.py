@@ -554,7 +554,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertStatus(206)
             ct = self.assertHeader('Content-Type')
             expected_type = 'multipart/byteranges; boundary='
-            self.assert_(ct.startswith(expected_type))
+            assert ct.startswith(expected_type)
             boundary = ct[len(expected_type):]
             expected_body = ('\r\n--%s\r\n'
                              'Content-type: text/html\r\n'
