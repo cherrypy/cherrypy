@@ -1,5 +1,4 @@
 import sys
-import imp
 import importlib
 
 import cherrypy
@@ -24,7 +23,7 @@ class TutorialTest(helper.CPWebCase):
         """
         target = 'cherrypy.tutorial.' + name
         if target in sys.modules:
-            module = imp.reload(sys.modules[target])
+            module = importlib.reload(sys.modules[target])
         else:
             module = importlib.import_module(target)
         return module
