@@ -5,6 +5,7 @@ environment:
   - PYTHON: "C:\\Python35-x64"
 
 init:
+- "chcp 65001"
 - ps: >-
     if($env:APPVEYOR_RDP_DEBUG -eq 'True') {
       iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
