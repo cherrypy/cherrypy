@@ -1,5 +1,9 @@
-v18.2.0dev
-----------
+v18.2.0
+-------
+
+* File-based sessions no longer attempt to remove the lock files
+  when releasing locks, instead deferring to the default behavior
+  of zc.lockfile. Fixes :issue:`1391` and :issue:`1779`.
 
 * :pr:`1794`: Add native support for ``308 Permanent Redirect``
   usable via ``raise cherrypy.HTTPRedirect('/new_uri', 308)``.
