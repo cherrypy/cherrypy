@@ -674,7 +674,7 @@ Once you run this snippet, go to:
 
 In both cases, you will be led to the `generate` page
 handler. Without our home-made dispatcher, the second
-one would fail and return a 404 error (:rfc:`2616#sec10.4.5`).
+one would fail and return a 404 error (:rfc:`7231#section-6.5.4`).
 
 Tool or dispatcher?
 ^^^^^^^^^^^^^^^^^^^

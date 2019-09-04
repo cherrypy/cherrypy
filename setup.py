@@ -68,7 +68,7 @@ params = dict(
             'sphinx',
             'docutils',
             'alabaster',
-            'rst.linker>=1.9',
+            'rst.linker>=1.11',
             'jaraco.packaging>=3.2',
         ],
         'json': ['simplejson'],

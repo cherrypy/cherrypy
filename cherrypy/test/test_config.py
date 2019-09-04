@@ -80,7 +80,7 @@ def setup_server():
 
             def wrapper():
                 params = cherrypy.request.params
-                for name, coercer in list(value.items()):
+                for name, coercer in value.copy().items():
                     try:
                         params[name] = coercer(params[name])
                     except KeyError:

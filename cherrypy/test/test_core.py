@@ -385,6 +385,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
         self.assertStatus(307)
 
+        self.getPage('/redirect/by_code?code=308')
+        self.assertMatchesBody(
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+        self.assertStatus(308)
+
         self.getPage('/redirect/nomodify')
         self.assertBody('')
         self.assertStatus(304)
@@ -549,7 +554,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             self.assertStatus(206)
             ct = self.assertHeader('Content-Type')
             expected_type = 'multipart/byteranges; boundary='
-            self.assert_(ct.startswith(expected_type))
+            assert ct.startswith(expected_type)
             boundary = ct[len(expected_type):]
             expected_body = ('\r\n--%s\r\n'
                              'Content-type: text/html\r\n'

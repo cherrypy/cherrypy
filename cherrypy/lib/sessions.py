@@ -403,7 +403,7 @@ class RamSession(Session):
         """Clean up expired sessions."""
 
         now = self.now()
-        for _id, (data, expiration_time) in list(self.cache.items()):
+        for _id, (data, expiration_time) in self.cache.copy().items():
             if expiration_time <= now:
                 try:
                     del self.cache[_id]

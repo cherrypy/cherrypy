@@ -5,6 +5,9 @@ v18.2.0
   when releasing locks, instead deferring to the default behavior
   of zc.lockfile. Fixes :issue:`1391` and :issue:`1779`.
 
+* :pr:`1794`: Add native support for ``308 Permanent Redirect``
+  usable via ``raise cherrypy.HTTPRedirect('/new_uri', 308)``.
+
 v18.1.2
 -------
 
