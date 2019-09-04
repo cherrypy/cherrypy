@@ -1,3 +1,10 @@
+v18.2.0
+-------
+
+* File-based sessions no longer attempt to remove the lock files
+  when releasing locks, instead deferring to the default behavior
+  of zc.lockfile. Fixes :issue:`1391` and :issue:`1779`.
+
 v18.1.2
 -------
 
