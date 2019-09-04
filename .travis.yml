@@ -142,10 +142,10 @@ jobs:
         tags: true
         all_branches: true
         python: *mainstream_python
-      user: jaraco
+      user: __token__
       distributions: dists
       password:
-        secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
+        secure: r9jZVhWnwBpbQwkoAQnhcQajV6Hk8WKs53+P20YrNfLSrSfODmJFyljCLsUJH7TnmAdrnQfV19PXPfVXPucK2ZEg2E91/5z6pgADi01NX3QMr7vEpffk6ix0uHBSa3VMBF+VlmhCzAFnNIN0E7M4kjoc5Cr7qBWPwZpqd715axYxBKSIH4Cmt2cyW3ozMftNtbI+ujs+kJTX6m/2UAL8yngau0TWR5bUBaywTZdkfPIKxt2XDfTW5PuOTRgS6QSU+/Va+M1IJhFPthjmTO+t8U/qonSLA34nLkT7vJmME0lyQF0lr+IV41IKxEFz29hmzLY1dyZI5+bs3vEhxU1xGqwr1Hnif6f14TzeiubQrCxt1UP9D3HXguCNI4gGeny1OPJNNt5ezJDNha2HlIy2quLKgtW38TS0PPm7PDqgYhjidZyRXZ8G6A/DAwh00amCNkSN6lG7Lryd1QB44mYHCKm8XdLfBT94EqzSdgQyyoUAA87A8zB5zpHiRD2DGwrTxHkGQo7TTSVr82cYwkRW0nqE6bZkfNTrGLULB8872ZFGpbSbrAft5mDlSnprLRwrEA0SsFUd4O2W64pcvcJENa/NY+vvXAyd9jaHb5v0RpxUyllLrAIFuLEFHeHwyBAlMgq54dtYWqYa8pyJNoUiwOt158qzOE6wnoburP4KA9c=
 cache:
   pip: true
   directories:
