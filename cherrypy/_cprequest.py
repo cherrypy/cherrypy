@@ -1,9 +1,12 @@
 import sys
 import time
+import collections
+import operator
 
 import uuid
 
 import six
+from six.moves import filter
 from six.moves.http_cookies import SimpleCookie, CookieError
 
 from more_itertools import consume
@@ -92,28 +95,36 @@ class HookMap(dict):
 
     def run(self, point):
         """Execute all registered Hooks (callbacks) for the given point."""
-        exc = None
-        hooks = self[point]
-        hooks.sort()
+        self.run_hooks(iter(sorted(self[point])))
+
+    @classmethod
+    def run_hooks(cls, hooks):
+        """Execute the indicated hooks, trapping errors.
+
+        Hooks with ``.failsafe == True`` are guaranteed to run
+        even if others at the same hookpoint fail. In this case,
+        log the failure and proceed on to the next hook. The only
+        way to stop all processing from one of these hooks is
+        to raise a BaseException like SystemExit or
+        KeyboardInterrupt and stop the whole server.
+        """
+        assert isinstance(hooks, collections.Iterator)
+        quiet_errors = (
+            cherrypy.HTTPError,
+            cherrypy.HTTPRedirect,
+            cherrypy.InternalRedirect,
+        )
+        safe = filter(operator.attrgetter('failsafe'), hooks)
         for hook in hooks:
-            # Some hooks are guaranteed to run even if others at
-            # the same hookpoint fail. We will still log the failure,
-            # but proceed on to the next hook. The only way
-            # to stop all processing from one of these hooks is
-            # to raise SystemExit and stop the whole server.
-            if exc is None or hook.failsafe:
-                try:
-                    hook()
-                except (KeyboardInterrupt, SystemExit):
-                    raise
-                except (cherrypy.HTTPError, cherrypy.HTTPRedirect,
-                        cherrypy.InternalRedirect):
-                    exc = sys.exc_info()[1]
-                except Exception:
-                    exc = sys.exc_info()[1]
-                    cherrypy.log(traceback=True, severity=40)
-        if exc:
-            raise exc
+            try:
+                hook()
+            except quiet_errors:
+                cls.run_hooks(safe)
+                raise
+            except Exception:
+                cherrypy.log(traceback=True, severity=40)
+                cls.run_hooks(safe)
+                raise
 
     def __copy__(self):
         newmap = self.__class__()
