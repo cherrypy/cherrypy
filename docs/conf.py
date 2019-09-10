@@ -101,6 +101,7 @@ extlinks = {
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'cheroot': ('https://cheroot.cherrypy.org/en/latest/', None),
+    'pytest-docs': ('https://docs.pytest.org/en/latest/', None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -149,7 +150,7 @@ html_theme_options = {
     'github_repo': project.lower(),
     'github_button': True,
     'github_banner': True,
-    'github_type': 'watch',
+    'github_type': 'star',
     'github_count': True,
     'travis_button': True,
     'codecov_button': True,

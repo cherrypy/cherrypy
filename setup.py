@@ -24,10 +24,7 @@ params = dict(
         'Framework :: CherryPy',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -61,19 +58,17 @@ params = dict(
     entry_points={'console_scripts': ['cherryd = cherrypy.__main__:run']},
     include_package_data=True,
     install_requires=[
-        'six>=1.11.0',
         'cheroot>=6.2.4',
         'portend>=2.1.1',
         'more_itertools',
         'zc.lockfile',
-        'contextlib2',
     ],
     extras_require={
         'docs': [
             'sphinx',
             'docutils',
             'alabaster',
-            'rst.linker>=1.9',
+            'rst.linker>=1.11',
             'jaraco.packaging>=3.2',
         ],
         'json': ['simplejson'],
@@ -93,19 +88,20 @@ params = dict(
             'path.py',
             'requests_toolbelt',
         ],
+        'testing:sys_platform != "win32"': [
+            'pytest-services',
+        ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],
         'xcgi': ['flup'],
 
         # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-        ':sys_platform == "win32" and python_version != "3.4"': ['pywin32'],
-        ':sys_platform == "win32" and python_version == "3.4"':
-            ['pypiwin32==219'],
+        ':sys_platform == "win32"': ['pywin32'],
     },
     setup_requires=[
         'setuptools_scm',
     ],
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*',
+    python_requires='>=3.5',
 )
 
 

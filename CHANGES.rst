@@ -1,3 +1,48 @@
+v18.2.0
+-------
+
+* File-based sessions no longer attempt to remove the lock files
+  when releasing locks, instead deferring to the default behavior
+  of zc.lockfile. Fixes :issue:`1391` and :issue:`1779`.
+
+* :pr:`1794`: Add native support for ``308 Permanent Redirect``
+  usable via ``raise cherrypy.HTTPRedirect('/new_uri', 308)``.
+
+v18.1.2
+-------
+
+* Fixed :issue:`1377` via :pr:`1785`: Restore a native WSGI-less
+  HTTP server support.
+* :pr:`1769`: Reduce log level for non-error events in win32.py
+
+v18.1.1
+-------
+
+* :pr:`1774` reverts :pr:`1759` as new evidence emerged that
+  the original behavior was intentional. Re-opens :issue:`1758`.
+
+v18.1.0
+-------
+
+* :issue:`1758` via :pr:`1759`: In the bus, when awaiting a
+  state change, only publish after the state has changed.
+
+v18.0.1
+-------
+
+* :issue:`1738` via :pr:`1736`: Restore support for 'bytes'
+  in response headers.
+
+* Substantial removal of Python 2 compatibility code.
+
+v18.0.0
+-------
+
+* :issue:`1730`: Drop support for Python 2.7. CherryPy 17 will
+  remain an LTS release for bug and security fixes.
+
+* Drop support for Python 3.4.
+
 v17.4.2
 -------
 

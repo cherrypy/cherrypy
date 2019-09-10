@@ -6,13 +6,11 @@ import mimetypes
 import socket
 import sys
 from unittest import mock
-
-import six
-from six.moves.http_client import HTTPConnection
-from six.moves import urllib
+import urllib.parse
+from http.client import HTTPConnection
 
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection, quote
+from cherrypy._cpcompat import HTTPSConnection
 
 from cherrypy.test import helper
 
@@ -36,7 +34,7 @@ def encode_filename(filename):
     """
     if is_ascii(filename):
         return 'filename', '"{filename}"'.format(**locals())
-    encoded = quote(filename, encoding='utf-8')
+    encoded = urllib.parse.quote(filename, encoding='utf-8')
     return 'filename*', "'".join((
         'UTF-8',
         '',  # lang
@@ -105,14 +103,12 @@ class HTTPTests(helper.CPWebCase):
                         count += 1
                     else:
                         if count:
-                            if six.PY3:
-                                curchar = chr(curchar)
+                            curchar = chr(curchar)
                             summary.append('%s * %d' % (curchar, count))
                         count = 1
                         curchar = c
                 if count:
-                    if six.PY3:
-                        curchar = chr(curchar)
+                    curchar = chr(curchar)
                     summary.append('%s * %d' % (curchar, count))
                 return ', '.join(summary)
 

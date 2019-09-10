@@ -10,17 +10,15 @@ to a public caning.
 import functools
 import email.utils
 import re
+import builtins
 from binascii import b2a_base64
 from cgi import parse_header
 from email.header import decode_header
-
-import six
-from six.moves import range, builtins, map
-from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import unquote_plus
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
-from cherrypy._cpcompat import unquote_plus
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
@@ -143,7 +141,7 @@ class HeaderElement(object):
         return self.value < other.value
 
     def __str__(self):
-        p = [';%s=%s' % (k, v) for k, v in six.iteritems(self.params)]
+        p = [';%s=%s' % (k, v) for k, v in self.params.items()]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
@@ -209,14 +207,11 @@ class AcceptElement(HeaderElement):
 
             Ref: https://github.com/cherrypy/cherrypy/issues/1370
             """
-            six.raise_from(
-                cherrypy.HTTPError(
-                    400,
-                    'Malformed HTTP header: `{}`'.
-                    format(str(self)),
-                ),
-                val_err,
-            )
+            raise cherrypy.HTTPError(
+                400,
+                'Malformed HTTP header: `{}`'.
+                format(str(self)),
+            ) from val_err
 
     def __cmp__(self, other):
         diff = builtins.cmp(self.qvalue, other.qvalue)
@@ -283,11 +278,11 @@ def valid_status(status):
     If status has no reason-phrase is supplied, a default reason-
     phrase will be provided.
 
-    >>> from six.moves import http_client
-    >>> from six.moves.BaseHTTPServer import BaseHTTPRequestHandler
-    >>> valid_status(http_client.ACCEPTED) == (
-    ...     int(http_client.ACCEPTED),
-    ... ) + BaseHTTPRequestHandler.responses[http_client.ACCEPTED]
+    >>> import http.client
+    >>> from http.server import BaseHTTPRequestHandler
+    >>> valid_status(http.client.ACCEPTED) == (
+    ...     int(http.client.ACCEPTED),
+    ... ) + BaseHTTPRequestHandler.responses[http.client.ACCEPTED]
     True
     """
 
@@ -295,7 +290,7 @@ def valid_status(status):
         status = 200
 
     code, reason = status, None
-    if isinstance(status, six.string_types):
+    if isinstance(status, str):
         code, _, reason = status.partition(' ')
         reason = reason.strip() or None
 
@@ -518,15 +513,14 @@ class HeaderMap(CaseInsensitiveDict):
         transmitting on the wire for HTTP.
         """
         for k, v in header_items:
-            if not isinstance(v, six.string_types) and \
-                    not isinstance(v, six.binary_type):
-                v = six.text_type(v)
+            if not isinstance(v, str) and not isinstance(v, bytes):
+                v = str(v)
 
             yield tuple(map(cls.encode_header_item, (k, v)))
 
     @classmethod
     def encode_header_item(cls, item):
-        if isinstance(item, six.text_type):
+        if isinstance(item, str):
             item = cls.encode(item)
 
         # See header_translate_* constants above.

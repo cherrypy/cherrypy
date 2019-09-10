@@ -1,11 +1,22 @@
 .. image:: https://img.shields.io/pypi/v/cherrypy.svg
    :target: https://pypi.org/project/cherrypy
 
+.. image:: https://img.shields.io/badge/Python%203%20only-pip%20install%20%22%3E%3D18.0.0%22-%234da45e.svg
+   :target: https://python3statement.org/
+
+.. image:: https://img.shields.io/badge/Python%203%20and%202-pip%20install%20%22%3C18.0.0%22-%2349a7e9.svg
+   :target: https://python3statement.org/#sections40-timeline
+
+
+
 .. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
   :target: https://docs.cherrypy.org/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/badge/StackOverflow-CherryPy-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
+
+.. image:: https://img.shields.io/badge/Mailing%20list-cherrypy--users-orange.svg
+   :target: https://groups.google.com/group/cherrypy-users
 
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
    :target: https://gitter.im/cherrypy/cherrypy

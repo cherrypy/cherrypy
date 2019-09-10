@@ -12,8 +12,6 @@ suite because it must import cherrypy late (after
 removing sys.path[0]).
 """
 
-from __future__ import print_function
-
 import os
 import sys
 

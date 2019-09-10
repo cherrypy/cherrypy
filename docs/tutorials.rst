@@ -76,6 +76,8 @@ log is harmless and will not prevent CherryPy from working. You
 can refer to :ref:`the documentation above <perappconf>` to
 understand how to set the configuration.
 
+.. _tut02:
+
 Tutorial 2: Different URLs lead to different functions
 ######################################################
 
@@ -1198,3 +1200,96 @@ those to a database for instance), etc.
 :ref:`Plugins <busplugins>` are called that way because
 they work along with the CherryPy :ref:`engine <cpengine>`
 and extend it with your operations.
+
+Tutorial 12: Using pytest and code coverage
+###########################################
+
+Pytest
+^^^^^^
+Let's revisit :ref:`Tutorial 2 <tut02>`.
+
+.. code-block:: python
+   :linenos:
+
+   import random
+   import string
+
+   import cherrypy
+
+
+   class StringGenerator(object):
+       @cherrypy.expose
+       def index(self):
+           return "Hello world!"
+
+       @cherrypy.expose
+       def generate(self):
+           return ''.join(random.sample(string.hexdigits, 8))
+
+
+   if __name__ == '__main__':
+       cherrypy.quickstart(StringGenerator())
+
+Save this into a file named ``tut12.py``.
+
+Now make the test file:
+
+.. code-block:: python
+    :linenos:
+
+    import cherrypy
+    from cherrypy.test import helper
+
+    from tut12 import StringGenerator
+
+    class SimpleCPTest(helper.CPWebCase):
+        @staticmethod
+        def setup_server():
+            cherrypy.tree.mount(StringGenerator(), '/', {})
+
+        def test_index(self):
+            self.getPage("/")
+            self.assertStatus('200 OK')
+        def test_generate(self):
+            self.getPage("/generate")
+            self.assertStatus('200 OK')
+
+Save this into a file named ``test_tut12.py`` and run
+
+.. code-block:: bash
+
+   $ pytest -v test_tut12.py
+
+.. note::
+
+   If you don't have `pytest <https://pytest.org>`_ installed, you'll need to install it by ``pip install pytest``
+
+We now have a neat way that we can exercise our application making tests.
+
+Adding Code Coverage
+^^^^^^^^^^^^^^^^^^^^
+
+To get code coverage, simply run
+
+.. code-block:: bash
+
+   $ pytest --cov=tut12 --cov-report term-missing test_tut12.py
+
+.. note::
+
+   To `add coverage support to pytest <https://pytest-cov.rtfd.io>`_, you'll need to install it by ``pip install pytest-cov``
+
+This tells us that one line is missing. Of course it is because that is only executed when
+the python program is started directly. We can simply change the following lines in ``tut12.py``:
+
+.. code-block:: python
+   :lineno-start: 17
+
+   if __name__ == '__main__':  # pragma: no cover
+       cherrypy.quickstart(StringGenerator())
+
+When you rerun the code coverage, it should show 100% now.
+
+.. note::
+
+   When using in CI, you might want to integrate `Codecov <https://codecov.io>`_, `Landscape <https://landscape.io>`_ or `Coveralls <https://coveralls.io/>`_ into your project to store and track coverage data over time.

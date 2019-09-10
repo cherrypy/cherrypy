@@ -6,11 +6,10 @@ import signal as _signal
 import sys
 import time
 import threading
-
-from six.moves import _thread
+import _thread
 
 from cherrypy._cpcompat import text_or_bytes
-from cherrypy._cpcompat import ntob, Timer
+from cherrypy._cpcompat import ntob
 
 # _module__file__base is used by Autoreload to make
 # absolute any filenames retrieved from sys.modules which are not
@@ -452,7 +451,7 @@ class PIDFile(SimplePlugin):
             pass
 
 
-class PerpetualTimer(Timer):
+class PerpetualTimer(threading.Timer):
 
     """A responsive subclass of threading.Timer whose run() method repeats.
 
@@ -627,7 +626,10 @@ class Autoreloader(Monitor):
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
-        search_mod_names = filter(re.compile(self.match).match, sys.modules)
+        search_mod_names = filter(
+            re.compile(self.match).match,
+            list(sys.modules.keys()),
+        )
         mods = map(sys.modules.get, search_mod_names)
         return set(filter(None, map(self._file_for_module, mods)))
 

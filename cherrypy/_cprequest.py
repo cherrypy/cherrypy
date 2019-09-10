@@ -2,12 +2,9 @@ import sys
 import time
 import collections
 import operator
+from http.cookies import SimpleCookie, CookieError
 
 import uuid
-
-import six
-from six.moves import filter
-from six.moves.http_cookies import SimpleCookie, CookieError
 
 from more_itertools import consume
 
@@ -152,7 +149,7 @@ def hooks_namespace(k, v):
     # hookpoint per path (e.g. "hooks.before_handler.1").
     # Little-known fact you only get from reading source ;)
     hookpoint = k.split('.', 1)[0]
-    if isinstance(v, six.string_types):
+    if isinstance(v, str):
         v = cherrypy.lib.reprconf.attributes(v)
     if not isinstance(v, Hook):
         v = Hook(v)
@@ -715,12 +712,6 @@ class Request(object):
                 'strings for this resource must be encoded with %r.' %
                 self.query_string_encoding)
 
-        # Python 2 only: keyword arguments must be byte strings (type 'str').
-        if six.PY2:
-            for key, value in p.items():
-                if isinstance(key, six.text_type):
-                    del p[key]
-                    p[key.encode(self.query_string_encoding)] = value
         self.params.update(p)
 
     def process_headers(self):
@@ -797,11 +788,11 @@ class ResponseBody(object):
 
     def __set__(self, obj, value):
         # Convert the given value to an iterable object.
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             raise ValueError(self.unicode_err)
         elif isinstance(value, list):
             # every item in a list must be bytes...
-            if any(isinstance(item, six.text_type) for item in value):
+            if any(isinstance(item, str) for item in value):
                 raise ValueError(self.unicode_err)
 
         obj._body = encoding.prepare_iter(value)
@@ -914,9 +905,9 @@ class Response(object):
         if cookie:
             for line in cookie.split('\r\n'):
                 name, value = line.split(': ', 1)
-                if isinstance(name, six.text_type):
+                if isinstance(name, str):
                     name = name.encode('ISO-8859-1')
-                if isinstance(value, six.text_type):
+                if isinstance(value, str):
                     value = headers.encode(value)
                 h.append((name, value))
 

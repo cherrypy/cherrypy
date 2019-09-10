@@ -193,10 +193,8 @@ import sys
 import threading
 import time
 
-import six
-
 import cherrypy
-from cherrypy._cpcompat import json
+from cherrypy._json import json
 
 # ------------------------------- Statistics -------------------------------- #
 
@@ -207,7 +205,7 @@ if not hasattr(logging, 'statistics'):
 def extrapolate_statistics(scope):
     """Return an extrapolated copy of the given scope."""
     c = {}
-    for k, v in list(scope.items()):
+    for k, v in scope.copy().items():
         if isinstance(v, dict):
             v = extrapolate_statistics(v)
         elif isinstance(v, (list, tuple)):
@@ -613,7 +611,7 @@ table.stats2 th {
         """Return ([headers], [rows]) for the given collection."""
         # E.g., the 'Requests' dict.
         headers = []
-        vals = six.itervalues(v)
+        vals = v.values()
         for record in vals:
             for k3 in record:
                 format = formatting.get(k3, missing)

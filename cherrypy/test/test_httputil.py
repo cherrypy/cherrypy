@@ -1,6 +1,6 @@
 """Test helpers from ``cherrypy.lib.httputil`` module."""
 import pytest
-from six.moves import http_client
+import http.client
 
 from cherrypy.lib import httputil
 
@@ -49,12 +49,12 @@ EXPECTED_444 = (444, 'Non-existent reason', '')
         (None, EXPECTED_200),
         (200, EXPECTED_200),
         ('500', EXPECTED_500),
-        (http_client.NOT_FOUND, EXPECTED_404),
+        (http.client.NOT_FOUND, EXPECTED_404),
         ('444 Non-existent reason', EXPECTED_444),
     ]
 )
 def test_valid_status(status, expected_status):
-    """Check valid int, string and http_client-constants
+    """Check valid int, string and http.client-constants
     statuses processing."""
     assert httputil.valid_status(status) == expected_status
 

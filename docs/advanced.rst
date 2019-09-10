@@ -405,7 +405,7 @@ and wrap your entire CherryPy application with it:
        headers = cherrypy.response.headers
        headers['X-Frame-Options'] = 'DENY'
        headers['X-XSS-Protection'] = '1; mode=block'
-       headers['Content-Security-Policy'] = "default-src='self'"
+       headers['Content-Security-Policy'] = "default-src 'self';"
 
 .. note::
 
@@ -561,12 +561,12 @@ is provided by an external library called
 Database support
 ################
 
-CherryPy does not bundle any database access but its architecture
-makes it easy to integrate common database interfaces such as
-the DB-API specified in :pep:`249`. Alternatively, you can also
-use an `ORM <en.wikipedia.org/wiki/Object-relational_mapping>`_
-such as `SQLAlchemy <http://sqlalchemy.readthedocs.org>`_
-or `SQLObject <https://pypi.python.org/pypi/SQLObject/>`_.
+CherryPy does not bundle any database access but its architecture makes it easy
+to integrate common database interfaces such as the DB-API specified in
+:pep:`249`. Alternatively, you can also use an `ORM
+<https://en.wikipedia.org/wiki/Object-relational_mapping>`_ such as `SQLAlchemy
+<http://sqlalchemy.readthedocs.org>`_ or `SQLObject
+<https://pypi.python.org/pypi/SQLObject/>`_.
 
 You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
 a recipe on how integrating SQLAlchemy using a mix of
@@ -641,6 +641,26 @@ You can then run the test using `py.test <http://pytest.org/latest/>`_ as follow
    $ py.test -s test_echo_app.py
 
 The ``-s`` is necessary because the CherryPy class also wraps stdin and stdout.
+Without the flag, tests may hang on failed assertions waiting for an input.
+
+Another option to avoid this problem, (if, for example, you are running tests
+inside an IDE) is to disable the interactive mode that's enabled by default.
+It can be disabled setting the ``WEBTEST_INTERACTIVE`` environment variable to
+``False`` or ``0``.
+
+If you don't want to change environment variables to simply run a suite of tests
+you could also subclass the :class:`helper class <cherrypy.test.helper.CPWebCase>`,
+set ``helper.CPWebCase.interactive = False`` in the class and then derive all
+your test classes from your custom class:
+
+.. code-block:: python
+
+    import cherrypy
+    from cherrypy.test import helper
+
+    class TestsBase(helper.CPWebCase):
+
+        helper.CPWebCase.interactive = False
 
 .. note::
 
@@ -650,3 +670,13 @@ The ``-s`` is necessary because the CherryPy class also wraps stdin and stdout.
    If you want to really unit test your CherryPy application, meaning without
    having to start a server, you may want to have a look at
    this `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_.
+
+.. note::
+
+   The :class:`helper class <cherrypy.test.helper.CPWebCase>` derives from
+   :class:`unittest.TestCase` class. For this reason, running from
+   `pytest <https://pytest.org/>`_,
+   there are some limitations with respect to standard  ``pytest`` tests,
+   especially if you are grouping the tests in test classes.
+   You can find more details at `this page
+   <pytest-docs:unittest.html#pytest-features-in-unittest-testcase-subclasses>`_.

@@ -2,8 +2,6 @@ import struct
 import time
 import io
 
-import six
-
 import cherrypy
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.lib import file_generator
@@ -50,7 +48,7 @@ class UTF8StreamEncoder:
 
     def __next__(self):
         res = next(self._iterator)
-        if isinstance(res, six.text_type):
+        if isinstance(res, str):
             res = res.encode('utf-8')
         return res
 
@@ -99,7 +97,7 @@ class ResponseEncoder:
 
         def encoder(body):
             for chunk in body:
-                if isinstance(chunk, six.text_type):
+                if isinstance(chunk, str):
                     chunk = chunk.encode(encoding, self.errors)
                 yield chunk
         self.body = encoder(self.body)
@@ -112,7 +110,7 @@ class ResponseEncoder:
         self.attempted_charsets.add(encoding)
         body = []
         for chunk in self.body:
-            if isinstance(chunk, six.text_type):
+            if isinstance(chunk, str):
                 try:
                     chunk = chunk.encode(encoding, self.errors)
                 except (LookupError, UnicodeError):

@@ -2,7 +2,7 @@ version: 2
 jobs:
   macos-build:
     macos:
-      xcode: "9.2.0"
+      xcode: "9.3.1"
 
     steps:
     - run: brew install pyenv readline xz
@@ -15,20 +15,18 @@ jobs:
         ' >> $BASH_ENV
 
     - run: |-
-        for py_ver in 2.7.14 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+        for py_ver in 3.7.0 3.6.4 3.5.4 pypy3.5-6.0.0
         do
           pyenv install "$py_ver" &
         done
         wait
-    - run: pyenv global 2.7.14 3.6.4 3.5.4 3.4.7 pypy3.5-5.10.0
+    - run: pyenv global 3.7.0 3.6.4 3.5.4 pypy3.5-6.0.0
 
     - run: pip install tox tox-pyenv
     - checkout
-    - run: tox -e py27,py34,py35,py36,pypy3 -- -p no:sugar
+    - run: tox -e py35,py36,py37,pypy3 -- -p no:sugar
     - store_test_results:
         path: .test-results
-    - store_test_results:
-        path: .test-results/pytest
     - store_artifacts:
         path: .test-results
 
@@ -39,11 +37,9 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py27,py34,py35,py36
+    - run: tox -e py35,py36,py37
     - store_test_results:
         path: .test-results
-    - store_test_results:
-        path: .test-results/pytest
     - store_artifacts:
         path: .test-results
 

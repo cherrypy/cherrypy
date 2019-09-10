@@ -33,7 +33,7 @@ sphinx/source/_build
 .pydevproject
 
 # test results in junit format for Appveyor
-/.test-results/pytest/results.xml
+/.test-results/
 
 # coverage results
 /.coverage

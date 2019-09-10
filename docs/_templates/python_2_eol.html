@@ -4,16 +4,23 @@
         Python 3, the new best practice, is here to stay.
         Python 2 will retire in only <time></time>!
     </a>
+    <p>
+      Since version 18.0.0 CherryPy has
+      <a href="https://python3statement.org" target="_blank">dropped
+      support for Python 2</a>,
+      but there's still LTS branch for v17 supporting hybrid
+      Python 2 and 3 code, which will get bugfixes and security updates.
+    </p>
 </aside>
 
 <!-- Python 2 EOL Clock -->
 <style type="text/css">
   body {
-    margin-top: 4em;
+    margin-top: 8em;
   }
 
   #python27eol {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0; right: 0;
     height:  auto;
@@ -21,16 +28,50 @@
     color: white;
     background-color: black;
     font-size: larger;
-    line-height: 3;
   }
 
-  #python27eol>* {
+  #python27eol * {
     color: white;
     background-color: black;
   }
 
   #python27eol>a {
     display: block;
+  }
+
+  #python27eol>p {
+    padding: 0 100px;
+  }
+
+  @media screen and (max-width: 875px) {
+    #python27eol p {
+      padding: 0 !important;
+    }
+
+    body {
+      margin: inherit !important;
+      padding: inherit !important;
+    }
+
+    div.body {
+      min-width: inherit !important;
+      width: 100% !important;
+    }
+
+    div.documentwrapper {
+      margin: inherit !important;
+    }
+
+    div.bodywrapper {
+      margin: 20px 30px !important;
+      padding-top: 190px !important;
+    }
+
+    div.sphinxsidebar {
+      margin: inherit !important;
+      padding: inherit !important;
+      width: 100% !important;
+    }
   }
 </style>
 
@@ -39,9 +80,9 @@
 <script src="//cdn.rawgit.com/icambron/moment-countdown/master/dist/moment-countdown.min.js"></script>
 
 <script>
-  var py2_death = moment('2020-04-12').toDate()
+  var py2_death = moment('2020-01-01').utc().toDate()
 
-  countdown(py2_death, update_time_left)
+  countdown(py2_death, update_time_left, ~(countdown.SECONDS | countdown.MILLISECONDS))
 
   function update_time_left(moments_left, timer_id) {
     document.querySelector('#python27eol time').innerHTML = moments_left.toHTML("em")

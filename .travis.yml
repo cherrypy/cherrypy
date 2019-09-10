@@ -4,6 +4,8 @@ language: python
 os: linux
 dist: trusty
 sudo: false
+services:
+- memcached
 _base_envs:
 - &stage_lint
   stage: &stage_lint_name lint
@@ -18,12 +20,12 @@ _base_envs:
 - _conditions:
   - &condition_api_or_cron
     if: type IN (api, cron)
+- &no_memcached
+  services: []
 - &pyenv_base
   <<: *stage_test
   language: generic
-  python: &pypy2 pypy2.7-5.10.0
   env:
-  - PYTHON_VERSION=pypy2.7-5.10.0
   - &env_pyenv PYENV_ROOT="$HOME/.pyenv"
   - &env_path PATH="$PYENV_ROOT/bin:$PATH"
   before_install:
@@ -70,21 +72,20 @@ _base_envs:
   <<: *stage_test_priority
 - &lint_python_base
   <<: *stage_lint
+  <<: *no_memcached
   python: 3.6
   after_failure: skip
 python:
-- 3.4
+- 3.5
 - 3.7-dev
-- *pypy2
 - &pypy3 pypy3.5-5.10.0
 jobs:
   fast_finish: true
   allow_failures:
-  # TODO: check what causes testing stuck
-  - python: *pypy2
   # TODO: fix tests
   - python: *pypy3
   - env: TOXENV=pre-commit-pep257
+  - python: nightly
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
@@ -97,29 +98,21 @@ jobs:
   - <<: *pure_python_base_priority
     # mainstream here (3.7)
   - <<: *pure_python_base_priority
-    python: 2.7
-  - <<: *pure_python_base_priority
     # mainstream here (3.7)
     # run tests against the bleeding-edge cheroot
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
     python: nightly
   - <<: *osx_python_base
-    python: 2.7
+    python: 3.5
     env:
-    - PYTHON_VERSION=2.7.13
-    - *env_pyenv
-    - *env_path
-  - <<: *osx_python_base
-    python: 3.4
-    env:
-    - PYTHON_VERSION=3.4.4
+    - PYTHON_VERSION=3.5.5
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.6.1
+    - PYTHON_VERSION=3.6.5
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
@@ -139,6 +132,7 @@ jobs:
     - *env_path
   - <<: *stage_deploy
     <<: *python_3_7_mixture
+    <<: *no_memcached
     install: skip
     script: skip
     deploy:
@@ -148,10 +142,10 @@ jobs:
         tags: true
         all_branches: true
         python: *mainstream_python
-      user: jaraco
+      user: __token__
       distributions: dists
       password:
-        secure: CQqUvtssQ4wmRluPcxh6m5lIXi83Qu9dAFAvZLS/+AQNIG78XECXv5xFTEdGSLX9yncKDpDKI3xRJeCKyO4OJUN0t6W1MRycY72+R63i9e9wPjfvtRqYH1TBT+no7jj/DHqXIrWSlpjRNAt4XXeSv7OzKWT4PmTNkNQSKyS1DWCmZGlbCKlV774Z9PbrfltflxL0V6DiX6ZfoY1THBO4rIopjMk/MPLgS5zvwLgXVbT9sK/DcPOgOq47iSLCs0oScbwiFzYW4DbcVZrBMv4ALtQTjk6ZEaBQ7KtKgsyxgi/ToVhjRxYg4rwvhjsyjixUdECLUqL3WgWfzW/lo82lhb79ERwhnjf1DvPNexlXhv9hHwHsFROpaOmM0nyDJsJg0rCNPVfO4SpBHEnd/ujlHO6yorHj0S54jZWqqDwD5gN19v3hEMT48Pc8uvazE9K1kMQbNXEzqn+SJjVB+DG7qK5Jm9Kk7ZC4R88hJAJNsR+SlFCXMGzkS9WUefUGLHQFfezZk43sMPIXMnh9d2XqCQo4QpUawdg3pwaTukFfyaHlK39CIHhZNas5D/UFL5spQPAAkH1IMcPILiSUwYYnXIJFWJIiulfEQalJroAQjrzvst/NVB8BbeYuCfmVLVOZw8Y6GOYONGgiXjT3nfmw/dN+uw+GY3EgAV5jl+fa434=
+        secure: r9jZVhWnwBpbQwkoAQnhcQajV6Hk8WKs53+P20YrNfLSrSfODmJFyljCLsUJH7TnmAdrnQfV19PXPfVXPucK2ZEg2E91/5z6pgADi01NX3QMr7vEpffk6ix0uHBSa3VMBF+VlmhCzAFnNIN0E7M4kjoc5Cr7qBWPwZpqd715axYxBKSIH4Cmt2cyW3ozMftNtbI+ujs+kJTX6m/2UAL8yngau0TWR5bUBaywTZdkfPIKxt2XDfTW5PuOTRgS6QSU+/Va+M1IJhFPthjmTO+t8U/qonSLA34nLkT7vJmME0lyQF0lr+IV41IKxEFz29hmzLY1dyZI5+bs3vEhxU1xGqwr1Hnif6f14TzeiubQrCxt1UP9D3HXguCNI4gGeny1OPJNNt5ezJDNha2HlIy2quLKgtW38TS0PPm7PDqgYhjidZyRXZ8G6A/DAwh00amCNkSN6lG7Lryd1QB44mYHCKm8XdLfBT94EqzSdgQyyoUAA87A8zB5zpHiRD2DGwrTxHkGQo7TTSVr82cYwkRW0nqE6bZkfNTrGLULB8872ZFGpbSbrAft5mDlSnprLRwrEA0SsFUd4O2W64pcvcJENa/NY+vvXAyd9jaHb5v0RpxUyllLrAIFuLEFHeHwyBAlMgq54dtYWqYa8pyJNoUiwOt158qzOE6wnoburP4KA9c=
 cache:
   pip: true
   directories:
