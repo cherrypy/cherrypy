@@ -15,7 +15,7 @@ applications using CherryPy. A couple of notes:
   probably want to use a separate template package (like Cheetah,
   CherryTemplate or XML/XSL).
 
-- For convinience cherrypy tutorials are provided in a docker container,
+- For convenience cherrypy tutorials are provided in a docker container,
   if you are not familiar with docker go through the `Getting started
   guide <https://docs.docker.com/get-started/>`_ first, then come back
   and try the examples below. All commands must be run within the
@@ -25,30 +25,13 @@ To run docker from the latest image in docker hub run:
 
 .. code-block:: bash
 
-  $ docker run -p 8080:8080 cherrypy/cherrypy
+  $ docker run -p 127.0.0.1:8080:8080 cherrypy/cherrypy
 
 By default tutorial 1 will be run within the container, you can pass the
 filename of the tutorial you wish to run like this:
 
 .. code-block:: bash
 
-  $ docker run -p 8080:8080 cherrypy/cherrypy tut02_expose_methods.py
+  $ docker run -p 127.0.0.1:8080:8080 cherrypy/cherrypy tut02_expose_methods.py
 
 Now you can browse to http://localhost:8080
-
-We also provide a docker-compose.yml so you can just run:
-
-.. code-block:: bash
-
-  $ docker-compose up
-
-Same as with plain docker you can specify the filename of any tutorial to
-docker-compose with an environment variable:
-
-.. code-block:: bash
-
-  $ CHERRYPY_APP=tut02_expose_methods.py docker-compose up
-
-Compose is a tool for defining and running multi-container Docker
-applications. To learn more about Compose refer to the `getting
-started <https://docs.docker.com/compose/gettingstarted/>`_
