@@ -105,7 +105,7 @@ class HookMap(dict):
         to raise a BaseException like SystemExit or
         KeyboardInterrupt and stop the whole server.
         """
-        assert isinstance(hooks, collections.Iterator)
+        assert isinstance(hooks, collections.abc.Iterator)
         quiet_errors = (
             cherrypy.HTTPError,
             cherrypy.HTTPRedirect,
