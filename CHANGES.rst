@@ -1,7 +1,7 @@
 v18.3.0
 -------
 
-* Support handling multiple exceptions when processing hooks as
+* :pr:`1806`: Support handling multiple exceptions when processing hooks as
   reported in :issue:`1770`.
 
 v18.2.0
