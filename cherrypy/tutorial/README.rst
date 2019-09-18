@@ -32,6 +32,6 @@ filename of the tutorial you wish to run like this:
 
 .. code-block:: bash
 
-  $ docker run -p 127.0.0.1:8080:8080 cherrypy/cherrypy tut02_expose_methods.py
+  $ docker run -p 127.0.0.1:8080:8080 cherrypy/cherrypy tut02_expose_methods
 
 Now you can browse to http://localhost:8080
