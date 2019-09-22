@@ -2,9 +2,11 @@
 import io
 import os
 import sys
+import re
 import platform
 import tempfile
 import urllib.parse
+import unittest.mock
 from http.client import HTTPConnection
 
 import pytest
@@ -397,6 +399,11 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus(404)
         self.assertInBody("I couldn't find that thing")
 
+    @unittest.mock.patch(
+        'http.client._contains_disallowed_url_pchar_re',
+        re.compile(r'[\n]'),
+        create=True,
+    )
     def test_null_bytes(self):
         self.getPage('/static/\x00')
         self.assertStatus('404 Not Found')
