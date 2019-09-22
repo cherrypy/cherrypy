@@ -399,10 +399,6 @@ class StaticTest(helper.CPWebCase):
         self.assertStatus(404)
         self.assertInBody("I couldn't find that thing")
 
-    def test_null_bytes(self):
-        self.getPage('/static/\x00')
-        self.assertStatus('404 Not Found')
-
     @staticmethod
     @contextlib.contextmanager
     def unicode_file():
