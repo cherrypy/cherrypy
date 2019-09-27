@@ -416,7 +416,7 @@ session_auth.__doc__ = (
     Any attribute of the SessionAuth class may be overridden via a keyword arg
     to this function:
 
-    """ + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
+    """ + '\n    '.join(['* %s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
                      for k in dir(SessionAuth) if not k.startswith('__')])
 )
 

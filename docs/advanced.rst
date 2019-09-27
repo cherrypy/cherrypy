@@ -568,9 +568,8 @@ to integrate common database interfaces such as the DB-API specified in
 <http://sqlalchemy.readthedocs.org>`_ or `SQLObject
 <https://pypi.python.org/pypi/SQLObject/>`_.
 
-You will find a recipe at `cherrypy-recipes
- <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
-that explains how to integrate SQLAlchemy using a mix of
+Here is a `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
+on how integrating SQLAlchemy using a mix of
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
 
 HTML Templating support
