@@ -14,6 +14,7 @@ CherryPy — A Minimalist Python Web Framework
    extend.rst
    deploy.rst
    support.rst
+   enterprise.rst
    contribute.rst
    development.rst
    glossary.rst
