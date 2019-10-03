@@ -1,3 +1,6 @@
+.. todo: consider linking to the same text in README.rst.
+.. https://github.com/cherrypy/cherrypy/pull/1813#discussion_r330805322
+
 For Enterprise
 ==============
 
