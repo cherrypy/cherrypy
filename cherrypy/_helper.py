@@ -82,7 +82,9 @@ def popargs(*args, **kwargs):
 
     This decorator may be used in one of two ways:
 
-    As a class decorator::
+    As a class decorator:
+
+    .. code-block:: python
 
         @cherrypy.popargs('year', 'month', 'day')
         class Blog:
@@ -92,10 +94,12 @@ def popargs(*args, **kwargs):
                 #will fill in the appropriate parameters.
 
             def create(self):
-                #This link will still be available at /create.  Defined functions
-                #take precedence over arguments.
+                #This link will still be available at /create.
+                #Defined functions take precedence over arguments.
 
-    Or as a member of a class::
+    Or as a member of a class:
+
+    .. code-block:: python
 
         class Blog:
             _cp_dispatch = cherrypy.popargs('year', 'month', 'day')
@@ -103,7 +107,9 @@ def popargs(*args, **kwargs):
 
     The handler argument may be used to mix arguments with built in functions.
     For instance, the following setup allows different activities at the
-    day, month, and year level::
+    day, month, and year level:
+
+    .. code-block:: python
 
         class DayHandler:
             def index(self, year, month, day):
