@@ -314,6 +314,7 @@ class PipelineTests(helper.CPWebCase):
         self.assertEqual(response.status, 408)
         conn.close()
 
+    @pytest.mark.xfail(reason='cherrypy#1817')
     def test_HTTP11_Timeout_after_request(self):
         # If we timeout after at least one request has succeeded,
         # the server will close the conn without 408.
