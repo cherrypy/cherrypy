@@ -390,12 +390,10 @@ class PipelineTests(helper.CPWebCase):
         except Exception:
             if not isinstance(sys.exc_info()[1],
                               (socket.error, BadStatusLine)):
-                self.fail("Writing to timed out socket didn't fail"
-                          ' as it should have: %s' % sys.exc_info()[1])
+                self.fail(msg % sys.exc_info()[1])
         else:
-            self.fail("Writing to timed out socket didn't fail"
-                      ' as it should have: %s' %
-                      response.read())
+            if response.status != 408:
+                self.fail(msg % response.read())
 
         conn.close()
 
