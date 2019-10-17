@@ -94,6 +94,11 @@ jobs:
     env: TOXENV=dist-check
   - <<: *lint_python_base
     env: TOXENV=setup-check
+  - <<: *lint_python_base
+    name: >-
+      Ensure that docs get built
+      (non-strict until \#1797 get fixed)
+    env: TOXENV=build-docs
   - <<: *pure_python_base_priority
     # mainstream here (3.7)
   - <<: *pure_python_base_priority
