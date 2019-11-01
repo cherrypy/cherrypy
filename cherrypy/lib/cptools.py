@@ -410,12 +410,15 @@ def session_auth(**kwargs):
     return sa.run()
 
 
+session_auth_subclasses = (
+    '* {!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
+    for k in dir(SessionAuth) if not k.startswith('__')
+)
 session_auth.__doc__ = (
     """Session authentication hook.
     Any attribute of the SessionAuth class may be overridden via a keyword arg
     to this function:
-    """ + '\n'.join(['%s: %s' % (k, type(getattr(SessionAuth, k)).__name__)
-                     for k in dir(SessionAuth) if not k.startswith('__')])
+    """ + '\n    '.join(session_auth_subclasses)
 )
 
 
