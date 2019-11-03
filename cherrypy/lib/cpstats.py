@@ -196,7 +196,7 @@ import time
 import six
 
 import cherrypy
-from cherrypy._cpcompat import json, tonative
+from cherrypy._cpcompat import json
 
 # ------------------------------- Statistics -------------------------------- #
 
@@ -308,14 +308,6 @@ def _get_threading_ident():
     return threading._get_ident()
 
 
-def _get_response_status(resp):
-    try:
-        response_status = resp.output_status
-    except AttributeError:
-        response_status = resp.status
-    return tonative(response_status, 'utf-8')
-
-
 class StatsTool(cherrypy.Tool):
 
     """Record various information about the current request."""
@@ -374,7 +366,7 @@ class StatsTool(cherrypy.Tool):
             w['Bytes Written'] = cl
             appstats['Total Bytes Written'] += cl
 
-        w['Response Status'] = _get_response_status(resp)
+        w['Response Status'] = getattr(resp, 'output_status', resp.status)
 
         w['End Time'] = time.time()
         p = w['End Time'] - w['Start Time']
