@@ -185,12 +185,14 @@ class HTTPTests(helper.CPWebCase):
         self.assertBody(', '.join(parts))
 
     def test_post_filename_with_special_characters(self):
-        '''Testing that we can handle filenames with special characters. This
-        was reported as a bug in:
-           https://github.com/cherrypy/cherrypy/issues/1146/
-           https://github.com/cherrypy/cherrypy/issues/1397/
-           https://github.com/cherrypy/cherrypy/issues/1694/
-        '''
+        """Testing that we can handle filenames with special characters.
+
+        This was reported as a bug in:
+
+        * https://github.com/cherrypy/cherrypy/issues/1146/
+        * https://github.com/cherrypy/cherrypy/issues/1397/
+        * https://github.com/cherrypy/cherrypy/issues/1694/
+        """
         # We'll upload a bunch of files with differing names.
         fnames = [
             'boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',

@@ -118,13 +118,13 @@ v16.0.0
   ``digest_auth`` tools and the ``httpauth`` module, which have been
   officially deprecated earlier in v14.0.0.
 
-* Removed deprecated properties::
+* Removed deprecated properties:
 
   - ``cherrypy._cpreqbody.Entity.type`` deprecated in favor of
     :py:attr:`cherrypy._cpreqbody.Entity.content_type`
 
   - ``cherrypy._cprequest.Request.body_params`` deprecated in favor of
-    py:attr:`cherrypy._cprequest.RequestBody.params`
+    :py:attr:`cherrypy._cprequest.RequestBody.params`
 
 * :issue:`1377`: In _cp_native server, set ``req.status`` using bytes
   (fixed in :pr:`1712`).

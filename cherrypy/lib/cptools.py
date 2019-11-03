@@ -409,7 +409,7 @@ def session_auth(**kwargs):
     Any attribute of the SessionAuth class may be overridden
     via a keyword arg to this function:
 
-    """ + '\n'.join(
+    """ + '\n    '.join(
         '{!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
         for k in dir(SessionAuth)
         if not k.startswith('__')
