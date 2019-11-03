@@ -1,8 +1,12 @@
-v18.3.1
+v18.4.0
 -------
 
 * :pr:`1715`: Fixed issue in cpstats where the ``data/`` endpoint
   would fail with encoding errors on Python 3.
+
+* :pr:`1821`: Simplify the passthrough of parameters to
+  ``CPWebCase.getPage`` to cheroot. CherryPy now requires
+  cheroot 8.2.1 or later.
 
 v18.3.0
 -------
