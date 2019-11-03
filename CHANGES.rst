@@ -1,3 +1,9 @@
+v18.3.1
+-------
+
+* :pr:`1715`: Fixed issue in cpstats where the ``data/`` endpoint
+  would fail with encoding errors on Python 3.
+
 v18.3.0
 -------
 
