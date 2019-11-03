@@ -8,8 +8,6 @@ import types
 import unittest
 import operator
 
-import pytest
-import requests
 import six
 from six.moves import range, map
 from six.moves.http_client import IncompleteRead
@@ -17,7 +15,6 @@ from six.moves.http_client import IncompleteRead
 import cherrypy
 from cherrypy import tools
 from cherrypy._cpcompat import ntou
-from cherrypy.lib import cpstats
 from cherrypy.test import helper, _test_decorators
 
 
@@ -469,21 +466,3 @@ class TestHooks:
         by_priority = operator.attrgetter('priority')
         priorities = list(map(by_priority, hooks))
         assert priorities == [48, 49, 50]
-
-
-@pytest.fixture
-def cpstats_server():
-    cherrypy.tree.mount(
-        cpstats.StatsPage(), '/', {'/': {'tools.cpstats.on': True}})
-    cherrypy.engine.start()
-    cherrypy.engine.wait(cherrypy.engine.states.STARTED)
-    yield 'http://localhost:8080'
-    cherrypy.engine.exit()
-    cherrypy.engine.block()
-    cherrypy.server.httpserver = None
-
-
-def test_get_cpstats_data(cpstats_server):
-    resp = requests.get(cpstats_server + '/data')
-    assert resp.status_code == 200
-    assert 'application/json' in resp.headers['Content-Type']
