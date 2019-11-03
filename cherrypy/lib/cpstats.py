@@ -364,8 +364,8 @@ class StatsTool(cherrypy.Tool):
             w['Bytes Written'] = cl
             appstats['Total Bytes Written'] += cl
 
-        w['Response Status'] = getattr(
-            resp, 'output_status', None) or resp.status
+        w['Response Status'] = \
+            getattr(resp, 'output_status', resp.status).decode()
 
         w['End Time'] = time.time()
         p = w['End Time'] - w['Start Time']
@@ -677,7 +677,7 @@ table.stats2 th {
         def data(self):
             s = extrapolate_statistics(logging.statistics)
             cherrypy.response.headers['Content-Type'] = 'application/json'
-            return json.dumps(s, sort_keys=True, indent=4)
+            return json.dumps(s, sort_keys=True, indent=4).encode('utf-8')
 
     @cherrypy.expose
     def pause(self, namespace):
