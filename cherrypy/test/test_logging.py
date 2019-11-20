@@ -16,13 +16,17 @@ erebos = u'\u0388\u03c1\u03b5\u03b2\u03bf\u03c2.com'
 
 
 @pytest.fixture
-def access_log_file(tmp_path_factory):
-    return tmp_path_factory.mktemp('logs') / 'access.log'
+def access_log_file(tmpdir):
+    p = tmpdir.mkdir("access_logs").join("access.log")
+    p.write("")
+    return p
 
 
 @pytest.fixture
-def error_log_file(tmp_path_factory):
-    return tmp_path_factory.mktemp('logs') / 'access.log'
+def error_log_file(tmpdir):
+    p = tmpdir.mkdir("error_logs").join("error.log")
+    p.write("")
+    return p
 
 
 @pytest.fixture
