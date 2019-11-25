@@ -1,6 +1,10 @@
 .. image:: https://img.shields.io/pypi/v/cherrypy.svg
    :target: https://pypi.org/project/cherrypy
 
+.. image:: https://tidelift.com/badges/package/pypi/CherryPy
+   :target: https://tidelift.com/subscription/pkg/pypi-cherrypy?utm_source=pypi-cherrypy&utm_medium=readme
+   :alt: CherryPy is available as part of the Tidelift Subscription
+
 .. image:: https://img.shields.io/badge/Python%203%20only-pip%20install%20%22%3E%3D18.0.0%22-%234da45e.svg
    :target: https://python3statement.org/
 
