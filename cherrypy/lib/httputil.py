@@ -456,7 +456,7 @@ class CaseInsensitiveDict(KeyTransformingDict):
     @staticmethod
     def transform_key(key):
         if key is None:
-            # TODO: why?
+            # TODO(#1830): why?
             return 'None'
         return key.title()
 
