@@ -1,3 +1,10 @@
+v18.5.0
+-------
+
+* :pr:`1826`: Rely on
+  `jaraco.collections <https://pypi.org/project/jaraco.collections>`_
+  for its case-insensitive dictionary support.
+
 v18.4.0
 -------
 
