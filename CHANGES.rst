@@ -1,3 +1,9 @@
+v18.4.1
+-------
+
+* :issue:`1827`: Fixed issue where bytes values in a ``HeaderMap``
+  would be converted to strings.
+
 v18.4.0
 -------
 
