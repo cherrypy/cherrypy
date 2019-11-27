@@ -391,12 +391,15 @@ class CaseInsensitiveDict(jaraco.collections.KeyTransformingDict):
 
     """A case-insensitive dict subclass.
 
-    Each key is changed on entry to str(key).title().
+    Each key is changed on entry to title case.
     """
 
     @staticmethod
     def transform_key(key):
-        return str(key).title()
+        if key is None:
+            # TODO(#1830): why?
+            return 'None'
+        return key.title()
 
 
 #   TEXT = <any OCTET except CTLs, but including LWS>
@@ -435,9 +438,7 @@ class HeaderMap(CaseInsensitiveDict):
 
     def elements(self, key):
         """Return a sorted list of HeaderElements for the given header."""
-        key = str(key).title()
-        value = self.get(key)
-        return header_elements(key, value)
+        return header_elements(self.transform_key(key), self.get(key))
 
     def values(self, key):
         """Return a sorted list of HeaderElement.value for the given header."""

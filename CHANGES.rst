@@ -1,6 +1,9 @@
 v18.5.0
 -------
 
+* :issue:`1827`: Fixed issue where bytes values in a ``HeaderMap``
+  would be converted to strings.
+
 * :pr:`1826`: Rely on
   `jaraco.collections <https://pypi.org/project/jaraco.collections>`_
   for its case-insensitive dictionary support.
