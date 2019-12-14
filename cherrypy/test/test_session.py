@@ -74,6 +74,16 @@ def setup_server():
             return str(counter)
 
         @cherrypy.expose
+        @cherrypy.config(**{'tools.sessions.locking': 'explicit'})
+        def testStrExplicitLockingExplicitSave(self):
+            cherrypy.session.acquire_lock()
+            counter = cherrypy.session.get('counter', 0) + 1
+            cherrypy.session['counter'] = counter
+            cherrypy.session.save()
+            cherrypy.session.release_lock()
+            return str(counter)
+
+        @cherrypy.expose
         @cherrypy.config(**{'tools.sessions.on': False})
         def set_session_cls(self, new_cls_name):
             new_cls = reprconf.attributes(new_cls_name)
@@ -415,6 +425,22 @@ class SessionTest(helper.CPWebCase):
         # for #1345
         self.getPage('/testStrExplicitLocking')
         assert self.body == b'1'
+
+    def test_10_File_Explicit_Locking_Saves_Implicitly(self):
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
+        # ensure the updated session was saved
+        self.getPage('/testStrExplicitLocking')
+        assert self.body == b'1'
+        self.getPage('/testStr', self.cookies)
+        assert self.body == b'2'
+
+    def test_11_File_Explicit_Locking_Explicit_Save(self):
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
+        # ensure the updated session was saved
+        self.getPage('/testStrExplicitLockingExplicitSave')
+        assert self.body == b'1'
+        self.getPage('/testStr', self.cookies)
+        assert self.body == b'2'
 
 
 def is_memcached_present():

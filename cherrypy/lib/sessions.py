@@ -529,6 +529,8 @@ class FileSession(Session):
             return None
 
     def _save(self, expiration_time):
+        if getattr(self, 'locking', '') == 'explicit' and not self.locked:
+            self.acquire_lock()
         assert self.locked, ('The session was saved without being locked.  '
                              "Check your tools' priority levels.")
         f = open(self._get_file_path(), 'wb')
