@@ -216,9 +216,11 @@ class Tree(object):
                 'order to inpect the WSGI environ for SCRIPT_NAME upon each '
                 'request). You cannot mount such Applications on this Tree; '
                 'you must pass them to a WSGI server interface directly.')
- 
+
         if script_name and not script_name.startswith('/'):
-            cherrypy.log.error(msg="script_name {0} should start with /".format(script_name))
+            cherrypy.log.error(
+                msg='script_name {0} should start with /'.format(script_name)
+            )
             script_name = '/' + script_name
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip('/')
