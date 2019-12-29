@@ -833,10 +833,10 @@ class TestScriptName(helper.CPWebCase):
 
             @cherrypy.expose
             def bar(self):
-                return "foobar"
+                return 'foobar'
 
         cherrypy.tree.mount(Root(), script_name='foo')
 
     def test_body(self):
         self.getPage('/foo/bar')
-        self.assertMatchesBody("foobar")
+        self.assertMatchesBody('foobar')
