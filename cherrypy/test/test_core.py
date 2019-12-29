@@ -824,3 +824,19 @@ class TestBinding:
         assert port > 0
         cherrypy.engine.stop()
         assert cherrypy.server.bind_addr == cherrypy.server.bound_addr
+
+
+class TestScriptName(helper.CPWebCase):
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def bar(self):
+                return "foobar"
+
+        cherrypy.tree.mount(Root(), script_name='foo')
+
+    def test_body(self):
+        self.getPage('/foo/bar')
+        self.assertMatchesBody("foobar")
