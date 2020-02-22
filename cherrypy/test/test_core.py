@@ -826,8 +826,7 @@ class TestBinding:
         assert cherrypy.server.bind_addr == cherrypy.server.bound_addr
 
 
-class TestScriptNameWithRoot(helper.CPWebCase):
-
+class TestScriptName(helper.CPWebCase):
     @staticmethod
     def setup_server():
         class Root:
@@ -841,61 +840,3 @@ class TestScriptNameWithRoot(helper.CPWebCase):
     def test_body(self):
         self.getPage('/foo/bar')
         self.assertMatchesBody('foobar')
-
-    def test_trading_slash(self):
-        self.getPage('/foo/bar/')
-        self.assertMatchesBody('foobar')
-
-    def test_root_404(self):
-        self.getPage('/foo/')
-        self.assertStatus(404)
-
-
-class TestScriptNameWithEmpty(helper.CPWebCase):
-
-    @staticmethod
-    def setup_server():
-        class Root:
-
-            @cherrypy.expose
-            def bar(self):
-                return 'foobar'
-
-        cherrypy.tree.mount(Root(), script_name='')
-
-    def test_body(self):
-        self.getPage('/bar')
-        self.assertMatchesBody('foobar')
-
-    def test_trading_slash(self):
-        self.getPage('/bar/')
-        self.assertMatchesBody('foobar')
-
-    def test_root_404(self):
-        self.getPage('/')
-        self.assertStatus(404)
-
-
-class TestScriptNameWithSlash(helper.CPWebCase):
-
-    @staticmethod
-    def setup_server():
-        class Root:
-
-            @cherrypy.expose
-            def bar(self):
-                return 'foobar'
-
-        cherrypy.tree.mount(Root(), script_name='/')
-
-    def test_body(self):
-        self.getPage('/bar')
-        self.assertMatchesBody('foobar')
-
-    def test_trading_slash(self):
-        self.getPage('/bar/')
-        self.assertMatchesBody('foobar')
-
-    def test_root_404(self):
-        self.getPage('/')
-        self.assertStatus(404)
