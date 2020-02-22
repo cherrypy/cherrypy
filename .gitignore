@@ -43,3 +43,18 @@ sphinx/source/_build
 /graph_AppResponse_*.png
 /graph_Response_*.png
 /graph_Request_*.png
+
+# Covers JetBrains IDEs: IntelliJ, PyCharm
+# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+
+# User-specific stuff
+.idea/
+
+# IntelliJ
+out/
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
+
+# Editor-based Rest Client
+.idea/httpRequests
