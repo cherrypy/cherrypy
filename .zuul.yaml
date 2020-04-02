@@ -1,0 +1,78 @@
+---
+- job:
+    name: tox-build-docs
+    parent: tox
+    vars:
+      tox_envlist: build-docs
+
+- job:
+    name: tox-dist-check
+    parent: tox
+    vars:
+      tox_envlist: dist-check
+
+- job:
+    name: tox-pre-commit
+    parent: tox
+    vars:
+      tox_envlist: pre-commit
+
+- job:
+    name: tox-pre-commit-pep257
+    parent: tox
+    voting: false
+    vars:
+      tox_envlist: pre-commit-pep257
+
+- job:
+    name: tox-py27-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 2.7
+      python_use_pyenv: false
+    parent: tox
+
+- job:
+    name: tox-py35-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.5
+      python_use_pyenv: true
+    parent: tox
+
+- job:
+    name: tox-py36-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.6
+      python_use_pyenv: true
+    parent: tox
+
+- job:
+    name: tox-py37-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.7
+      python_use_pyenv: false
+    parent: tox
+
+- job:
+    name: tox-py38-setup-check
+    vars:
+      tox_envlist: setup-check
+      python_version: 3.8
+      python_use_pyenv: true
+    parent: tox
+
+- project:
+    check:
+      jobs:
+      - tox-build-docs
+      - tox-dist-check
+      - tox-pre-commit
+      - tox-pre-commit-pep257
+      - tox-py27-setup-check
+      - tox-py35-setup-check
+      - tox-py36-setup-check
+      - tox-py37-setup-check
+      - tox-py38-setup-check
