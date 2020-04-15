@@ -49,6 +49,9 @@ params = dict(
         'Docs: RTD': 'https://docs.cherrypy.org',
         'GitHub: issues': '{}/issues'.format(repo_url),
         'GitHub: repo': repo_url,
+        'Tidelift: funding':
+        'https://tidelift.com/subscription/pkg/pypi-cherrypy'
+        '?utm_source=pypi-cherrypy&utm_medium=referral&utm_campaign=pypi',
     },
     packages=[
         'cherrypy', 'cherrypy.lib',
