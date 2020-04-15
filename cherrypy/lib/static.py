@@ -28,6 +28,22 @@ def _setup_mimetypes():
 _setup_mimetypes()
 
 
+def _utf8_content_disposition(disposition, file_name):
+    """Create HTTP header for downloading a file with UTF-8 filename.
+
+    See this and related answers:
+    https://stackoverflow.com/a/8996249/2173868
+    """
+    ascii_name = (
+        unicodedata.normalize('NFKD', file_name).
+        encode('ascii', errors='ignore').decode()
+    )
+    quoted_name = urllib.parse.quote(file_name)
+    header = u'{}; filename="{}"'.format(disposition, ascii_name)
+    header += u'; filename*=UTF-8\'\'{}'.format(quoted_name)
+    return header
+
+
 def serve_file(path, content_type=None, disposition=None, name=None,
                debug=False):
     """Set status, headers, and body in order to serve the given path.
@@ -37,9 +53,10 @@ def serve_file(path, content_type=None, disposition=None, name=None,
     of the 'path' argument.
 
     If disposition is not None, the Content-Disposition header will be set
-    to "<disposition>; filename=<name>". If name is None, it will be set
-    to the basename of path. If disposition is None, no Content-Disposition
-    header will be written.
+    to "<disposition>; filename=<name>; filename*=utf-8''<name>"
+    as described in RFC6266 (https://tools.ietf.org/html/rfc6266#appendix-D).
+    If name is None, it will be set to the basename of path.
+    If disposition is None, no Content-Disposition header will be written.
     """
     response = cherrypy.serving.response
 
@@ -92,7 +109,7 @@ def serve_file(path, content_type=None, disposition=None, name=None,
     if disposition is not None:
         if name is None:
             name = os.path.basename(path)
-        cd = '%s; filename="%s"' % (disposition, name)
+        cd = _utf8_content_disposition(disposition, name)
         response.headers['Content-Disposition'] = cd
     if debug:
         cherrypy.log('Content-Disposition: %r' % cd, 'TOOLS.STATIC')
@@ -111,9 +128,10 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
     The Content-Type header will be set to the content_type arg, if provided.
 
     If disposition is not None, the Content-Disposition header will be set
-    to "<disposition>; filename=<name>". If name is None, 'filename' will
-    not be set. If disposition is None, no Content-Disposition header will
-    be written.
+    to "<disposition>; filename=<name>; filename*=utf-8''<name>"
+    as described in RFC6266 (https://tools.ietf.org/html/rfc6266#appendix-D).
+    If name is None, 'filename' will not be set.
+    If disposition is None, no Content-Disposition header will be written.
 
     CAUTION: If the request contains a 'Range' header, one or more seek()s will
     be performed on the file object.  This may cause undesired behavior if
@@ -149,7 +167,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
         if name is None:
             cd = disposition
         else:
-            cd = '%s; filename="%s"' % (disposition, name)
+            cd = _utf8_content_disposition(disposition, name)
         response.headers['Content-Disposition'] = cd
     if debug:
         cherrypy.log('Content-Disposition: %r' % cd, 'TOOLS.STATIC')
