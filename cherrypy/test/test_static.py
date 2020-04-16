@@ -107,7 +107,7 @@ class StaticTest(helper.CPWebCase):
             @cherrypy.expose
             def serve_fileobj_utf8_filename(self):
                 return static.serve_fileobj(
-                    io.BytesIO(b'☃\nfie\nfo\nfum'),
+                    io.BytesIO('☃\nfie\nfo\nfum'.encode('utf-8')),
                     disposition='attachment',
                     name='has_utf-8_character_☃.html')
 
