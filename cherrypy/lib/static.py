@@ -30,9 +30,10 @@ _setup_mimetypes()
 
 
 def _utf8_content_disposition(disposition, file_name):
-    """Create HTTP header for downloading a file with UTF-8 filename.
-    See this and related answers:
-    https://stackoverflow.com/a/8996249/2173868
+    """Create HTTP header for downloading a file with a UTF-8 filename.
+
+    This function implements the recommendations of :rfc:`6266#appendix-D`.
+    See this and related answers: https://stackoverflow.com/a/8996249/2173868.
     """
     ascii_name = (
         unicodedata.normalize('NFKD', file_name).
