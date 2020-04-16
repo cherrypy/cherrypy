@@ -29,7 +29,7 @@ def _setup_mimetypes():
 _setup_mimetypes()
 
 
-def _utf8_content_disposition(disposition, file_name):
+def _make_content_disposition(disposition, file_name):
     """Create HTTP header for downloading a file with a UTF-8 filename.
 
     This function implements the recommendations of :rfc:`6266#appendix-D`.
@@ -110,7 +110,7 @@ def serve_file(path, content_type=None, disposition=None, name=None,
     if disposition is not None:
         if name is None:
             name = os.path.basename(path)
-        cd = _utf8_content_disposition(disposition, name)
+        cd = _make_content_disposition(disposition, name)
         response.headers['Content-Disposition'] = cd
     if debug:
         cherrypy.log('Content-Disposition: %r' % cd, 'TOOLS.STATIC')
@@ -168,7 +168,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
         if name is None:
             cd = disposition
         else:
-            cd = _utf8_content_disposition(disposition, name)
+            cd = _make_content_disposition(disposition, name)
         response.headers['Content-Disposition'] = cd
     if debug:
         cherrypy.log('Content-Disposition: %r' % cd, 'TOOLS.STATIC')
