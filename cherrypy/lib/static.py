@@ -54,7 +54,7 @@ def serve_file(path, content_type=None, disposition=None, name=None,
 
     If disposition is not None, the Content-Disposition header will be set
     to "<disposition>; filename=<name>; filename*=utf-8''<name>"
-    as described in RFC6266 (https://tools.ietf.org/html/rfc6266#appendix-D).
+    as described in :rfc:`6266#appendix-D`.
     If name is None, it will be set to the basename of path.
     If disposition is None, no Content-Disposition header will be written.
     """
@@ -129,7 +129,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None,
 
     If disposition is not None, the Content-Disposition header will be set
     to "<disposition>; filename=<name>; filename*=utf-8''<name>"
-    as described in RFC6266 (https://tools.ietf.org/html/rfc6266#appendix-D).
+    as described in :rfc:`6266#appendix-D`.
     If name is None, 'filename' will not be set.
     If disposition is None, no Content-Disposition header will be written.
 
