@@ -99,9 +99,8 @@ class StaticTest(helper.CPWebCase):
 
             @cherrypy.expose
             def serve_file_utf8_filename(self):
-                file_path = os.path.join(curdir, 'style.css')
                 return static.serve_file(
-                    file_path,
+                    __file__,
                     disposition='attachment',
                     name='has_utf-8_character_☃.html')
 
