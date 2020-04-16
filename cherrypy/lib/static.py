@@ -39,9 +39,10 @@ def _make_content_disposition(disposition, file_name):
         unicodedata.normalize('NFKD', file_name).
         encode('ascii', errors='ignore').decode()
     )
-    quoted_name = urllib.parse.quote(file_name)
     header = u'{}; filename="{}"'.format(disposition, ascii_name)
-    header += u'; filename*=UTF-8\'\'{}'.format(quoted_name)
+    if ascii_name != file_name:
+        quoted_name = urllib.parse.quote(file_name)
+        header += u'; filename*=UTF-8\'\'{}'.format(quoted_name)
     return header
 
 
