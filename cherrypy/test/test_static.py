@@ -210,7 +210,7 @@ class StaticTest(helper.CPWebCase):
 
         # Check a filename with utf-8 characters in it
         ascii_fn = 'has_utf-8_character_.html'
-        url_quote_fn = 'has_utf-8_character_%E2%98%83.html'
+        url_quote_fn = 'has_utf-8_character_%E2%98%83.html'  # %E2%98%83 == ☃
         cd = '''attachment; filename="%s"; filename*=UTF-8\'\'%s'''
 
         self.getPage('/serve_file_utf8_filename')
