@@ -35,12 +35,12 @@ def _make_content_disposition(disposition, file_name):
     This function implements the recommendations of :rfc:`6266#appendix-D`.
     See this and related answers: https://stackoverflow.com/a/8996249/2173868.
     """
-    # As normalization algorithm for `unicodedata` is used composed form (NFC and NFKC)
-    # with compatibility equivalence criteria (NFK), so "NFKC" is the one.
-    # It first applies the compatibility decomposition, followed by the canonical
-    # composition. Should be displayed in the same manner, should be treated in
-    # the same way by applications such as alphabetizing names or searching,
-    # and may be substituted for each other.
+    # As normalization algorithm for `unicodedata` is used composed form (NFC
+    # and NFKC) with compatibility equivalence criteria (NFK), so "NFKC" is the
+    # one. It first applies the compatibility decomposition, followed by the
+    # canonical composition. Should be displayed in the same manner, should be
+    # treated in the same way by applications such as alphabetizing names or
+    # searching, and may be substituted for each other.
     # See: https://en.wikipedia.org/wiki/Unicode_equivalence.
     ascii_name = (
         unicodedata.normalize('NFKC', file_name).
