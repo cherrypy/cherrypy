@@ -97,6 +97,20 @@ class StaticTest(helper.CPWebCase):
                 f = io.BytesIO(b'Fee\nfie\nfo\nfum')
                 return static.serve_fileobj(f, content_type='text/plain')
 
+            @cherrypy.expose
+            def serve_file_utf8_filename(self):
+                return static.serve_file(
+                    __file__,
+                    disposition='attachment',
+                    name='has_utf-8_character_☃.html')
+
+            @cherrypy.expose
+            def serve_fileobj_utf8_filename(self):
+                return static.serve_fileobj(
+                    io.BytesIO('☃\nfie\nfo\nfum'.encode('utf-8')),
+                    disposition='attachment',
+                    name='has_utf-8_character_☃.html')
+
         class Static:
 
             @cherrypy.expose
@@ -192,6 +206,22 @@ class StaticTest(helper.CPWebCase):
         #   into \r\n on Windows when extracting the CherryPy tarball so
         #   we just check the content
         self.assertMatchesBody('^Dummy stylesheet')
+
+        # Check a filename with utf-8 characters in it
+        ascii_fn = 'has_utf-8_character_.html'
+        url_quote_fn = 'has_utf-8_character_%E2%98%83.html'  # %E2%98%83 == ☃
+        expected_content_disposition = (
+            'attachment; filename="{!s}"; filename*=UTF-8\'\'{!s}'.
+            format(ascii_fn, url_quote_fn)
+        )
+
+        self.getPage('/serve_file_utf8_filename')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Disposition', expected_content_disposition)
+
+        self.getPage('/serve_fileobj_utf8_filename')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Disposition', expected_content_disposition)
 
     @pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only')
     def test_static_longpath(self):

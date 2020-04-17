@@ -1,3 +1,9 @@
+v18.6.0
+-------
+
+* :issue:`1776` via :pr:`1851`: Add support for UTF-8 encoded attachment
+  file names in ``Content-Disposition`` header via :rfc:`6266#appendix-D`.
+
 v18.5.0
 -------
 
