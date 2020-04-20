@@ -90,7 +90,7 @@ params = dict(
             # once https://github.com/Teemu/pytest-sugar/pull/188 is
             # merged, the upper bound can be removed.
             # Ref: https://github.com/pytest-dev/pytest/issues/6931
-            'pytest>=5.3.5,<5.4.0',
+            'pytest>=5.3.5,<5.5.0',
             'pytest-cov',
             'pytest-sugar',
             'backports.unittest_mock',
