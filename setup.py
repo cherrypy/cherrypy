@@ -93,7 +93,6 @@ params = dict(
             'pytest>=5.3.5,<6.1.0',
             'pytest-cov',
             'pytest-sugar',
-            'backports.unittest_mock',
             'path.py',
             'requests_toolbelt',
             'pytest-services>=2',
