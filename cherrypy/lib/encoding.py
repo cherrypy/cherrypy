@@ -11,6 +11,10 @@ from cherrypy.lib import is_closable_iterator
 from cherrypy.lib import set_vary_header
 
 
+_COMPRESSION_LEVEL_FAST = 1
+_COMPRESSION_LEVEL_BEST = 9
+
+
 def decode(encoding=None, default_encoding='utf-8'):
     """Replace or extend the list of charsets used to decode a request entity.
 
@@ -287,13 +291,29 @@ def compress(body, compress_level):
     """Compress 'body' at the given compress_level."""
     import zlib
 
-    # See http://www.gzip.org/zlib/rfc-gzip.html
+    # See https://tools.ietf.org/html/rfc1952
     yield b'\x1f\x8b'       # ID1 and ID2: gzip marker
     yield b'\x08'           # CM: compression method
     yield b'\x00'           # FLG: none set
     # MTIME: 4 bytes
     yield struct.pack('<L', int(time.time()) & int('FFFFFFFF', 16))
-    yield b'\x02'           # XFL: max compression, slowest algo
+
+    # RFC 1952, section 2.3.1:
+    #
+    # XFL (eXtra FLags)
+    #    These flags are available for use by specific compression
+    #    methods.  The "deflate" method (CM = 8) sets these flags as
+    #    follows:
+    #
+    #       XFL = 2 - compressor used maximum compression,
+    #                 slowest algorithm
+    #       XFL = 4 - compressor used fastest algorithm
+    if compress_level == _COMPRESSION_LEVEL_BEST:
+        yield b'\x02'       # XFL: max compression, slowest algo
+    elif compress_level == _COMPRESSION_LEVEL_FAST:
+        yield b'\x04'       # XFL: min compression, fastest algo
+    else:
+        yield b'\x00'       # XFL: compression unset/tradeoff
     yield b'\xff'           # OS: unknown
 
     crc = zlib.crc32(b'')

@@ -1,6 +1,10 @@
 v17.4.3
 -------
 
+* :issue:`1849` via :pr:`1879`: Fixed XLF flag in gzip header
+  emitted by gzip compression tool per
+  :rfc:`1952#section-2.3.1`.
+
 * :issue:`1874`: Restricted depending on pywin32 only under
   CPython so that it won't get pulled-in under PyPy
   -- by :user:`webknjaz`.

@@ -18,6 +18,17 @@ from cherrypy._cpcompat import ntou
 from cherrypy.test import helper, _test_decorators
 
 
+PY_VER_PATCH = sys.version_info[:3]
+PY_VER_MINOR = PY_VER_PATCH[:2]
+# Refs:
+# bugs.python.org/issue39389
+# docs.python.org/3.7/whatsnew/changelog.html#python-3-7-7-release-candidate-1
+# docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-release-candidate-1
+HAS_GZIP_COMPRESSION_HEADER_FIXED = PY_VER_PATCH >= (3, 8, 2) or (
+    PY_VER_MINOR == (3, 7) and PY_VER_PATCH >= (3, 7, 7)
+)
+
+
 timeout = 0.2
 europoundUnicode = ntou('\x80\xa3')
 
@@ -363,6 +374,13 @@ class ToolTests(helper.CPWebCase):
                          ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')])
         self.assertInBody(zbuf.getvalue()[:3])
 
+        if not HAS_GZIP_COMPRESSION_HEADER_FIXED:
+            # NOTE: CherryPy adopts a fix from the CPython bug 39389
+            # NOTE: introducing a variable compression XFL flag that
+            # NOTE: was hardcoded to "best compression" before. And so
+            # NOTE: we can only test it on CPython versions that also
+            # NOTE: implement this fix.
+            return
         zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
