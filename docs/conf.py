@@ -62,6 +62,7 @@ github_repo_name = project.lower()
 github_repo_slug = f'{github_repo_org}/{github_repo_name}'
 github_repo_url = f'{github_url}/{github_repo_slug}'
 cr_github_repo_url = f'{github_url}/{github_repo_org}/cheroot'
+github_sponsors_url = f'{github_url}/sponsors'
 
 rst_epilog = f"""
 .. |project| replace:: {project}
@@ -96,6 +97,7 @@ extlinks = {
     'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #'),
     'cr-pr': (f'{cr_github_repo_url}/pull/%s', 'Cheroot PR #'),
     'gh': (f'{github_url}/%s', 'GitHub: '),
+    'user': (f'{github_sponsors_url}/%s', '@'),
 }
 
 intersphinx_mapping = {
