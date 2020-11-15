@@ -1,3 +1,10 @@
+v18.6.1
+-------
+
+* :issue:`1849` via :pr:`1879`: Fixed XLF flag in gzip header
+  emitted by gzip compression tool per
+  :rfc:`1952#section-2.3.1`.
+
 v18.6.0
 -------
 
