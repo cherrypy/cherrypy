@@ -144,7 +144,7 @@ jobs:
         tags: true
         all_branches: true
         python: *mainstream_python
-      username: __token__
+      user: __token__
       distributions: dists
       password:
         secure: r9jZVhWnwBpbQwkoAQnhcQajV6Hk8WKs53+P20YrNfLSrSfODmJFyljCLsUJH7TnmAdrnQfV19PXPfVXPucK2ZEg2E91/5z6pgADi01NX3QMr7vEpffk6ix0uHBSa3VMBF+VlmhCzAFnNIN0E7M4kjoc5Cr7qBWPwZpqd715axYxBKSIH4Cmt2cyW3ozMftNtbI+ujs+kJTX6m/2UAL8yngau0TWR5bUBaywTZdkfPIKxt2XDfTW5PuOTRgS6QSU+/Va+M1IJhFPthjmTO+t8U/qonSLA34nLkT7vJmME0lyQF0lr+IV41IKxEFz29hmzLY1dyZI5+bs3vEhxU1xGqwr1Hnif6f14TzeiubQrCxt1UP9D3HXguCNI4gGeny1OPJNNt5ezJDNha2HlIy2quLKgtW38TS0PPm7PDqgYhjidZyRXZ8G6A/DAwh00amCNkSN6lG7Lryd1QB44mYHCKm8XdLfBT94EqzSdgQyyoUAA87A8zB5zpHiRD2DGwrTxHkGQo7TTSVr82cYwkRW0nqE6bZkfNTrGLULB8872ZFGpbSbrAft5mDlSnprLRwrEA0SsFUd4O2W64pcvcJENa/NY+vvXAyd9jaHb5v0RpxUyllLrAIFuLEFHeHwyBAlMgq54dtYWqYa8pyJNoUiwOt158qzOE6wnoburP4KA9c=
