@@ -161,14 +161,9 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
 
+    @pytest.mark.skipif(os.name == 'nt', 'see pytest-dev/pytest-forked#44')
     @pytest.mark.forked
-    @pytest.mark.xfail(
-        bool(os.getenv('CI')),
-        reason=(
-            'fails on Windows because of pytest-dev/pytest-forked#44 and '
-            'on other OSes because of #1873'
-        )
-    )
+    @pytest.mark.xfail(bool(os.getenv('CI')), reason='KeyboardInterrupt #1873')
     def test_2_KeyboardInterrupt(self):
         # Raise a keyboard interrupt in the HTTP server's main thread.
         # We must start the server in this, the main thread
