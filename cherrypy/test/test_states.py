@@ -164,7 +164,10 @@ class ServerStateTests(helper.CPWebCase):
     @pytest.mark.forked
     @pytest.mark.xfail(
         bool(os.getenv('CI')),
-        reason='keyboard interrupts fail on continuous integration'
+        reason=(
+                'fails on Windows because of pytest-dev/pytest-forked#44 and '
+                'on other OSes because of #1873'
+        )
     )
     def test_2_KeyboardInterrupt(self):
         # Raise a keyboard interrupt in the HTTP server's main thread.
