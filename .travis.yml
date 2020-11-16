@@ -72,7 +72,7 @@ _base_envs:
 - &lint_python_base
   <<: *stage_lint
   <<: *no_memcached
-  python: 3.6
+  python: 3.9
   after_failure: skip
 python:
 - 3.5
