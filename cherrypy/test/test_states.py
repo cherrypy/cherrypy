@@ -165,8 +165,8 @@ class ServerStateTests(helper.CPWebCase):
     @pytest.mark.xfail(
         bool(os.getenv('CI')),
         reason=(
-                'fails on Windows because of pytest-dev/pytest-forked#44 and '
-                'on other OSes because of #1873'
+            'fails on Windows because of pytest-dev/pytest-forked#44 and '
+            'on other OSes because of #1873'
         )
     )
     def test_2_KeyboardInterrupt(self):
