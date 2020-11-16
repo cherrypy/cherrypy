@@ -11,7 +11,7 @@ import pytest
 
 from cherrypy.process import wspbus
 
-CI_ON_MACOS = bool(os.getenv('CI')) and sys.platform == "darwin"
+CI_ON_MACOS = bool(os.getenv("CI")) and sys.platform == "darwin"
 msg = 'Listener %d on channel %s: %s.'  # pylint: disable=invalid-name
 
 
