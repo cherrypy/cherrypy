@@ -2,7 +2,7 @@ version: 2
 jobs:
   macos-build:
     macos:
-      xcode: "9.3.1"
+      xcode: "12.2.0"
 
     steps:
     - run: brew install pyenv readline xz
