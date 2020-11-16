@@ -2,7 +2,7 @@ conditions: v1
 
 language: python
 os: linux
-dist: trusty
+dist: focal
 sudo: false
 services:
 - memcached
@@ -61,7 +61,6 @@ _base_envs:
   - travis_retry python -m tox
 - &python_3_7_mixture
   python: &mainstream_python 3.7
-  dist: xenial
   group:
   sudo: true
 - &pure_python_base
@@ -73,7 +72,7 @@ _base_envs:
 - &lint_python_base
   <<: *stage_lint
   <<: *no_memcached
-  python: 3.6
+  python: 3.9
   after_failure: skip
 python:
 - 3.5

@@ -2,7 +2,7 @@ version: 2
 jobs:
   macos-build:
     macos:
-      xcode: "9.3.1"
+      xcode: "12.2.0"
 
     steps:
     - run: brew install pyenv readline xz
@@ -22,7 +22,8 @@ jobs:
         wait
     - run: pyenv global 3.7.0 3.6.4 3.5.4 pypy3.5-6.0.0
 
-    - run: pip install tox tox-pyenv
+    - run: python3 -m pip install --upgrade pip wheel
+    - run: python3 -m pip install tox tox-pyenv
     - checkout
     - run: tox -e py35,py36,py37,pypy3 -- -p no:sugar
     - store_test_results:
