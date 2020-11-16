@@ -161,6 +161,10 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
 
+    @pytest.mark.forked
+    @pytest.mark.xfail(
+        bool(os.getenv("CI")), reason="continuous integration fails keyboard interrupts"
+    )
     def test_2_KeyboardInterrupt(self):
         # Raise a keyboard interrupt in the HTTP server's main thread.
         # We must start the server in this, the main thread
