@@ -165,8 +165,6 @@ class ServerStateTests(helper.CPWebCase):
     def test_2_KeyboardInterrupt(self):
         # Raise a keyboard interrupt in the HTTP server's main thread.
         # We must start the server in this, the main thread
-        if os.name == 'nt':
-            return  # Workaround for the pytest.mark.skipif() above.
         engine.start()
         cherrypy.server.start()
 
