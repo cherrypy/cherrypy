@@ -436,7 +436,7 @@ class ToolTests(helper.CPWebCase):
         @cherrypy.tools.register(  # noqa: F811
             'before_finalize', name='renamed', priority=60,
         )
-        def example():
+        def example():  # noqa: F811
             pass
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.renamed._point, 'before_finalize')
