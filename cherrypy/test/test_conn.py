@@ -7,8 +7,6 @@ import time
 import urllib.parse
 from http.client import BadStatusLine, HTTPConnection, NotConnected
 
-import pytest
-
 from cheroot.test import webtest
 
 import cherrypy
