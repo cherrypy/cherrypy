@@ -86,7 +86,11 @@ params = dict(
             # cherrypy.lib.gctools
             'objgraph',
 
-            'pytest>=5.3.5',
+            # pytest >= 5.4.0 doesn't work with pytest-sugar <= 0.9.2
+            # once https://github.com/Teemu/pytest-sugar/pull/188 is
+            # merged, the upper bound can be removed.
+            # Ref: https://github.com/pytest-dev/pytest/issues/6931
+            'pytest>=5.3.5,<6.1.0',
             'pytest-cov',
             'pytest-sugar',
             'path.py',
