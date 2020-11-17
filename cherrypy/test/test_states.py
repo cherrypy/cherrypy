@@ -10,6 +10,10 @@ import cherrypy
 import cherrypy.process.servers
 from cherrypy.test import helper
 
+
+IS_WINDOWS = os.name == 'nt'
+
+
 engine = cherrypy.engine
 thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
@@ -161,7 +165,7 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
 
-    @pytest.mark.xfail(reason='KeyboardInterrupt #1873', run=(os.name != 'nt'))
+    @pytest.mark.xfail(reason='KeyboardInterrupt #1873', run=not IS_WINDOWS)
     def test_2_KeyboardInterrupt(self):
         # Raise a keyboard interrupt in the HTTP server's main thread.
         # We must start the server in this, the main thread
@@ -219,6 +223,9 @@ class ServerStateTests(helper.CPWebCase):
         engine.block()
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
+
+    if not IS_WINDOWS:
+        test_2_KeyboardInterrupt = pytest.mark.forked(test_2_KeyboardInterrupt)
 
     @pytest.mark.xfail(
         'sys.platform == "Darwin" '
