@@ -3,7 +3,6 @@ conditions: v1
 language: python
 os: linux
 dist: focal
-sudo: false
 services:
 - memcached
 _base_envs:
@@ -62,7 +61,6 @@ _base_envs:
 - &python_3_7_mixture
   python: &mainstream_python 3.7
   group:
-  sudo: true
 - &pure_python_base
   <<: *stage_test
   <<: *python_3_7_mixture
