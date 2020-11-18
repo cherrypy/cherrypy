@@ -12,7 +12,7 @@ import pytest
 from cherrypy.process import wspbus
 
 
-CI_ON_MACOS = bool(os.getenv("CI")) and sys.platform == "darwin"
+CI_ON_MACOS = bool(os.getenv('CI')) and sys.platform == 'darwin'
 msg = 'Listener %d on channel %s: %s.'  # pylint: disable=invalid-name
 
 
@@ -221,7 +221,7 @@ def test_wait(bus):
         assert bus.state in states, 'State %r not in %r' % (bus.state, states)
 
 
-@pytest.mark.xfail(CI_ON_MACOS, reason="continuous integration on macOS fails")
+@pytest.mark.xfail(CI_ON_MACOS, reason='continuous integration on macOS fails')
 def test_wait_publishes_periodically(bus):
     """Test that wait publishes each tick."""
     callback = unittest.mock.MagicMock()
