@@ -25,7 +25,7 @@ jobs:
     - run: python3 -m pip install --upgrade pip wheel
     - run: python3 -m pip install tox tox-pyenv
     - checkout
-    - run: tox -e py35,py36,py37 -- -p no:sugar  #, pypy3
+    - run: tox -e py35,py36,py37 -- -p no:sugar  # , pypy3
     - store_test_results:
         path: .test-results
     - store_artifacts:
