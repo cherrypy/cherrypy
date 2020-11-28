@@ -543,7 +543,7 @@ Using sessions in your applications is done as follows:
           cherrypy.session['count'] = 0
        cherrypy.session['count'] += 1
 
-In this snippet, everytime the the index page handler is called,
+In this snippet, everytime the index page handler is called,
 the current user's session has its `'count'` key incremented by `1`.
 
 CherryPy knows which session to use by inspecting the cookie
