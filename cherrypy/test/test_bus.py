@@ -261,10 +261,15 @@ def test_block(bus, log_tracker):
 
     # The last message will mention an indeterminable thread name; ignore
     # it
-    assert (log_tracker.log_entries[:-1] ==
-            ['Bus STOPPING', 'Bus STOPPED',
-             'Bus EXITING', 'Bus EXITED',
-             'Waiting for child threads to terminate...'])
+    expected = [
+        "Bus STOPPING",
+        "Bus STOPPED",
+        "Bus EXITING",
+        "Bus EXITED",
+        "Waiting for child threads to terminate...",
+    ]
+    # If the last message mentions an indeterminable thread name then ignore it
+    assert expected in (log_tracker.log_entries, log_tracker.log_entries[:-1])
 
 
 def test_start_with_callback(bus):
