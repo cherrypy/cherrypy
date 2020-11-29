@@ -58,12 +58,12 @@ _base_envs:
   - brew --cache
   script:
   - travis_retry python -m tox
-- &python_3_8_mixture
-  python: &mainstream_python 3.8
+- &python_3_9_mixture
+  python: &mainstream_python 3.9
   group:
 - &pure_python_base
   <<: *stage_test
-  <<: *python_3_8_mixture
+  <<: *python_3_9_mixture
 - &pure_python_base_priority
   <<: *pure_python_base
   <<: *stage_test_priority
@@ -132,7 +132,7 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *stage_deploy
-    <<: *python_3_8_mixture
+    <<: *python_3_9_mixture
     <<: *no_memcached
     install: skip
     script: skip
