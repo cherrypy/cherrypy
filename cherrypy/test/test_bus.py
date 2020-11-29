@@ -271,7 +271,7 @@ def test_block(bus, log_tracker):
     # If the last message mentions an indeterminable thread name then ignore it
     len_expected = len(expected)
     assert log_tracker.log_entries[:len_expected] == expected
-    assert len(log_tracker.log_entries) - len_expected in (0, 1), (
+    assert len(log_tracker.log_entries) - len_expected <= 1, (
         'No more than one extra log line with the thread name expected'
     )
 
