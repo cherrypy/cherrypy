@@ -269,7 +269,11 @@ def test_block(bus, log_tracker):
         'Waiting for child threads to terminate...',
     ]
     # If the last message mentions an indeterminable thread name then ignore it
-    assert expected in (log_tracker.log_entries, log_tracker.log_entries[:-1])
+    len_expected = len(expected)
+    assert log_tracker.log_entries[:len_expected] == expected
+    assert len(log_tracker.log_entries[len_expected:]) - len_expected in (0, 1), (
+        'No more than one extra log line with the thread name expected'
+    )
 
 
 def test_start_with_callback(bus):
