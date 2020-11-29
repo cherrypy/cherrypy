@@ -58,12 +58,12 @@ _base_envs:
   - brew --cache
   script:
   - travis_retry python -m tox
-- &python_3_7_mixture
-  python: &mainstream_python 3.7
+- &python_3_9_mixture
+  python: &mainstream_python 3.9
   group:
 - &pure_python_base
   <<: *stage_test
-  <<: *python_3_7_mixture
+  <<: *python_3_9_mixture
 - &pure_python_base_priority
   <<: *pure_python_base
   <<: *stage_test_priority
@@ -97,9 +97,9 @@ jobs:
       (non-strict until \#1797 get fixed)
     env: TOXENV=build-docs
   - <<: *pure_python_base_priority
-    # mainstream here (3.7)
+    # mainstream Python here
   - <<: *pure_python_base_priority
-    # mainstream here (3.7)
+    # mainstream Python here
     # run tests against the bleeding-edge cheroot
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
@@ -123,7 +123,7 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *osx_python_base
-    # mainstream here (3.7)
+    # mainstream Python here
     python: *mainstream_python
     env:
     - PYTHON_VERSION=3.7.0
@@ -132,7 +132,7 @@ jobs:
     - *env_pyenv
     - *env_path
   - <<: *stage_deploy
-    <<: *python_3_7_mixture
+    <<: *python_3_9_mixture
     <<: *no_memcached
     install: skip
     script: skip
