@@ -261,10 +261,20 @@ def test_block(bus, log_tracker):
 
     # The last message will mention an indeterminable thread name; ignore
     # it
-    assert (log_tracker.log_entries[:-1] ==
-            ['Bus STOPPING', 'Bus STOPPED',
-             'Bus EXITING', 'Bus EXITED',
-             'Waiting for child threads to terminate...'])
+    expected_bus_messages = [
+        'Bus STOPPING',
+        'Bus STOPPED',
+        'Bus EXITING',
+        'Bus EXITED',
+        'Waiting for child threads to terminate...',
+    ]
+    bus_msg_num = len(expected_bus_messages)
+
+    # If the last message mentions an indeterminable thread name then ignore it
+    assert log_tracker.log_entries[:bus_msg_num] == expected_bus_messages
+    assert len(log_tracker.log_entries[bus_msg_num:]) <= 1, (
+        'No more than one extra log line with the thread name expected'
+    )
 
 
 def test_start_with_callback(bus):
