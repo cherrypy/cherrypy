@@ -126,7 +126,7 @@ jobs:
     # mainstream Python here
     python: *mainstream_python
     env:
-    - PYTHON_VERSION=3.8.6
+    - PYTHON_VERSION=3.7.0
     # run tests against the bleeding-edge cheroot
     - TOXENV=cheroot-master
     - *env_pyenv
