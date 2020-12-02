@@ -43,8 +43,8 @@ class ParamsTest(helper.CPWebCase):
         self.assertStatus(500)
 
     def test_syntax(self):
-        if sys.version_info < (3,):
-            return self.skip('skipped (Python 3 only)')
+        if not (3,) < sys.version_info < (3, 10):
+            return self.skip('skipped (Python 3.0 to 3.9 only)')
         code = textwrap.dedent("""
             class Root:
                 @cherrypy.expose
