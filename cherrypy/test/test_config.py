@@ -221,8 +221,8 @@ class ConfigTests(helper.CPWebCase):
         # the favicon in the page handler to be '../favicon.ico',
         # but then overrode it in config to be './static/dirback.jpg'.
         self.getPage('/favicon.ico')
-        self.assertBody(open(os.path.join(localDir, 'static/dirback.jpg'),
-                             'rb').read())
+        with open(os.path.join(localDir, 'static/dirback.jpg'), 'rb') as tf:
+            self.assertBody(tf.read())
 
     def test_request_body_namespace(self):
         self.getPage('/plain', method='POST', headers=[
