@@ -19,7 +19,12 @@ CherryPy — A Minimalist Python Web Framework
    development.rst
    glossary.rst
    history.rst
-   pkg/modules.rst
+
+.. toctree::
+   :hidden:
+   :caption: Reference
+
+   pkg/modules
 
 `CherryPy <http://www.cherrypy.org>`_ is a pythonic, object-oriented web framework.
 

@@ -80,12 +80,16 @@ rst_epilog = f"""
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    # Stdlib extensions:
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+
+    # Third-party extensions:
+    'sphinxcontrib.apidoc',
     'rst.linker',
     'jaraco.packaging.sphinx',
 ]
@@ -238,3 +242,17 @@ link_files = {
 # Ref: https://github.com/python-attrs/attrs/pull/571/files\
 #      #diff-85987f48f1258d9ee486e3191495582dR82
 default_role = 'any'
+
+
+# -- Options for apidoc extension ----------------------------------------
+
+apidoc_excluded_paths = []
+apidoc_extra_args = [
+    '--implicit-namespaces',
+    '--private',  # include “_private” modules
+]
+apidoc_module_dir = '../cherrypy'
+apidoc_module_first = False
+apidoc_output_dir = 'pkg'
+apidoc_separate_modules = True
+apidoc_toc_file = None

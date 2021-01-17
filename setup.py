@@ -73,6 +73,7 @@ params = dict(
             'sphinx',
             'docutils',
             'alabaster',
+            'sphinxcontrib-apidoc>=0.3.0',
             'rst.linker>=1.11',
             'jaraco.packaging>=3.2',
         ],
