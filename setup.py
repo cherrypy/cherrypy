@@ -76,6 +76,7 @@ params = dict(
             'sphinxcontrib-apidoc>=0.3.0',
             'rst.linker>=1.11',
             'jaraco.packaging>=3.2',
+            'setuptools',
         ],
         'json': ['simplejson'],
         'routes_dispatcher': ['routes>=2.3.1'],
@@ -94,6 +95,7 @@ params = dict(
             'path.py',
             'requests_toolbelt',
             'pytest-services>=2',
+            'setuptools',
         ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],
