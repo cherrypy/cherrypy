@@ -366,7 +366,7 @@ class Daemonizer(SimplePlugin):
         # "The general problem with making fork() work in a multi-threaded
         #  world is what to do with all of the threads..."
         # So we check for active threads:
-        if threading.activeCount() != 1:
+        if threading.active_count() != 1:
             self.bus.log('There are %r active threads. '
                          'Daemonizing now may cause strange failures.' %
                          threading.enumerate(), level=30)
@@ -552,7 +552,7 @@ class Monitor(SimplePlugin):
             if self.thread is None:
                 self.thread = BackgroundTask(self.frequency, self.callback,
                                              bus=self.bus)
-                self.thread.setName(threadname)
+                self.thread.name = threadname
                 self.thread.start()
                 self.bus.log('Started monitor thread %r.' % threadname)
             else:
@@ -565,8 +565,8 @@ class Monitor(SimplePlugin):
             self.bus.log('No thread running for %s.' %
                          self.name or self.__class__.__name__)
         else:
-            if self.thread is not threading.currentThread():
-                name = self.thread.getName()
+            if self.thread is not threading.current_thread():
+                name = self.thread.name
                 self.thread.cancel()
                 if not self.thread.daemon:
                     self.bus.log('Joining %r' % name)
@@ -692,7 +692,7 @@ class Autoreloader(Monitor):
                                      filename)
                         self.thread.cancel()
                         self.bus.log('Stopped thread %r.' %
-                                     self.thread.getName())
+                                     self.thread.name)
                         self.bus.restart()
                         return
 
