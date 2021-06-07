@@ -356,13 +356,13 @@ class Bus(object):
             # implemented as a windows service and in any other case
             # that another thread executes cherrypy.engine.exit()
             if (
-                    t != threading.currentThread() and
+                    t != threading.current_thread() and
                     not isinstance(t, threading._MainThread) and
                     # Note that any dummy (external) threads are
                     # always daemonic.
                     not t.daemon
             ):
-                self.log('Waiting for thread %s.' % t.getName())
+                self.log('Waiting for thread %s.' % t.name)
                 t.join()
 
         if self.execv:
@@ -570,7 +570,7 @@ class Bus(object):
             self.wait(states.STARTED)
             func(*a, **kw)
         t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
-        t.setName('Bus Callback ' + t.getName())
+        t.name = 'Bus Callback ' + t.name
         t.start()
 
         self.start()
