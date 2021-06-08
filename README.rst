@@ -67,9 +67,9 @@ CherryPy is a pythonic, object-oriented HTTP framework.
 
 Here's how easy it is to write "Hello World" in CherryPy:
 
-{
-["# $*._]
-}
+
+
+
 .. code:: python
 
     import cherrypy
@@ -81,15 +81,15 @@ Here's how easy it is to write "Hello World" in CherryPy:
 
     cherrypy.quickstart(HelloWorld())
 
-{# Example
-["# $*._]
-}
- "#$*._
- {
- [And it continues to work that intuitively when systems grow, allowing
+
+
+
+
+
+And it continues to work that intuitively when systems grow, allowing
 for the Python object model to be dynamically presented as a web site
-and/or API.]
-}
+and/or API.
+
 
 While CherryPy is one of the easiest and most intuitive frameworks out
 there, the prerequisite for understanding the `CherryPy
@@ -100,7 +100,7 @@ Additionally:
 -  Tutorials are included in the repository:
    https://github.com/cherrypy/cherrypy/tree/master/cherrypy/tutorial
 -  A general wiki at:
-   https://github.com/cherrypy/cherrypy/wiki
+              <https://github.com/cherrypy/cherrypy/wiki>
 
 If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
