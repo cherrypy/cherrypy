@@ -57,7 +57,7 @@ CherryPy is a pythonic, object-oriented HTTP framework.
 
 1. It allows building web applications in much the same way one would
    build any other object-oriented program.
-2. This design results in less and more readable code being developed faster.
+2. This design results in more concise and readable code developed faster.
    It's all just properties and methods.
 3. It is now more than ten years old and has proven fast and very
    stable.
@@ -79,7 +79,7 @@ Here's how easy it is to write "Hello World" in CherryPy:
     cherrypy.quickstart(HelloWorld())
 
 And it continues to work that intuitively when systems grow, allowing
-for the Python object model to be dynamically presented as a web site
+for the Python object model to be dynamically presented as a website
 and/or API.
 
 While CherryPy is one of the easiest and most intuitive frameworks out
