@@ -15,17 +15,17 @@ jobs:
         ' >> $BASH_ENV
 
     - run: |-
-        for py_ver in 3.7.0 3.6.4 3.5.4 pypy3.5-6.0.0
+        for py_ver in 3.7.0 3.6.4
         do
           pyenv install "$py_ver" &
         done
         wait
-    - run: pyenv global 3.7.0 3.6.4 3.5.4 pypy3.5-6.0.0
+    - run: pyenv global 3.7.0 3.6.4
 
     - run: python3 -m pip install --upgrade pip wheel
     - run: python3 -m pip install tox tox-pyenv
     - checkout
-    - run: tox -e py35,py36,py37 -- -p no:sugar  # , pypy3
+    - run: tox -e py36,py37 -- -p no:sugar
     - store_test_results:
         path: .test-results
     - store_artifacts:
@@ -38,7 +38,7 @@ jobs:
     steps:
     - checkout
     - run: pip install tox
-    - run: tox -e py35,py36,py37
+    - run: tox -e py36,py37
     - store_test_results:
         path: .test-results
     - store_artifacts:
