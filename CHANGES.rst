@@ -9,6 +9,8 @@ v18.6.1
   CPython so that it won't get pulled-in under PyPy
   -- by :user:`webknjaz`.
 
+* :issue:`1920`: Bumped minimum version of PyWin32 to 227.
+
 v18.6.0
 -------
 

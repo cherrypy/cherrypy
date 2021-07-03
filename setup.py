@@ -103,7 +103,7 @@ params = dict(
 
         # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
         ':sys_platform == "win32" and implementation_name == "cpython"': [
-            'pywin32',
+            'pywin32 >= 227',
         ],
     },
     setup_requires=[
