@@ -102,7 +102,9 @@ params = dict(
         'xcgi': ['flup'],
 
         # https://docs.cherrypy.org/en/latest/advanced.html?highlight=windows#windows-console-events
-        ':sys_platform == "win32" and implementation_name == "cpython"': [
+        ':sys_platform == "win32" and implementation_name == "cpython"'
+        # pywin32 disabled while a build is unavailable. Ref #1920.
+        ' and python_version < "3.10"': [
             'pywin32 >= 227',
         ],
     },

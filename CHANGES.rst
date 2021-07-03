@@ -10,6 +10,7 @@ v18.6.1
   -- by :user:`webknjaz`.
 
 * :issue:`1920`: Bumped minimum version of PyWin32 to 227.
+  Block pywin32 install on Python 3.10 and later.
 
 v18.6.0
 -------
