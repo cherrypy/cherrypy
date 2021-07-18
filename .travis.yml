@@ -73,15 +73,9 @@ _base_envs:
   python: 3.9
   after_failure: skip
 python:
-- 3.5
 - 3.7-dev
-- &pypy3 pypy3.5-5.10.0
 jobs:
   fast_finish: true
-  allow_failures:
-  # TODO: fix tests
-  - python: *pypy3
-  - env: TOXENV=pre-commit-pep257
   include:
   - <<: *lint_python_base
     env: TOXENV=pre-commit
@@ -104,12 +98,6 @@ jobs:
     env: TOXENV=cheroot-master
   - <<: *pure_python_base_priority
     python: nightly
-  - <<: *osx_python_base
-    python: 3.5
-    env:
-    - PYTHON_VERSION=3.5.5
-    - *env_pyenv
-    - *env_path
   - <<: *osx_python_base
     python: *mainstream_python
     env:
