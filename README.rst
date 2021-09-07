@@ -51,7 +51,7 @@
    :target: https://codecov.io/gh/cherrypy/cherrypy
    :alt: codecov
 
-Welcome to the GitHub repository of `CherryPy <https://cherrypy.rtfd.io>`_!
+Welcome to the GitHub repository of `CherryPy <https://cherrypy.dev>`_!
 
 CherryPy is a pythonic, object-oriented HTTP framework.
 
@@ -84,7 +84,7 @@ and/or API.
 
 While CherryPy is one of the easiest and most intuitive frameworks out
 there, the prerequisite for understanding the `CherryPy
-documentation <https://cherrypy.readthedocs.io/en/latest/>`_ is that you have
+documentation <https://docs.cherrypy.dev>`_ is that you have
 a general understanding of Python and web development.
 Additionally:
 
@@ -95,7 +95,7 @@ Additionally:
 
 If the docs are insufficient to address your needs, the CherryPy
 community has several `avenues for support
-<https://cherrypy.readthedocs.io/en/latest/support.html>`_.
+<https://docs.cherrypy.dev/en/latest/support.html>`_.
 
 For Enterprise
 --------------
@@ -112,6 +112,6 @@ Contributing
 ------------
 
 Please follow the `contribution guidelines
-<https://cherrypy.readthedocs.io/en/latest/contribute.html>`_.
+<https://docs.cherrypy.dev/en/latest/contribute.html>`_.
 And by all means, absorb the `Zen of
 CherryPy <https://github.com/cherrypy/cherrypy/wiki/The-Zen-of-CherryPy>`_.
