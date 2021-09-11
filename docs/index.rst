@@ -26,7 +26,7 @@ CherryPy — A Minimalist Python Web Framework
 
    pkg/modules
 
-`CherryPy <http://www.cherrypy.org>`_ is a pythonic, object-oriented web framework.
+`CherryPy <http://www.cherrypy.dev>`_ is a pythonic, object-oriented web framework.
 
 CherryPy allows developers to build web applications in much the
 same way they would build any other object-oriented Python program.

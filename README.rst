@@ -14,7 +14,7 @@
 
 
 .. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
-  :target: https://docs.cherrypy.org/en/latest/?badge=latest
+  :target: https://docs.cherrypy.dev/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/badge/StackOverflow-CherryPy-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy

@@ -6,7 +6,7 @@ The project actively encourages aspiring and experienced users to dive
 in and add their best contribution to the project.
 
 How can you contribute? Well, first search the `docs
-<https://docs.cherrypy.org>`_ and the `project page
+<https://docs.cherrypy.dev>`_ and the `project page
 <https://github.com/cherrypy/cherrypy>`_ to see if someone
 has already reported your issue.
 
