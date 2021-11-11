@@ -15,6 +15,11 @@ _COMPRESSION_GZIP       = 'gzip'
 _COMPRESSION_BROTLI     = 'br'
 _COMPRESSION_ALL        = {_COMPRESSION_GZIP, _COMPRESSION_BROTLI}
 
+_COMPRESSION_LEVEL_DEFAULTS = {
+    'gzip': 5,
+    'br': 4,
+}
+
 
 def decode(encoding=None, default_encoding='utf-8'):
     """Replace or extend the list of charsets used to decode a request entity.
@@ -346,8 +351,8 @@ def decompress(body):
     return data
 
 
-def gzip(compress_level=5, mime_types=['text/html', 'text/plain'],
-         debug=False):
+def gzip(compress_level=_COMPRESSION_LEVEL_DEFAULTS['gzip'],
+        mime_types=['text/html', 'text/plain'], debug=False):
     """Try to gzip the response body if Content-Type in mime_types.
 
     cherrypy.response.headers['Content-Type'] must be set to one of the
@@ -492,8 +497,15 @@ def apply_weighted_compression_method(request, response, context,
                                     (ct, mime_types), context=context)
                 return
 
+        # since we may be applying a different method than the one implied by
+        # the caller we also must get the appropriate compression level
+        cm_context = context.lower().split('.')[-1]
+        if cm != cm_context:
+            fallback = _COMPRESSION_LEVEL_DEFAULTS[cm]
+            compress_level = toolmap[cm].get('compress_level', fallback)
         if debug:
-            cherrypy.log('Compressing content. Method: %s' % cm, context=context)
+            cherrypy.log('Compressing content. Method: %s / Level: %d' %
+                            (cm, compress_level), context=context)
         # Return a generator that compresses the page
         response.headers['Content-Encoding'] = cm
         if cm == _COMPRESSION_BROTLI:
@@ -513,8 +525,8 @@ def apply_weighted_compression_method(request, response, context,
     cherrypy.HTTPError(406, ', '.join(sorted(enabled_methods))).set_response()
 
 
-def brotli_tool(compress_level=5, mime_types=['text/html', 'text/plain'],
-         debug=False):
+def brotli_tool(compress_level=_COMPRESSION_LEVEL_DEFAULTS['br'],
+        mime_types=['text/html', 'text/plain'], debug=False):
     """Try to brotli compress the response body if Content-Type in mime_types.
 
     cherrypy.response.headers['Content-Type'] must be set to one of the
@@ -535,7 +547,7 @@ def brotli_tool(compress_level=5, mime_types=['text/html', 'text/plain'],
     request = cherrypy.serving.request
     response = cherrypy.serving.response
 
-    apply_weighted_compression_method(request, response, 'TOOLS.BROTLI',
+    apply_weighted_compression_method(request, response, 'TOOLS.BR',
         compress_level=compress_level, mime_types=mime_types, debug=debug)
 
 
