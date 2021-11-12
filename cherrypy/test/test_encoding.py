@@ -460,12 +460,14 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/brotli/', headers=[('Accept-Encoding', 'br')])
         self.assertHeader('Vary', 'Accept-Encoding')
         self.assertHeader('Content-Encoding', 'br')
-        self.assertBody(brotli.compress(b'Hello, world', quality=5))
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
 
         self.getPage('/brotli/', headers=[('Accept-Encoding', 'gzip, deflate, br')])
         self.assertHeader('Vary', 'Accept-Encoding')
         self.assertHeader('Content-Encoding', 'br')
-        self.assertBody(brotli.compress(b'Hello, world', quality=5))
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
 
     def testBrotliGzip(self):
         if not HAS_BROTLI:
@@ -476,7 +478,8 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'br')])
         self.assertHeader('Vary', 'Accept-Encoding')
         self.assertHeader('Content-Encoding', 'br')
-        self.assertBody(brotli.compress(b'Hello, world', quality=5))
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
 
         self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Vary', 'Accept-Encoding')
