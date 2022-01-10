@@ -9,6 +9,7 @@ import unittest.mock
 
 import pytest
 
+from cherrypy.process import threads as cherrypy_threads
 from cherrypy.process import wspbus
 
 
@@ -237,6 +238,7 @@ def test_wait_publishes_periodically(bus):
 
 def test_block(bus, log_tracker):
     """Test that bus block waits for exiting."""
+
     def f():  # pylint: disable=invalid-name
         time.sleep(0.2)
         bus.exit()
@@ -244,20 +246,29 @@ def test_block(bus, log_tracker):
     def g():  # pylint: disable=invalid-name
         time.sleep(0.4)
 
-    threading.Thread(target=f).start()
-    threading.Thread(target=g).start()
+    finish_non_cherrypy_thread = False
+
+    def non_cherrypy_thread():
+        while not finish_non_cherrypy_thread:
+            time.sleep(0.2)
+
+    cherrypy_threads.Thread(target=f).start()
+    cherrypy_threads.Thread(target=g).start()
+    threading.Thread(target=non_cherrypy_thread).start()
     threads = [t for t in threading.enumerate() if not t.daemon]
-    assert len(threads) == 3
+    assert len(threads) == 4
 
     bus.block()
+
+    threads = [t for t in threading.enumerate() if not t.daemon]
+    finish_non_cherrypy_thread = True
 
     # The block method MUST wait for the EXITING state.
     assert bus.state == bus.states.EXITING
 
-    # The block method MUST wait for ALL non-main, non-daemon threads to
-    # finish.
-    threads = [t for t in threading.enumerate() if not t.daemon]
-    assert len(threads) == 1
+    # The block method MUST wait for all non-main, non-daemon cherrypy threads
+    # to finish.
+    assert len(threads) == 2
 
     # The last message will mention an indeterminable thread name; ignore
     # it

@@ -82,7 +82,8 @@ import subprocess
 import functools
 
 from more_itertools import always_iterable
-
+from cheroot.workers import threadpool
+from cherrypy.process import threads
 
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
@@ -344,10 +345,8 @@ class Bus(object):
             self.exit()
             raise
 
-        # Waiting for ALL child threads to finish is necessary on OS X.
-        # See https://github.com/cherrypy/cherrypy/issues/581.
-        # It's also good to let them all shut down before allowing
-        # the main thread to call atexit handlers.
+        # Waiting for cheroot/cherrypy threads to finish to let them all shut
+        # down before allowing the main thread to call atexit handlers.
         # See https://github.com/cherrypy/cherrypy/issues/751.
         self.log('Waiting for child threads to terminate...')
         for t in threading.enumerate():
@@ -356,11 +355,9 @@ class Bus(object):
             # implemented as a windows service and in any other case
             # that another thread executes cherrypy.engine.exit()
             if (
-                    t != threading.current_thread() and
-                    not isinstance(t, threading._MainThread) and
-                    # Note that any dummy (external) threads are
-                    # always daemonic.
-                    not t.daemon
+                isinstance(t, (threads.Thread, threadpool.WorkerThread))
+                and not t.daemon
+                and t != threading.current_thread()
             ):
                 self.log('Waiting for thread %s.' % t.name)
                 t.join()
