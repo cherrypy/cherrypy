@@ -101,15 +101,12 @@ class ModFCGISupervisor(helper.LocalSupervisor):
             fcgiconf = os.path.join(curdir, fcgiconf)
 
         # Write the Apache conf file.
-        f = open(fcgiconf, 'wb')
-        try:
+        with open(fcgiconf, 'wb') as f:
             server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
             output = self.template % {'port': self.port, 'root': curdir,
                                       'server': server}
             output = ntob(output.replace('\r\n', '\n'))
             f.write(output)
-        finally:
-            f.close()
 
         result = read_process(APACHE_PATH, '-k start -f %s' % fcgiconf)
         if result:

@@ -107,13 +107,10 @@ class ModPythonSupervisor(helper.Supervisor):
         if not os.path.isabs(mpconf):
             mpconf = os.path.join(curdir, mpconf)
 
-        f = open(mpconf, 'wb')
-        try:
+        with open(mpconf, 'wb') as f:
             f.write(self.template %
                     {'port': self.port, 'modulename': modulename,
                      'host': self.host})
-        finally:
-            f.close()
 
         result = read_process(APACHE_PATH, '-k start -f %s' % mpconf)
         if result:

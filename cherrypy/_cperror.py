@@ -532,7 +532,8 @@ def get_error_page(status, **kwargs):
                     return result
             else:
                 # Load the template from this path.
-                template = io.open(error_page, newline='').read()
+                with io.open(error_page, newline='') as f:
+                    template = f.read()
         except Exception:
             e = _format_exception(*_exc_info())[-1]
             m = kwargs['message']
