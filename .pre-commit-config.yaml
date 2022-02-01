@@ -1,5 +1,5 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+-   repo: https://github.com/pre-commit/pre-commit-hooks.git
     rev: v1.1.1
     hooks:
     -   id: trailing-whitespace
@@ -28,7 +28,7 @@ repos:
         exclude: cherrypy/test/test.pem
     -   id: requirements-txt-fixer
 
--   repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle
+-   repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
     rev: v2.1.1
     hooks:
     -   id: pydocstyle
@@ -50,12 +50,12 @@ repos:
                 test|tutorial
             )
 
--   repo: https://github.com/Lucas-C/pre-commit-hooks
+-   repo: https://github.com/Lucas-C/pre-commit-hooks.git
     rev: v1.1.11
     hooks:
     -   id: remove-tabs
 
--   repo: https://github.com/Lucas-C/pre-commit-hooks-lxml
+-   repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
     rev: v1.1.0
     hooks:
     -   id: forbid-html-img-without-alt-text
