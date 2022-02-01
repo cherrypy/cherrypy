@@ -166,7 +166,7 @@ class TutorialTest(helper.CPWebCase):
         self.assertHeader('Content-Disposition',
                           # Make sure the filename is quoted.
                           'attachment; filename="pdf_file.pdf"')
-        self.assertEqual(len(self.body), 85698)
+        self.assertEqual(len(self.body), 11961)
 
     def test10HTTPErrors(self):
         self.setup_tutorial('tut10_http_errors', 'HTTPErrorDemo')
