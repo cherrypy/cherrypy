@@ -106,7 +106,7 @@ extlinks = {
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'cheroot': ('https://cheroot.cherrypy.org/en/latest/', None),
+    'cheroot': ('https://cheroot.cherrypy.dev/en/latest/', None),
     'pytest-docs': ('https://docs.pytest.org/en/latest/', None),
 }
 

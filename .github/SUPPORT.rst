@@ -9,7 +9,7 @@ I have a question
 -----------------
 
 If you have a question and cannot find an answer for it in issues or the
-the `documentation <http://docs.cherrypy.org/en/latest/>`__, `please
+the `documentation <http://docs.cherrypy.dev/en/latest/>`__, `please
 create an issue <https://github.com/cherrypy/cherrypy/issues/new>`__.
 
 Questions and their answers have great value for the community, and a

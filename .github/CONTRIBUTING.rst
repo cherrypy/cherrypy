@@ -28,5 +28,5 @@ python version, and any other related software versions.
 
 Also
 ----
-See `Contributing <https://docs.cherrypy.org/en/latest/contribute.html>`_ in
+See `Contributing <https://docs.cherrypy.dev/en/latest/contribute.html>`_ in
 the docs.

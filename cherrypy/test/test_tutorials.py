@@ -78,7 +78,7 @@ class TutorialTest(helper.CPWebCase):
 
             <ul>
                 <li><a href="http://del.icio.us">del.icio.us</a></li>
-                <li><a href="http://www.cherrypy.org">CherryPy</a></li>
+                <li><a href="http://www.cherrypy.dev">CherryPy</a></li>
             </ul>
 
             <p>[<a href="../">Return to links page</a>]</p>'''
