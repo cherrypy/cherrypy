@@ -582,6 +582,7 @@ class FileSession(Session):
                     # path of the first session called, this may not run.
                     cherrypy.log('Cleanup lock acquired.', 'TOOLS.SESSIONS')
 
+                clean_lock_file = False # a quick and dirtly fix for #1855 'many lock files not cleaned'
                 try:
                     contents = self._load(path)
                     # _load returns None on IOError
@@ -590,8 +591,15 @@ class FileSession(Session):
                         if expiration_time < now:
                             # Session expired: deleting it
                             os.unlink(path)
+                            clean_lock_file = True
                 finally:
                     self.release_lock(path)
+                if clean_lock_file:
+                    try:
+                        os.unlink(path + self.LOCK_SUFFIX)
+                    except:
+                        pass
+                    
 
     def __len__(self):
         """Return the number of active sessions."""
