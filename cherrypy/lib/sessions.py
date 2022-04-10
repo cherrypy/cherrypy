@@ -597,7 +597,7 @@ class FileSession(Session):
                 if clean_lock_file:
                     try:
                         os.unlink(path + self.LOCK_SUFFIX)
-                    except:
+                    except OSError::
                         pass
                     
 
