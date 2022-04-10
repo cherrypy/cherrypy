@@ -599,7 +599,7 @@ class FileSession(Session):
                         os.unlink(path + self.LOCK_SUFFIX)
                     except OSError::
                         pass
-                    
+
 
     def __len__(self):
         """Return the number of active sessions."""
