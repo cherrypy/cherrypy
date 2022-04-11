@@ -597,7 +597,7 @@ class FileSession(Session):
         # Find all lock files, and remove those without session files
         files = {fname for fname in os.listdir(self.storage_path) if fname.startswith(self.SESSION_PREFIX)}
         session_files = {fname for fname in files if not fname.endswith(self.LOCK_SUFFIX)}
-        session_lock_files = {fname + self.LOCK_SUFFIX for fname in session_files}        
+        session_lock_files = {fname + self.LOCK_SUFFIX for fname in session_files}
         for fname in files - session_files - session_lock_files:
             try:
                 os.unlink(os.path.join(self.storage_path, fname))
