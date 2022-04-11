@@ -592,7 +592,7 @@ class FileSession(Session):
                             os.unlink(path)
                 finally:
                     self.release_lock(path)
-                    
+
         # A quick and dirty fix to clean up those lock files that never get removed
         # Fix for #1855
         files = [f for f in os.listdir(self.storage_path) if f.startswith(self.SESSION_PREFIX)]
@@ -605,7 +605,7 @@ class FileSession(Session):
                 except OSError:
                     pass
 
-                    
+
 
     def __len__(self):
         """Return the number of active sessions."""
