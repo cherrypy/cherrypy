@@ -597,7 +597,7 @@ class FileSession(Session):
         # Fix for #1855
         files = [f for f in os.listdir(self.storage_path) if f.startswith(self.SESSION_PREFIX)]
         lock_files = [f for f in files if f.endswith(self.LOCK_SUFFIX)]
-        session_files = list(set(files) - set(lock_files))
+        session_files = set(files) - set(lock_files)
         for fname in lock_files:
             if fname.replace(self.LOCK_SUFFIX, '') not in session_files:
                 try:
