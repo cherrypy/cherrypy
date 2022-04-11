@@ -592,19 +592,19 @@ class FileSession(Session):
                             os.unlink(path)
                 finally:
                     self.release_lock(path)
-                    
+
         # A quick and dirty fix to clean up those lock files that never get removed
         # Find all lock files, and remove those without session files
         files = {f for f in os.listdir(self.storage_path) if f.startswith(self.SESSION_PREFIX)}
         all_lock_files = {f for f in files if f.endswith(self.LOCK_SUFFIX)}
         session_files = files - all_lock_files
-        keep_lock_files = {f + self.LOCK_SUFFIX for f in session_files}        
+        keep_lock_files = {f + self.LOCK_SUFFIX for f in session_files}
         for fname in all_lock_files - keep_lock_files:
             try:
                 os.unlink(os.path.join(self.storage_path, fname))
             except OSError:
                 pass
-       
+
 
     def __len__(self):
         """Return the number of active sessions."""
