@@ -569,19 +569,20 @@ class FileSession(Session):
         # Find out all lock files, remove them unless their session files still exit
         all_files = {fname for fname in os.listdir(self.storage_path) if fname.startswith(self.SESSION_PREFIX)}
         lock_files = {fname for fname in all_files if fname.endswith(self.LOCK_SUFFIX)}
-        session_files = {fname for fname in all_files if not fname.endswith(self.LOCK_SUFFIX)}
-        session_lock_files = {fname + self.LOCK_SUFFIX for fname in session_files}
+        session_files = all_files - lock_files
+        session_lock_files = {fname + self.LOCK_SUFFIX for fname in session_files}        
         for fname in lock_files - session_lock_files:
             try:
                 os.unlink(os.path.join(self.storage_path, fname))
             except OSError:
                 pass
-
+                
         # Iterate over all session files in self.storage_path
         for fname in session_files:
             have_session = (
-                fname.startswith(self.SESSION_PREFIX)
-                and not fname.endswith(self.LOCK_SUFFIX)
+                True
+                # fname.startswith(self.SESSION_PREFIX)
+                # and not fname.endswith(self.LOCK_SUFFIX)
             )
             if have_session:
                 # We have a session file: lock and load it and check
