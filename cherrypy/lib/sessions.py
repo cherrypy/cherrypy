@@ -560,11 +560,6 @@ class FileSession(Session):
         """Release the lock on the currently-loaded session data."""
         self.lock.close()
         self.locked = False
-        if not self._exists():
-            try:
-                os.unlink(self._get_file_path() + self.LOCK_SUFFIX)
-            except OSError:
-                pass
 
     def clean_up(self):
         """Clean up expired sessions."""
