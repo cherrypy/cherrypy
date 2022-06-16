@@ -557,7 +557,10 @@ class RequestObjectTests(helper.CPWebCase):
         ignore = helper.webtest.ignored_exceptions
         ignore.append(ValueError)
         try:
-            valerr = '\n    raise ValueError()\nValueError'
+            if sys.version_info >= (3, 11):
+                valerr = '\n    raise ValueError()\n    ^^^^^^^^^^^^^^^^^^\nValueError'
+            else:
+                valerr = '\n    raise ValueError()\nValueError'
             self.getPage('/error/page_method')
             self.assertErrorPage(500, pattern=valerr)
 

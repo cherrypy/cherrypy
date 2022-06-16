@@ -272,7 +272,10 @@ class ToolTests(helper.CPWebCase):
         self.getPage('/demo/ended/1')
         self.assertBody('True')
 
-        valerr = '\n    raise ValueError()\nValueError'
+        if sys.version_info >= (3, 11):
+            valerr = '\n    raise ValueError()\n    ^^^^^^^^^^^^^^^^^^\nValueError'
+        else:
+            valerr = '\n    raise ValueError()\nValueError'
         self.getPage('/demo/err?id=3')
         # If body is "razdrez", then on_end_request is being called too early.
         self.assertErrorPage(502, pattern=valerr)
