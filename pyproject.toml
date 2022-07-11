@@ -11,7 +11,7 @@ skip-string-normalization = true
 addopts = "--black"
 
 [tool.pytest-enabler.mypy]
-addopts = "--mypy"
+# addopts = "--mypy"
 
 [tool.pytest-enabler.flake8]
 addopts = "--flake8"
