@@ -34,28 +34,6 @@ repos:
         exclude: cherrypy/test/test.pem
     -   id: requirements-txt-fixer
 
--   repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
-    rev: v2.1.1
-    hooks:
-    -   id: pydocstyle
-        exclude: |
-            (?x)
-            tests/dist|
-            cherrypy/(
-                _cp(
-                    compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
-                )|
-                (
-                    lib/(
-                        auth|auth_basic|auth_digest|caching|covercp|
-                        cpstats|cptools|encoding|gctools|httpauth|httputil|
-                        jsontools|lockfile|locking|profiler|reprconf|sessions
-                    )|
-                    process/(plugins|servers|win32)
-                ).py|
-                test|tutorial
-            )
-
 -   repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
     rev: v1.1.0
     hooks:
