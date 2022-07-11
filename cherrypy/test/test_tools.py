@@ -33,7 +33,7 @@ europoundUnicode = ntou('\x80\xa3')
 
 
 class ToolTests(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
 
         # Put check_access in a custom toolbox with its own namespace

@@ -60,7 +60,7 @@ BIGFILE_SIZE = 32 * MB
 class StaticTest(helper.CPWebCase):
     files_to_remove = []
 
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
         if not os.path.exists(has_space_filepath):
             with open(has_space_filepath, 'wb') as f:

@@ -5,7 +5,7 @@ script_names = ['', '/path/to/myapp']
 
 
 class ProxyTest(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
 
         # Set up site

@@ -31,7 +31,7 @@ defined_http_methods = (
 
 
 class RequestObjectTests(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
         class Root:
             @cherrypy.expose

@@ -23,7 +23,7 @@ gif_bytes = (
 
 
 class CacheTest(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
         @cherrypy.config(**{'tools.caching.on': True})
         class Root:

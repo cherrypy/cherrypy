@@ -3,7 +3,7 @@ from cherrypy.test import helper
 
 
 class WSGI_Namespace_Test(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
         class WSGIResponse(object):
             def __init__(self, appresults):

@@ -172,7 +172,7 @@ class GCRoot(object):
     def index(self):
         return 'Hello, world!'
 
-    @cherrypy.expose
+    @cherrypy.expose  # noqa: C901
     def stats(self):  # noqa: C901
         output = ['Statistics:']
 

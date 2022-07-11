@@ -492,7 +492,7 @@ class StatsPage(object):
         },
     }
 
-    @cherrypy.expose
+    @cherrypy.expose  # noqa: C901
     def index(self):  # noqa: C901
         # Transform the raw data into pretty output for HTML
         yield """

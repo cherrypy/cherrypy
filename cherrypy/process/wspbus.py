@@ -432,7 +432,7 @@ class Bus(object):
             else subprocess._args_from_interpreter_flags()
         )
 
-    @staticmethod
+    @staticmethod  # noqa: C901
     def _get_true_argv():  # noqa: C901
         """Retrieve all real arguments of the python interpreter.
 

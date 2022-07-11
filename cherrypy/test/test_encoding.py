@@ -20,7 +20,7 @@ sing16 = sing.encode('utf-16')
 
 
 class EncodingTests(helper.CPWebCase):
-    @staticmethod
+    @staticmethod  # noqa: C901
     def setup_server():  # noqa: C901
         class Root:
             @cherrypy.expose
