@@ -240,7 +240,8 @@ class HTTPTests(helper.CPWebCase):
 
     def test_request_line_split_issue_1220(self):
         params = {
-            'intervenant-entreprise-evenement_classaction': 'evenement-mailremerciements',
+            'intervenant-entreprise-evenement_classaction': ''
+            'evenement-mailremerciements',
             '_path': 'intervenant-entreprise-evenement',
             'intervenant-entreprise-evenement_action-id': 19404,
             'intervenant-entreprise-evenement_id': 19404,
