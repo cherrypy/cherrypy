@@ -92,13 +92,17 @@ class NamespaceSet(dict):
                     handler(k, v)
 
     def __repr__(self):
-        return '%s.%s(%s)' % (self.__module__, self.__class__.__name__,
-                              dict.__repr__(self))
+        return '%s.%s(%s)' % (
+            self.__module__,
+            self.__class__.__name__,
+            dict.__repr__(self),
+        )
 
     def __copy__(self):
         newobj = self.__class__()
         newobj.update(self)
         return newobj
+
     copy = __copy__
 
 
@@ -179,9 +183,11 @@ class Parser(configparser.ConfigParser):
                     value = unrepr(value)
                 except Exception:
                     x = sys.exc_info()[1]
-                    msg = ('Config error in section: %r, option: %r, '
-                           'value: %r. Config values must be valid Python.' %
-                           (section, option, value))
+                    msg = (
+                        'Config error in section: %r, option: %r, '
+                        'value: %r. Config values must be valid Python.'
+                        % (section, option, value)
+                    )
                     raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
         return result
@@ -209,12 +215,10 @@ class Parser(configparser.ConfigParser):
 
 
 class _Builder:
-
     def build(self, o):
         m = getattr(self, 'build_' + o.__class__.__name__, None)
         if m is None:
-            raise TypeError('unrepr does not recognize %s' %
-                            repr(o.__class__.__name__))
+            raise TypeError('unrepr does not recognize %s' % repr(o.__class__.__name__))
         return m(o)
 
     def astnode(self, s):
@@ -241,6 +245,7 @@ class _Builder:
         https://greentreesnakes.readthedocs.org/en/latest/nodes.html
         """
         import ast
+
         callee = self.build(o.func)
         args = []
         if o.args is not None:
@@ -254,8 +259,9 @@ class _Builder:
             if kw.arg is None:  # double asterix `**`
                 rst = self.build(kw.value)
                 if not isinstance(rst, dict):
-                    raise TypeError('Invalid argument for call.'
-                                    'Must be a mapping object.')
+                    raise TypeError(
+                        'Invalid argument for call.' 'Must be a mapping object.'
+                    )
                 # give preference to the keys set directly from arg=value
                 for k, v in rst.items():
                     if k not in kwargs:
@@ -300,8 +306,7 @@ class _Builder:
         return o.n
 
     def build_Dict(self, o):
-        return dict([(self.build(k), self.build(v))
-                     for k, v in zip(o.keys, o.values)])
+        return dict([(self.build(k), self.build(v)) for k, v in zip(o.keys, o.values)])
 
     def build_Tuple(self, o):
         return tuple(self.build_List(o))
@@ -379,7 +384,7 @@ def attributes(full_attribute_name):
 
     # Parse out the path, module, and attribute
     last_dot = full_attribute_name.rfind('.')
-    attr_name = full_attribute_name[last_dot + 1:]
+    attr_name = full_attribute_name[last_dot + 1 :]
     mod_path = full_attribute_name[:last_dot]
 
     mod = modules(mod_path)
@@ -387,8 +392,9 @@ def attributes(full_attribute_name):
     try:
         attr = getattr(mod, attr_name)
     except AttributeError:
-        raise AttributeError("'%s' object has no attribute '%s'"
-                             % (mod_path, attr_name))
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (mod_path, attr_name)
+        )
 
     # Return a reference to the attribute.
     return attr

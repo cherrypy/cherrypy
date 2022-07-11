@@ -13,8 +13,12 @@ def json_processor(entity):
         cherrypy.serving.request.json = json.decode(body.decode('utf-8'))
 
 
-def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
-            force=True, debug=False, processor=json_processor):
+def json_in(
+    content_type=[ntou('application/json'), ntou('text/javascript')],
+    force=True,
+    debug=False,
+    processor=json_processor,
+):
     """Add a processor to parse JSON request entities:
     The default processor places the parsed data into request.json.
 
@@ -42,12 +46,14 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
 
     if force:
         if debug:
-            cherrypy.log('Removing body processors %s' %
-                         repr(request.body.processors.keys()), 'TOOLS.JSON_IN')
+            cherrypy.log(
+                'Removing body processors %s' % repr(request.body.processors.keys()),
+                'TOOLS.JSON_IN',
+            )
         request.body.processors.clear()
         request.body.default_proc = cherrypy.HTTPError(
-            415, 'Expected an entity of content type %s' %
-            ', '.join(content_type))
+            415, 'Expected an entity of content type %s' % ', '.join(content_type)
+        )
 
     for ct in content_type:
         if debug:
@@ -60,8 +66,7 @@ def json_handler(*args, **kwargs):
     return json.encode(value)
 
 
-def json_out(content_type='application/json', debug=False,
-             handler=json_handler):
+def json_out(content_type='application/json', debug=False, handler=json_handler):
     """Wrap request.handler to serialize its output to JSON. Sets Content-Type.
 
     If the given content_type is None, the Content-Type response header
@@ -78,12 +83,12 @@ def json_out(content_type='application/json', debug=False,
     if request.handler is None:
         return
     if debug:
-        cherrypy.log('Replacing %s with JSON handler' % request.handler,
-                     'TOOLS.JSON_OUT')
+        cherrypy.log(
+            'Replacing %s with JSON handler' % request.handler, 'TOOLS.JSON_OUT'
+        )
     request._json_inner_handler = request.handler
     request.handler = handler
     if content_type is not None:
         if debug:
-            cherrypy.log('Setting Content-Type to %s' %
-                         content_type, 'TOOLS.JSON_OUT')
+            cherrypy.log('Setting Content-Type to %s' % content_type, 'TOOLS.JSON_OUT')
         cherrypy.serving.response.headers['Content-Type'] = content_type

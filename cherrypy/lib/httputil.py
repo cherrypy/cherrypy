@@ -25,13 +25,17 @@ from cherrypy._cpcompat import ntob, ntou
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://github.com/cherrypy/cherrypy/issues/361
-response_codes[500] = ('Internal Server Error',
-                       'The server encountered an unexpected condition '
-                       'which prevented it from fulfilling the request.')
-response_codes[503] = ('Service Unavailable',
-                       'The server is currently unable to handle the '
-                       'request due to a temporary overloading or '
-                       'maintenance of the server.')
+response_codes[500] = (
+    'Internal Server Error',
+    'The server encountered an unexpected condition '
+    'which prevented it from fulfilling the request.',
+)
+response_codes[503] = (
+    'Service Unavailable',
+    'The server is currently unable to handle the '
+    'request due to a temporary overloading or '
+    'maintenance of the server.',
+)
 
 
 HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
@@ -211,8 +215,7 @@ class AcceptElement(HeaderElement):
             """
             raise cherrypy.HTTPError(
                 400,
-                'Malformed HTTP header: `{}`'.
-                format(str(self)),
+                'Malformed HTTP header: `{}`'.format(str(self)),
             ) from val_err
 
     def __cmp__(self, other):
@@ -232,8 +235,7 @@ RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return a sorted HeaderElement list from a comma-separated header string.
-    """
+    """Return a sorted HeaderElement list from a comma-separated header string."""
     if not fieldvalue:
         return []
 
@@ -299,12 +301,14 @@ def valid_status(status):
     try:
         code = int(code)
     except (TypeError, ValueError):
-        raise ValueError('Illegal response status from server '
-                         '(%s is non-numeric).' % repr(code))
+        raise ValueError(
+            'Illegal response status from server ' '(%s is non-numeric).' % repr(code)
+        )
 
     if code < 100 or code > 599:
-        raise ValueError('Illegal response status from server '
-                         '(%s is out of range).' % repr(code))
+        raise ValueError(
+            'Illegal response status from server ' '(%s is out of range).' % repr(code)
+        )
 
     if code not in response_codes:
         # code is unknown but not illegal
@@ -321,6 +325,7 @@ def valid_status(status):
 # NOTE: the parse_qs functions that follow are modified version of those
 # in the python3.0 source - we need to pass through an encoding to the unquote
 # method, but the default parse_qs function doesn't allow us to.  These do.
+
 
 def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
     """Parse a query given as a string argument.
@@ -409,8 +414,7 @@ class CaseInsensitiveDict(jaraco.collections.KeyTransformingDict):
 # replaced with a single SP before interpretation of the TEXT value."
 if str == bytes:
     header_translate_table = ''.join([chr(i) for i in range(256)])
-    header_translate_deletechars = ''.join(
-        [chr(i) for i in range(32)]) + chr(127)
+    header_translate_deletechars = ''.join([chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])
@@ -467,8 +471,7 @@ class HeaderMap(CaseInsensitiveDict):
 
         # See header_translate_* constants above.
         # Replace only if you really know what you're doing.
-        return item.translate(
-            header_translate_table, header_translate_deletechars)
+        return item.translate(header_translate_table, header_translate_deletechars)
 
     @classmethod
     def encode(cls, v):
@@ -486,11 +489,12 @@ class HeaderMap(CaseInsensitiveDict):
             # because we never want to fold lines--folding has
             # been deprecated by the HTTP working group.
             v = b2a_base64(v.encode('utf-8'))
-            return (b'=?utf-8?b?' + v.strip(b'\n') + b'?=')
+            return b'=?utf-8?b?' + v.strip(b'\n') + b'?='
 
-        raise ValueError('Could not encode header part %r using '
-                         'any of the encodings %r.' %
-                         (v, cls.encodings))
+        raise ValueError(
+            'Could not encode header part %r using '
+            'any of the encodings %r.' % (v, cls.encodings)
+        )
 
 
 class Host(object):

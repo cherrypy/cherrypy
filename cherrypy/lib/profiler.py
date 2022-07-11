@@ -47,8 +47,7 @@ try:
     import pstats
 
     def new_func_strip_path(func_name):
-        """Make profiler output more readable by adding `__init__` modules' parents
-        """
+        """Make profiler output more readable by adding `__init__` modules' parents"""
         filename, line, name = func_name
         if filename.endswith('__init__.py'):
             return (
@@ -68,7 +67,6 @@ _count = 0
 
 
 class Profiler(object):
-
     def __init__(self, path=None):
         if not path:
             path = os.path.join(os.path.dirname(__file__), 'profile')
@@ -87,14 +85,15 @@ class Profiler(object):
         return result
 
     def statfiles(self):
-        """:rtype: list of available profiles.
-        """
-        return [f for f in os.listdir(self.path)
-                if f.startswith('cp_') and f.endswith('.prof')]
+        """:rtype: list of available profiles."""
+        return [
+            f
+            for f in os.listdir(self.path)
+            if f.startswith('cp_') and f.endswith('.prof')
+        ]
 
     def stats(self, filename, sortby='cumulative'):
-        """:rtype stats(index): output of print_stats() for the given profile.
-        """
+        """:rtype stats(index): output of print_stats() for the given profile."""
         sio = io.StringIO()
         if sys.version_info >= (2, 5):
             s = pstats.Stats(os.path.join(self.path, filename), stream=sio)
@@ -135,8 +134,7 @@ class Profiler(object):
         runs = self.statfiles()
         runs.sort()
         for i in runs:
-            yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (
-                i, i)
+            yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (i, i)
 
     @cherrypy.expose
     def report(self, filename):
@@ -145,7 +143,6 @@ class Profiler(object):
 
 
 class ProfileAggregator(Profiler):
-
     def __init__(self, path=None):
         Profiler.__init__(self, path)
         global _count
@@ -160,7 +157,6 @@ class ProfileAggregator(Profiler):
 
 
 class make_app:
-
     def __init__(self, nextapp, path=None, aggregate=False):
         """Make a WSGI middleware app which wraps 'nextapp' with profiling.
 
@@ -178,11 +174,13 @@ class make_app:
 
         """
         if profile is None or pstats is None:
-            msg = ('Your installation of Python does not have a profile '
-                   "module. If you're on Debian, try "
-                   '`sudo apt-get install python-profiler`. '
-                   'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
-                   'for details.')
+            msg = (
+                'Your installation of Python does not have a profile '
+                "module. If you're on Debian, try "
+                '`sudo apt-get install python-profiler`. '
+                'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
+                'for details.'
+            )
             warnings.warn(msg)
 
         self.nextapp = nextapp
@@ -198,22 +196,28 @@ class make_app:
             for line in self.nextapp(environ, start_response):
                 result.append(line)
             return result
+
         return self.profiler.run(gather)
 
 
 def serve(path=None, port=8080):
     if profile is None or pstats is None:
-        msg = ('Your installation of Python does not have a profile module. '
-               "If you're on Debian, try "
-               '`sudo apt-get install python-profiler`. '
-               'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
-               'for details.')
+        msg = (
+            'Your installation of Python does not have a profile module. '
+            "If you're on Debian, try "
+            '`sudo apt-get install python-profiler`. '
+            'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
+            'for details.'
+        )
         warnings.warn(msg)
 
-    cherrypy.config.update({'server.socket_port': int(port),
-                            'server.thread_pool': 10,
-                            'environment': 'production',
-                            })
+    cherrypy.config.update(
+        {
+            'server.socket_port': int(port),
+            'server.thread_pool': 10,
+            'environment': 'production',
+        }
+    )
     cherrypy.quickstart(Profiler(path))
 
 

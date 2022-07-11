@@ -41,6 +41,7 @@ def checkpassword_dict(user_password_dict):
     checkpassword_dict(my_credentials_dict) as the value for the
     checkpassword argument to basic_auth().
     """
+
     def checkpassword(realm, user, password):
         p = user_password_dict.get(user)
         return p and p == password or False
@@ -99,16 +100,14 @@ def basic_auth(realm, checkpassword, debug=False, accept_charset='utf-8'):
 
     charset = accept_charset.upper()
     charset_declaration = (
-        (', charset="%s"' % charset)
-        if charset != fallback_charset
-        else ''
+        (', charset="%s"' % charset) if charset != fallback_charset else ''
     )
     # Respond with 401 status and a WWW-Authenticate header
-    cherrypy.serving.response.headers['www-authenticate'] = (
-        'Basic realm="%s"%s' % (realm, charset_declaration)
+    cherrypy.serving.response.headers['www-authenticate'] = 'Basic realm="%s"%s' % (
+        realm,
+        charset_declaration,
     )
-    raise cherrypy.HTTPError(
-        401, 'You are not authorized to access that resource')
+    raise cherrypy.HTTPError(401, 'You are not authorized to access that resource')
 
 
 def _try_decode(subject, charsets):

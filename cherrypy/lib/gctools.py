@@ -71,15 +71,32 @@ class ReferrerTree(object):
             return self.peek(repr(obj))
 
         if isinstance(obj, dict):
-            return '{' + ', '.join(['%s: %s' % (self._format(k, descend=False),
-                                                self._format(v, descend=False))
-                                    for k, v in obj.items()]) + '}'
+            return (
+                '{'
+                + ', '.join(
+                    [
+                        '%s: %s'
+                        % (
+                            self._format(k, descend=False),
+                            self._format(v, descend=False),
+                        )
+                        for k, v in obj.items()
+                    ]
+                )
+                + '}'
+            )
         elif isinstance(obj, list):
-            return '[' + ', '.join([self._format(item, descend=False)
-                                    for item in obj]) + ']'
+            return (
+                '['
+                + ', '.join([self._format(item, descend=False) for item in obj])
+                + ']'
+            )
         elif isinstance(obj, tuple):
-            return '(' + ', '.join([self._format(item, descend=False)
-                                    for item in obj]) + ')'
+            return (
+                '('
+                + ', '.join([self._format(item, descend=False) for item in obj])
+                + ')'
+            )
 
         r = self.peek(repr(obj))
         if isinstance(obj, (str, int, float)):
@@ -95,6 +112,7 @@ class ReferrerTree(object):
                 output.append(('    ' * depth) + self._format(parent))
                 if grandparents:
                     ascend(grandparents, depth + 1)
+
         ascend(tree)
         return output
 
@@ -104,7 +122,6 @@ def get_instances(cls):
 
 
 class RequestCounter(SimplePlugin):
-
     def start(self):
         self.count = 0
 
@@ -136,12 +153,19 @@ class GCRoot(object):
     """A CherryPy page handler for testing reference leaks."""
 
     classes = [
-        (_cprequest.Request, 2, 2,
-         'Should be 1 in this request thread and 1 in the main thread.'),
-        (_cprequest.Response, 2, 2,
-         'Should be 1 in this request thread and 1 in the main thread.'),
-        (_cpwsgi.AppResponse, 1, 1,
-         'Should be 1 in this request thread only.'),
+        (
+            _cprequest.Request,
+            2,
+            2,
+            'Should be 1 in this request thread and 1 in the main thread.',
+        ),
+        (
+            _cprequest.Response,
+            2,
+            2,
+            'Should be 1 in this request thread and 1 in the main thread.',
+        ),
+        (_cpwsgi.AppResponse, 1, 1, 'Should be 1 in this request thread only.'),
     ]
 
     @cherrypy.expose
@@ -195,22 +219,30 @@ class GCRoot(object):
             if lenobj < minobj or lenobj > maxobj:
                 if minobj == maxobj:
                     output.append(
-                        '\nExpected %s %r references, got %s.' %
-                        (minobj, cls, lenobj))
+                        '\nExpected %s %r references, got %s.' % (minobj, cls, lenobj)
+                    )
                 else:
                     output.append(
-                        '\nExpected %s to %s %r references, got %s.' %
-                        (minobj, maxobj, cls, lenobj))
+                        '\nExpected %s to %s %r references, got %s.'
+                        % (minobj, maxobj, cls, lenobj)
+                    )
 
                 for obj in objs:
                     if objgraph is not None:
                         ig = [id(objs), id(inspect.currentframe())]
                         fname = 'graph_%s_%s.png' % (cls.__name__, id(obj))
                         objgraph.show_backrefs(
-                            obj, extra_ignore=ig, max_depth=4, too_many=20,
-                            filename=fname, extra_info=get_context)
-                    output.append('\nReferrers for %s (refcount=%s):' %
-                                  (repr(obj), sys.getrefcount(obj)))
+                            obj,
+                            extra_ignore=ig,
+                            max_depth=4,
+                            too_many=20,
+                            filename=fname,
+                            extra_info=get_context,
+                        )
+                    output.append(
+                        '\nReferrers for %s (refcount=%s):'
+                        % (repr(obj), sys.getrefcount(obj))
+                    )
                     t = ReferrerTree(ignore=[objs], maxdepth=3)
                     tree = t.ascend(obj)
                     output.extend(t.format(tree))

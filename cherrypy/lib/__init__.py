@@ -10,6 +10,7 @@ def is_iterator(obj):
     but not iterators themselves.
     """
     from types import GeneratorType
+
     if isinstance(obj, GeneratorType):
         return True
     elif not hasattr(obj, '__iter__'):
@@ -28,6 +29,7 @@ def is_closable_iterator(obj):
 
     # A generator - the easiest thing to deal with.
     import inspect
+
     if inspect.isgenerator(obj):
         return True
 
@@ -68,6 +70,7 @@ class file_generator(object):
             if hasattr(self.input, 'close'):
                 self.input.close()
             raise StopIteration()
+
     next = __next__
 
     def __del__(self):
