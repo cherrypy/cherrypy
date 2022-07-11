@@ -37,10 +37,7 @@ class NativeGateway(cheroot.server.Gateway):
                 method = tonative(req.method)
                 path = tonative(req.path)
                 qs = tonative(req.qs or '')
-                headers = (
-                    (tonative(h), tonative(v))
-                    for h, v in req.inheaders.items()
-                )
+                headers = ((tonative(h), tonative(v)) for h, v in req.inheaders.items())
                 rfile = req.rfile
                 prev = None
 
@@ -48,7 +45,8 @@ class NativeGateway(cheroot.server.Gateway):
                     redirections = []
                     while True:
                         request, response = app.get_serving(
-                            local, remote, scheme, 'HTTP/1.1')
+                            local, remote, scheme, 'HTTP/1.1'
+                        )
                         request.multithread = True
                         request.multiprocess = False
                         request.app = app
@@ -58,9 +56,12 @@ class NativeGateway(cheroot.server.Gateway):
                         # response
                         try:
                             request.run(
-                                method, path, qs,
+                                method,
+                                path,
+                                qs,
                                 tonative(req.request_protocol),
-                                headers, rfile,
+                                headers,
+                                rfile,
                             )
                             break
                         except cherrypy.InternalRedirect:
@@ -72,7 +73,8 @@ class NativeGateway(cheroot.server.Gateway):
                                 if ir.path in redirections:
                                     raise RuntimeError(
                                         'InternalRedirector visited the same '
-                                        'URL twice: %r' % ir.path)
+                                        'URL twice: %r' % ir.path
+                                    )
                                 else:
                                     # Add the *previous* path_info + qs to
                                     # redirections.
@@ -87,8 +89,8 @@ class NativeGateway(cheroot.server.Gateway):
                             rfile = io.BytesIO()
 
                     self.send_response(
-                        response.output_status, response.header_list,
-                        response.body)
+                        response.output_status, response.header_list, response.body
+                    )
                 finally:
                     app.release_serving()
         except Exception:
@@ -108,7 +110,7 @@ class NativeGateway(cheroot.server.Gateway):
         # Set response headers
         for header, value in headers:
             req.outheaders.append((header, value))
-        if (req.ready and not req.sent_headers):
+        if req.ready and not req.sent_headers:
             req.sent_headers = True
             req.send_headers()
 
@@ -130,20 +132,21 @@ class CPHTTPServer(cheroot.server.HTTPServer):
         """Initialize CPHTTPServer."""
         self.server_adapter = server_adapter
 
-        server_name = (self.server_adapter.socket_host or
-                       self.server_adapter.socket_file or
-                       None)
+        server_name = (
+            self.server_adapter.socket_host or self.server_adapter.socket_file or None
+        )
 
         cheroot.server.HTTPServer.__init__(
-            self, server_adapter.bind_addr, NativeGateway,
+            self,
+            server_adapter.bind_addr,
+            NativeGateway,
             minthreads=server_adapter.thread_pool,
             maxthreads=server_adapter.thread_pool_max,
-            server_name=server_name)
+            server_name=server_name,
+        )
 
-        self.max_request_header_size = (
-            self.server_adapter.max_request_header_size or 0)
-        self.max_request_body_size = (
-            self.server_adapter.max_request_body_size or 0)
+        self.max_request_header_size = self.server_adapter.max_request_header_size or 0
+        self.max_request_body_size = self.server_adapter.max_request_body_size or 0
         self.request_queue_size = self.server_adapter.socket_queue_size
         self.timeout = self.server_adapter.socket_timeout
         self.shutdown_timeout = self.server_adapter.shutdown_timeout
@@ -157,7 +160,8 @@ class CPHTTPServer(cheroot.server.HTTPServer):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                self.server_adapter.ssl_ciphers,
+            )
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
@@ -165,4 +169,5 @@ class CPHTTPServer(cheroot.server.HTTPServer):
                 self.server_adapter.ssl_certificate,
                 self.server_adapter.ssl_private_key,
                 self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                self.server_adapter.ssl_ciphers,
+            )

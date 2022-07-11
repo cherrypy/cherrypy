@@ -22,11 +22,9 @@ favicon_path = os.path.join(os.getcwd(), localDir, '../favicon.ico')
 
 
 class CoreRequestHandlingTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'hello'
@@ -36,9 +34,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             @cherrypy.expose
             def defct(self, newct):
                 newct = 'text/%s' % newct
-                cherrypy.config.update({'tools.response_headers.on': True,
-                                        'tools.response_headers.headers':
-                                        [('Content-Type', newct)]})
+                cherrypy.config.update(
+                    {
+                        'tools.response_headers.on': True,
+                        'tools.response_headers.headers': [('Content-Type', newct)],
+                    }
+                )
 
             @cherrypy.expose
             def baseurl(self, path_info, relative=None):
@@ -53,17 +54,18 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             subclass, and adds an instance of the subclass as an attribute
             of root.
             """
+
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
                 for value in dct.values():
                     if isinstance(value, types.FunctionType):
                         value.exposed = True
                 setattr(root, name.lower(), cls())
-        Test = TestType('Test', (object, ), {})
+
+        Test = TestType('Test', (object,), {})
 
         @cherrypy.config(**{'tools.trailing_slash.on': False})
         class URL(Test):
-
             def index(self, path_info, relative=None):
                 if relative != 'server':
                     relative = bool(relative)
@@ -79,11 +81,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         def log_status():
             Status.statuses.append(cherrypy.response.status)
-        cherrypy.tools.log_status = cherrypy.Tool(
-            'on_end_resource', log_status)
+
+        cherrypy.tools.log_status = cherrypy.Tool('on_end_resource', log_status)
 
         class Status(Test):
-
             def index(self):
                 return 'normal'
 
@@ -115,12 +116,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return repr(self.statuses)
 
         class Redirect(Test):
-
-            @cherrypy.config(**{
-                'tools.err_redirect.on': True,
-                'tools.err_redirect.url': '/errpage',
-                'tools.err_redirect.internal': False,
-            })
+            @cherrypy.config(
+                **{
+                    'tools.err_redirect.on': True,
+                    'tools.err_redirect.url': '/errpage',
+                    'tools.err_redirect.internal': False,
+                }
+            )
             class Error:
                 @cherrypy.expose
                 def index(self):
@@ -155,7 +157,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
             def url_with_xss(self):
                 raise cherrypy.HTTPRedirect(
-                    "/some<script>alert(1);</script>url/that'we/want")
+                    "/some<script>alert(1);</script>url/that'we/want"
+                )
 
             def url_with_unicode(self):
                 raise cherrypy.HTTPRedirect(ntou('тест', 'utf-8'))
@@ -163,13 +166,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         def login_redir():
             if not getattr(cherrypy.request, 'login', None):
                 raise cherrypy.InternalRedirect('/internalredirect/login')
+
         tools.login_redir = _cptools.Tool('before_handler', login_redir)
 
         def redir_custom():
             raise cherrypy.InternalRedirect('/internalredirect/custom_err')
 
         class InternalRedirect(Test):
-
             def index(self):
                 raise cherrypy.InternalRedirect('/')
 
@@ -189,21 +192,25 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 if user_id == 'parrot':
                     # Trade it for a slug when redirecting
                     raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=slug')
+                        '/image/getImagesByUser?user_id=slug'
+                    )
                 elif user_id == 'terrier':
                     # Trade it for a fish when redirecting
                     raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=fish')
+                        '/image/getImagesByUser?user_id=fish'
+                    )
                 else:
                     # This should pass the user_id through to getImagesByUser
                     raise cherrypy.InternalRedirect(
-                        '/image/getImagesByUser?user_id=%s' % str(user_id))
+                        '/image/getImagesByUser?user_id=%s' % str(user_id)
+                    )
 
             # We support Python 2.3, but the @-deco syntax would look like
             # this:
             # @tools.login_redir()
             def secure(self):
                 return 'Welcome!'
+
             secure = tools.login_redir()(secure)
             # Since calling the tool returns the same function you pass in,
             # you could skip binding the return value, and just write:
@@ -220,12 +227,10 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                 return 'whatever'
 
         class Image(Test):
-
             def getImagesByUser(self, user_id):
                 return '0 images for %s' % user_id
 
         class Flatten(Test):
-
             def as_string(self):
                 return 'content'
 
@@ -244,17 +249,14 @@ class CoreRequestHandlingTest(helper.CPWebCase):
                     yield chunk
 
         class Ranges(Test):
-
             def get_ranges(self, bytes):
                 return repr(httputil.get_ranges('bytes=%s' % bytes, 8))
 
             def slice_file(self):
                 path = os.path.join(os.getcwd(), os.path.dirname(__file__))
-                return static.serve_file(
-                    os.path.join(path, 'static/index.html'))
+                return static.serve_file(os.path.join(path, 'static/index.html'))
 
         class Cookies(Test):
-
             def single(self, name):
                 cookie = cherrypy.request.cookie[name]
                 # Python2's SimpleCookie.__setitem__ won't take unicode keys.
@@ -267,23 +269,27 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             if debug:
                 cherrypy.log(
                     'Extending response headers with %s' % repr(header_list),
-                    'TOOLS.APPEND_HEADERS')
+                    'TOOLS.APPEND_HEADERS',
+                )
             cherrypy.serving.response.header_list.extend(header_list)
-        cherrypy.tools.append_headers = cherrypy.Tool(
-            'on_end_resource', append_headers)
+
+        cherrypy.tools.append_headers = cherrypy.Tool('on_end_resource', append_headers)
 
         class MultiHeader(Test):
-
             def header_list(self):
                 pass
-            header_list = cherrypy.tools.append_headers(header_list=[
-                (b'WWW-Authenticate', b'Negotiate'),
-                (b'WWW-Authenticate', b'Basic realm="foo"'),
-            ])(header_list)
+
+            header_list = cherrypy.tools.append_headers(
+                header_list=[
+                    (b'WWW-Authenticate', b'Negotiate'),
+                    (b'WWW-Authenticate', b'Basic realm="foo"'),
+                ]
+            )(header_list)
 
             def commas(self):
                 cherrypy.response.headers[
-                    'WWW-Authenticate'] = 'Negotiate,Basic realm="foo"'
+                    'WWW-Authenticate'
+                ] = 'Negotiate,Basic realm="foo"'
 
         cherrypy.tree.mount(root)
 
@@ -333,8 +339,9 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             # we're using a virtual root and the URI is "/vroot" (no slash).
             self.getPage('')
             self.assertStatus(301)
-            self.assertMatchesBody("<a href=(['\"])%s/\\1>%s/</a>" %
-                                   (self.base(), self.base()))
+            self.assertMatchesBody(
+                "<a href=(['\"])%s/\\1>%s/</a>" % (self.base(), self.base())
+            )
 
         # Test that requests for NON-index methods WITH a trailing slash
         # get redirected to the same URI path WITHOUT a trailing slash.
@@ -343,8 +350,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(301)
         self.assertMatchesBody(
             "<a href=(['\"])%s/redirect/by_code[?]code=307\\1>"
-            '%s/redirect/by_code[?]code=307</a>'
-            % (self.base(), self.base())
+            '%s/redirect/by_code[?]code=307</a>' % (self.base(), self.base())
         )
 
         # If the trailing_slash tool is off, CP should just continue
@@ -362,32 +368,38 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         self.getPage('/redirect/by_code?code=300')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(300)
 
         self.getPage('/redirect/by_code?code=301')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(301)
 
         self.getPage('/redirect/by_code?code=302')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(302)
 
         self.getPage('/redirect/by_code?code=303')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(303)
 
         self.getPage('/redirect/by_code?code=307')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(307)
 
         self.getPage('/redirect/by_code?code=308')
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>")
+            r"<a href=(['\"])(.*)somewhere%20else\1>\2somewhere%20else</a>"
+        )
         self.assertStatus(308)
 
         self.getPage('/redirect/nomodify')
@@ -417,8 +429,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         frag = 'foo'
         self.getPage('/redirect/fragment/%s' % frag)
         self.assertMatchesBody(
-            r"<a href=(['\"])(.*)\/some\/url\#%s\1>\2\/some\/url\#%s</a>" % (
-                frag, frag))
+            r"<a href=(['\"])(.*)\/some\/url\#%s\1>\2\/some\/url\#%s</a>" % (frag, frag)
+        )
         loc = self.assertHeader('Location')
         assert loc.endswith('#%s' % frag)
         self.assertStatus(('302 Found', '303 See Other'))
@@ -427,7 +439,8 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         # See https://github.com/cherrypy/cherrypy/issues/1003
         self.getPage(
             '/redirect/custom?'
-            'code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval')
+            'code=303&url=/foobar/%0d%0aSet-Cookie:%20somecookie=someval'
+        )
         self.assertStatus(303)
         loc = self.assertHeader('Location')
         assert 'Set-Cookie' in loc
@@ -435,6 +448,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
         def assertValidXHTML():
             from xml.etree import ElementTree
+
             try:
                 ElementTree.fromstring(
                     '<html><body>%s</body></html>' % self.body,
@@ -483,8 +497,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
 
         # Test passthrough
-        self.getPage(
-            '/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film')
+        self.getPage('/internalredirect/petshop?user_id=Sir-not-appearing-in-this-film')
         self.assertBody('0 images for Sir-not-appearing-in-this-film')
         self.assertStatus(200)
 
@@ -494,14 +507,12 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertStatus(200)
 
         # Test POST
-        self.getPage('/internalredirect/petshop', method='POST',
-                     body='user_id=terrier')
+        self.getPage('/internalredirect/petshop', method='POST', body='user_id=terrier')
         self.assertBody('0 images for fish')
         self.assertStatus(200)
 
         # Test ir before body read
-        self.getPage('/internalredirect/early_ir', method='POST',
-                     body='arg=aha!')
+        self.getPage('/internalredirect/early_ir', method='POST', body='arg=aha!')
         self.assertBody('Something went horribly wrong.')
         self.assertStatus(200)
 
@@ -521,9 +532,13 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('Something went horribly wrong.')
 
     def testFlatten(self):
-        for url in ['/flatten/as_string', '/flatten/as_list',
-                    '/flatten/as_yield', '/flatten/as_dblyield',
-                    '/flatten/as_refyield']:
+        for url in [
+            '/flatten/as_string',
+            '/flatten/as_list',
+            '/flatten/as_yield',
+            '/flatten/as_dblyield',
+            '/flatten/as_refyield',
+        ]:
             self.getPage(url)
             self.assertBody('content')
 
@@ -555,18 +570,20 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             ct = self.assertHeader('Content-Type')
             expected_type = 'multipart/byteranges; boundary='
             assert ct.startswith(expected_type)
-            boundary = ct[len(expected_type):]
-            expected_body = ('\r\n--%s\r\n'
-                             'Content-type: text/html\r\n'
-                             'Content-range: bytes 4-6/14\r\n'
-                             '\r\n'
-                             'o, \r\n'
-                             '--%s\r\n'
-                             'Content-type: text/html\r\n'
-                             'Content-range: bytes 2-5/14\r\n'
-                             '\r\n'
-                             'llo,\r\n'
-                             '--%s--\r\n' % (boundary, boundary, boundary))
+            boundary = ct[len(expected_type) :]
+            expected_body = (
+                '\r\n--%s\r\n'
+                'Content-type: text/html\r\n'
+                'Content-range: bytes 4-6/14\r\n'
+                '\r\n'
+                'o, \r\n'
+                '--%s\r\n'
+                'Content-type: text/html\r\n'
+                'Content-range: bytes 2-5/14\r\n'
+                '\r\n'
+                'llo,\r\n'
+                '--%s--\r\n' % (boundary, boundary, boundary)
+            )
             self.assertBody(expected_body)
             self.assertHeader('Content-Length')
 
@@ -608,18 +625,22 @@ class CoreRequestHandlingTest(helper.CPWebCase):
     def testCookies(self):
         self.skip_if_bad_cookies()
 
-        self.getPage('/cookies/single?name=First',
-                     [('Cookie', 'First=Dinsdale;')])
+        self.getPage('/cookies/single?name=First', [('Cookie', 'First=Dinsdale;')])
         self.assertHeader('Set-Cookie', 'First=Dinsdale')
 
-        self.getPage('/cookies/multiple?names=First&names=Last',
-                     [('Cookie', 'First=Dinsdale; Last=Piranha;'),
-                      ])
+        self.getPage(
+            '/cookies/multiple?names=First&names=Last',
+            [
+                ('Cookie', 'First=Dinsdale; Last=Piranha;'),
+            ],
+        )
         self.assertHeader('Set-Cookie', 'First=Dinsdale')
         self.assertHeader('Set-Cookie', 'Last=Piranha')
 
-        self.getPage('/cookies/single?name=Something-With%2CComma',
-                     [('Cookie', 'Something-With,Comma=some-value')])
+        self.getPage(
+            '/cookies/single?name=Something-With%2CComma',
+            [('Cookie', 'Something-With,Comma=some-value')],
+        )
         self.assertStatus(400)
 
     def testDefaultContentType(self):
@@ -634,9 +655,11 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.getPage('/multiheader/header_list')
         self.assertEqual(
             [(k, v) for k, v in self.headers if k == 'WWW-Authenticate'],
-            [('WWW-Authenticate', 'Negotiate'),
-             ('WWW-Authenticate', 'Basic realm="foo"'),
-             ])
+            [
+                ('WWW-Authenticate', 'Negotiate'),
+                ('WWW-Authenticate', 'Basic realm="foo"'),
+            ],
+        )
         self.getPage('/multiheader/commas')
         self.assertHeader('WWW-Authenticate', 'Negotiate,Basic realm="foo"')
 
@@ -648,8 +671,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
         self.assertBody('%s/url/page1' % self.base())
         # Other host header
         host = 'www.mydomain.example'
-        self.getPage('/url/leaf?path_info=page1',
-                     headers=[('Host', host)])
+        self.getPage('/url/leaf?path_info=page1', headers=[('Host', host)])
         self.assertBody('%s://%s/url/page1' % (self.scheme, host))
 
         # Input is 'absolute'; that is, relative to script_name
@@ -762,17 +784,15 @@ class CoreRequestHandlingTest(helper.CPWebCase):
 
 
 class ErrorTests(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         def break_header():
             # Add a header after finalize that is invalid
             cherrypy.serving.response.header_list.append((2, 3))
-        cherrypy.tools.break_header = cherrypy.Tool(
-            'on_end_resource', break_header)
+
+        cherrypy.tools.break_header = cherrypy.Tool('on_end_resource', break_header)
 
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'hello'
@@ -793,16 +813,15 @@ class ErrorTests(helper.CPWebCase):
     def test_start_response_error(self):
         self.getPage('/start_response_error')
         self.assertStatus(500)
-        self.assertInBody(
-            'TypeError: response.header_list key 2 is not a byte string.')
+        self.assertInBody('TypeError: response.header_list key 2 is not a byte string.')
 
     def test_contextmanager(self):
         self.getPage('/stat/missing')
         self.assertStatus(404)
         body_text = self.body.decode('utf-8')
         assert (
-            'No such file or directory' in body_text or
-            'cannot find the file specified' in body_text
+            'No such file or directory' in body_text
+            or 'cannot find the file specified' in body_text
         )
 
 

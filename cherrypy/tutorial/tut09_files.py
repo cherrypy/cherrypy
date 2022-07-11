@@ -51,7 +51,6 @@ absDir = os.path.join(os.getcwd(), localDir)
 
 
 class FileDemo(object):
-
     @cherrypy.expose
     def index(self):
         return """
@@ -92,8 +91,9 @@ class FileDemo(object):
     @cherrypy.expose
     def download(self):
         path = os.path.join(absDir, 'pdf_file.pdf')
-        return static.serve_file(path, 'application/x-download',
-                                 'attachment', os.path.basename(path))
+        return static.serve_file(
+            path, 'application/x-download', 'attachment', os.path.basename(path)
+        )
 
 
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')

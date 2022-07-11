@@ -14,8 +14,10 @@ class ParamsTest(helper.CPWebCase):
             @cherrypy.tools.params()
             def resource(self, limit=None, sort=None):
                 return type(limit).__name__
+
             # for testing on Py 2
             resource.__annotations__ = {'limit': int}
+
         conf = {'/': {'tools.params.on': True}}
         cherrypy.tree.mount(Root(), config=conf)
 
@@ -45,7 +47,8 @@ class ParamsTest(helper.CPWebCase):
     def test_syntax(self):
         if sys.version_info < (3,):
             return self.skip('skipped (Python 3 only)')
-        code = textwrap.dedent("""
+        code = textwrap.dedent(
+            """
             class Root:
                 @cherrypy.expose
                 @cherrypy.tools.params()
@@ -53,7 +56,8 @@ class ParamsTest(helper.CPWebCase):
                     return type(limit).__name__
             conf = {'/': {'tools.params.on': True}}
             cherrypy.tree.mount(Root(), config=conf)
-            """)
+            """
+        )
         exec(code)
 
         self.getPage('/resource?limit=0')

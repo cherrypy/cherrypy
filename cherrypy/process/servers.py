@@ -177,6 +177,7 @@ class ServerAdapter(object):
                 portend.free(*self.bind_addr, timeout=Timeouts.free)
 
         import threading
+
         t = threading.Thread(target=self._start_http_thread)
         t.name = 'HTTPServer ' + t.name
         t.start()
@@ -184,6 +185,7 @@ class ServerAdapter(object):
         self.wait()
         self.running = True
         self.bus.log('Serving on %s' % self.description)
+
     start.priority = 75
 
     @property
@@ -234,8 +236,9 @@ class ServerAdapter(object):
             raise
         except Exception:
             self.interrupt = sys.exc_info()[1]
-            self.bus.log('Error in HTTP server: shutting down',
-                         traceback=True, level=40)
+            self.bus.log(
+                'Error in HTTP server: shutting down', traceback=True, level=40
+            )
             self.bus.exit()
             raise
 
@@ -244,7 +247,7 @@ class ServerAdapter(object):
         while not getattr(self.httpserver, 'ready', False):
             if self.interrupt:
                 raise self.interrupt
-            time.sleep(.1)
+            time.sleep(0.1)
 
         # bypass check when LISTEN_PID is set
         if os.environ.get('LISTEN_PID', None):
@@ -283,6 +286,7 @@ class ServerAdapter(object):
             self.bus.log('HTTP Server %s shut down' % self.httpserver)
         else:
             self.bus.log('HTTP Server %s already shut down' % self.httpserver)
+
     stop.priority = 25
 
     def restart(self):
@@ -322,11 +326,13 @@ class FlupFCGIServer(object):
     def __init__(self, *args, **kwargs):
         if kwargs.get('bindAddress', None) is None:
             import socket
+
             if not hasattr(socket, 'fromfd'):
                 raise ValueError(
                     'Dynamic FCGI server not available on this platform. '
                     'You must use a static or external one by providing a '
-                    'legal bindAddress.')
+                    'legal bindAddress.'
+                )
         self.args = args
         self.kwargs = kwargs
         self.ready = False
@@ -336,6 +342,7 @@ class FlupFCGIServer(object):
         # We have to instantiate the server class here because its __init__
         # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.fcgi import WSGIServer
+
         self.fcgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:
@@ -356,8 +363,7 @@ class FlupFCGIServer(object):
         # Forcibly stop the fcgi server main event loop.
         self.fcgiserver._keepGoing = False
         # Force all worker threads to die off.
-        self.fcgiserver._threadPool.maxSpare = (
-            self.fcgiserver._threadPool._idleCount)
+        self.fcgiserver._threadPool.maxSpare = self.fcgiserver._threadPool._idleCount
         self.ready = False
 
 
@@ -375,6 +381,7 @@ class FlupSCGIServer(object):
         # We have to instantiate the server class here because its __init__
         # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.scgi import WSGIServer
+
         self.scgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:

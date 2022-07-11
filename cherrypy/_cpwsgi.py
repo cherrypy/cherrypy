@@ -18,8 +18,7 @@ from cherrypy.lib import is_closable_iterator
 
 
 def downgrade_wsgi_ux_to_1x(environ):
-    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ.
-    """
+    """Return a new environ dict for WSGI 1.x from the given WSGI u.x environ."""
     env1x = {}
 
     url_encoding = environ[ntou('wsgi.url_encoding')]
@@ -55,6 +54,7 @@ class VirtualHost(object):
 
         cherrypy.tree.graft(vhost)
     """
+
     default = None
     """Required. The default WSGI application."""
 
@@ -122,9 +122,7 @@ class InternalRedirector(object):
                         new_uri += '?' + ir.query_string
                     if new_uri in redirections:
                         ir.request.close()
-                        tmpl = (
-                            'InternalRedirector visited the same URL twice: %r'
-                        )
+                        tmpl = 'InternalRedirector visited the same URL twice: %r'
                         raise RuntimeError(tmpl % new_uri)
 
                 # Munge the environment and try again.
@@ -145,12 +143,7 @@ class ExceptionTrapper(object):
         self.throws = throws
 
     def __call__(self, environ, start_response):
-        return _TrappedResponse(
-            self.nextapp,
-            environ,
-            start_response,
-            self.throws
-        )
+        return _TrappedResponse(self.nextapp, environ, start_response, self.throws)
 
 
 class _TrappedResponse(object):
@@ -164,7 +157,9 @@ class _TrappedResponse(object):
         self.throws = throws
         self.started_response = False
         self.response = self.trap(
-            self.nextapp, self.environ, self.start_response,
+            self.nextapp,
+            self.environ,
+            self.start_response,
         )
         self.iter_response = iter(self.response)
 
@@ -195,10 +190,7 @@ class _TrappedResponse(object):
             if True:
                 # What fun.
                 s = s.decode('ISO-8859-1')
-                h = [
-                    (k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
-                    for k, v in h
-                ]
+                h = [(k.decode('ISO-8859-1'), v.decode('ISO-8859-1')) for k, v in h]
             if self.started_response:
                 # Empty our iterable (so future calls raise StopIteration)
                 self.iter_response = iter([])
@@ -247,9 +239,7 @@ class AppResponse(object):
                     tmpl = 'response.header_list key %r is not a byte string.'
                     raise TypeError(tmpl % k)
                 if not isinstance(v, bytes):
-                    tmpl = (
-                        'response.header_list value %r is not a byte string.'
-                    )
+                    tmpl = 'response.header_list value %r is not a byte string.'
                     raise TypeError(tmpl % v)
                 outheaders.append((k, v))
 
@@ -349,7 +339,8 @@ class AppResponse(object):
         old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
         new_enc = self.cpapp.find_config(
             self.environ.get('PATH_INFO', ''),
-            'request.uri_encoding', 'utf-8',
+            'request.uri_encoding',
+            'utf-8',
         )
         if new_enc.lower() == old_enc.lower():
             return

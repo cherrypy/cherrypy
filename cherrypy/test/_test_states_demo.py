@@ -8,7 +8,6 @@ starttime = time.time()
 
 
 class Root:
-
     @cherrypy.expose
     def index(self):
         return 'Hello World'
@@ -46,9 +45,11 @@ def unsub_sig():
     except ImportError:
         pass
     else:
+
         def old_term_handler(signum=None, frame=None):
             cherrypy.log('I am an old SIGTERM handler.')
             sys.exit(0)
+
         cherrypy.log('Subscribing the new one.')
         signal(SIGTERM, old_term_handler)
 
@@ -62,8 +63,7 @@ def starterror():
 @cherrypy.engine.subscribe('start', priority=6)
 def log_test_case_name():
     if cherrypy.config.get('test_case_name', False):
-        cherrypy.log('STARTED FROM: %s' %
-                     cherrypy.config.get('test_case_name'))
+        cherrypy.log('STARTED FROM: %s' % cherrypy.config.get('test_case_name'))
 
 
 cherrypy.tree.mount(Root(), '/', {'/': {}})

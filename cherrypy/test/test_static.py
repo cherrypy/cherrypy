@@ -53,7 +53,7 @@ bigfile_filepath = curdir / 'static' / 'bigfile.log'
 # The file size needs to be big enough such that half the size of it
 # won't be socket-buffered (or server-buffered) all in one go. See
 # test_file_stream.
-MB = 2 ** 20
+MB = 2**20
 BIGFILE_SIZE = 32 * MB
 
 
@@ -66,15 +66,14 @@ class StaticTest(helper.CPWebCase):
             with open(has_space_filepath, 'wb') as f:
                 f.write(b'Hello, world\r\n')
         needs_bigfile = (
-            not os.path.exists(bigfile_filepath) or
-            os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
+            not os.path.exists(bigfile_filepath)
+            or os.path.getsize(bigfile_filepath) != BIGFILE_SIZE
         )
         if needs_bigfile:
             with open(bigfile_filepath, 'wb') as f:
                 f.write(b'x' * BIGFILE_SIZE)
 
         class Root:
-
             @cherrypy.expose
             @cherrypy.config(**{'response.stream': True})
             def bigfile(self):
@@ -102,17 +101,18 @@ class StaticTest(helper.CPWebCase):
                 return static.serve_file(
                     __file__,
                     disposition='attachment',
-                    name='has_utf-8_character_☃.html')
+                    name='has_utf-8_character_☃.html',
+                )
 
             @cherrypy.expose
             def serve_fileobj_utf8_filename(self):
                 return static.serve_fileobj(
                     io.BytesIO('☃\nfie\nfo\nfum'.encode('utf-8')),
                     disposition='attachment',
-                    name='has_utf-8_character_☃.html')
+                    name='has_utf-8_character_☃.html',
+                )
 
         class Static:
-
             @cherrypy.expose
             def index(self):
                 return 'You want the Baron? You can have the Baron!'
@@ -153,7 +153,7 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.root': curdir,
                 'tools.staticdir.dir': 'static',
                 'error_page.404': error_page_404,
-            }
+            },
         }
         rootApp = cherrypy.Application(root)
         rootApp.merge(rootconf)
@@ -211,8 +211,9 @@ class StaticTest(helper.CPWebCase):
         ascii_fn = 'has_utf-8_character_.html'
         url_quote_fn = 'has_utf-8_character_%E2%98%83.html'  # %E2%98%83 == ☃
         expected_content_disposition = (
-            'attachment; filename="{!s}"; filename*=UTF-8\'\'{!s}'.
-            format(ascii_fn, url_quote_fn)
+            'attachment; filename="{!s}"; filename*=UTF-8\'\'{!s}'.format(
+                ascii_fn, url_quote_fn
+            )
         )
 
         self.getPage('/serve_file_utf8_filename')
@@ -255,8 +256,7 @@ class StaticTest(helper.CPWebCase):
         self.assertHeader('Location', '%s/docroot/' % self.base())
         self.assertMatchesBody(
             "This resource .* <a href=(['\"])%s/docroot/\\1>"
-            '%s/docroot/</a>.'
-            % (self.base(), self.base())
+            '%s/docroot/</a>.' % (self.base(), self.base())
         )
 
     def test_config_errors(self):
@@ -265,8 +265,7 @@ class StaticTest(helper.CPWebCase):
         self.assertErrorPage(500)
         if sys.version_info >= (3, 3):
             errmsg = (
-                r'TypeError: staticdir\(\) missing 2 '
-                'required positional arguments'
+                r'TypeError: staticdir\(\) missing 2 ' 'required positional arguments'
             )
         else:
             errmsg = (
@@ -347,8 +346,8 @@ class StaticTest(helper.CPWebCase):
             else:
                 newconn = HTTPConnection
             s, h, b = helper.webtest.openURL(
-                b'/tell', headers=[], host=self.HOST, port=self.PORT,
-                http_conn=newconn)
+                b'/tell', headers=[], host=self.HOST, port=self.PORT, http_conn=newconn
+            )
             if not b:
                 # The file was closed on the server.
                 tell_position = BIGFILE_SIZE
@@ -382,17 +381,21 @@ class StaticTest(helper.CPWebCase):
                         'The file should have advanced to position %r, but '
                         'has already advanced to the end of the file. It '
                         'may not be streamed as intended, or at the wrong '
-                        'chunk size (64k)' % read_so_far)
+                        'chunk size (64k)' % read_so_far
+                    )
             elif tell_position < read_so_far:
                 self.fail(
                     'The file should have advanced to position %r, but has '
                     'only advanced to position %r. It may not be streamed '
-                    'as intended, or at the wrong chunk size (64k)' %
-                    (read_so_far, tell_position))
+                    'as intended, or at the wrong chunk size (64k)'
+                    % (read_so_far, tell_position)
+                )
 
         if body != b'x' * BIGFILE_SIZE:
-            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
-                      (BIGFILE_SIZE, body[:50], len(body)))
+            self.fail(
+                "Body != 'x' * %d. Got %r instead (%d bytes)."
+                % (BIGFILE_SIZE, body[:50], len(body))
+            )
         conn.close()
 
     def test_file_stream_deadlock(self):
@@ -412,8 +415,10 @@ class StaticTest(helper.CPWebCase):
         self.assertEqual(response.status, 200)
         body = response.fp.read(65536)
         if body != b'x' * len(body):
-            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
-                      (65536, body[:50], len(body)))
+            self.fail(
+                "Body != 'x' * %d. Got %r instead (%d bytes)."
+                % (65536, body[:50], len(body))
+            )
         response.close()
         conn.close()
 
@@ -421,8 +426,10 @@ class StaticTest(helper.CPWebCase):
         self.persistent = False
         self.getPage('/bigfile')
         if self.body != b'x' * BIGFILE_SIZE:
-            self.fail("Body != 'x' * %d. Got %r instead (%d bytes)." %
-                      (BIGFILE_SIZE, self.body[:50], len(body)))
+            self.fail(
+                "Body != 'x' * %d. Got %r instead (%d bytes)."
+                % (BIGFILE_SIZE, self.body[:50], len(body))
+            )
 
     def test_error_page_with_serve_file(self):
         self.getPage('/404test/yunyeen')
@@ -442,7 +449,7 @@ class StaticTest(helper.CPWebCase):
     def unicode_file(cls):
         filename = ntou('Слава Україні.html', 'utf-8')
         filepath = curdir / 'static' / filename
-        with filepath.open('w', encoding='utf-8')as strm:
+        with filepath.open('w', encoding='utf-8') as strm:
             strm.write(ntou('Героям Слава!', 'utf-8'))
         cls.files_to_remove.append(filepath)
 

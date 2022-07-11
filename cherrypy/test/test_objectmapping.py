@@ -8,11 +8,9 @@ script_names = ['', '/foo', '/users/fred/blog', '/corp/blog']
 
 
 class ObjectMappingTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self, name='world'):
                 return name
@@ -55,26 +53,26 @@ class ObjectMappingTest(helper.CPWebCase):
         @cherrypy.expose
         def mapped_func(self, ID=None):
             return 'ID is %s' % ID
+
         setattr(Root, 'Von B\xfclow', mapped_func)
 
         class Exposing:
-
             @cherrypy.expose
             def base(self):
                 return 'expose works!'
+
             cherrypy.expose(base, '1')
             cherrypy.expose(base, '2')
 
         class ExposingNewStyle(object):
-
             @cherrypy.expose
             def base(self):
                 return 'expose works!'
+
             cherrypy.expose(base, '1')
             cherrypy.expose(base, '2')
 
         class Dir1:
-
             @cherrypy.expose
             def index(self):
                 return 'index for dir1'
@@ -83,14 +81,14 @@ class ObjectMappingTest(helper.CPWebCase):
             @cherrypy.config(**{'tools.trailing_slash.extra': True})
             def myMethod(self):
                 return 'myMethod from dir1, path_info is:' + repr(
-                    cherrypy.request.path_info)
+                    cherrypy.request.path_info
+                )
 
             @cherrypy.expose
             def default(self, *params):
                 return 'default for dir1, param is:' + repr(params)
 
         class Dir2:
-
             @cherrypy.expose
             def index(self):
                 return 'index for dir2, path is:' + cherrypy.request.path_info
@@ -108,17 +106,14 @@ class ObjectMappingTest(helper.CPWebCase):
                 return '/'.join(vpath)
 
         class Dir3:
-
             def default(self):
                 return 'default for dir3, not exposed'
 
         class Dir4:
-
             def index(self):
                 return 'index for dir4, not exposed'
 
         class DefNoIndex:
-
             @cherrypy.expose
             def default(self, *args):
                 raise cherrypy.HTTPRedirect('contact')
@@ -126,7 +121,6 @@ class ObjectMappingTest(helper.CPWebCase):
         # MethodDispatcher code
         @cherrypy.expose
         class ByMethod:
-
             def __init__(self, *things):
                 self.things = list(things)
 
@@ -151,14 +145,14 @@ class ObjectMappingTest(helper.CPWebCase):
 
         d = cherrypy.dispatch.MethodDispatcher()
         for url in script_names:
-            conf = {'/': {'user': (url or '/').split('/')[-2]},
-                    '/bymethod': {'request.dispatch': d},
-                    '/collection': {'request.dispatch': d},
-                    }
+            conf = {
+                '/': {'user': (url or '/').split('/')[-2]},
+                '/bymethod': {'request.dispatch': d},
+                '/collection': {'request.dispatch': d},
+            }
             cherrypy.tree.mount(Root(), url, conf)
 
         class Isolated:
-
             @cherrypy.expose
             def index(self):
                 return 'made it!'
@@ -167,12 +161,10 @@ class ObjectMappingTest(helper.CPWebCase):
 
         @cherrypy.expose
         class AnotherApp:
-
             def GET(self):
                 return 'milk'
 
-        cherrypy.tree.mount(AnotherApp(), '/app',
-                            {'/': {'request.dispatch': d}})
+        cherrypy.tree.mount(AnotherApp(), '/app', {'/': {'request.dispatch': d}})
 
     def testObjectMapping(self):
         for url in script_names:
@@ -182,12 +174,10 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertBody('world')
 
             self.getPage('/dir1/myMethod')
-            self.assertBody(
-                "myMethod from dir1, path_info is:'/dir1/myMethod'")
+            self.assertBody("myMethod from dir1, path_info is:'/dir1/myMethod'")
 
             self.getPage('/this/method/does/not/exist')
-            self.assertBody(
-                "default:('this', 'method', 'does', 'not', 'exist')")
+            self.assertBody("default:('this', 'method', 'does', 'not', 'exist')")
 
             self.getPage('/extra/too/much')
             self.assertBody("('too', 'much')")
@@ -214,7 +204,8 @@ class ObjectMappingTest(helper.CPWebCase):
             # Test that default method must be exposed in order to match.
             self.getPage('/dir1/dir2/dir3/dir4/index')
             self.assertBody(
-                "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')")
+                "default for dir1, param is:('dir2', 'dir3', 'dir4', 'index')"
+            )
 
             # Test *vpath when default() is defined but not index()
             # This also tests HTTPRedirect with default.
@@ -223,12 +214,10 @@ class ObjectMappingTest(helper.CPWebCase):
             self.assertHeader('Location', '%s/contact' % self.base())
             self.getPage('/defnoindex/')
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s/defnoindex/contact' %
-                              self.base())
+            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
             self.getPage('/defnoindex/page')
             self.assertStatus((302, 303))
-            self.assertHeader('Location', '%s/defnoindex/contact' %
-                              self.base())
+            self.assertHeader('Location', '%s/defnoindex/contact' % self.base())
 
             self.getPage('/redirect')
             self.assertStatus('302 Found')
@@ -262,8 +251,10 @@ class ObjectMappingTest(helper.CPWebCase):
         self.getPage('http://%s:%s/' % (self.interface(), self.PORT))
         self.assertBody('world')
 
-        self.getPage('http://%s:%s/abs/?service=http://192.168.0.1/x/y/z' %
-                     (self.interface(), self.PORT))
+        self.getPage(
+            'http://%s:%s/abs/?service=http://192.168.0.1/x/y/z'
+            % (self.interface(), self.PORT)
+        )
         self.assertBody("default:('abs',)")
 
         self.getPage('/rel/?service=http://192.168.120.121:8000/x/y/z')
@@ -387,7 +378,6 @@ class ObjectMappingTest(helper.CPWebCase):
 
     def testTreeMounting(self):
         class Root(object):
-
             @cherrypy.expose
             def hello(self):
                 return 'Hello world!'
@@ -418,11 +408,13 @@ class ObjectMappingTest(helper.CPWebCase):
     def testKeywords(self):
         if sys.version_info < (3,):
             return self.skip('skipped (Python 3 only)')
-        exec("""class Root(object):
+        exec(
+            """class Root(object):
     @cherrypy.expose
     def hello(self, *, name='world'):
         return 'Hello %s!' % name
-cherrypy.tree.mount(Application(Root(), '/keywords'))""")
+cherrypy.tree.mount(Application(Root(), '/keywords'))"""
+        )
 
         self.getPage('/keywords/hello')
         self.assertStatus(200)

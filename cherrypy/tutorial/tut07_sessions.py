@@ -26,10 +26,13 @@ class HitCounter:
         cherrypy.session['count'] = count
 
         # And display a silly hit count message!
-        return '''
+        return (
+            '''
             During your current session, you've viewed this
             page %s times! Your life is a patio of fun!
-        ''' % count
+        '''
+            % count
+        )
 
 
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')

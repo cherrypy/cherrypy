@@ -11,7 +11,6 @@ import cherrypy
 
 
 class HomePage:
-
     @cherrypy.expose
     def index(self):
         return '''
@@ -25,7 +24,6 @@ class HomePage:
 
 
 class JokePage:
-
     @cherrypy.expose
     def index(self):
         return '''
@@ -35,7 +33,6 @@ class JokePage:
 
 
 class LinksPage:
-
     def __init__(self):
         # Request handler objects can create their own nested request
         # handler objects. Simply create them inside their __init__
@@ -68,7 +65,6 @@ class LinksPage:
 
 
 class ExtraLinksPage:
-
     @cherrypy.expose
     def index(self):
         # Note the relative link back to the Links page!

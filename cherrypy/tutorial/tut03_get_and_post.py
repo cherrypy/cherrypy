@@ -10,7 +10,6 @@ import cherrypy
 
 
 class WelcomePage:
-
     @cherrypy.expose
     def index(self):
         # Ask for the user's name.

@@ -47,7 +47,6 @@ def shutdown_server():
 @pytest.fixture
 def configure_server(access_log_file, error_log_file):
     class Root:
-
         @cherrypy.expose
         def index(self):
             return 'hello'
@@ -86,16 +85,20 @@ def configure_server(access_log_file, error_log_file):
     root = Root()
 
     cherrypy.config.reset()
-    cherrypy.config.update({
-        'server.socket_host': webtest.WebCase.HOST,
-        'server.socket_port': webtest.WebCase.PORT,
-        'server.protocol_version': webtest.WebCase.PROTOCOL,
-        'environment': 'test_suite',
-    })
-    cherrypy.config.update({
-        'log.error_file': str(error_log_file),
-        'log.access_file': str(access_log_file),
-    })
+    cherrypy.config.update(
+        {
+            'server.socket_host': webtest.WebCase.HOST,
+            'server.socket_port': webtest.WebCase.PORT,
+            'server.protocol_version': webtest.WebCase.PROTOCOL,
+            'environment': 'test_suite',
+        }
+    )
+    cherrypy.config.update(
+        {
+            'log.error_file': str(error_log_file),
+            'log.access_file': str(access_log_file),
+        }
+    )
     cherrypy.tree.mount(root)
 
 
@@ -103,6 +106,7 @@ def configure_server(access_log_file, error_log_file):
 def log_tracker(access_log_file):
     class LogTracker(LogCase):
         logfile = str(access_log_file)
+
     return LogTracker()
 
 
@@ -126,17 +130,13 @@ def test_normal_return(log_tracker, server):
     log_tracker.assertLog(-1, intro)
 
     content_length = len(expected_body)
-    if not any(
-            k for k, v in resp.headers.items()
-            if k.lower() == 'content-length'
-    ):
+    if not any(k for k, v in resp.headers.items() if k.lower() == 'content-length'):
         content_length = '-'
 
     log_tracker.assertLog(
         -1,
         '] "GET /as_string HTTP/1.1" 200 %s '
-        '"http://www.cherrypy.dev/" "Mozilla/5.0"'
-        % content_length,
+        '"http://www.cherrypy.dev/" "Mozilla/5.0"' % content_length,
     )
 
 
@@ -158,16 +158,12 @@ def test_normal_yield(log_tracker, server):
 
     log_tracker.assertLog(-1, intro)
     content_length = len(expected_body)
-    if not any(
-            k for k, v in resp.headers.items()
-            if k.lower() == 'content-length'
-    ):
+    if not any(k for k, v in resp.headers.items() if k.lower() == 'content-length'):
         content_length = '-'
 
     log_tracker.assertLog(
         -1,
-        '] "GET /as_yield HTTP/1.1" 200 %s "" ""'
-        % content_length,
+        '] "GET /as_yield HTTP/1.1" 200 %s "" ""' % content_length,
     )
 
 
@@ -192,8 +188,7 @@ def test_custom_log_format(log_tracker, monkeypatch, server):
     log_tracker.assertLog(-1, '%s - - [' % host)
     log_tracker.assertLog(
         -1,
-        '] "GET /as_string HTTP/1.1" '
-        '200 7 "REFERER" "USERAGENT" HOST',
+        '] "GET /as_string HTTP/1.1" ' '200 7 "REFERER" "USERAGENT" HOST',
     )
 
 
@@ -226,8 +221,7 @@ def test_timez_log_format(log_tracker, monkeypatch, server):
     log_tracker.assertLog(-1, expected_time)
     log_tracker.assertLog(
         -1,
-        ' "GET /as_string HTTP/1.1" '
-        '200 7 "REFERER" "USERAGENT" HOST',
+        ' "GET /as_string HTTP/1.1" ' '200 7 "REFERER" "USERAGENT" HOST',
     )
 
 

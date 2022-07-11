@@ -32,16 +32,16 @@ cherrypy.tools.allow = cherrypy.Tool('on_start_resource', http_methods_allowed)
 
 
 def setup_server():
-
-    @cherrypy.config(**{
-        'tools.sessions.on': True,
-        'tools.sessions.storage_class': sessions.RamSession,
-        'tools.sessions.storage_path': localDir,
-        'tools.sessions.timeout': (1.0 / 60),
-        'tools.sessions.clean_freq': (1.0 / 60),
-    })
+    @cherrypy.config(
+        **{
+            'tools.sessions.on': True,
+            'tools.sessions.storage_class': sessions.RamSession,
+            'tools.sessions.storage_path': localDir,
+            'tools.sessions.timeout': (1.0 / 60),
+            'tools.sessions.clean_freq': (1.0 / 60),
+        }
+    )
     class Root:
-
         @cherrypy.expose
         def clear(self):
             cherrypy.session.cache.clear()
@@ -109,10 +109,12 @@ def setup_server():
             raise cherrypy.InternalRedirect('/redir_target')
 
         @cherrypy.expose
-        @cherrypy.config(**{
-            'tools.allow.on': True,
-            'tools.allow.methods': ['GET'],
-        })
+        @cherrypy.config(
+            **{
+                'tools.allow.on': True,
+                'tools.allow.methods': ['GET'],
+            }
+        )
         def restricted(self):
             return cherrypy.request.method
 
@@ -126,11 +128,13 @@ def setup_server():
             return str(len(cherrypy.session))
 
         @cherrypy.expose
-        @cherrypy.config(**{
-            'tools.sessions.path': '/session_cookie',
-            'tools.sessions.name': 'temp',
-            'tools.sessions.persistent': False,
-        })
+        @cherrypy.config(
+            **{
+                'tools.sessions.path': '/session_cookie',
+                'tools.sessions.name': 'temp',
+                'tools.sessions.persistent': False,
+            }
+        )
         def session_cookie(self):
             # Must load() to start the clean thread.
             cherrypy.session.load()
@@ -149,9 +153,7 @@ class SessionTest(helper.CPWebCase):
         consume(
             file.remove_p()
             for file in localDir.listdir()
-            if file.basename().startswith(
-                sessions.FileSession.SESSION_PREFIX
-            )
+            if file.basename().startswith(sessions.FileSession.SESSION_PREFIX)
         )
 
     def test_0_Session(self):
@@ -168,8 +170,9 @@ class SessionTest(helper.CPWebCase):
 
         self.getPage('/testStr')
         assert self.body == b'1'
-        cookie_parts = dict([p.strip().split('=')
-                             for p in self.cookies[0][1].split(';')])
+        cookie_parts = dict(
+            [p.strip().split('=') for p in self.cookies[0][1].split(';')]
+        )
         # Assert there is an 'expires' param
         expected_cookie_keys = {'session_id', 'expires', 'Path', 'Max-Age'}
         assert set(cookie_parts.keys()) == expected_cookie_keys
@@ -224,6 +227,7 @@ class SessionTest(helper.CPWebCase):
                 for x in os.listdir(localDir)
                 if x.startswith('session-') and not x.endswith('.lock')
             ]
+
         assert f() == []
 
         # Wait for the cleanup thread to delete remaining session files
@@ -330,11 +334,16 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/testStr')
         # grab the cookie ID
         id1 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
-        self.getPage('/testStr',
-                     headers=[
-                         ('Cookie',
-                          'session_id=maliciousid; '
-                          'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;')])
+        self.getPage(
+            '/testStr',
+            headers=[
+                (
+                    'Cookie',
+                    'session_id=maliciousid; '
+                    'expires=Sat, 27 Oct 2017 04:18:28 GMT; Path=/;',
+                )
+            ],
+        )
         id2 = self.cookies[0][1].split(';', 1)[0].split('=', 1)[1]
         assert id1 != id2
         assert id2 != 'maliciousid'
@@ -344,8 +353,9 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/clear')
         self.getPage('/session_cookie')
         # grab the cookie ID
-        cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(';')])
+        cookie_parts = dict(
+            [p.strip().split('=') for p in self.cookies[0][1].split(';')]
+        )
         # Assert there is no 'expires' param
         assert set(cookie_parts.keys()) == {'temp', 'Path'}
         id1 = cookie_parts['temp']
@@ -353,8 +363,9 @@ class SessionTest(helper.CPWebCase):
 
         # Send another request in the same "browser session".
         self.getPage('/session_cookie', self.cookies)
-        cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(';')])
+        cookie_parts = dict(
+            [p.strip().split('=') for p in self.cookies[0][1].split(';')]
+        )
         # Assert there is no 'expires' param
         assert set(cookie_parts.keys()) == {'temp', 'Path'}
         assert self.body.decode('utf-8') == id1
@@ -363,8 +374,9 @@ class SessionTest(helper.CPWebCase):
         # Simulate a browser close by just not sending the cookies
         self.getPage('/session_cookie')
         # grab the cookie ID
-        cookie_parts = dict([p.strip().split('=')
-                            for p in self.cookies[0][1].split(';')])
+        cookie_parts = dict(
+            [p.strip().split('=') for p in self.cookies[0][1].split(';')]
+        )
         # Assert there is no 'expires' param
         assert set(cookie_parts.keys()) == {'temp', 'Path'}
         # Assert a new id has been generated...
@@ -442,7 +454,8 @@ def memcached_instance(request, watcher_getter, memcached_server_present):
 
 @pytest.fixture
 def memcached_configured(
-    memcached_instance, monkeypatch,
+    memcached_instance,
+    monkeypatch,
     memcached_client_present,
 ):
     server = 'localhost:{port}'.format_map(memcached_instance)
@@ -462,9 +475,7 @@ class MemcachedSessionTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
     def test_0_Session(self):
-        self.getPage(
-            '/set_session_cls/cherrypy.lib.sessions.MemcachedSession'
-        )
+        self.getPage('/set_session_cls/cherrypy.lib.sessions.MemcachedSession')
 
         self.getPage('/testStr')
         assert self.body == b'1'
@@ -535,8 +546,7 @@ class MemcachedSessionTest(helper.CPWebCase):
 
     def test_5_Error_paths(self):
         self.getPage('/unknown/page')
-        self.assertErrorPage(
-            404, "The path '/unknown/page' was not found.")
+        self.assertErrorPage(404, "The path '/unknown/page' was not found.")
 
         # Note: this path is *not* the same as above. The above
         # takes a normal route through the session code; this one

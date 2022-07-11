@@ -12,6 +12,7 @@ to a hierarchical arrangement of objects, starting at request.app.root.
 import string
 import sys
 import types
+
 try:
     classtype = (type, types.ClassType)
 except AttributeError:
@@ -84,28 +85,37 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     parameters are part of the request; if they are invalid a 400 Bad Request.
     """
     show_mismatched_params = getattr(
-        cherrypy.serving.request, 'show_mismatched_params', False)
+        cherrypy.serving.request, 'show_mismatched_params', False
+    )
     try:
         (args, varargs, varkw, defaults) = getargspec(callable)
     except TypeError:
         if isinstance(callable, object) and hasattr(callable, '__call__'):
-            (args, varargs, varkw,
-             defaults) = getargspec(callable.__call__)
+            (args, varargs, varkw, defaults) = getargspec(callable.__call__)
         else:
             # If it wasn't one of our own types, re-raise
             # the original error
             raise
 
     if args and (
-            # For callable objects, which have a __call__(self) method
-            hasattr(callable, '__call__') or
-            # For normal methods
-            inspect.ismethod(callable)
+        # For callable objects, which have a __call__(self) method
+        hasattr(callable, '__call__')
+        or
+        # For normal methods
+        inspect.ismethod(callable)
     ):
         # Strip 'self'
         args = args[1:]
 
-    arg_usage = dict([(arg, 0,) for arg in args])
+    arg_usage = dict(
+        [
+            (
+                arg,
+                0,
+            )
+            for arg in args
+        ]
+    )
     vararg_usage = 0
     varkw_usage = 0
     extra_kwargs = set()
@@ -124,7 +134,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
             extra_kwargs.add(key)
 
     # figure out which args have defaults.
-    args_with_defaults = args[-len(defaults or []):]
+    args_with_defaults = args[-len(defaults or []) :]
     for i, val in enumerate(defaults or []):
         # Defaults take effect only when the arg hasn't been used yet.
         if arg_usage[args_with_defaults[i]] == 0:
@@ -175,8 +185,7 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
 
         message = None
         if show_mismatched_params:
-            message = 'Multiple values for parameters: '\
-                '%s' % ','.join(multiple_args)
+            message = 'Multiple values for parameters: ' '%s' % ','.join(multiple_args)
         raise cherrypy.HTTPError(error, message=message)
 
     if not varkw and varkw_usage > 0:
@@ -186,8 +195,9 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
         if extra_qs_params:
             message = None
             if show_mismatched_params:
-                message = 'Unexpected query string '\
-                    'parameters: %s' % ', '.join(extra_qs_params)
+                message = 'Unexpected query string ' 'parameters: %s' % ', '.join(
+                    extra_qs_params
+                )
             raise cherrypy.HTTPError(404, message=message)
 
         # If there were any extra body parameters, it's a 400 Not Found
@@ -195,17 +205,21 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
         if extra_body_params:
             message = None
             if show_mismatched_params:
-                message = 'Unexpected body parameters: '\
-                    '%s' % ', '.join(extra_body_params)
+                message = 'Unexpected body parameters: ' '%s' % ', '.join(
+                    extra_body_params
+                )
             raise cherrypy.HTTPError(400, message=message)
 
 
 try:
     import inspect
 except ImportError:
+
     def test_callable_spec(callable, args, kwargs):  # noqa: F811
         return None
+
 else:
+
     def getargspec(callable):
         return inspect.getfullargspec(callable)[:4]
 
@@ -236,15 +250,17 @@ class LateParamPageHandler(PageHandler):
 
 if sys.version_info < (3, 0):
     punctuation_to_underscores = string.maketrans(
-        string.punctuation, '_' * len(string.punctuation))
+        string.punctuation, '_' * len(string.punctuation)
+    )
 
     def validate_translator(t):
         if not isinstance(t, str) or len(t) != 256:
-            raise ValueError(
-                'The translate argument must be a str of len 256.')
+            raise ValueError('The translate argument must be a str of len 256.')
+
 else:
     punctuation_to_underscores = str.maketrans(
-        string.punctuation, '_' * len(string.punctuation))
+        string.punctuation, '_' * len(string.punctuation)
+    )
 
     def validate_translator(t):
         if not isinstance(t, dict):
@@ -272,8 +288,7 @@ class Dispatcher(object):
     to provide their own dynamic dispatch algorithm.
     """
 
-    def __init__(self, dispatch_method_name=None,
-                 translate=punctuation_to_underscores):
+    def __init__(self, dispatch_method_name=None, translate=punctuation_to_underscores):
         validate_translator(translate)
         self.translate = translate
         if dispatch_method_name:
@@ -338,9 +353,12 @@ class Dispatcher(object):
             pre_len = len(iternames)
             if subnode is None:
                 dispatch = getattr(node, dispatch_name, None)
-                if dispatch and hasattr(dispatch, '__call__') and not \
-                        getattr(dispatch, 'exposed', False) and \
-                        pre_len > 1:
+                if (
+                    dispatch
+                    and hasattr(dispatch, '__call__')
+                    and not getattr(dispatch, 'exposed', False)
+                    and pre_len > 1
+                ):
                     # Don't expose the hidden 'index' token to _cp_dispatch
                     # We skip this if pre_len == 1 since it makes no sense
                     # to call a dispatcher when we have no tokens left.
@@ -381,7 +399,7 @@ class Dispatcher(object):
                 curpath = '/' + '/'.join(fullpath[0:existing_len])
             else:
                 curpath = ''
-            new_segs = fullpath[fullpath_len - pre_len:fullpath_len - segleft]
+            new_segs = fullpath[fullpath_len - pre_len : fullpath_len - segleft]
             for seg in new_segs:
                 curpath += '/' + seg
                 if curpath in app.config:
@@ -390,16 +408,16 @@ class Dispatcher(object):
             object_trail.append([name, node, nodeconf, segleft])
 
         def set_conf():
-            """Collapse all object_trail config into cherrypy.request.config.
-            """
+            """Collapse all object_trail config into cherrypy.request.config."""
             base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.
             for name, obj, conf, segleft in object_trail:
                 base.update(conf)
                 if 'tools.staticdir.dir' in conf:
-                    base['tools.staticdir.section'] = '/' + \
-                        '/'.join(fullpath[0:fullpath_len - segleft])
+                    base['tools.staticdir.section'] = '/' + '/'.join(
+                        fullpath[0 : fullpath_len - segleft]
+                    )
             return base
 
         # Try successive objects (reverse order)
@@ -416,12 +434,11 @@ class Dispatcher(object):
                 if getattr(defhandler, 'exposed', False):
                     # Insert any extra _cp_config from the default handler.
                     conf = getattr(defhandler, '_cp_config', {})
-                    object_trail.insert(
-                        i + 1, ['default', defhandler, conf, segleft])
+                    object_trail.insert(i + 1, ['default', defhandler, conf, segleft])
                     request.config = set_conf()
                     # See https://github.com/cherrypy/cherrypy/issues/613
                     request.is_index = path.endswith('/')
-                    return defhandler, fullpath[fullpath_len - segleft:-1]
+                    return defhandler, fullpath[fullpath_len - segleft : -1]
 
             # Uncomment the next line to restrict positional params to
             # "default".
@@ -440,7 +457,7 @@ class Dispatcher(object):
                     # Note that this also includes handlers which take
                     # positional parameters (virtual paths).
                     request.is_index = False
-                return candidate, fullpath[fullpath_len - segleft:-1]
+                return candidate, fullpath[fullpath_len - segleft : -1]
 
         # We didn't find anything
         request.config = set_conf()
@@ -504,6 +521,7 @@ class RoutesDispatcher(object):
         parameters. By default they won't be.
         """
         import routes
+
         self.full_result = full_result
         self.controllers = {}
         self.mapper = routes.Mapper(**mapper_options)
@@ -612,11 +630,11 @@ def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
     def xmlrpc_dispatch(path_info):
         path_info = xmlrpcutil.patched_path(path_info)
         return next_dispatcher(path_info)
+
     return xmlrpc_dispatch
 
 
-def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
-                **domains):
+def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True, **domains):
     """
     Select a different handler based on the Host header.
 
@@ -675,8 +693,9 @@ def VirtualHost(next_dispatcher=Dispatcher(), use_x_forwarded_host=True,
         # https://github.com/cherrypy/cherrypy/issues/614.
         section = request.config.get('tools.staticdir.section')
         if section:
-            section = section[len(prefix):]
+            section = section[len(prefix) :]
             request.config['tools.staticdir.section'] = section
 
         return result
+
     return vhost_dispatch

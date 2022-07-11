@@ -20,8 +20,7 @@ curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
 class HTTPErrorDemo(object):
 
     # Set a custom response for 403 errors.
-    _cp_config = {'error_page.403':
-                  os.path.join(curpath, 'custom_error.html')}
+    _cp_config = {'error_page.403': os.path.join(curpath, 'custom_error.html')}
 
     @cherrypy.expose
     def index(self):
@@ -32,7 +31,8 @@ class HTTPErrorDemo(object):
         else:
             trace = 'on'
 
-        return """
+        return (
+            """
         <html><body>
             <p>Toggle tracebacks <a href="toggleTracebacks">%s</a></p>
             <p><a href="/doesNotExist">Click me; I'm a broken link!</a></p>
@@ -51,7 +51,9 @@ class HTTPErrorDemo(object):
             <p><a href="/messageArg">You can also set the response body
             when you raise an error.</a></p>
         </body></html>
-        """ % trace
+        """
+            % trace
+        )
 
     @cherrypy.expose
     def toggleTracebacks(self):
@@ -69,9 +71,11 @@ class HTTPErrorDemo(object):
 
     @cherrypy.expose
     def messageArg(self):
-        message = ("If you construct an HTTPError with a 'message' "
-                   'argument, it wil be placed on the error page '
-                   '(underneath the status line by default).')
+        message = (
+            "If you construct an HTTPError with a 'message' "
+            'argument, it wil be placed on the error page '
+            '(underneath the status line by default).'
+        )
         raise cherrypy.HTTPError(500, message=message)
 
 

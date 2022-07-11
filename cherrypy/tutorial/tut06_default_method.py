@@ -22,7 +22,6 @@ import cherrypy
 
 
 class UsersPage:
-
     @cherrypy.expose
     def index(self):
         # Since this is just a stupid little example, we'll simply

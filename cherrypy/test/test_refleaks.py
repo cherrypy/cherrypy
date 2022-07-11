@@ -14,12 +14,9 @@ data = object()
 
 
 class ReferenceTests(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
-
         class Root:
-
             @cherrypy.expose
             def index(self, *args, **kwargs):
                 cherrypy.request.thing = data
@@ -51,10 +48,7 @@ class ReferenceTests(helper.CPWebCase):
 
         ITERATIONS = 25
 
-        ts = [
-            threading.Thread(target=getpage)
-            for _ in range(ITERATIONS)
-        ]
+        ts = [threading.Thread(target=getpage) for _ in range(ITERATIONS)]
 
         for t in ts:
             t.start()

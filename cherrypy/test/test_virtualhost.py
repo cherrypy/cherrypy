@@ -7,11 +7,9 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 class VirtualHostTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'Hello, world'
@@ -25,7 +23,6 @@ class VirtualHostTest(helper.CPWebCase):
                 return 'You sent %s' % value
 
         class VHost:
-
             def __init__(self, sitename):
                 self.sitename = sitename
 
@@ -42,28 +39,29 @@ class VirtualHostTest(helper.CPWebCase):
                 return cherrypy.url('nextpage')
 
             # Test static as a handler (section must NOT include vhost prefix)
-            static = cherrypy.tools.staticdir.handler(
-                section='/static', dir=curdir)
+            static = cherrypy.tools.staticdir.handler(section='/static', dir=curdir)
 
         root = Root()
         root.mydom2 = VHost('Domain 2')
         root.mydom3 = VHost('Domain 3')
-        hostmap = {'www.mydom2.com': '/mydom2',
-                   'www.mydom3.com': '/mydom3',
-                   'www.mydom4.com': '/dom4',
-                   }
-        cherrypy.tree.mount(root, config={
-            '/': {
-                'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)
+        hostmap = {
+            'www.mydom2.com': '/mydom2',
+            'www.mydom3.com': '/mydom3',
+            'www.mydom4.com': '/dom4',
+        }
+        cherrypy.tree.mount(
+            root,
+            config={
+                '/': {'request.dispatch': cherrypy.dispatch.VirtualHost(**hostmap)},
+                # Test static in config (section must include vhost prefix)
+                '/mydom2/static2': {
+                    'tools.staticdir.on': True,
+                    'tools.staticdir.root': curdir,
+                    'tools.staticdir.dir': 'static',
+                    'tools.staticdir.index': 'index.html',
+                },
             },
-            # Test static in config (section must include vhost prefix)
-            '/mydom2/static2': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.root': curdir,
-                'tools.staticdir.dir': 'static',
-                'tools.staticdir.index': 'index.html',
-            },
-        })
+        )
 
     def testVirtualHost(self):
         self.getPage('/', [('Host', 'www.mydom1.com')])
@@ -83,8 +81,12 @@ class VirtualHostTest(helper.CPWebCase):
         self.assertBody('You sent root')
         self.getPage('/vmethod?value=dom2+GET', [('Host', 'www.mydom2.com')])
         self.assertBody('You sent dom2 GET')
-        self.getPage('/vmethod', [('Host', 'www.mydom3.com')], method='POST',
-                     body='value=dom3+POST')
+        self.getPage(
+            '/vmethod',
+            [('Host', 'www.mydom3.com')],
+            method='POST',
+            body='value=dom3+POST',
+        )
         self.assertBody('You sent dom3 POST')
         self.getPage('/vmethod/pos', [('Host', 'www.mydom3.com')])
         self.assertBody('You sent pos')

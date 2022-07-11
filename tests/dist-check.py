@@ -18,12 +18,14 @@ import sys
 import pytest
 
 
-@pytest.fixture(params=[
-    'favicon.ico',
-    'scaffold/static/made_with_cherrypy_small.png',
-    'tutorial/tutorial.conf',
-    'tutorial/custom_error.html',
-])
+@pytest.fixture(
+    params=[
+        'favicon.ico',
+        'scaffold/static/made_with_cherrypy_small.png',
+        'tutorial/tutorial.conf',
+        'tutorial/custom_error.html',
+    ]
+)
 def data_file_path(request):
     'generates data file paths expected to be found in the package'
     return request.param
@@ -35,8 +37,7 @@ def remove_paths_to_checkout():
     to_remove = [
         path
         for path in sys.path
-        if os.path.isdir(path)
-        and os.path.samefile(path, os.path.curdir)
+        if os.path.isdir(path) and os.path.samefile(path, os.path.curdir)
     ]
     print('Removing', to_remove)
     list(map(sys.path.remove, to_remove))
@@ -49,6 +50,7 @@ def test_data_files_installed(data_file_path):
     installed package as expected.
     """
     import cherrypy
+
     root = os.path.dirname(cherrypy.__file__)
     fn = os.path.join(root, data_file_path)
     assert os.path.exists(fn), fn

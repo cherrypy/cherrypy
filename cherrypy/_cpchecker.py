@@ -60,11 +60,11 @@ class Checker(object):
             sn_atoms = sn.strip('/').split('/')
             for key in app.config.keys():
                 key_atoms = key.strip('/').split('/')
-                if key_atoms[:len(sn_atoms)] == sn_atoms:
+                if key_atoms[: len(sn_atoms)] == sn_atoms:
                     warnings.warn(
                         'The application mounted at %r has config '
-                        'entries that start with its script name: %r' % (sn,
-                                                                         key))
+                        'entries that start with its script name: %r' % (sn, key)
+                    )
 
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
@@ -78,15 +78,16 @@ class Checker(object):
                     for key, value in entries.items():
                         for n in ('engine.', 'server.', 'tree.', 'checker.'):
                             if key.startswith(n):
-                                msg.append('[%s] %s = %s' %
-                                           (section, key, value))
+                                msg.append('[%s] %s = %s' % (section, key, value))
             if msg:
-                msg.insert(0,
-                           'The application mounted at %r contains the '
-                           'following config entries, which are only allowed '
-                           'in site-wide config. Move them to a [global] '
-                           'section and pass them to cherrypy.config.update() '
-                           'instead of tree.mount().' % sn)
+                msg.insert(
+                    0,
+                    'The application mounted at %r contains the '
+                    'following config entries, which are only allowed '
+                    'in site-wide config. Move them to a [global] '
+                    'section and pass them to cherrypy.config.update() '
+                    'instead of tree.mount().' % sn,
+                )
                 warnings.warn(os.linesep.join(msg))
 
     def check_skipped_app_config(self):
@@ -97,11 +98,13 @@ class Checker(object):
             if not app.config:
                 msg = 'The Application mounted at %r has an empty config.' % sn
                 if self.global_config_contained_paths:
-                    msg += (' It looks like the config you passed to '
-                            'cherrypy.config.update() contains application-'
-                            'specific sections. You must explicitly pass '
-                            'application config via '
-                            'cherrypy.tree.mount(..., config=app_config)')
+                    msg += (
+                        ' It looks like the config you passed to '
+                        'cherrypy.config.update() contains application-'
+                        'specific sections. You must explicitly pass '
+                        'application config via '
+                        'cherrypy.tree.mount(..., config=app_config)'
+                    )
                 warnings.warn(msg)
                 return
 
@@ -118,7 +121,8 @@ class Checker(object):
                         'The application mounted at %r has config '
                         'section names with extraneous brackets: %r. '
                         'Config *files* need brackets; config *dicts* '
-                        '(e.g. passed to tree.mount) do not.' % (sn, key))
+                        '(e.g. passed to tree.mount) do not.' % (sn, key)
+                    )
 
     def check_static_paths(self):
         """Check Application config for incorrect static paths."""
@@ -144,34 +148,38 @@ class Checker(object):
                         if os.path.isabs(dir):
                             fulldir = dir
                             if root:
-                                msg = ('dir is an absolute path, even '
-                                       'though a root is provided.')
+                                msg = (
+                                    'dir is an absolute path, even '
+                                    'though a root is provided.'
+                                )
                                 testdir = os.path.join(root, dir[1:])
                                 if os.path.exists(testdir):
                                     msg += (
                                         '\nIf you meant to serve the '
                                         'filesystem folder at %r, remove the '
-                                        'leading slash from dir.' % (testdir,))
+                                        'leading slash from dir.' % (testdir,)
+                                    )
                         else:
                             if not root:
-                                msg = (
-                                    'dir is a relative path and '
-                                    'no root provided.')
+                                msg = 'dir is a relative path and ' 'no root provided.'
                             else:
                                 fulldir = os.path.join(root, dir)
                                 if not os.path.isabs(fulldir):
-                                    msg = ('%r is not an absolute path.' % (
-                                        fulldir,))
+                                    msg = '%r is not an absolute path.' % (fulldir,)
 
                         if fulldir and not os.path.exists(fulldir):
                             if msg:
                                 msg += '\n'
-                            msg += ('%r (root + dir) is not an existing '
-                                    'filesystem path.' % fulldir)
+                            msg += (
+                                '%r (root + dir) is not an existing '
+                                'filesystem path.' % fulldir
+                            )
 
                     if msg:
-                        warnings.warn('%s\nsection: [%s]\nroot: %r\ndir: %r'
-                                      % (msg, section, root, dir))
+                        warnings.warn(
+                            '%s\nsection: [%s]\nroot: %r\ndir: %r'
+                            % (msg, section, root, dir)
+                        )
 
     # -------------------------- Compatibility -------------------------- #
     obsolete = {
@@ -184,8 +192,9 @@ class Checker(object):
         'log_to_screen': 'log.screen',
         'show_tracebacks': 'request.show_tracebacks',
         'throw_errors': 'request.throw_errors',
-        'profiler.on': ('cherrypy.tree.mount(profiler.make_app('
-                        'cherrypy.Application(Root())))'),
+        'profiler.on': (
+            'cherrypy.tree.mount(profiler.make_app(' 'cherrypy.Application(Root())))'
+        ),
     }
 
     deprecated = {}
@@ -196,20 +205,26 @@ class Checker(object):
             if isinstance(conf, dict):
                 for k in conf:
                     if k in self.obsolete:
-                        warnings.warn('%r is obsolete. Use %r instead.\n'
-                                      'section: [%s]' %
-                                      (k, self.obsolete[k], section))
+                        warnings.warn(
+                            '%r is obsolete. Use %r instead.\n'
+                            'section: [%s]' % (k, self.obsolete[k], section)
+                        )
                     elif k in self.deprecated:
-                        warnings.warn('%r is deprecated. Use %r instead.\n'
-                                      'section: [%s]' %
-                                      (k, self.deprecated[k], section))
+                        warnings.warn(
+                            '%r is deprecated. Use %r instead.\n'
+                            'section: [%s]' % (k, self.deprecated[k], section)
+                        )
             else:
                 if section in self.obsolete:
-                    warnings.warn('%r is obsolete. Use %r instead.'
-                                  % (section, self.obsolete[section]))
+                    warnings.warn(
+                        '%r is obsolete. Use %r instead.'
+                        % (section, self.obsolete[section])
+                    )
                 elif section in self.deprecated:
-                    warnings.warn('%r is deprecated. Use %r instead.'
-                                  % (section, self.deprecated[section]))
+                    warnings.warn(
+                        '%r is deprecated. Use %r instead.'
+                        % (section, self.deprecated[section])
+                    )
 
     def check_compatibility(self):
         """Process config and warn on each obsolete or deprecated entry."""
@@ -243,20 +258,23 @@ class Checker(object):
                                 msg = (
                                     'The config entry %r is invalid; '
                                     'try %r instead.\nsection: [%s]'
-                                    % (k, '.'.join(atoms[1:]), section))
+                                    % (k, '.'.join(atoms[1:]), section)
+                                )
                             else:
                                 msg = (
                                     'The config entry %r is invalid, '
                                     'because the %r config namespace '
                                     'is unknown.\n'
-                                    'section: [%s]' % (k, atoms[0], section))
+                                    'section: [%s]' % (k, atoms[0], section)
+                                )
                             warnings.warn(msg)
                         elif atoms[0] == 'tools':
                             if atoms[1] not in dir(cherrypy.tools):
                                 msg = (
                                     'The config entry %r may be invalid, '
                                     'because the %r tool was not found.\n'
-                                    'section: [%s]' % (k, atoms[1], section))
+                                    'section: [%s]' % (k, atoms[1], section)
+                                )
                                 warnings.warn(msg)
 
     def check_config_namespaces(self):
@@ -270,8 +288,7 @@ class Checker(object):
     known_config_types = {}
 
     def _populate_known_types(self):
-        b = [x for x in vars(builtins).values()
-             if type(x) is type(str)]
+        b = [x for x in vars(builtins).values() if type(x) is type(str)]
 
         def traverse(obj, namespace):
             for name in dir(obj):
@@ -289,8 +306,10 @@ class Checker(object):
         traverse(cherrypy.log, 'log')
 
     def _known_types(self, config):
-        msg = ('The config entry %r in section %r is of type %r, '
-               'which does not match the expected type %r.')
+        msg = (
+            'The config entry %r in section %r is of type %r, '
+            'which does not match the expected type %r.'
+        )
 
         for section, conf in config.items():
             if not isinstance(conf, dict):
@@ -300,8 +319,9 @@ class Checker(object):
                     expected_type = self.known_config_types.get(k, None)
                     vtype = type(v)
                     if expected_type and vtype != expected_type:
-                        warnings.warn(msg % (k, section, vtype.__name__,
-                                             expected_type.__name__))
+                        warnings.warn(
+                            msg % (k, section, vtype.__name__, expected_type.__name__)
+                        )
 
     def check_config_types(self):
         """Assert that config values are of the same type as default values."""
@@ -316,8 +336,10 @@ class Checker(object):
         """Warn if any socket_host is 'localhost'. See #711."""
         for k, v in cherrypy.config.items():
             if k == 'server.socket_host' and v == 'localhost':
-                warnings.warn("The use of 'localhost' as a socket host can "
-                              'cause problems on newer systems, since '
-                              "'localhost' can map to either an IPv4 or an "
-                              "IPv6 address. You should use '127.0.0.1' "
-                              "or '[::1]' instead.")
+                warnings.warn(
+                    "The use of 'localhost' as a socket host can "
+                    'cause problems on newer systems, since '
+                    "'localhost' can map to either an IPv4 or an "
+                    "IPv6 address. You should use '127.0.0.1' "
+                    "or '[::1]' instead."
+                )

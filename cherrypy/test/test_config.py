@@ -18,10 +18,8 @@ def StringIOFromNative(x):
 
 
 def setup_server():
-
     @cherrypy.config(foo='this', bar='that')
     class Root:
-
         def __init__(self):
             cherrypy.config.namespaces['db'] = self.db_namespace
 
@@ -47,14 +45,15 @@ def setup_server():
             return x
 
         favicon_ico = cherrypy.tools.staticfile.handler(
-            filename=os.path.join(localDir, '../favicon.ico'))
+            filename=os.path.join(localDir, '../favicon.ico')
+        )
 
     @cherrypy.config(foo='this2', baz='that2')
     class Foo:
-
         @cherrypy.expose
         def index(self, key):
             return cherrypy.request.config.get(key, 'None')
+
         nex = index
 
         @cherrypy.expose
@@ -69,7 +68,6 @@ def setup_server():
             return repr(cherrypy.request.config.get(key, None))
 
     class Another:
-
         @cherrypy.expose
         def index(self, key):
             return str(cherrypy.request.config.get(key, 'None'))
@@ -86,6 +84,7 @@ def setup_server():
                     except KeyError:
                         pass
                 return handler()
+
             cherrypy.request.handler = wrapper
         elif key == 'output':
             handler = cherrypy.request.handler
@@ -93,17 +92,18 @@ def setup_server():
             def wrapper():
                 # 'value' is a type (like int or str).
                 return value(handler())
+
             cherrypy.request.handler = wrapper
 
     @cherrypy.config(**{'raw.output': repr})
     class Raw:
-
         @cherrypy.expose
         @cherrypy.config(**{'raw.input.map': {'num': int}})
         def incr(self, num):
             return num + 1
 
-    ioconf = StringIOFromNative("""
+    ioconf = StringIOFromNative(
+        """
 [/]
 neg: -1234
 filename: os.path.join(sys.prefix, "hello.py")
@@ -117,7 +117,9 @@ stradd: %%(ones)s + %%(twos)s + "33"
 
 [/favicon.ico]
 tools.staticfile.filename = %r
-""" % os.path.join(localDir, 'static/dirback.jpg'))
+"""
+        % os.path.join(localDir, 'static/dirback.jpg')
+    )
 
     root = Root()
     root.foo = Foo()
@@ -126,9 +128,12 @@ tools.staticfile.filename = %r
     app.request_class.namespaces['raw'] = raw_namespace
 
     cherrypy.tree.mount(Another(), '/another')
-    cherrypy.config.update({'luxuryyacht': 'throatwobblermangrove',
-                            'db.scheme': r'sqlite///memory',
-                            })
+    cherrypy.config.update(
+        {
+            'luxuryyacht': 'throatwobblermangrove',
+            'db.scheme': r'sqlite///memory',
+        }
+    )
 
 
 #                             Client-side code                             #
@@ -193,6 +198,7 @@ class ConfigTests(helper.CPWebCase):
             # server and client are running in different processes.
             self.getPage('/repr?key=thing2')
             from cherrypy.tutorial import thing2
+
             self.assertBody(repr(thing2))
 
         self.getPage('/repr?key=complex')
@@ -225,10 +231,15 @@ class ConfigTests(helper.CPWebCase):
             self.assertBody(tf.read())
 
     def test_request_body_namespace(self):
-        self.getPage('/plain', method='POST', headers=[
-            ('Content-Type', 'application/x-www-form-urlencoded'),
-            ('Content-Length', '13')],
-            body=b'\xff\xfex\x00=\xff\xfea\x00b\x00c\x00')
+        self.getPage(
+            '/plain',
+            method='POST',
+            headers=[
+                ('Content-Type', 'application/x-www-form-urlencoded'),
+                ('Content-Length', '13'),
+            ],
+            body=b'\xff\xfex\x00=\xff\xfea\x00b\x00c\x00',
+        )
         self.assertBody('abc')
 
 
@@ -239,7 +250,8 @@ class VariableSubstitutionTests(unittest.TestCase):
         from textwrap import dedent
 
         # variable substitution with [DEFAULT]
-        conf = dedent("""
+        conf = dedent(
+            """
         [DEFAULT]
         dir = "/some/dir"
         my.dir = %(dir)s + "/sub"
@@ -248,14 +260,14 @@ class VariableSubstitutionTests(unittest.TestCase):
         my.dir = %(dir)s + "/my/dir"
         my.dir2 = %(my.dir)s + '/dir2'
 
-        """)
+        """
+        )
 
         fp = StringIOFromNative(conf)
 
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config['my']['my.dir'], '/some/dir/my/dir')
-        self.assertEqual(cherrypy.config['my']
-                         ['my.dir2'], '/some/dir/my/dir/dir2')
+        self.assertEqual(cherrypy.config['my']['my.dir2'], '/some/dir/my/dir/dir2')
 
 
 class CallablesInConfigTest(unittest.TestCase):
@@ -263,25 +275,27 @@ class CallablesInConfigTest(unittest.TestCase):
 
     def test_call_with_literal_dict(self):
         from textwrap import dedent
-        conf = dedent("""
+
+        conf = dedent(
+            """
         [my]
         value = dict(**{'foo': 'bar'})
-        """)
+        """
+        )
         fp = StringIOFromNative(conf)
         cherrypy.config.update(fp)
         self.assertEqual(cherrypy.config['my']['value'], {'foo': 'bar'})
 
     def test_call_with_kwargs(self):
         from textwrap import dedent
-        conf = dedent("""
+
+        conf = dedent(
+            """
         [my]
         value = dict(foo="buzz", **cherrypy._test_dict)
-        """)
-        test_dict = {
-            'foo': 'bar',
-            'bar': 'foo',
-            'fizz': 'buzz'
-        }
+        """
+        )
+        test_dict = {'foo': 'bar', 'bar': 'foo', 'fizz': 'buzz'}
         cherrypy._test_dict = test_dict
         fp = StringIOFromNative(conf)
         cherrypy.config.update(fp)

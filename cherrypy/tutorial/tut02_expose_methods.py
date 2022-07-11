@@ -11,7 +11,6 @@ import cherrypy
 
 
 class HelloWorld:
-
     @cherrypy.expose
     def index(self):
         # Let's link to another method here.

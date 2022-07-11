@@ -24,7 +24,10 @@ class Page:
             <head>
             <body>
             <h2>%s</h2>
-        ''' % (self.title, self.title)
+        ''' % (
+            self.title,
+            self.title,
+        )
 
     def footer(self):
         return '''
@@ -51,12 +54,16 @@ class HomePage(Page):
     def index(self):
         # Note that we call the header and footer methods inherited
         # from the Page class!
-        return self.header() + '''
+        return (
+            self.header()
+            + '''
             <p>
             Isn't this exciting? There's
             <a href="./another/">another page</a>, too!
             </p>
-        ''' + self.footer()
+        '''
+            + self.footer()
+        )
 
 
 class AnotherPage(Page):
@@ -64,11 +71,15 @@ class AnotherPage(Page):
 
     @cherrypy.expose
     def index(self):
-        return self.header() + '''
+        return (
+            self.header()
+            + '''
             <p>
             And this is the amazing second page!
             </p>
-        ''' + self.footer()
+        '''
+            + self.footer()
+        )
 
 
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')

@@ -97,17 +97,16 @@ function init() {
 
 
 class Root(object):
-
     def page(self):
         changemsg = []
         if cherrypy.session.id != cherrypy.session.originalid:
             if cherrypy.session.originalid is None:
-                changemsg.append(
-                    'Created new session because no session id was given.')
+                changemsg.append('Created new session because no session id was given.')
             if cherrypy.session.missing:
                 changemsg.append(
                     'Created new session due to missing '
-                    '(expired or malicious) session.')
+                    '(expired or malicious) session.'
+                )
             if cherrypy.session.regenerated:
                 changemsg.append('Application generated a new session.')
 
@@ -122,9 +121,7 @@ class Root(object):
             'respcookie': cherrypy.response.cookie.output(),
             'reqcookie': cherrypy.request.cookie.output(),
             'sessiondata': list(cherrypy.session.items()),
-            'servertime': (
-                datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'
-            ),
+            'servertime': (datetime.utcnow().strftime('%Y/%m/%d %H:%M') + ' UTC'),
             'serverunixtime': calendar.timegm(datetime.utcnow().timetuple()),
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,
@@ -151,9 +148,11 @@ class Root(object):
 
 
 if __name__ == '__main__':
-    cherrypy.config.update({
-        # 'environment': 'production',
-        'log.screen': True,
-        'tools.sessions.on': True,
-    })
+    cherrypy.config.update(
+        {
+            # 'environment': 'production',
+            'log.screen': True,
+            'tools.sessions.on': True,
+        }
+    )
     cherrypy.quickstart(Root())

@@ -22,22 +22,22 @@ class RoutesDispatchTest(helper.CPWebCase):
             pytest.skip('Install routes to test RoutesDispatcher code')
 
         class Dummy:
-
             def index(self):
                 return 'I said good day!'
 
         class City:
-
             def __init__(self, name):
                 self.name = name
                 self.population = 10000
 
-            @cherrypy.config(**{
-                'tools.response_headers.on': True,
-                'tools.response_headers.headers': [
-                    ('Content-Language', 'en-GB'),
-                ],
-            })
+            @cherrypy.config(
+                **{
+                    'tools.response_headers.on': True,
+                    'tools.response_headers.headers': [
+                        ('Content-Language', 'en-GB'),
+                    ],
+                }
+            )
             def index(self, **kwargs):
                 return 'Welcome to %s, pop. %s' % (self.name, self.population)
 
@@ -46,13 +46,25 @@ class RoutesDispatchTest(helper.CPWebCase):
                 return 'OK'
 
         d = cherrypy.dispatch.RoutesDispatcher()
-        d.connect(action='index', name='hounslow', route='/hounslow',
-                  controller=City('Hounslow'))
         d.connect(
-            name='surbiton', route='/surbiton', controller=City('Surbiton'),
-            action='index', conditions=dict(method=['GET']))
-        d.mapper.connect('/surbiton', controller='surbiton',
-                         action='update', conditions=dict(method=['POST']))
+            action='index',
+            name='hounslow',
+            route='/hounslow',
+            controller=City('Hounslow'),
+        )
+        d.connect(
+            name='surbiton',
+            route='/surbiton',
+            controller=City('Surbiton'),
+            action='index',
+            conditions=dict(method=['GET']),
+        )
+        d.mapper.connect(
+            '/surbiton',
+            controller='surbiton',
+            action='update',
+            conditions=dict(method=['POST']),
+        )
         d.connect('main', ':action', controller=Dummy())
 
         conf = {'/': {'request.dispatch': d}}

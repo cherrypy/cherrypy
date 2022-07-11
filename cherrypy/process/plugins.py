@@ -97,16 +97,18 @@ class SignalHandler(object):
     def __init__(self, bus):
         self.bus = bus
         # Set default handlers
-        self.handlers = {'SIGTERM': self.bus.exit,
-                         'SIGHUP': self.handle_SIGHUP,
-                         'SIGUSR1': self.bus.graceful,
-                         }
+        self.handlers = {
+            'SIGTERM': self.bus.exit,
+            'SIGHUP': self.handle_SIGHUP,
+            'SIGUSR1': self.bus.graceful,
+        }
 
         if sys.platform[:4] == 'java':
             del self.handlers['SIGUSR1']
             self.handlers['SIGUSR2'] = self.bus.graceful
-            self.bus.log('SIGUSR1 cannot be set on the JVM platform. '
-                         'Using SIGUSR2 instead.')
+            self.bus.log(
+                'SIGUSR1 cannot be set on the JVM platform. ' 'Using SIGUSR2 instead.'
+            )
             self.handlers['SIGINT'] = self._jython_SIGINT_handler
 
         self._previous_handlers = {}
@@ -131,10 +133,7 @@ class SignalHandler(object):
         is executing inside other process like in a CI tool
         (Buildbot, Jenkins).
         """
-        return (
-            self._original_pid != os.getpid() and
-            not os.isatty(sys.stdin.fileno())
-        )
+        return self._original_pid != os.getpid() and not os.isatty(sys.stdin.fileno())
 
     def subscribe(self):
         """Subscribe self.handlers to signals."""
@@ -158,12 +157,17 @@ class SignalHandler(object):
             try:
                 our_handler = _signal.signal(signum, handler)
                 if our_handler is None:
-                    self.bus.log('Restored old %s handler %r, but our '
-                                 'handler was not registered.' %
-                                 (signame, handler), level=30)
+                    self.bus.log(
+                        'Restored old %s handler %r, but our '
+                        'handler was not registered.' % (signame, handler),
+                        level=30,
+                    )
             except ValueError:
-                self.bus.log('Unable to restore %s handler %r.' %
-                             (signame, handler), level=40, traceback=True)
+                self.bus.log(
+                    'Unable to restore %s handler %r.' % (signame, handler),
+                    level=40,
+                    traceback=True,
+                )
 
     def set_handler(self, signal, listener=None):
         """Subscribe a handler for the given signal (number or name).
@@ -241,8 +245,7 @@ class DropPrivileges(SimplePlugin):
     def uid(self, val):
         if val is not None:
             if pwd is None:
-                self.bus.log('pwd module not available; ignoring uid.',
-                             level=30)
+                self.bus.log('pwd module not available; ignoring uid.', level=30)
                 val = None
             elif isinstance(val, text_or_bytes):
                 val = pwd.getpwnam(val)[2]
@@ -257,8 +260,7 @@ class DropPrivileges(SimplePlugin):
     def gid(self, val):
         if val is not None:
             if grp is None:
-                self.bus.log('grp module not available; ignoring gid.',
-                             level=30)
+                self.bus.log('grp module not available; ignoring gid.', level=30)
                 val = None
             elif isinstance(val, text_or_bytes):
                 val = grp.getgrnam(val)[2]
@@ -279,8 +281,7 @@ class DropPrivileges(SimplePlugin):
             try:
                 os.umask
             except AttributeError:
-                self.bus.log('umask function not available; ignoring umask.',
-                             level=30)
+                self.bus.log('umask function not available; ignoring umask.', level=30)
                 val = None
         self._umask = val
 
@@ -297,8 +298,7 @@ class DropPrivileges(SimplePlugin):
 
         if self.finalized:
             if not (self.uid is None and self.gid is None):
-                self.bus.log('Already running as uid: %r gid: %r' %
-                             current_ids())
+                self.bus.log('Already running as uid: %r gid: %r' % current_ids())
         else:
             if self.uid is None and self.gid is None:
                 if pwd or grp:
@@ -321,10 +321,10 @@ class DropPrivileges(SimplePlugin):
                 self.bus.log('umask not set', level=30)
             else:
                 old_umask = os.umask(self.umask)
-                self.bus.log('umask old: %03o, new: %03o' %
-                             (old_umask, self.umask))
+                self.bus.log('umask old: %03o, new: %03o' % (old_umask, self.umask))
 
         self.finalized = True
+
     # This is slightly higher than the priority for server.start
     # in order to facilitate the most common use: starting on a low
     # port (which requires root) and then dropping to another user.
@@ -349,8 +349,7 @@ class Daemonizer(SimplePlugin):
     indicates if the process successfully finished the first fork.
     """
 
-    def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
-                 stderr='/dev/null'):
+    def __init__(self, bus, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         SimplePlugin.__init__(self, bus)
         self.stdin = stdin
         self.stdout = stdout
@@ -367,19 +366,25 @@ class Daemonizer(SimplePlugin):
         #  world is what to do with all of the threads..."
         # So we check for active threads:
         if threading.active_count() != 1:
-            self.bus.log('There are %r active threads. '
-                         'Daemonizing now may cause strange failures.' %
-                         threading.enumerate(), level=30)
+            self.bus.log(
+                'There are %r active threads. '
+                'Daemonizing now may cause strange failures.' % threading.enumerate(),
+                level=30,
+            )
 
         self.daemonize(self.stdin, self.stdout, self.stderr, self.bus.log)
 
         self.finalized = True
+
     start.priority = 65
 
     @staticmethod
     def daemonize(
-            stdin='/dev/null', stdout='/dev/null', stderr='/dev/null',
-            logger=lambda msg: None):
+        stdin='/dev/null',
+        stdout='/dev/null',
+        stderr='/dev/null',
+        logger=lambda msg: None,
+    ):
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
         # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -388,9 +393,7 @@ class Daemonizer(SimplePlugin):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        error_tmpl = (
-            '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
-        )
+        error_tmpl = '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
 
         for fork in range(2):
             msg = ['Forking once.', 'Forking twice.'][fork]
@@ -440,6 +443,7 @@ class PIDFile(SimplePlugin):
                 f.write(ntob('%s\n' % pid, 'utf8'))
             self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
             self.finalized = True
+
     start.priority = 70
 
     def exit(self):
@@ -476,8 +480,10 @@ class PerpetualTimer(threading.Timer):
             except Exception:
                 if self.bus:
                     self.bus.log(
-                        'Error in perpetual timer thread function %r.' %
-                        self.function, level=40, traceback=True)
+                        'Error in perpetual timer thread function %r.' % self.function,
+                        level=40,
+                        traceback=True,
+                    )
                 # Quit on first error to avoid massive logs.
                 raise
 
@@ -518,8 +524,11 @@ class BackgroundTask(threading.Thread):
                 self.function(*self.args, **self.kwargs)
             except Exception:
                 if self.bus:
-                    self.bus.log('Error in background task thread function %r.'
-                                 % self.function, level=40, traceback=True)
+                    self.bus.log(
+                        'Error in background task thread function %r.' % self.function,
+                        level=40,
+                        traceback=True,
+                    )
                 # Quit on first error to avoid massive logs.
                 raise
 
@@ -551,20 +560,23 @@ class Monitor(SimplePlugin):
         if self.frequency > 0:
             threadname = self.name or self.__class__.__name__
             if self.thread is None:
-                self.thread = BackgroundTask(self.frequency, self.callback,
-                                             bus=self.bus)
+                self.thread = BackgroundTask(
+                    self.frequency, self.callback, bus=self.bus
+                )
                 self.thread.name = threadname
                 self.thread.start()
                 self.bus.log('Started monitor thread %r.' % threadname)
             else:
                 self.bus.log('Monitor thread %r already started.' % threadname)
+
     start.priority = 70
 
     def stop(self):
         """Stop our callback's background task thread."""
         if self.thread is None:
-            self.bus.log('No thread running for %s.' %
-                         self.name or self.__class__.__name__)
+            self.bus.log(
+                'No thread running for %s.' % self.name or self.__class__.__name__
+            )
         else:
             if self.thread is not threading.current_thread():
                 name = self.thread.name
@@ -623,6 +635,7 @@ class Autoreloader(Monitor):
         if self.thread is None:
             self.mtimes = {}
         Monitor.start(self)
+
     start.priority = 70
 
     def sysfiles(self):
@@ -637,10 +650,7 @@ class Autoreloader(Monitor):
     @classmethod
     def _file_for_module(cls, module):
         """Return the relevant file for the module."""
-        return (
-            cls._archive_for_zip_module(module)
-            or cls._file_for_file_module(module)
-        )
+        return cls._archive_for_zip_module(module) or cls._file_for_file_module(module)
 
     @staticmethod
     def _archive_for_zip_module(module):
@@ -661,8 +671,10 @@ class Autoreloader(Monitor):
     @staticmethod
     def _make_absolute(filename):
         """Ensure filename is absolute to avoid effect of os.chdir."""
-        return filename if os.path.isabs(filename) else (
-            os.path.normpath(os.path.join(_module__file__base, filename))
+        return (
+            filename
+            if os.path.isabs(filename)
+            else (os.path.normpath(os.path.join(_module__file__base, filename)))
         )
 
     def run(self):
@@ -689,11 +701,9 @@ class Autoreloader(Monitor):
                 else:
                     if mtime is None or mtime > oldtime:
                         # The file has been deleted or modified.
-                        self.bus.log('Restarting because %s changed.' %
-                                     filename)
+                        self.bus.log('Restarting because %s changed.' % filename)
                         self.thread.cancel()
-                        self.bus.log('Stopped thread %r.' %
-                                     self.thread.name)
+                        self.bus.log('Stopped thread %r.' % self.thread.name)
                         self.bus.restart()
                         return
 
@@ -752,4 +762,5 @@ class ThreadManager(SimplePlugin):
         for thread_ident, i in self.threads.items():
             self.bus.publish('stop_thread', i)
         self.threads.clear()
+
     graceful = stop

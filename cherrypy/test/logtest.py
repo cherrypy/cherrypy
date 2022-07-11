@@ -15,6 +15,7 @@ try:
 
     def getchar():
         return msvcrt.getch()
+
 except ImportError:
     # Unix getchr
     import tty
@@ -57,9 +58,11 @@ class LogCase(object):
         if not self.interactive:
             raise pytest.fail(msg)
 
-        p = ('    Show: '
-             '[L]og [M]arker [P]attern; '
-             '[I]gnore, [R]aise, or sys.e[X]it >> ')
+        p = (
+            '    Show: '
+            '[L]og [M]arker [P]attern; '
+            '[I]gnore, [R]aise, or sys.e[X]it >> '
+        )
         sys.stdout.write(p + ' ')
         # ARGH
         sys.stdout.flush()
@@ -107,10 +110,7 @@ class LogCase(object):
         self.lastmarker = key
 
         with open(self.logfile, 'ab+') as f:
-            f.write(
-                b'%s%s\n'
-                % (self.markerPrefix, key.encode('utf-8'))
-            )
+            f.write(b'%s%s\n' % (self.markerPrefix, key.encode('utf-8')))
 
     def _read_marked_region(self, marker=None):
         """Return lines from self.logfile in the marked region.
@@ -118,8 +118,8 @@ class LogCase(object):
         If marker is None, self.lastmarker is used. If the log hasn't
         been marked (using self.markLog), the entire log will be returned.
         """
-# Give the logger time to finish writing?
-# time.sleep(0.5)
+        # Give the logger time to finish writing?
+        # time.sleep(0.5)
 
         logfile = self.logfile
         marker = marker or self.lastmarker
@@ -134,8 +134,7 @@ class LogCase(object):
         with open(logfile, 'rb') as f:
             for line in f:
                 if in_region:
-                    if (line.startswith(self.markerPrefix)
-                            and marker not in line):
+                    if line.startswith(self.markerPrefix) and marker not in line:
                         break
                     else:
                         data.append(line)
@@ -178,10 +177,7 @@ class LogCase(object):
         been marked (using self.markLog), the entire log will be searched.
         """
         data = self._read_marked_region(marker)
-        data = [
-            chunk.decode('utf-8').rstrip('\n').rstrip('\r')
-            for chunk in data
-        ]
+        data = [chunk.decode('utf-8').rstrip('\n').rstrip('\r') for chunk in data]
         for log_chunk in data:
             try:
                 uuid_log = data[-1]
@@ -215,17 +211,19 @@ class LogCase(object):
                 msg = '%r not found on log line %r' % (lines, sliceargs)
                 self._handleLogError(
                     msg,
-                    [data[sliceargs], '--EXTRA CONTEXT--'] + data[
-                        sliceargs + 1:sliceargs + 6],
+                    [data[sliceargs], '--EXTRA CONTEXT--']
+                    + data[sliceargs + 1 : sliceargs + 6],
                     marker,
-                    lines)
+                    lines,
+                )
         else:
             # Multiple args. Use __getslice__ and require lines to be list.
             if isinstance(lines, tuple):
                 lines = list(lines)
             elif isinstance(lines, text_or_bytes):
-                raise TypeError("The 'lines' arg must be a list when "
-                                "'sliceargs' is a tuple.")
+                raise TypeError(
+                    "The 'lines' arg must be a list when " "'sliceargs' is a tuple."
+                )
 
             start, stop = sliceargs
             for line, logline in zip(lines, data[start:stop]):

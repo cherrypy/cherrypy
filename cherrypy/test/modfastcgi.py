@@ -47,8 +47,9 @@ def read_process(cmd, args=''):
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r'(not recognized|No such file|not found)', firstline,
-                      re.IGNORECASE)):
+        if re.search(
+            r'(not recognized|No such file|not found)', firstline, re.IGNORECASE
+        ):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:
@@ -97,7 +98,8 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
 
     def start(self, modulename):
         cherrypy.server.httpserver = servers.FlupFCGIServer(
-            application=erase_script_name, bindAddress=('127.0.0.1', 4000))
+            application=erase_script_name, bindAddress=('127.0.0.1', 4000)
+        )
         cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
         cherrypy.server.socket_port = 4000
         # For FCGI, we both start apache...
@@ -114,8 +116,11 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
         # Write the Apache conf file.
         with open(fcgiconf, 'wb') as f:
             server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
-            output = self.template % {'port': self.port, 'root': curdir,
-                                      'server': server}
+            output = self.template % {
+                'port': self.port,
+                'root': curdir,
+                'server': server,
+            }
             output = output.replace('\r\n', '\n')
             f.write(output)
 
@@ -130,4 +135,5 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
 
     def sync_apps(self):
         cherrypy.server.httpserver.fcgiserver.application = self.get_app(
-            erase_script_name)
+            erase_script_name
+        )

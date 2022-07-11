@@ -13,7 +13,6 @@ import cherrypy
 
 
 class GeneratorDemo:
-
     def header(self):
         return '<html><body><h2>Generators rule!</h2>'
 

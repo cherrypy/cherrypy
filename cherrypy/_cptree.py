@@ -59,8 +59,12 @@ class Application(object):
 
     def __repr__(self):
         """Generate a representation of the Application instance."""
-        return '%s.%s(%r, %r)' % (self.__module__, self.__class__.__name__,
-                                  self.root, self.script_name)
+        return '%s.%s(%r, %r)' % (
+            self.__module__,
+            self.__class__.__name__,
+            self.root,
+            self.script_name,
+        )
 
     script_name_doc = """The URI "mount point" for this app. A mount point
     is that portion of the URI which is constant for all URIs that are
@@ -215,7 +219,8 @@ class Tree(object):
                 'objects may, however, possess a script_name of None (in '
                 'order to inpect the WSGI environ for SCRIPT_NAME upon each '
                 'request). You cannot mount such Applications on this Tree; '
-                'you must pass them to a WSGI server interface directly.')
+                'you must pass them to a WSGI server interface directly.'
+            )
 
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip('/')
@@ -225,7 +230,8 @@ class Tree(object):
             if script_name != '' and script_name != app.script_name:
                 raise ValueError(
                     'Cannot specify a different script name and pass an '
-                    'Application instance to cherrypy.mount')
+                    'Application instance to cherrypy.mount'
+                )
             script_name = app.script_name
         else:
             app = Application(root, script_name)
@@ -265,8 +271,7 @@ class Tree(object):
         if path is None:
             try:
                 request = cherrypy.serving.request
-                path = httputil.urljoin(request.script_name,
-                                        request.path_info)
+                path = httputil.urljoin(request.script_name, request.path_info)
             except AttributeError:
                 return None
 
@@ -278,7 +283,7 @@ class Tree(object):
                 return None
 
             # Move one node up the tree and try again.
-            path = path[:path.rfind('/')]
+            path = path[: path.rfind('/')]
 
     def __call__(self, environ, start_response):
         """Pre-initialize WSGI env and call WSGI-callable."""
@@ -286,8 +291,9 @@ class Tree(object):
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
         env1x = environ
-        path = httputil.urljoin(env1x.get('SCRIPT_NAME', ''),
-                                env1x.get('PATH_INFO', ''))
+        path = httputil.urljoin(
+            env1x.get('SCRIPT_NAME', ''), env1x.get('PATH_INFO', '')
+        )
         sn = self.script_name(path or '/')
         if sn is None:
             start_response('404 Not Found', [])
@@ -298,5 +304,5 @@ class Tree(object):
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
         environ['SCRIPT_NAME'] = sn
-        environ['PATH_INFO'] = path[len(sn.rstrip('/')):]
+        environ['PATH_INFO'] = path[len(sn.rstrip('/')) :]
         return app(environ, start_response)

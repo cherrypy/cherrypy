@@ -16,7 +16,6 @@ thisdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 class Dependency:
-
     def __init__(self, bus):
         self.bus = bus
         self.running = False
@@ -53,7 +52,6 @@ db_connection = Dependency(engine)
 
 def setup_server():
     class Root:
-
         @cherrypy.expose
         def index(self):
             return 'Hello World'
@@ -68,11 +66,14 @@ def setup_server():
             return 'app was (gracefully) restarted succesfully'
 
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({
-        'environment': 'test_suite',
-    })
+    cherrypy.config.update(
+        {
+            'environment': 'test_suite',
+        }
+    )
 
     db_connection.subscribe()
+
 
 # ------------ Enough helpers. Time for real live test cases. ------------ #
 
@@ -121,6 +122,7 @@ class ServerStateTests(helper.CPWebCase):
             self.getPage('/')
             self.assertBody('Hello World')
             engine.exit()
+
         cherrypy.server.start()
         engine.start_with_callback(exittest)
         engine.block()
@@ -254,8 +256,9 @@ class ServerStateTests(helper.CPWebCase):
 
             self.getPage('/start')
             if not (float(self.body) > start):
-                raise AssertionError('start time %s not greater than %s' %
-                                     (float(self.body), start))
+                raise AssertionError(
+                    'start time %s not greater than %s' % (float(self.body), start)
+                )
         finally:
             # Shut down the spawned process
             self.getPage('/exit')
@@ -269,8 +272,7 @@ class ServerStateTests(helper.CPWebCase):
 
         # If a process errors during start, it should stop the engine
         # and exit with a non-zero exit code.
-        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
-                             wait=True)
+        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'), wait=True)
         p.write_conf(
             extra="""starterror: True
 test_case_name: "test_5_Start_Error"
@@ -282,7 +284,6 @@ test_case_name: "test_5_Start_Error"
 
 
 class PluginTests(helper.CPWebCase):
-
     def test_daemonize(self):
         if os.name not in ['posix']:
             return self.skip('skipped (not on posix) ')
@@ -291,12 +292,14 @@ class PluginTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
-                             wait=True, daemonize=True,
-                             socket_host='127.0.0.1',
-                             socket_port=8081)
-        p.write_conf(
-            extra='test_case_name: "test_daemonize"')
+        p = helper.CPProcess(
+            ssl=(self.scheme.lower() == 'https'),
+            wait=True,
+            daemonize=True,
+            socket_host='127.0.0.1',
+            socket_port=8081,
+        )
+        p.write_conf(extra='test_case_name: "test_daemonize"')
         p.start(imports='cherrypy.test._test_states_demo')
         try:
             # Just get the pid of the daemonization process.
@@ -316,7 +319,6 @@ class PluginTests(helper.CPWebCase):
 
 
 class SignalHandlingTests(helper.CPWebCase):
-
     def test_SIGHUP_tty(self):
         # When not daemonized, SIGHUP should shut down the server.
         try:
@@ -326,8 +328,7 @@ class SignalHandlingTests(helper.CPWebCase):
 
         # Spawn the process.
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
-        p.write_conf(
-            extra='test_case_name: "test_SIGHUP_tty"')
+        p.write_conf(extra='test_case_name: "test_SIGHUP_tty"')
         p.start(imports='cherrypy.test._test_states_demo')
         # Send a SIGHUP
         os.kill(p.get_pid(), SIGHUP)
@@ -347,10 +348,10 @@ class SignalHandlingTests(helper.CPWebCase):
         # Spawn the process and wait, when this returns, the original process
         # is finished.  If it daemonized properly, we should still be able
         # to access pages.
-        p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
-                             wait=True, daemonize=True)
-        p.write_conf(
-            extra='test_case_name: "test_SIGHUP_daemonized"')
+        p = helper.CPProcess(
+            ssl=(self.scheme.lower() == 'https'), wait=True, daemonize=True
+        )
+        p.write_conf(extra='test_case_name: "test_SIGHUP_daemonized"')
         p.start(imports='cherrypy.test._test_states_demo')
 
         pid = p.get_pid()
@@ -381,8 +382,7 @@ class SignalHandlingTests(helper.CPWebCase):
 
         # Spawn a normal, undaemonized process.
         p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'))
-        p.write_conf(
-            extra='test_case_name: "test_SIGTERM"')
+        p.write_conf(extra='test_case_name: "test_SIGTERM"')
         p.start(imports='cherrypy.test._test_states_demo')
         # Send a SIGTERM
         os.kill(p.get_pid(), signal.SIGTERM)
@@ -391,10 +391,10 @@ class SignalHandlingTests(helper.CPWebCase):
 
         if os.name in ['posix']:
             # Spawn a daemonized process and test again.
-            p = helper.CPProcess(ssl=(self.scheme.lower() == 'https'),
-                                 wait=True, daemonize=True)
-            p.write_conf(
-                extra='test_case_name: "test_SIGTERM_2"')
+            p = helper.CPProcess(
+                ssl=(self.scheme.lower() == 'https'), wait=True, daemonize=True
+            )
+            p.write_conf(extra='test_case_name: "test_SIGTERM_2"')
             p.start(imports='cherrypy.test._test_states_demo')
             # Send a SIGTERM
             os.kill(p.get_pid(), signal.SIGTERM)
@@ -416,7 +416,8 @@ class SignalHandlingTests(helper.CPWebCase):
         p.write_conf(
             extra="""unsubsig: True
 test_case_name: "test_signal_handler_unsubscribe"
-""")
+"""
+        )
         p.start(imports='cherrypy.test._test_states_demo')
         # Ask the process to quit
         os.kill(p.get_pid(), signal.SIGTERM)
@@ -427,8 +428,7 @@ test_case_name: "test_signal_handler_unsubscribe"
         with open(p.error_log, 'rb') as f:
             log_lines = list(f)
             assert any(
-                line.endswith(b'I am an old SIGTERM handler.\n')
-                for line in log_lines
+                line.endswith(b'I am an old SIGTERM handler.\n') for line in log_lines
             )
 
 
@@ -456,8 +456,8 @@ def test_safe_wait_INADDR_ANY():  # pylint: disable=invalid-name
 
     # Wait on the free port that's unbound
     with pytest.warns(
-            UserWarning,
-            match='Unable to verify that the server is bound on ',
+        UserWarning,
+        match='Unable to verify that the server is bound on ',
     ) as warnings:
         # pylint: disable=protected-access
         with servers._safe_wait(inaddr_any, free_port):

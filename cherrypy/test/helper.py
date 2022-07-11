@@ -134,8 +134,7 @@ class LocalWSGISupervisor(LocalSupervisor):
             try:
                 from wsgiref import validate
             except ImportError:
-                warnings.warn(
-                    'Error importing wsgiref. The validator will not run.')
+                warnings.warn('Error importing wsgiref. The validator will not run.')
             else:
                 # wraps the app in the validator
                 app = validate.validator(app)
@@ -145,6 +144,7 @@ class LocalWSGISupervisor(LocalSupervisor):
 
 def get_cpmodpy_supervisor(**options):
     from cherrypy.test import modpy
+
     sup = modpy.ModPythonSupervisor(**options)
     sup.template = modpy.conf_cpmodpy
     return sup
@@ -152,6 +152,7 @@ def get_cpmodpy_supervisor(**options):
 
 def get_modpygw_supervisor(**options):
     from cherrypy.test import modpy
+
     sup = modpy.ModPythonSupervisor(**options)
     sup.template = modpy.conf_modpython_gateway
     sup.using_wsgi = True
@@ -160,16 +161,19 @@ def get_modpygw_supervisor(**options):
 
 def get_modwsgi_supervisor(**options):
     from cherrypy.test import modwsgi
+
     return modwsgi.ModWSGISupervisor(**options)
 
 
 def get_modfcgid_supervisor(**options):
     from cherrypy.test import modfcgid
+
     return modfcgid.ModFCGISupervisor(**options)
 
 
 def get_modfastcgi_supervisor(**options):
     from cherrypy.test import modfastcgi
+
     return modfastcgi.ModFCGISupervisor(**options)
 
 
@@ -183,15 +187,16 @@ class CPWebCase(webtest.WebCase):
     script_name = ''
     scheme = 'http'
 
-    available_servers = {'wsgi': LocalWSGISupervisor,
-                         'wsgi_u': get_wsgi_u_supervisor,
-                         'native': NativeServerSupervisor,
-                         'cpmodpy': get_cpmodpy_supervisor,
-                         'modpygw': get_modpygw_supervisor,
-                         'modwsgi': get_modwsgi_supervisor,
-                         'modfcgid': get_modfcgid_supervisor,
-                         'modfastcgi': get_modfastcgi_supervisor,
-                         }
+    available_servers = {
+        'wsgi': LocalWSGISupervisor,
+        'wsgi_u': get_wsgi_u_supervisor,
+        'native': NativeServerSupervisor,
+        'cpmodpy': get_cpmodpy_supervisor,
+        'modpygw': get_modpygw_supervisor,
+        'modwsgi': get_modwsgi_supervisor,
+        'modfcgid': get_modfcgid_supervisor,
+        'modfastcgi': get_modfastcgi_supervisor,
+    }
     default_server = 'wsgi'
 
     @classmethod
@@ -218,11 +223,14 @@ class CPWebCase(webtest.WebCase):
         else:
             conf = conf or {}
         baseconf = conf.copy()
-        baseconf.update({'server.socket_host': supervisor.host,
-                         'server.socket_port': supervisor.port,
-                         'server.protocol_version': supervisor.protocol,
-                         'environment': 'test_suite',
-                         })
+        baseconf.update(
+            {
+                'server.socket_host': supervisor.host,
+                'server.socket_port': supervisor.port,
+                'server.protocol_version': supervisor.protocol,
+                'environment': 'test_suite',
+            }
+        )
         if supervisor.scheme == 'https':
             # baseconf['server.ssl_module'] = 'builtin'
             baseconf['server.ssl_certificate'] = serverpem
@@ -240,7 +248,7 @@ class CPWebCase(webtest.WebCase):
 
     @classmethod
     def setup_class(cls):
-        ''
+        ''''''
         # Creates a server
         conf = {
             'scheme': 'http',
@@ -250,8 +258,7 @@ class CPWebCase(webtest.WebCase):
             'validate': False,
             'server': 'wsgi',
         }
-        supervisor_factory = cls.available_servers.get(
-            conf.get('server', 'wsgi'))
+        supervisor_factory = cls.available_servers.get(conf.get('server', 'wsgi'))
         if supervisor_factory is None:
             raise RuntimeError('Unknown server in config: %s' % conf['server'])
         supervisor = supervisor_factory(**conf)
@@ -278,7 +285,7 @@ class CPWebCase(webtest.WebCase):
 
     @classmethod
     def teardown_class(cls):
-        ''
+        ''''''
         if hasattr(cls, 'setup_server'):
             cls.supervisor.stop()
 
@@ -298,21 +305,25 @@ class CPWebCase(webtest.WebCase):
         return self.script_name.rstrip('/')
 
     def base(self):
-        if ((self.scheme == 'http' and self.PORT == 80) or
-                (self.scheme == 'https' and self.PORT == 443)):
+        if (self.scheme == 'http' and self.PORT == 80) or (
+            self.scheme == 'https' and self.PORT == 443
+        ):
             port = ''
         else:
             port = ':%s' % self.PORT
 
-        return '%s://%s%s%s' % (self.scheme, self.HOST, port,
-                                self.script_name.rstrip('/'))
+        return '%s://%s%s%s' % (
+            self.scheme,
+            self.HOST,
+            port,
+            self.script_name.rstrip('/'),
+        )
 
     def exit(self):
         sys.exit()
 
     def getPage(self, url, *args, **kwargs):
-        """Open the url.
-        """
+        """Open the url."""
         if self.script_name:
             url = httputil.urljoin(self.script_name, url)
         return webtest.WebCase.getPage(self, url, *args, **kwargs)
@@ -333,14 +344,15 @@ class CPWebCase(webtest.WebCase):
         # Stick a match-all group (.*) in to grab the traceback.
         def esc(text):
             return re.escape(ntob(text))
+
         epage = re.escape(page)
         epage = epage.replace(
             esc('<pre id="traceback"></pre>'),
-            esc('<pre id="traceback">') + b'(.*)' + esc('</pre>'))
+            esc('<pre id="traceback">') + b'(.*)' + esc('</pre>'),
+        )
         m = re.match(epage, self.body, re.DOTALL)
         if not m:
-            self._handlewebError(
-                'Error page does not match; expected:\n' + page)
+            self._handlewebError('Error page does not match; expected:\n' + page)
             return
 
         # Now test the pattern against the traceback
@@ -350,8 +362,8 @@ class CPWebCase(webtest.WebCase):
                 self._handlewebError('Error page contains traceback')
         else:
             if (m is None) or (
-                not re.search(ntob(re.escape(pattern), self.encoding),
-                              m.group(1))):
+                not re.search(ntob(re.escape(pattern), self.encoding), m.group(1))
+            ):
                 msg = 'Error page does not contain %s in traceback'
                 self._handlewebError(msg % repr(pattern))
 
@@ -367,8 +379,9 @@ class CPWebCase(webtest.WebCase):
         else:
             diff = dt2 - dt1
         if not diff < datetime.timedelta(seconds=seconds):
-            raise AssertionError('%r and %r are not within %r seconds.' %
-                                 (dt1, dt2, seconds))
+            raise AssertionError(
+                '%r and %r are not within %r seconds.' % (dt1, dt2, seconds)
+            )
 
 
 def _test_method_sorter(_, x, y):
@@ -394,6 +407,7 @@ def setup_client():
     if cherrypy.server.ssl_certificate:
         CPWebCase.scheme = 'https'
 
+
 # --------------------------- Spawning helpers --------------------------- #
 
 
@@ -414,8 +428,9 @@ log.access_file: r'%(access_log)s'
     error_log = os.path.join(thisdir, 'test.error.log')
     access_log = os.path.join(thisdir, 'test.access.log')
 
-    def __init__(self, wait=False, daemonize=False, ssl=False,
-                 socket_host=None, socket_port=None):
+    def __init__(
+        self, wait=False, daemonize=False, ssl=False, socket_host=None, socket_port=None
+    ):
         self.wait = wait
         self.daemonize = daemonize
         self.ssl = ssl
@@ -428,7 +443,10 @@ log.access_file: r'%(access_log)s'
             ssl = """
 server.ssl_certificate: r'%s'
 server.ssl_private_key: r'%s'
-""" % (serverpem, serverpem)
+""" % (
+                serverpem,
+                serverpem,
+            )
         else:
             ssl = ''
 
@@ -450,8 +468,10 @@ server.ssl_private_key: r'%s'
         args = [
             '-m',
             'cherrypy',
-            '-c', self.config_file,
-            '-p', self.pid_file,
+            '-c',
+            self.config_file,
+            '-p',
+            self.pid_file,
         ]
         r"""
         Command for running cherryd server with autoreload enabled
@@ -487,8 +507,7 @@ server.ssl_private_key: r'%s'
         # defined.
         grandparentdir = os.path.abspath(os.path.join(thisdir, '..', '..'))
         if env.get('PYTHONPATH', ''):
-            env['PYTHONPATH'] = os.pathsep.join(
-                (grandparentdir, env['PYTHONPATH']))
+            env['PYTHONPATH'] = os.pathsep.join((grandparentdir, env['PYTHONPATH']))
         else:
             env['PYTHONPATH'] = grandparentdir
         self._proc = subprocess.Popen([sys.executable] + args, env=env)

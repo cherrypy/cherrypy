@@ -41,7 +41,6 @@ extensions += [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-
     # Third-party extensions:
     'sphinxcontrib.apidoc',
 ]
@@ -64,10 +63,12 @@ extlinks = {
     'user': (f'{urls.github}/sponsors/%s', '@'),
 }
 
-intersphinx_mapping.update({
-    'cheroot': ('https://cheroot.cherrypy.dev/en/latest/', None),
-    'pytest-docs': ('https://docs.pytest.org/en/latest/', None),
-})
+intersphinx_mapping.update(
+    {
+        'cheroot': ('https://cheroot.cherrypy.dev/en/latest/', None),
+        'pytest-docs': ('https://docs.pytest.org/en/latest/', None),
+    }
+)
 
 
 # -- Options for LaTeX output --------------------------------------------
@@ -99,6 +100,7 @@ def mock_pywin32():
     import contextlib
     import importlib
     import sys
+
     with contextlib.suppress(ImportError):
         importlib.import_module('win32api')
         return
@@ -106,7 +108,10 @@ def mock_pywin32():
     from unittest import mock
 
     MOCK_MODULES = [
-        'win32api', 'win32con', 'win32event', 'win32service',
+        'win32api',
+        'win32con',
+        'win32event',
+        'win32service',
         'win32serviceutil',
     ]
     for mod_name in MOCK_MODULES:

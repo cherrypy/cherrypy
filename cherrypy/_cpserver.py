@@ -6,7 +6,7 @@ from cherrypy._cpcompat import text_or_bytes
 from cherrypy.process.servers import ServerAdapter
 
 
-__all__ = ('Server', )
+__all__ = ('Server',)
 
 
 class Server(ServerAdapter):
@@ -41,9 +41,11 @@ class Server(ServerAdapter):
     @socket_host.setter
     def socket_host(self, value):
         if value == '':
-            raise ValueError("The empty string ('') is not an allowed value. "
-                             "Use '0.0.0.0' instead to listen on all active "
-                             'interfaces (INADDR_ANY).')
+            raise ValueError(
+                "The empty string ('') is not an allowed value. "
+                "Use '0.0.0.0' instead to listen on all active "
+                'interfaces (INADDR_ANY).'
+            )
         self._socket_host = value
 
     socket_file = None
@@ -167,6 +169,7 @@ class Server(ServerAdapter):
             httpserver = self.instance
         if httpserver is None:
             from cherrypy import _cpwsgi_server
+
             httpserver = _cpwsgi_server.CPWSGIServer(self)
         if isinstance(httpserver, text_or_bytes):
             # Is anyone using this? Can I add an arg?
@@ -178,6 +181,7 @@ class Server(ServerAdapter):
         if not self.httpserver:
             self.httpserver, self.bind_addr = self.httpserver_from_self()
         super(Server, self).start()
+
     start.priority = 75
 
     @property
@@ -207,9 +211,11 @@ class Server(ServerAdapter):
                 self.socket_host, self.socket_port = value
                 self.socket_file = None
             except ValueError:
-                raise ValueError('bind_addr must be a (host, port) tuple '
-                                 '(for TCP sockets) or a string (for Unix '
-                                 'domain sockets), not %r' % value)
+                raise ValueError(
+                    'bind_addr must be a (host, port) tuple '
+                    '(for TCP sockets) or a string (for Unix '
+                    'domain sockets), not %r' % value
+                )
 
     def base(self):
         """Return the base for this server.
@@ -225,6 +231,7 @@ class Server(ServerAdapter):
             # Look up the host name, which should be the
             # safest thing to spit out in a URL.
             import socket
+
             host = socket.gethostname()
 
         port = self.socket_port

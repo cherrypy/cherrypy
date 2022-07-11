@@ -16,6 +16,7 @@ import cherrypy
 from cherrypy import tools, url
 
 import os
+
 local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
@@ -31,8 +32,11 @@ class Root:
 or a <a href='%s?n=14'>default</a> path.<br />
 Or, just look at the pretty picture:<br />
 <img src='%s' />
-</body></html>""" % (url('other'), url('else'),
-                     url('files/made_with_cherrypy_small.png'))
+</body></html>""" % (
+            url('other'),
+            url('else'),
+            url('files/made_with_cherrypy_small.png'),
+        )
 
     @cherrypy.expose
     def default(self, *args, **kwargs):
@@ -52,7 +56,7 @@ Or, just look at the pretty picture:<br />
         section='/files',
         dir=os.path.join(local_dir, 'static'),
         # Ignore .php files, etc.
-                match=r'\.(css|gif|html?|ico|jpe?g|js|png|swf|xml)$',
+        match=r'\.(css|gif|html?|ico|jpe?g|js|png|swf|xml)$',
     )
 
 

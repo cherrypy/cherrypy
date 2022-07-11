@@ -144,7 +144,8 @@ def merge(base, other):
                 'Application config must include section headers, but the '
                 "config you tried to merge doesn't have any sections. "
                 'Wrap your config in another dict with paths as section '
-                "headers, for example: {'/': config}.")
+                "headers, for example: {'/': config}."
+            )
         base.setdefault(section, {}).update(value_map)
 
 
@@ -169,9 +170,11 @@ class Config(reprconf.Config):
     @staticmethod
     def __call__(**kwargs):
         """Decorate for page handlers to set _cp_config."""
+
         def tool_decorator(f):
             _Vars(f).setdefault('_cp_config', {}).update(kwargs)
             return f
+
         return tool_decorator
 
 
@@ -239,6 +242,7 @@ def _server_namespace_handler(k, v):
         servername, k = atoms
         if servername not in cherrypy.servers:
             from cherrypy import _cpserver
+
             cherrypy.servers[servername] = _cpserver.Server()
             # On by default, but 'on = False' can unsubscribe it (see below).
             cherrypy.servers[servername].subscribe()

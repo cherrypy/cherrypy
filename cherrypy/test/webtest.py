@@ -3,8 +3,12 @@ import warnings
 
 from cheroot.test.webtest import (  # noqa
     interface,
-    WebCase, cleanHeaders, shb, openURL,
-    ServerError, server_error,
+    WebCase,
+    cleanHeaders,
+    shb,
+    openURL,
+    ServerError,
+    server_error,
 )
 
 

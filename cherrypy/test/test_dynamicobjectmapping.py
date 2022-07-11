@@ -6,7 +6,6 @@ script_names = ['', '/foo', '/users/fred/blog', '/corp/blog']
 
 def setup_server():
     class SubSubRoot:
-
         @cherrypy.expose
         def index(self):
             return 'SubSubRoot index'
@@ -29,7 +28,6 @@ def setup_server():
     }
 
     class SubRoot:
-
         @cherrypy.expose
         def index(self):
             return 'SubRoot index'
@@ -51,7 +49,6 @@ def setup_server():
     }
 
     class Root:
-
         @cherrypy.expose
         def index(self):
             return 'index'
@@ -71,7 +68,6 @@ def setup_server():
     # DynamicNodeAndMethodDispatcher example.
     # This example exposes a fairly naive HTTP api
     class User(object):
-
         def __init__(self, id, name):
             self.id = id
             self.name = name
@@ -95,7 +91,6 @@ def setup_server():
 
     @cherrypy.expose
     class UserContainerNode(object):
-
         def POST(self, name):
             """
             Allow the creation of a new Object
@@ -114,7 +109,6 @@ def setup_server():
 
     @cherrypy.expose
     class UserInstanceNode(object):
-
         def __init__(self, id):
             self.id = id
             self.user = user_lookup.get(id, None)
@@ -160,9 +154,7 @@ def setup_server():
             return 'DELETE %d' % id
 
     class ABHandler:
-
         class CustomDispatch:
-
             @cherrypy.expose
             def index(self, a, b):
                 return 'custom'
@@ -185,7 +177,6 @@ def setup_server():
             return 'deleting ' + str(a) + ' and ' + str(b)
 
     class IndexOnly:
-
         def _cp_dispatch(self, vpath):
             """Make sure that popping ALL of vpath still shows the index
             handler.
@@ -209,8 +200,8 @@ def setup_server():
         @cherrypy.expose
         def hi(self):
             return "hi was not interpreted as 'a' param"
-    DecoratedPopArgs = cherrypy.popargs(
-        'a', 'b', handler=ABHandler())(DecoratedPopArgs)
+
+    DecoratedPopArgs = cherrypy.popargs('a', 'b', handler=ABHandler())(DecoratedPopArgs)
 
     class NonDecoratedPopArgs:
 
@@ -233,15 +224,17 @@ def setup_server():
         def index(self):
             if 'a' in cherrypy.request.params:
                 raise Exception(
-                    'Parameterized handler argument ended up in '
-                    'request.params')
+                    'Parameterized handler argument ended up in ' 'request.params'
+                )
             return self.a
 
     class ParameterizedPopArgs:
 
         """Test cherrypy.popargs() with a function call handler"""
-    ParameterizedPopArgs = cherrypy.popargs(
-        'a', handler=ParameterizedHandler)(ParameterizedPopArgs)
+
+    ParameterizedPopArgs = cherrypy.popargs('a', handler=ParameterizedHandler)(
+        ParameterizedPopArgs
+    )
 
     Root.decorated = DecoratedPopArgs()
     Root.undecorated = NonDecoratedPopArgs()
@@ -256,9 +249,7 @@ def setup_server():
             '/': {
                 'user': (url or '/').split('/')[-2],
             },
-            '/users': {
-                'request.dispatch': md
-            },
+            '/users': {'request.dispatch': md},
         }
         cherrypy.tree.mount(Root(), url, conf)
 
@@ -372,14 +363,12 @@ class DynamicObjectMappingTest(helper.CPWebCase):
             self.assertHeader('Allow', headers)
 
             # Make sure POSTs update already existings resources
-            self.getPage('/users/%d' %
-                         id, method='POST', body='name=%s' % updatedname)
+            self.getPage('/users/%d' % id, method='POST', body='name=%s' % updatedname)
             self.assertBody('POST %d' % id)
             self.assertHeader('Allow', headers)
 
             # Make sure PUTs Update already existing resources.
-            self.getPage('/users/%d' %
-                         id, method='PUT', body='name=%s' % updatedname)
+            self.getPage('/users/%d' % id, method='PUT', body='name=%s' % updatedname)
             self.assertBody('PUT %d' % id)
             self.assertHeader('Allow', headers)
 

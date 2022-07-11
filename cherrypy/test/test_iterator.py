@@ -17,7 +17,6 @@ class IteratorBase(object):
 
 
 class OurGenerator(IteratorBase):
-
     def __iter__(self):
         self.incr()
         try:
@@ -60,7 +59,6 @@ class OurIterator(IteratorBase):
 
 
 class OurClosableIterator(OurIterator):
-
     def close(self):
         self.decrement()
 
@@ -77,12 +75,9 @@ class OurUnclosableIterator(OurIterator):
 
 
 class IteratorTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
-
         class Root(object):
-
             @cherrypy.expose
             def count(self, clsname):
                 cherrypy.response.headers['Content-Type'] = 'text/plain'
@@ -118,6 +113,7 @@ class IteratorTest(helper.CPWebCase):
         all_classes = closables + unclosables
 
         import random
+
         random.shuffle(all_classes)
 
         for clsname in all_classes:
@@ -180,6 +176,7 @@ class IteratorTest(helper.CPWebCase):
                 # get the answer we wanted.
                 if self.body != '0':
                     import time
+
                     time.sleep(0.1)
                     self.getPage('/count/' + clsname)
 

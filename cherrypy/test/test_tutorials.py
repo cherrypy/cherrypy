@@ -6,14 +6,15 @@ from cherrypy.test import helper
 
 
 class TutorialTest(helper.CPWebCase):
-
     @classmethod
     def setup_server(cls):
         """
         Mount something so the engine starts.
         """
+
         class Dummy:
             pass
+
         cherrypy.tree.mount(Dummy())
 
     @staticmethod
@@ -34,7 +35,7 @@ class TutorialTest(helper.CPWebCase):
         module = cls.load_module(name)
         root = getattr(module, root_name)
         conf = getattr(module, 'tutconf')
-        class_types = type,
+        class_types = (type,)
         if isinstance(root, class_types):
             root = root()
         cherrypy.tree.mount(root, config=conf)
@@ -111,8 +112,10 @@ class TutorialTest(helper.CPWebCase):
     def test06DefaultMethod(self):
         self.setup_tutorial('tut06_default_method', 'UsersPage')
         self.getPage('/hendrik')
-        self.assertBody('Hendrik Mans, CherryPy co-developer & crazy German '
-                        '(<a href="./">back</a>)')
+        self.assertBody(
+            'Hendrik Mans, CherryPy co-developer & crazy German '
+            '(<a href="./">back</a>)'
+        )
 
     def test07Sessions(self):
         self.setup_tutorial('tut07_sessions', 'HitCounter')
@@ -121,51 +124,64 @@ class TutorialTest(helper.CPWebCase):
         self.assertBody(
             "\n            During your current session, you've viewed this"
             '\n            page 1 times! Your life is a patio of fun!'
-            '\n        ')
+            '\n        '
+        )
 
         self.getPage('/', self.cookies)
         self.assertBody(
             "\n            During your current session, you've viewed this"
             '\n            page 2 times! Your life is a patio of fun!'
-            '\n        ')
+            '\n        '
+        )
 
     def test08GeneratorsAndYield(self):
         self.setup_tutorial('tut08_generators_and_yield', 'GeneratorDemo')
         self.getPage('/')
-        self.assertBody('<html><body><h2>Generators rule!</h2>'
-                        '<h3>List of users:</h3>'
-                        'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
-                        '</body></html>')
+        self.assertBody(
+            '<html><body><h2>Generators rule!</h2>'
+            '<h3>List of users:</h3>'
+            'Remi<br/>Carlos<br/>Hendrik<br/>Lorenzo Lamas<br/>'
+            '</body></html>'
+        )
 
     def test09Files(self):
         self.setup_tutorial('tut09_files', 'FileDemo')
 
         # Test upload
         filesize = 5
-        h = [('Content-type', 'multipart/form-data; boundary=x'),
-             ('Content-Length', str(105 + filesize))]
-        b = ('--x\n'
-             'Content-Disposition: form-data; name="myFile"; '
-             'filename="hello.txt"\r\n'
-             'Content-Type: text/plain\r\n'
-             '\r\n')
+        h = [
+            ('Content-type', 'multipart/form-data; boundary=x'),
+            ('Content-Length', str(105 + filesize)),
+        ]
+        b = (
+            '--x\n'
+            'Content-Disposition: form-data; name="myFile"; '
+            'filename="hello.txt"\r\n'
+            'Content-Type: text/plain\r\n'
+            '\r\n'
+        )
         b += 'a' * filesize + '\n' + '--x--\n'
         self.getPage('/upload', h, 'POST', b)
-        self.assertBody('''<html>
+        self.assertBody(
+            '''<html>
         <body>
             myFile length: %d<br />
             myFile filename: hello.txt<br />
             myFile mime-type: text/plain
         </body>
-        </html>''' % filesize)
+        </html>'''
+            % filesize
+        )
 
         # Test download
         self.getPage('/download')
         self.assertStatus('200 OK')
         self.assertHeader('Content-Type', 'application/x-download')
-        self.assertHeader('Content-Disposition',
-                          # Make sure the filename is quoted.
-                          'attachment; filename="pdf_file.pdf"')
+        self.assertHeader(
+            'Content-Disposition',
+            # Make sure the filename is quoted.
+            'attachment; filename="pdf_file.pdf"',
+        )
         self.assertEqual(len(self.body), 11961)
 
     def test10HTTPErrors(self):
@@ -174,6 +190,7 @@ class TutorialTest(helper.CPWebCase):
         @cherrypy.expose
         def traceback_setting():
             return repr(cherrypy.request.show_tracebacks)
+
         cherrypy.tree.mount(traceback_setting, '/traceback_setting')
 
         self.getPage('/')
@@ -192,8 +209,10 @@ class TutorialTest(helper.CPWebCase):
 
         self.getPage('/error?code=500')
         self.assertStatus(500)
-        self.assertInBody('The server encountered an unexpected condition '
-                          'which prevented it from fulfilling the request.')
+        self.assertInBody(
+            'The server encountered an unexpected condition '
+            'which prevented it from fulfilling the request.'
+        )
 
         self.getPage('/error?code=403')
         self.assertStatus(403)

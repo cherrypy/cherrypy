@@ -5,7 +5,6 @@ from cherrypy import expose, tools
 
 
 class ExposeExamples(object):
-
     @expose
     def no_call(self):
         return 'Mr E. R. Bradshaw'
@@ -28,7 +27,6 @@ class ExposeExamples(object):
 
 
 class ToolExamples(object):
-
     @expose
     # This is here to demonstrate that using the config decorator
     # does not overwrite other config attributes added by the Tool
