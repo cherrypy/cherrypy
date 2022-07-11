@@ -24,10 +24,11 @@ def setup_server():
 
 ##########################################
 # mod_python settings for apache2
+##########################################
+
 # This should reside in your httpd.conf
 # or a file that will be loaded at
 # apache startup
-##########################################
 
 # Start
 DocumentRoot "/"

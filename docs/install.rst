@@ -30,12 +30,6 @@ dependencies |project| enables you to specify extras in your requirements (e.g.
 - xcgi
 
 
-Supported python version
-########################
-
-|project| supports Python |min_py_supported| through to |max_py_supported|.
-
-
 Installing
 ##########
 
