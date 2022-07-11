@@ -1,24 +1,40 @@
-.. image:: https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct.svg
-   :target: https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md
-   :alt: SWUbanner
-
 .. image:: https://img.shields.io/pypi/v/cherrypy.svg
-   :target: https://pypi.org/project/cherrypy
+   :target: `PyPI link`_
+
+.. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
+   :target: `PyPI link`_
+
+.. _PyPI link: https://pypi.org/project/CherryPy
+
+.. image:: https://github.com/cherrypy/cherrypy/workflows/tests/badge.svg
+   :target: https://github.com/cherrypy/cherrypy/actions?query=workflow%3A%22tests%22
+   :alt: tests
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: Code style: Black
+
+.. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
+   :target: https://cherrypy.readthedocs.io/en/latest/?badge=latest
+
+.. image:: https://img.shields.io/badge/skeleton-2022-informational
+   :target: https://blog.jaraco.com/skeleton
 
 .. image:: https://tidelift.com/badges/package/pypi/CherryPy
    :target: https://tidelift.com/subscription/pkg/pypi-cherrypy?utm_source=pypi-cherrypy&utm_medium=readme
    :alt: CherryPy is available as part of the Tidelift Subscription
+
+.. Following are local badges (not found in upstream templates)
+
+.. image:: https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct.svg
+   :target: https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md
+   :alt: SWUbanner
 
 .. image:: https://img.shields.io/badge/Python%203%20only-pip%20install%20%22%3E%3D18.0.0%22-%234da45e.svg
    :target: https://python3statement.org/
 
 .. image:: https://img.shields.io/badge/Python%203%20and%202-pip%20install%20%22%3C18.0.0%22-%2349a7e9.svg
    :target: https://python3statement.org/#sections40-timeline
-
-
-
-.. image:: https://readthedocs.org/projects/cherrypy/badge/?version=latest
-  :target: https://docs.cherrypy.dev/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/badge/StackOverflow-CherryPy-blue.svg
    :target: https://stackoverflow.com/questions/tagged/cheroot+or+cherrypy
@@ -40,9 +56,6 @@
 
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
-
-.. image:: https://img.shields.io/pypi/pyversions/cherrypy.svg
-   :target: https://pypi.org/project/cherrypy
 
 .. image:: https://badges.github.io/stability-badges/dist/stable.svg
    :target: https://github.com/badges/stability-badges

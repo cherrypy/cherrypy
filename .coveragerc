@@ -1,0 +1,8 @@
+[run]
+omit =
+	# leading `*/` for pytest-dev/pytest-cov#456
+	*/.tox/*
+	*/pep517-build-env-*
+
+[report]
+show_missing = True

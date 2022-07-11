@@ -1,6 +1,6 @@
 
-CherryPy — A Minimalist Python Web Framework
-============================================
+|project| — A Minimalist Python Web Framework
+=============================================
 
 .. toctree::
    :hidden:
