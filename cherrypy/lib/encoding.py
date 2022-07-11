@@ -348,8 +348,8 @@ def decompress(body):
 
 
 def gzip(  # noqa: C901
-        compress_level=5,
-        mime_types=['text/html', 'text/plain'], debug=False):
+    compress_level=5, mime_types=['text/html', 'text/plain'], debug=False
+):
     """Try to gzip the response body if Content-Type in mime_types.
 
     cherrypy.response.headers['Content-Type'] must be set to one of the

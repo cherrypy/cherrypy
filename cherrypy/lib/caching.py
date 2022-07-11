@@ -266,8 +266,7 @@ class MemoryCache(Cache):
         self.store.pop(uri, None)
 
 
-def get(  # noqa: C901
-        invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
+def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):  # noqa: C901
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
 
     If POST, PUT, or DELETE:

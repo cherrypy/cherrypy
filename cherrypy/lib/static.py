@@ -55,8 +55,8 @@ def _make_content_disposition(disposition, file_name):
 
 
 def serve_file(  # noqa: C901
-        path, content_type=None, disposition=None, name=None,
-        debug=False):
+    path, content_type=None, disposition=None, name=None, debug=False
+):
     """Set status, headers, and body in order to serve the given path.
 
     The Content-Type header will be set to the content_type arg, if provided.
