@@ -2,6 +2,7 @@ v18.7.0
 -------
 
 * :pr:`1923`: Drop support for Python 3.5.
+* :pr:`1945`: Fixed compatibility on Python 3.11.
 
 v18.6.1
 -------
