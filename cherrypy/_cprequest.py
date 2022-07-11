@@ -883,7 +883,7 @@ class Response(object):
         """
         consume(iter(self.body))
 
-    def finalize(self):
+    def finalize(self):  # noqa: C901
         """Transform headers (and cookies) into self.header_list. (Core)"""
         try:
             code, reason, _ = httputil.valid_status(self.status)

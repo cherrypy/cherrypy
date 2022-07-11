@@ -7,7 +7,7 @@ from cherrypy.test import helper
 
 class WSGIGraftTests(helper.CPWebCase):
     @staticmethod
-    def setup_server():
+    def setup_server():  # noqa: C901
         def test_app(environ, start_response):
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]

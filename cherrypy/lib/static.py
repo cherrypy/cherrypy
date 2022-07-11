@@ -54,7 +54,9 @@ def _make_content_disposition(disposition, file_name):
     return header
 
 
-def serve_file(path, content_type=None, disposition=None, name=None, debug=False):
+def serve_file(  # noqa: C901
+        path, content_type=None, disposition=None, name=None,
+        debug=False):
     """Set status, headers, and body in order to serve the given path.
 
     The Content-Type header will be set to the content_type arg, if provided.
@@ -183,7 +185,7 @@ def serve_fileobj(fileobj, content_type=None, disposition=None, name=None, debug
     return _serve_fileobj(fileobj, content_type, content_length, debug=debug)
 
 
-def _serve_fileobj(fileobj, content_type, content_length, debug=False):
+def _serve_fileobj(fileobj, content_type, content_length, debug=False):  # noqa: C901
     """Internal. Set response.body to the given file object, perhaps ranged."""
     response = cherrypy.serving.response
 
@@ -300,7 +302,7 @@ def _attempt(filename, content_types, debug=False):
         return False
 
 
-def staticdir(
+def staticdir(  # noqa: C901
     section, dir, root='', match='', content_types=None, index='', debug=False
 ):
     """Serve a static resource from the given (root +) dir.

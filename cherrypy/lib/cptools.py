@@ -14,7 +14,7 @@ from cherrypy.lib import is_iterator
 #                     Conditional HTTP request support                     #
 
 
-def validate_etags(autotags=False, debug=False):
+def validate_etags(autotags=False, debug=False):  # noqa: C901
     """Validate the current ETag against If-Match, If-None-Match headers.
 
     If autotags is True, an ETag response-header value will be provided
@@ -159,7 +159,7 @@ def allow(methods=None, debug=False):
             )
 
 
-def proxy(
+def proxy(  # noqa: C901
     base=None,
     local='X-Forwarded-Host',
     remote='X-Forwarded-For',
@@ -540,7 +540,7 @@ def flatten(debug=False):
     response.body = flattener(response.body)
 
 
-def accept(media=None, debug=False):
+def accept(media=None, debug=False):  # noqa: C901
     """Return the client's preferred media-type (from the given Content-Types).
 
     If 'media' is None (the default), no test will be performed.

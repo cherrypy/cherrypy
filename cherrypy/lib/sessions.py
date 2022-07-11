@@ -730,7 +730,7 @@ close.failsafe = True
 close.priority = 90
 
 
-def init(
+def init(  # noqa: C901
     storage_type=None,
     path=None,
     path_header=None,

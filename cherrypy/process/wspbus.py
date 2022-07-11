@@ -433,7 +433,7 @@ class Bus(object):
         )
 
     @staticmethod
-    def _get_true_argv():
+    def _get_true_argv():  # noqa: C901
         """Retrieve all real arguments of the python interpreter.
 
         ...even those not listed in ``sys.argv``

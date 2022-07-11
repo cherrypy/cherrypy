@@ -489,7 +489,7 @@ _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC
 '''
 
 
-def get_error_page(status, **kwargs):
+def get_error_page(status, **kwargs):  # noqa: C901
     """Return an HTML page, containing a pretty error response.
 
     status should be an int or a str.

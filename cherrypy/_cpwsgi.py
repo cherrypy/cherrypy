@@ -174,7 +174,7 @@ class _TrappedResponse(object):
         if hasattr(self.response, 'close'):
             self.response.close()
 
-    def trap(self, func, *args, **kwargs):
+    def trap(self, func, *args, **kwargs):  # noqa: C901
         try:
             return func(*args, **kwargs)
         except self.throws:

@@ -14,11 +14,10 @@ if not hasattr(socket, 'ssl'):
     socket.ssl = True
 
 
-def setup_server():
-    class Root:
-        @cherrypy.expose
-        def index(self):
-            return "I'm a standard index!"
+class Root:
+    @cherrypy.expose
+    def index(self):
+        return "I'm a standard index!"
 
     class XmlRpc(_cptools.XMLRPCController):
         @cherrypy.expose
@@ -69,10 +68,16 @@ def setup_server():
         def test_returning_Fault(self):
             return Fault(1, 'custom Fault response')
 
-    root = Root()
-    root.xmlrpc = XmlRpc()
+    @classmethod
+    def create(cls):
+        self = cls()
+        self.xmlrpc = Root.XmlRpc()
+        return self
+
+
+def setup_server():
     cherrypy.tree.mount(
-        root,
+        Root.create(),
         config={
             '/': {
                 'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),

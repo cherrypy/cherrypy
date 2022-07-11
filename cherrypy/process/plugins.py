@@ -285,7 +285,7 @@ class DropPrivileges(SimplePlugin):
                 val = None
         self._umask = val
 
-    def start(self):
+    def start(self):  # noqa: C901
         # uid/gid
         def current_ids():
             """Return the current (uid, gid) if available."""

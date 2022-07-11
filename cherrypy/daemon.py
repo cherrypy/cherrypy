@@ -7,7 +7,7 @@ from cherrypy.process import plugins, servers
 from cherrypy import Application
 
 
-def start(
+def start(  # noqa: C901
     configfiles=None,
     daemonize=False,
     environment=None,

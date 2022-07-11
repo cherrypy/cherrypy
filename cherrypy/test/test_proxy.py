@@ -6,7 +6,7 @@ script_names = ['', '/path/to/myapp']
 
 class ProxyTest(helper.CPWebCase):
     @staticmethod
-    def setup_server():
+    def setup_server():  # noqa: C901
 
         # Set up site
         cherrypy.config.update(

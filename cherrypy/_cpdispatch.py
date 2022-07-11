@@ -64,7 +64,7 @@ class PageHandler(object):
             raise
 
 
-def test_callable_spec(callable, callable_args, callable_kwargs):
+def test_callable_spec(callable, callable_args, callable_kwargs):  # noqa: C901
     """
     Inspect callable and test to see if the given args are suitable for it.
 
@@ -306,7 +306,7 @@ class Dispatcher(object):
         else:
             request.handler = cherrypy.NotFound()
 
-    def find_handler(self, path):
+    def find_handler(self, path):  # noqa: C901
         """Return the appropriate page handler, plus any virtual path.
 
         This will return two objects. The first will be a callable,
@@ -542,7 +542,7 @@ class RoutesDispatcher(object):
         else:
             cherrypy.serving.request.handler = cherrypy.NotFound()
 
-    def find_handler(self, path_info):
+    def find_handler(self, path_info):  # noqa: C901
         """Find the right page handler, and set request.config."""
         import routes
 

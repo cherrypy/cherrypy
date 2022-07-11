@@ -366,7 +366,7 @@ def run_modpython(use_wsgi=False):
         s.stop()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # noqa: C901
     init()
 
     longopts = ['cpmodpy', 'modpython', 'null', 'notests', 'help', 'ab=', 'apache=']

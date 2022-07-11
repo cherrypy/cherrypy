@@ -72,7 +72,7 @@ from cherrypy.lib import httputil
 # ------------------------------ Request-handling
 
 
-def setup(req):
+def setup(req):  # noqa: C901
     from mod_python import apache
 
     # Run any setup functions defined by a "PythonOption cherrypy.setup"
@@ -144,7 +144,7 @@ recursive = False
 _isSetUp = False
 
 
-def handler(req):
+def handler(req):  # noqa: C901
     from mod_python import apache
 
     try:

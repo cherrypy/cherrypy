@@ -9,7 +9,7 @@ script_names = ['', '/foo', '/users/fred/blog', '/corp/blog']
 
 class ObjectMappingTest(helper.CPWebCase):
     @staticmethod
-    def setup_server():
+    def setup_server():  # noqa: C901
         class Root:
             @cherrypy.expose
             def index(self, name='world'):

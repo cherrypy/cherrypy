@@ -17,7 +17,7 @@ def StringIOFromNative(x):
     return io.StringIO(str(x))
 
 
-def setup_server():
+def setup_server():  # noqa: C901
     @cherrypy.config(foo='this', bar='that')
     class Root:
         def __init__(self):

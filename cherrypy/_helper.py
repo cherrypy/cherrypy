@@ -58,7 +58,7 @@ def expose(func=None, alias=None):
         return expose_
 
 
-def popargs(*args, **kwargs):
+def popargs(*args, **kwargs):  # noqa: C901
     """Decorate _cp_dispatch.
 
     (cherrypy.dispatch.Dispatcher.dispatch_method_name)
@@ -200,7 +200,7 @@ def popargs(*args, **kwargs):
     return decorated
 
 
-def url(path='', qs='', script_name=None, base=None, relative=None):
+def url(path='', qs='', script_name=None, base=None, relative=None):  # noqa: C901
     """Create an absolute URL for the given path.
 
     If 'path' starts with a slash ('/'), this will return

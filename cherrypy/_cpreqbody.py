@@ -141,7 +141,7 @@ def unquote_plus(bs):
 # ------------------------------- Processors -------------------------------- #
 
 
-def process_urlencoded(entity):
+def process_urlencoded(entity):  # noqa: C901
     """Read application/x-www-form-urlencoded data into entity.params."""
     qs = entity.fp.read()
     for charset in entity.attempt_charsets:
@@ -409,7 +409,7 @@ class Entity(object):
     multipart parts.
     """
 
-    def __init__(self, fp, headers, params=None, parts=None):
+    def __init__(self, fp, headers, params=None, parts=None):  # noqa: C901
         # Make an instance-specific copy of the class processors
         # so Tools, etc. can replace them per-request.
         self.processors = self.processors.copy()
@@ -649,7 +649,7 @@ class Part(Entity):
 
         return headers
 
-    def read_lines_to_boundary(self, fp_out=None):
+    def read_lines_to_boundary(self, fp_out=None):  # noqa: C901
         """Read bytes from self.fp and return or write them to a file.
 
         If the 'fp_out' argument is None (the default), all bytes read are
@@ -751,7 +751,7 @@ class SizedReader:
         self.done = False
         self.has_trailers = has_trailers
 
-    def read(self, size=None, fp_out=None):
+    def read(self, size=None, fp_out=None):  # noqa: C901
         """Read bytes from the request body and return or write them to a file.
 
         A number of bytes less than or equal to the 'size' argument are read
@@ -884,7 +884,7 @@ class SizedReader:
                 break
         return lines
 
-    def finish(self):
+    def finish(self):  # noqa: C901
         self.done = True
         if self.has_trailers and hasattr(self.fp, 'read_trailer_lines'):
             self.trailers = {}

@@ -18,7 +18,7 @@ timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
-def setup_server():
+def setup_server():  # noqa: C901
     def raise500():
         raise cherrypy.HTTPError(500)
 

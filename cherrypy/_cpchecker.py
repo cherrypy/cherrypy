@@ -124,7 +124,7 @@ class Checker(object):
                         '(e.g. passed to tree.mount) do not.' % (sn, key)
                     )
 
-    def check_static_paths(self):
+    def check_static_paths(self):  # noqa: C901
         """Check Application config for incorrect static paths."""
         # Use the dummy Request object in the main thread.
         request = cherrypy.request

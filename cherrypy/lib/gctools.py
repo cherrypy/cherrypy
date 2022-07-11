@@ -173,7 +173,7 @@ class GCRoot(object):
         return 'Hello, world!'
 
     @cherrypy.expose
-    def stats(self):
+    def stats(self):  # noqa: C901
         output = ['Statistics:']
 
         for trial in range(10):

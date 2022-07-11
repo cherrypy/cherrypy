@@ -124,7 +124,7 @@ class ResponseEncoder:
         self.body = body
         return True
 
-    def find_acceptable_charset(self):
+    def find_acceptable_charset(self):  # noqa: C901
         request = cherrypy.serving.request
         response = cherrypy.serving.response
 
@@ -347,7 +347,9 @@ def decompress(body):
     return data
 
 
-def gzip(compress_level=5, mime_types=['text/html', 'text/plain'], debug=False):
+def gzip(  # noqa: C901
+        compress_level=5,
+        mime_types=['text/html', 'text/plain'], debug=False):
     """Try to gzip the response body if Content-Type in mime_types.
 
     cherrypy.response.headers['Content-Type'] must be set to one of the

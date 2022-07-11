@@ -51,7 +51,7 @@ class LogCase(object):
     lastmarker = None
     markerPrefix = b'test suite marker: '
 
-    def _handleLogError(self, msg, data, marker, pattern):
+    def _handleLogError(self, msg, data, marker, pattern):  # noqa: C901
         print('')
         print('    ERROR: %s' % msg)
 

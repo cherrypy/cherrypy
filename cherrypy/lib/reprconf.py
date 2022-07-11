@@ -41,7 +41,7 @@ class NamespaceSet(dict):
     See cherrypy.tools (the Toolbox class) for an example.
     """
 
-    def __call__(self, config):
+    def __call__(self, config):  # noqa: C901
         """Iterate through config and pass it to each namespace handler.
 
         config

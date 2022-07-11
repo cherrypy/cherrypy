@@ -4,7 +4,7 @@ from cherrypy.test import helper
 
 class WSGI_Namespace_Test(helper.CPWebCase):
     @staticmethod
-    def setup_server():
+    def setup_server():  # noqa: C901
         class WSGIResponse(object):
             def __init__(self, appresults):
                 self.appresults = appresults

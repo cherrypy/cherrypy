@@ -17,7 +17,7 @@ class NativeGateway(cheroot.server.Gateway):
 
     recursive = False
 
-    def respond(self):
+    def respond(self):  # noqa: C901
         """Obtain response from CherryPy machinery and then send it."""
         req = self.req
         try:

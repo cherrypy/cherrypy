@@ -4,7 +4,7 @@ from cherrypy.test import helper
 script_names = ['', '/foo', '/users/fred/blog', '/corp/blog']
 
 
-def setup_server():
+def setup_server():  # noqa: C901
     class SubSubRoot:
         @cherrypy.expose
         def index(self):

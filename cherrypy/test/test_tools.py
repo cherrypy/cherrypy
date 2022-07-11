@@ -34,7 +34,7 @@ europoundUnicode = ntou('\x80\xa3')
 
 class ToolTests(helper.CPWebCase):
     @staticmethod
-    def setup_server():
+    def setup_server():  # noqa: C901
 
         # Put check_access in a custom toolbox with its own namespace
         myauthtools = cherrypy._cptools.Toolbox('myauth')

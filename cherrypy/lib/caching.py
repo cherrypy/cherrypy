@@ -266,7 +266,8 @@ class MemoryCache(Cache):
         self.store.pop(uri, None)
 
 
-def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
+def get(  # noqa: C901
+        invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
 
     If POST, PUT, or DELETE:
@@ -427,7 +428,7 @@ def tee_output():
     response.body = tee(response.body)
 
 
-def expires(secs=0, force=False, debug=False):
+def expires(secs=0, force=False, debug=False):  # noqa: C901
     """Tool for influencing cache mechanisms using the 'Expires' header.
 
     secs
