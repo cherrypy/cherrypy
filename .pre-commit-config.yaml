@@ -59,3 +59,12 @@ repos:
     rev: v1.1.0
     hooks:
     -   id: forbid-html-img-without-alt-text
+
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: v1.27.1
+  hooks:
+  - id: yamllint
+    files: \.(yaml|yml)$
+    types: [file, yaml]
+    args:
+    - --strict
