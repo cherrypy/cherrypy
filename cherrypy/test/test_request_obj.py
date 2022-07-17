@@ -7,8 +7,6 @@ import types
 import uuid
 from http.client import IncompleteRead
 
-import pytest
-
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy.lib import httputil
@@ -758,7 +756,6 @@ class RequestObjectTests(helper.CPWebCase):
                      headers=[('Content-type', 'application/json')])
         self.assertBody('application/json')
 
-    @pytest.mark.xfail(reason="#1974")
     def test_dangerous_host(self):
         """
         Dangerous characters like newlines should be elided.
