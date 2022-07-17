@@ -756,6 +756,16 @@ class RequestObjectTests(helper.CPWebCase):
                      headers=[('Content-type', 'application/json')])
         self.assertBody('application/json')
 
+    def test_dangerous_host(self):
+        """
+        Dangerous characters like newlines should be elided.
+        Ref #1974.
+        """
+        # foo\nbar
+        encoded = '=?iso-8859-1?q?foo=0Abar?='
+        self.getPage('/headers/Host', headers=[('Host', encoded)])
+        self.assertBody('foobar')
+
     def test_basic_HTTPMethods(self):
         helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND',
                                               'PATCH')
