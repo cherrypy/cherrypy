@@ -7,6 +7,8 @@ import types
 import uuid
 from http.client import IncompleteRead
 
+import pytest
+
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy.lib import httputil
@@ -755,6 +757,17 @@ class RequestObjectTests(helper.CPWebCase):
         self.getPage('/headers/Content-Type',
                      headers=[('Content-type', 'application/json')])
         self.assertBody('application/json')
+
+    @pytest.mark.xfail(reason="#1974")
+    def test_dangerous_host(self):
+        """
+        Dangerous characters like newlines should be elided.
+        Ref #1974.
+        """
+        # foo\nbar
+        encoded = '=?iso-8859-1?q?foo=0Abar?='
+        self.getPage('/headers/Host', headers=[('Host', encoded)])
+        self.assertBody('foobar')
 
     def test_basic_HTTPMethods(self):
         helper.webtest.methods_with_bodies = ('POST', 'PUT', 'PROPFIND',
