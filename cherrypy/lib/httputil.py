@@ -13,6 +13,7 @@ import re
 import builtins
 from binascii import b2a_base64
 from cgi import parse_header
+from datetime import datetime
 from email.header import decode_header
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import unquote_plus
@@ -66,6 +67,29 @@ def urljoin_bytes(*atoms):
 def protocol_from_http(protocol_str):
     """Return a protocol tuple from the given 'HTTP/x.y' string."""
     return int(protocol_str[5]), int(protocol_str[7])
+
+
+def matches_if_range_check(if_range_header):
+    """
+    Determines if an If-Range header is present and passes its conditions.
+    """
+    if not if_range_header:
+        return True
+    # Per RFC:
+    # The If-Range HTTP request header makes a range request
+    # conditional: if the condition is fulfilled, the range
+    # request will be issued and the server sends back
+    # a 206 Partial Content answer with
+    # the appropriate body. If the condition is not fulfilled,
+    # the full resource is sent back, with a 200 OK status.
+    # Ref: https://tools.ietf.org/html/rfc7233#section-3.2
+    try:
+        return (datetime(*email.utils.parsedate(if_range_header)[:6])
+                < datetime.now())
+    except TypeError:
+        # Fixme: TypeError indicates that the value is an ETag.
+        # We don't support ETag at the moment.
+        return False
 
 
 def get_ranges(headervalue, content_length):
