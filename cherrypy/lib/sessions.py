@@ -621,8 +621,9 @@ class MemcachedSession(Session):
         for k, v in kwargs.items():
             setattr(cls, k, v)
 
-        import memcache
-        cls.cache = memcache.Client(cls.servers)
+        from pymemcache.client.hash import HashClient
+        from pymemcache import serde
+        cls.cache = HashClient(cls.servers, serde=serde.pickle_serde)
 
     def _exists(self):
         self.mc_lock.acquire()
@@ -639,8 +640,8 @@ class MemcachedSession(Session):
             self.mc_lock.release()
 
     def _save(self, expiration_time):
-        # Send the expiration time as "Unix time" (seconds since 1/1/1970)
-        td = int(time.mktime(expiration_time.timetuple()))
+        # Seconds to expire from now
+        td = (expiration_time - self.now()).seconds
         self.mc_lock.acquire()
         try:
             if not self.cache.set(self.id, (self._data, expiration_time), td):
