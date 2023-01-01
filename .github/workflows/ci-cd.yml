@@ -725,7 +725,7 @@ jobs:
           python-version: pypy-3.9
         - os: macos-12
           python-version: pypy-3.9
-        # TODO: include TOXENV=cheroot-master
+        include: []  # TODO: include TOXENV=cheroot-master
 
     continue-on-error: >-
       ${{
