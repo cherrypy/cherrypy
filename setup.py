@@ -42,6 +42,7 @@ params = dict(
         'CI: AppVeyor': 'https://ci.appveyor.com/project/{}'.format(repo_slug),
         'CI: Travis': 'https://travis-ci.org/{}'.format(repo_slug),
         'CI: Circle': 'https://circleci.com/gh/{}'.format(repo_slug),
+        'CI: GitHub': 'https://github.com/{}/actions'.format(repo_slug),
         'Docs: RTD': 'https://docs.cherrypy.dev',
         'GitHub: issues': '{}/issues'.format(repo_url),
         'GitHub: repo': repo_url,
