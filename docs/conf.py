@@ -95,13 +95,13 @@ extensions = [
 ]
 
 extlinks = {
-    'issue': (f'{github_repo_url}/issues/%s', '#'),
-    'pr': (f'{github_repo_url}/pull/%s', 'PR #'),
-    'commit': (f'{github_repo_url}/commit/%s', ''),
-    'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #'),
-    'cr-pr': (f'{cr_github_repo_url}/pull/%s', 'Cheroot PR #'),
-    'gh': (f'{github_url}/%s', 'GitHub: '),
-    'user': (f'{github_sponsors_url}/%s', '@'),
+    'issue': (f'{github_repo_url}/issues/%s', '#%s'),
+    'pr': (f'{github_repo_url}/pull/%s', 'PR #%s'),
+    'commit': (f'{github_repo_url}/commit/%s', '%s'),
+    'cr-issue': (f'{cr_github_repo_url}/issues/%s', 'Cheroot #%s'),
+    'cr-pr': (f'{cr_github_repo_url}/pull/%s', 'Cheroot PR #%s'),
+    'gh': (f'{github_url}/%s', 'GitHub: %s'),
+    'user': (f'{github_sponsors_url}/%s', '@%s'),
 }
 
 intersphinx_mapping = {
