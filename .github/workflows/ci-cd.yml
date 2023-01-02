@@ -573,13 +573,19 @@ jobs:
     # NOTE: Git repository.
     - name: Grab the source from Git
       if: >-
-        contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
+        contains(
+        fromJSON('["pre-commit", "pre-commit-pep257", "spellcheck-docs"]'),
+        matrix.toxenv
+        )
       uses: actions/checkout@v3
       with:
         ref: ${{ github.event.inputs.release-committish }}
     - name: Retrieve the project source from an sdist inside the GHA artifact
       if: >-
-        !contains(fromJSON('["pre-commit", "spellcheck-docs"]'), matrix.toxenv)
+        !contains(
+        fromJSON('["pre-commit", "pre-commit-pep257", "spellcheck-docs"]'),
+        matrix.toxenv
+        )
       uses: re-actors/checkout-python-sdist@release/v1
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
