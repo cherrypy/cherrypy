@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # Essentials
-    "setuptools >= 34.4",
+    "setuptools >= 45, < 60.9.0",  # The first version with setuptools-scm problems
 
     # Plugins
     "setuptools_scm[toml] >= 3.5",
