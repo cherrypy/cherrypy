@@ -731,6 +731,8 @@ jobs:
           python-version: pypy-3.9
         - os: macos-12
           python-version: pypy-3.9
+        - runner-vm-os: ubuntu-22.04
+          python-version: 3.6  # EOL, only provided for older OSs
         include: []  # TODO: include TOXENV=cheroot-master
 
     continue-on-error: >-
