@@ -54,7 +54,7 @@ concurrency:
 
 env:
   dists-artifact-name: python-package-distributions
-  dists-name: cherrypy
+  dists-name: CherryPy
 
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
