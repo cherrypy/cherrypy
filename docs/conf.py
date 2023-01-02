@@ -35,7 +35,7 @@ def get_supported_pythons(classifiers):
     vers = filter(lambda c: c.startswith(PY_VER_CLASSIFIER), classifiers)
     vers = map(lambda c: c[len(PY_VER_CLASSIFIER):], vers)
     vers = filter(lambda c: c[0].isdigit() and '.' in c, vers)
-    vers = map(lambda c: tuple(c.split('.')), vers)
+    vers = map(lambda c: tuple(map(int, c.split('.'))), vers)
     vers = sorted(vers)
     del vers[1:-1]
     return vers
@@ -51,7 +51,7 @@ prj_license = prj_meta['License']
 prj_description = prj_meta['Description']
 prj_py_ver_range = get_supported_pythons(prj_meta.get_all('Classifier'))
 prj_py_min_supported, prj_py_max_supported = map(
-    lambda v: '.'.join(v), prj_py_ver_range
+    lambda v: '.'.join(map(str, v)), prj_py_ver_range
 )
 
 project = prj_dist.project_name
