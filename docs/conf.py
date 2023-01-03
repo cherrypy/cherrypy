@@ -200,30 +200,6 @@ latex_documents = [
 ]
 
 
-def mock_pywin32():
-    """Mock pywin32 module.
-
-    Resulting in Linux hosts, including ReadTheDocs,
-    and other environments that don't have pywin32 can generate the docs
-    properly including the PDF version.
-    See:
-    http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
-    """
-    if try_import('win32api'):
-        return
-
-    from unittest import mock
-
-    MOCK_MODULES = [
-        'win32api', 'win32con', 'win32event', 'win32service',
-        'win32serviceutil',
-    ]
-    for mod_name in MOCK_MODULES:
-        sys.modules[mod_name] = mock.MagicMock()
-
-
-mock_pywin32()
-
 link_files = {
     '../CHANGES.rst': dict(
         using=dict(
@@ -242,6 +218,17 @@ link_files = {
 # Ref: https://github.com/python-attrs/attrs/pull/571/files\
 #      #diff-85987f48f1258d9ee486e3191495582dR82
 default_role = 'any'
+
+
+# -- Options for autodoc extension ---------------------------------------
+
+autodoc_mock_imports = [
+    'win32api',
+    'win32con',
+    'win32event',
+    'win32service',
+    'win32serviceutil',
+]
 
 
 # -- Options for apidoc extension ----------------------------------------
