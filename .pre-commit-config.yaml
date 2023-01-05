@@ -28,8 +28,8 @@ repos:
     exclude: cherrypy/test/test.pem
   - id: requirements-txt-fixer
 
-- repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
-  rev: v2.1.1
+- repo: https://github.com/PyCQA/pydocstyle.git
+  rev: 6.2.2
   hooks:
   - id: pydocstyle
     exclude: |
