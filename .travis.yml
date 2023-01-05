@@ -1,3 +1,5 @@
+---
+
 conditions: v1
 
 language: python
@@ -167,3 +169,5 @@ stages:
   <<: *condition_api_or_cron
 - name: *stage_deploy_name
   if: tag IS present
+
+...

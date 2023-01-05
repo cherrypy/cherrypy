@@ -1,3 +1,5 @@
+---
+
 environment:
   matrix:
   - PYTHON: "C:\\Python37-x64"
@@ -46,3 +48,5 @@ on_finish:
 
 artifacts:
 - path: dist\*
+
+...

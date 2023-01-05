@@ -1,3 +1,5 @@
+---
+
 build:
   image: latest
 python:
@@ -6,3 +8,5 @@ python:
   - docs
   - testing
   pip_install: true
+
+...
