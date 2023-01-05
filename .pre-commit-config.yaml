@@ -20,8 +20,6 @@ repos:
   - id: check-ast
   - id: check-byte-order-marker
   - id: check-case-conflict
-  # disabled due to pre-commit/pre-commit-hooks#159
-  #- id: check-docstring-first
   - id: check-json
     include: .mention-bot
   - id: check-symlinks
