@@ -1,66 +1,66 @@
 ---
 
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v1.1.1
-    hooks:
-    -   id: trailing-whitespace
-        exclude: cherrypy/test/static/index.html
-    -   id: flake8
-    -   id: check-merge-conflict
-    -   id: double-quote-string-fixer
-    -   id: end-of-file-fixer
-    -   id: name-tests-test
-        include: cherrypy/test/
-        args:
-        - --django
-        exclude: tests/dist-check.py
-    -   id: debug-statements
-    -   id: check-added-large-files
-    -   id: check-ast
-    -   id: check-byte-order-marker
-    -   id: check-case-conflict
-    # disabled due to pre-commit/pre-commit-hooks#159
-    #-   id: check-docstring-first
-    -   id: check-json
-        include: .mention-bot
-    -   id: check-symlinks
-    -   id: check-yaml
-    -   id: detect-private-key
-        exclude: cherrypy/test/test.pem
-    -   id: requirements-txt-fixer
+- repo: https://github.com/pre-commit/pre-commit-hooks.git
+  rev: v1.1.1
+  hooks:
+  - id: trailing-whitespace
+    exclude: cherrypy/test/static/index.html
+  - id: flake8
+  - id: check-merge-conflict
+  - id: double-quote-string-fixer
+  - id: end-of-file-fixer
+  - id: name-tests-test
+    include: cherrypy/test/
+    args:
+    - --django
+    exclude: tests/dist-check.py
+  - id: debug-statements
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-byte-order-marker
+  - id: check-case-conflict
+  # disabled due to pre-commit/pre-commit-hooks#159
+  #- id: check-docstring-first
+  - id: check-json
+    include: .mention-bot
+  - id: check-symlinks
+  - id: check-yaml
+  - id: detect-private-key
+    exclude: cherrypy/test/test.pem
+  - id: requirements-txt-fixer
 
--   repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
-    rev: v2.1.1
-    hooks:
-    -   id: pydocstyle
-        exclude: |
-            (?x)
-            tests/dist|
-            cherrypy/(
-                _cp(
-                    compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
+- repo: https://github.com/chewse/pre-commit-mirrors-pydocstyle.git
+  rev: v2.1.1
+  hooks:
+  - id: pydocstyle
+    exclude: |
+        (?x)
+        tests/dist|
+        cherrypy/(
+            _cp(
+                compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
+            )|
+            (
+                lib/(
+                    auth|auth_basic|auth_digest|caching|covercp|
+                    cpstats|cptools|encoding|gctools|httpauth|httputil|
+                    jsontools|lockfile|locking|profiler|reprconf|sessions
                 )|
-                (
-                    lib/(
-                        auth|auth_basic|auth_digest|caching|covercp|
-                        cpstats|cptools|encoding|gctools|httpauth|httputil|
-                        jsontools|lockfile|locking|profiler|reprconf|sessions
-                    )|
-                    process/(plugins|servers|win32)
-                ).py|
-                test|tutorial
-            )
+                process/(plugins|servers|win32)
+            ).py|
+            test|tutorial
+        )
 
--   repo: https://github.com/Lucas-C/pre-commit-hooks.git
-    rev: v1.1.12
-    hooks:
-    -   id: remove-tabs
+- repo: https://github.com/Lucas-C/pre-commit-hooks.git
+  rev: v1.1.12
+  hooks:
+  - id: remove-tabs
 
--   repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
-    rev: v1.1.0
-    hooks:
-    -   id: forbid-html-img-without-alt-text
+- repo: https://github.com/Lucas-C/pre-commit-hooks-lxml.git
+  rev: v1.1.0
+  hooks:
+  - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.27.1

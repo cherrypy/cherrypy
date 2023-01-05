@@ -1,9 +1,9 @@
 ---
 
 repos:
--   repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
-    rev: v2.1.1
-    hooks:
-    -   id: pydocstyle
+- repo: git://github.com/chewse/pre-commit-mirrors-pydocstyle
+  rev: v2.1.1
+  hooks:
+  - id: pydocstyle
 
 ...
