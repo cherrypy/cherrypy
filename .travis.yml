@@ -93,7 +93,7 @@ jobs:
       (non-strict until \#1797 get fixed)
     env: TOXENV=build-docs
   - <<: *pure_python_base_priority
-    # mainstream Python here
+  # mainstream Python here
   - <<: *pure_python_base_priority
     # mainstream Python here
     # run tests against the bleeding-edge cheroot
