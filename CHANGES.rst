@@ -1,9 +1,3 @@
-v(next)
--------
-
-* Removed the use of :mod:`cgi` deprecated in Python 3.11
-  -- by :user:`webknjaz`.
-
 v18.8.0
 -------
 

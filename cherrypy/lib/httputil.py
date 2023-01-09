@@ -12,8 +12,8 @@ import email.utils
 import re
 import builtins
 from binascii import b2a_base64
+from cgi import parse_header
 from email.header import decode_header
-from email.message import EmailMessage as _EmailMessage
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import unquote_plus
 
@@ -155,12 +155,7 @@ class HeaderElement(object):
     @staticmethod
     def parse(elementstr):
         """Transform 'token;key=val' to ('token', {'key': 'val'})."""
-        msg = _EmailMessage()
-        msg['content-type'] = elementstr
-
-        initial_value = msg.get_content_type()
-        params = dict(msg['content-type'].params)
-
+        initial_value, params = parse_header(elementstr)
         return initial_value, params
 
     @classmethod
