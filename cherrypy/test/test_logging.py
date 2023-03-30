@@ -198,7 +198,7 @@ def test_custom_log_format(log_tracker, monkeypatch, server):
 
 
 def test_utc_in_timez(monkeypatch):
-    """Test utc timestamp is used in 
+    """Test utc timestamp is used in
     cherrypy._cplogging.LazyRfc3339UtcTime"""
     import datetime
 
