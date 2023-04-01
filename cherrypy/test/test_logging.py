@@ -1,5 +1,6 @@
 """Basic tests for the CherryPy core: request handling."""
 
+import datetime
 import logging
 
 from cheroot.test import webtest
@@ -199,8 +200,6 @@ def test_custom_log_format(log_tracker, monkeypatch, server):
 
 def test_utc_in_timez(monkeypatch):
     """Test that ``LazyRfc3339UtcTime`` is rendered as ``str`` using UTC timestamp."""
-    import datetime
-
     utcoffset8_local_time_in_naive_utc = (
         datetime.datetime(
             year=2020,
