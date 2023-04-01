@@ -453,4 +453,5 @@ class WSGIErrorHandler(logging.Handler):
 class LazyRfc3339UtcTime(object):
     def __str__(self):
         """Return utcnow() in RFC3339 UTC Format."""
-        return f"{datetime.datetime.utcnow().isoformat('T')}Z"
+        iso_formatted_now = datetime.datetime.utcnow().isoformat('T')
+        return f'{iso_formatted_now!s}Z'
