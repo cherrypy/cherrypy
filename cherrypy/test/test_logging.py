@@ -198,8 +198,7 @@ def test_custom_log_format(log_tracker, monkeypatch, server):
 
 
 def test_utc_in_timez(monkeypatch):
-    """Test utc timestamp is used in
-    cherrypy._cplogging.LazyRfc3339UtcTime"""
+    """Test that ``LazyRfc3339UtcTime`` is rendered as ``str`` using UTC timestamp."""
     import datetime
 
     utcoffset8_local_time_in_naive_utc = (
