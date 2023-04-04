@@ -79,7 +79,6 @@ params = dict(
             'sphinxcontrib-apidoc>=0.3.0',
             'rst.linker>=1.11',
             'jaraco.packaging>=3.2',
-            'setuptools',
         ],
         'json': ['simplejson'],
         'routes_dispatcher': ['routes>=2.3.1'],

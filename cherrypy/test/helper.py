@@ -461,11 +461,10 @@ server.ssl_private_key: r'%s'
         ```
         ['-c',
          "__requires__ = 'CherryPy'; \
-         import pkg_resources, re, sys; \
+         import importlib.metadata, re, sys; \
          sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0]); \
          sys.exit(\
-            pkg_resources.load_entry_point(\
-                'CherryPy', 'console_scripts', 'cherryd')())"]
+            importlib.metadata.distribution('cherrypy').entry_points[0])"]
         ```
 
         doesn't work as it's impossible to reconstruct the `-c`'s contents.
