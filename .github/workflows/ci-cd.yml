@@ -1018,8 +1018,6 @@ jobs:
     - name: >-
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-testpypi:
     name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -1050,7 +1048,6 @@ jobs:
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
 
   post-release-repo-update:
