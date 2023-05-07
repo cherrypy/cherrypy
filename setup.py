@@ -84,9 +84,6 @@ params = dict(
         'routes_dispatcher': ['routes>=2.3.1'],
         'ssl': ['pyOpenSSL'],
         'testing': [
-            'coverage',  # inspects tests coverage
-            'codecov',   # sends tests coverage to codecov.io
-
             # cherrypy.lib.gctools
             'objgraph',
 
