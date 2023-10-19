@@ -406,7 +406,7 @@ class Daemonizer(SimplePlugin):
             if fork == 0:
                 os.setsid()
 
-        os.umask(0)
+        mask = os.umask(0)
 
         si = open(stdin, 'r')
         so = open(stdout, 'a+')
@@ -420,6 +420,8 @@ class Daemonizer(SimplePlugin):
         os.dup2(se.fileno(), sys.stderr.fileno())
 
         logger('Daemonized to PID: %s' % os.getpid())
+        # Important - setting umask to default/previous value
+        os.umask(mask)
 
 
 class PIDFile(SimplePlugin):
