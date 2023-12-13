@@ -1,3 +1,9 @@
+v18.9.0
+-------
+
+* Various
+  `changes <https://github.com/cherrypy/cherrypy/compare/v18.8.0...v18.9.0>`_.
+
 v18.8.0
 -------
 
