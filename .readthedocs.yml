@@ -1,12 +1,17 @@
 ---
 
 build:
-  image: latest
+  os: ubuntu-22.04
+  tools:
+    python: >-
+      3.6
+
 python:
-  version: 3.6
-  extra_requirements:
-  - docs
-  - testing
-  pip_install: true
+  install:
+  - method: pip
+    path: .
+    extra_requirements:
+    - docs
+    - testing
 
 ...
