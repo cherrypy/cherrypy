@@ -216,7 +216,7 @@ def test_utc_in_timez(monkeypatch):
 
     class mock_datetime:
         @classmethod
-        def utcnow(cls):
+        def now(cls, tz):
             return utcoffset8_local_time_in_naive_utc
 
     monkeypatch.setattr('datetime.datetime', mock_datetime)

@@ -19,10 +19,10 @@ class Timer(object):
         """
         Return a timer that will expire after `elapsed` passes.
         """
-        return cls(datetime.datetime.utcnow() + elapsed)
+        return cls(datetime.datetime.now(datetime.UTC) + elapsed)
 
     def expired(self):
-        return datetime.datetime.utcnow() >= self.expiration
+        return datetime.datetime.now(datetime.UTC) >= self.expiration
 
 
 class LockTimeout(Exception):
