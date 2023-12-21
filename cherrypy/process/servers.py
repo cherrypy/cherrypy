@@ -176,8 +176,8 @@ class ServerAdapter(object):
             if isinstance(self.bind_addr, tuple):
                 portend.free(*self.bind_addr, timeout=Timeouts.free)
 
-        import threading
-        t = threading.Thread(target=self._start_http_thread)
+        from cherrypy.process import threads
+        t = threads.Thread(target=self._start_http_thread)
         t.name = 'HTTPServer ' + t.name
         t.start()
 
