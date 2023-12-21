@@ -3,14 +3,7 @@
 
 import calendar
 from datetime import datetime
-
-try:
-    from datetime import UTC  # Python 3.11+
-except ImportError:
-    # Python 3.6-3.10
-    from datetime import timezone as _timezone
-    UTC = _timezone.utc
-    del _timezone
+from datetime import timezone as _timezone
 import sys
 
 import cherrypy
@@ -131,11 +124,11 @@ class Root(object):
             'reqcookie': cherrypy.request.cookie.output(),
             'sessiondata': list(cherrypy.session.items()),
             'servertime': (
-                datetime.now(UTC).strftime('%Y/%m/%d %H:%M UTC')
+                datetime.now(_timezone.utc).strftime('%Y/%m/%d %H:%M UTC')
             ),
             'serverunixtime':
             calendar.timegm(
-                datetime.utcnow(UTC).timetuple(),
+                datetime.utcnow(_timezone.utc).timetuple(),
             ),
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,
