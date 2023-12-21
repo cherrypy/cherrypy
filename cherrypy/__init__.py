@@ -57,9 +57,14 @@ These API's are described in the `CherryPy specification
 """
 
 try:
-    import pkg_resources
+    import importlib.metadata as importlib_metadata
 except ImportError:
-    pass
+    # fall back for python <= 3.7
+    # can simply pass when py 3.6/3.7 no longer supported
+    try:
+        import importlib_metadata
+    except ImportError:
+        pass
 
 from threading import local as _local
 
@@ -109,7 +114,7 @@ tree = _cptree.Tree()
 
 
 try:
-    __version__ = pkg_resources.require('cherrypy')[0].version
+    __version__ = importlib_metadata.version('cherrypy')
 except Exception:
     __version__ = 'unknown'
 
