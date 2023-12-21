@@ -127,7 +127,7 @@ class Root(object):
             ),
             'serverunixtime':
             calendar.timegm(
-                datetime.datetime.utcnow(UTC).timetuple()
+                datetime.utcnow(UTC).timetuple(),
             ),
             'cpversion': cherrypy.__version__,
             'pyversion': sys.version,
