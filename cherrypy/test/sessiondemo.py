@@ -2,7 +2,15 @@
 """A session demonstration app."""
 
 import calendar
-from datetime import datetime, UTC
+from datetime import datetime
+
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    # Python 3.6-3.10
+    from datetime import timezone as _timezone
+    UTC = _timezone.utc
+    del _timezone
 import sys
 
 import cherrypy
