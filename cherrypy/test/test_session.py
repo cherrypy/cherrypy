@@ -148,7 +148,7 @@ class SessionTest(helper.CPWebCase):
         super(cls, cls).teardown_class()
         consume(
             file.remove_p()
-            for file in localDir.listdir()
+            for file in localDir.iterdir()
             if file.basename().startswith(
                 sessions.FileSession.SESSION_PREFIX
             )
