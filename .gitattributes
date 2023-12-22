@@ -1,3 +1,6 @@
+# Needed for setuptools-scm-git-archive
+.git_archival.txt  export-subst
+
 # Blame ignore list entries are expected to always be appended, never edited
 .git-blame-ignore-revs  merge=union
 
