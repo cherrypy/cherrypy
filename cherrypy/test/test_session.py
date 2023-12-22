@@ -418,9 +418,7 @@ def memcached_client_present():
 
 @pytest.fixture(scope='session')
 def memcached_instance(request, watcher_getter, memcached_server_present):
-    """
-    Start up an instance of memcached.
-    """
+    """Start up an instance of memcached."""
 
     port = portend.find_available_local_port()
 

@@ -1,4 +1,4 @@
-"""test configuration for pytest."""
+"""Test configuration for pytest."""
 
 import sys
 
