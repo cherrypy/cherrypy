@@ -1,1 +1,4 @@
+# Blame ignore list entries are expected to always be appended, never edited
+.git-blame-ignore-revs  merge=union
+
 /CHANGES.rst merge=union
