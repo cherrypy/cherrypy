@@ -603,6 +603,10 @@ class FileSession(Session):
                         if expiration_time < now:
                             # Session expired: deleting it
                             os.unlink(path)
+                
+                except pickle.UnpicklingError:
+                    os.unlink(path)
+                    
                 finally:
                     self.release_lock(path)
 
