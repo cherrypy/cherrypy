@@ -60,11 +60,8 @@ try:
     import importlib.metadata as importlib_metadata
 except ImportError:
     # fall back for python <= 3.7
-    # can simply pass when py 3.6/3.7 no longer supported
-    try:
-        import importlib_metadata
-    except ImportError:
-        pass
+    # This try/except can be removed with py <= 3.7 support
+    import importlib_metadata
 
 from threading import local as _local
 
