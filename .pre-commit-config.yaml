@@ -36,7 +36,7 @@ repos:
   - id: requirements-txt-fixer
 
 - repo: https://github.com/PyCQA/pydocstyle.git
-  rev: 6.2.2
+  rev: 6.3.0
   hooks:
   - id: pydocstyle
     exclude: |
@@ -58,7 +58,7 @@ repos:
         )
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.1.12
+  rev: v1.5.4
   hooks:
   - id: remove-tabs
 
@@ -68,7 +68,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.27.1
+  rev: v1.33.0
   hooks:
   - id: yamllint
     files: \.(yaml|yml)$
