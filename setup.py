@@ -70,6 +70,7 @@ params = dict(
         'more_itertools',
         'zc.lockfile',
         'jaraco.collections',
+        'importlib-metadata; python_version<="3.7"',
     ],
     extras_require={
         'docs': [
