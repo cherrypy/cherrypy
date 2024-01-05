@@ -4,7 +4,9 @@ requires = [
     "setuptools >= 45",
 
     # Plugins
-    "setuptools_scm[toml] >= 7.0.0",
+    "setuptools_scm[toml] >= 7; python_version >= '3.7'",
+    "setuptools_scm[toml] < 7; python_version < '3.7'",
+    "setuptools_scm_git_archive >= 1.1; python_version < '3.7'",
 ]
 build-backend = "setuptools.build_meta"
 
