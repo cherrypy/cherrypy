@@ -4,7 +4,7 @@ import threading
 import time
 from http.client import HTTPConnection
 
-from distutils.spawn import find_executable
+from shutil import which
 import pytest
 from path import Path
 from more_itertools import consume
@@ -407,7 +407,7 @@ class SessionTest(helper.CPWebCase):
 
 
 def is_memcached_present():
-    executable = find_executable('memcached')
+    executable = which('memcached')
     return bool(executable)
 
 
