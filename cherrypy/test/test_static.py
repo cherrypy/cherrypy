@@ -144,6 +144,13 @@ class StaticTest(helper.CPWebCase):
                 'tools.staticdir.dir': 'static',
                 'tools.staticdir.index': 'index.html',
             },
+            '/docrootabs': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.root': curdir,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.index': 'index.html',
+                'tools.staticdir.abs_index': True,
+            },
             '/error': {
                 'tools.staticdir.on': True,
                 'request.show_tracebacks': True,
@@ -258,6 +265,28 @@ class StaticTest(helper.CPWebCase):
             '%s/docroot/</a>.'
             % (self.base(), self.base())
         )
+
+    def test_abs_index(self):
+        # Check a directory via "staticdir.index" but not "staticdir.abs_index"
+        # it's not falling back to "staticdir.dir"'s index
+        self.getPage('/docroot/somepath/')
+        self.assertStatus(404)
+        # also deeper path's shouldn't work
+        self.getPage('/docroot/some/even/deeper/path/')
+        self.assertStatus(404)
+        # but with "staticdir.abs_index" set to True all subpath's should
+        # fall back to "staticdir.dir"'s index
+        self.getPage('/docrootabs/somepath/')
+        self.assertStatus('200 OK')
+        self.assertBody('Hello, world\r\n')
+        # even deeper path's should work now
+        self.getPage('/docrootabs/some/even/deeper/path/')
+        self.assertStatus('200 OK')
+        self.assertBody('Hello, world\r\n')
+        # and for sure the basepath
+        self.getPage('/docrootabs/')
+        self.assertStatus('200 OK')
+        self.assertBody('Hello, world\r\n')
 
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir

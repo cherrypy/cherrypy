@@ -682,6 +682,30 @@ CherryPy will automatically respond to URLs such as
 `http://hostname/static/` by returning its contents.
 
 
+Specifying an absolute index file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Assuming you like to serve a Single Page Application (SPA) like
+Angular under a static directory. These Apps usually bring their
+own routing module for subsequent path's but all index'es of
+this path's need to deliver the root's index on requests like a
+refresh (F5) or copied links. You can accomplish this behavior
+with the `abs_index` flag like here:
+
+.. code-block:: ini
+
+   [/app]
+   tools.staticdir.on = True
+   tools.staticdir.dir = "/home/site/static"
+   tools.staticdir.index = "index.html"
+   tools.staticdir.abs_index = True
+
+Assuming you have the SPA's index at `app/index.html`,
+CherryPy will respond to URLs such as `http://hostname/app/`,
+`http://hostname/app/somepath/` and `http://hostname/app/some/even/deeper/path/`
+by returning its contents.
+
+
 Allow files downloading
 ^^^^^^^^^^^^^^^^^^^^^^^
 
