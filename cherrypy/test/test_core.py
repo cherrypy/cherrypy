@@ -821,3 +821,118 @@ class TestBinding:
         assert port > 0
         cherrypy.engine.stop()
         assert cherrypy.server.bind_addr == cherrypy.server.bound_addr
+
+
+class TestScriptNameWithRoot(helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def bar(self):
+                return 'foobar'
+
+        cherrypy.tree.mount(Root(), script_name='foo')
+
+    def test_body(self):
+        self.getPage('/foo/bar')
+        self.assertMatchesBody('foobar')
+
+    def test_trading_slash(self):
+        self.getPage('/foo/bar/')
+        self.assertMatchesBody('foobar')
+
+    def test_root_404(self):
+        self.getPage('/foo/')
+        self.assertStatus(404)
+
+
+class TestScriptNameEmptyScriptName(helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def bar(self):
+                return 'foobar'
+
+        cherrypy.tree.mount(Root(), script_name='')
+
+    def test_body(self):
+        self.getPage('/bar')
+        self.assertMatchesBody('foobar')
+
+    def test_trading_slash(self):
+        self.getPage('/bar/')
+        self.assertMatchesBody('foobar')
+
+    def test_root_404(self):
+        self.getPage('/')
+        self.assertStatus(404)
+
+
+class TestScriptNameSlashScriptName(helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def bar(self):
+                return 'foobar'
+
+        cherrypy.tree.mount(Root(), script_name='/')
+
+    def test_body(self):
+        self.getPage('/bar')
+        self.assertMatchesBody('foobar')
+
+    def test_trading_slash(self):
+        self.getPage('/bar/')
+        self.assertMatchesBody('foobar')
+
+    def test_root_404(self):
+        self.getPage('/')
+        self.assertStatus(404)
+
+
+class TestScriptNameNestedTree(helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+
+        class Band(object):
+            def __init__(self):
+                self.albums = Album()
+
+            def _cp_dispatch(self, vpath):
+                if len(vpath) == 1:
+                    cherrypy.request.params['name'] = vpath.pop()
+                    return self
+
+                if len(vpath) == 3:
+                    cherrypy.request.params['artist'] = vpath.pop(0)  # /band name/
+                    vpath.pop(0)  # /albums/
+                    cherrypy.request.params['title'] = vpath.pop(0)  # /album title/
+                    return self.albums
+
+                return vpath
+
+            @cherrypy.expose
+            def index(self, name):
+                return 'About %s...' % name
+
+        class Album(object):
+            @cherrypy.expose
+            def index(self, artist, title):
+                return 'About %s by %s...' % (title, artist)
+
+        cherrypy.tree.mount(Band(), script_name='/')
+
+    def test_nested(self):
+        self.getPage('/nirvana/')
+        self.assertMatchesBody('About nirvana...')
+        self.getPage('/nirvana/albums/test/')
+        self.assertMatchesBody('About test by nirvana...')
