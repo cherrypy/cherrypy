@@ -11,6 +11,11 @@ from cherrypy._cpcompat import ntob, ntou
 
 from cherrypy.test import helper
 
+try:
+    import brotli
+    HAS_BROTLI = True
+except ImportError:
+    HAS_BROTLI = False
 
 europoundUnicode = ntou('£', encoding='utf-8')
 sing = ntou('毛泽东: Sing, Little Birdie?', encoding='utf-8')
@@ -95,6 +100,18 @@ class EncodingTests(helper.CPWebCase):
                 raise IndexError()
                 yield 'Here be dragons'
 
+        class BROTLI:
+
+            @cherrypy.expose
+            def index(self):
+                yield 'Hello, world'
+
+        class BROTLI_GZIP:
+
+            @cherrypy.expose
+            def index(self):
+                yield 'Hello, world'
+
         class Decode:
 
             @cherrypy.expose
@@ -117,8 +134,15 @@ class EncodingTests(helper.CPWebCase):
 
         root = Root()
         root.gzip = GZIP()
+        root.brotli = BROTLI()
+        root.br_gzip = BROTLI_GZIP()
         root.decode = Decode()
-        cherrypy.tree.mount(root, config={'/gzip': {'tools.gzip.on': True}})
+        config = {
+            '/gzip': {'tools.gzip.on': True},
+            '/brotli': {'tools.br.on': HAS_BROTLI},
+            '/br_gzip': {'tools.br.on': HAS_BROTLI, 'tools.gzip.on': True},
+        }
+        cherrypy.tree.mount(root, config=config)
 
     def test_query_string_decoding(self):
         URI_TMPL = '/reqparams?q={q}'
@@ -377,6 +401,11 @@ class EncodingTests(helper.CPWebCase):
         self.assertHeader('Vary', 'Accept-Encoding')
         self.assertHeader('Content-Encoding', 'gzip')
 
+        self.getPage('/gzip/', headers=[('Accept-Encoding', 'gzip, br')])
+        self.assertInBody(zbuf.getvalue()[:3])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'gzip')
+
         # Test when gzip is denied.
         self.getPage('/gzip/', headers=[('Accept-Encoding', 'identity')])
         self.assertHeader('Vary', 'Accept-Encoding')
@@ -397,7 +426,7 @@ class EncodingTests(helper.CPWebCase):
         self.getPage('/gzip/', headers=[('Accept-Encoding', '*;q=0')])
         self.assertStatus(406)
         self.assertNoHeader('Content-Encoding')
-        self.assertErrorPage(406, 'identity, gzip')
+        self.assertErrorPage(406, 'gzip, identity')
 
         # Test for ticket #147
         self.getPage('/gzip/noshow', headers=[('Accept-Encoding', 'gzip')])
@@ -421,6 +450,58 @@ class EncodingTests(helper.CPWebCase):
             self.assertRaises((ValueError, IncompleteRead), self.getPage,
                               '/gzip/noshow_stream',
                               headers=[('Accept-Encoding', 'gzip')])
+
+    def testBrotli(self):
+        if not HAS_BROTLI:
+            return
+
+        import brotli
+
+        self.getPage('/brotli/', headers=[('Accept-Encoding', 'br')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'br')
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
+
+        self.getPage('/brotli/', headers=[('Accept-Encoding', 'gzip, deflate, br')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'br')
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
+
+    def testBrotliGzip(self):
+        if not HAS_BROTLI:
+            return
+
+        import brotli
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'br')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'br')
+        self.assertBody(brotli.compress(b'Hello, world',
+                quality=cherrypy.lib.encoding._COMPRESSION_LEVEL_DEFAULTS['br']))
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'gzip')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'gzip')
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'gzip;q=0.2, br;q=0.8')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'br')
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'gzip;q=0.8, br;q=0.2')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertHeader('Content-Encoding', 'gzip')
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', 'identity')])
+        self.assertHeader('Vary', 'Accept-Encoding')
+        self.assertNoHeader('Content-Encoding')
+        self.assertBody('Hello, world')
+
+        self.getPage('/br_gzip/', headers=[('Accept-Encoding', '*;q=0')])
+        self.assertStatus(406)
+        self.assertNoHeader('Content-Encoding')
+        self.assertErrorPage(406, 'br, gzip, identity')
 
     def test_UnicodeHeaders(self):
         self.getPage('/cookies_and_headers')
