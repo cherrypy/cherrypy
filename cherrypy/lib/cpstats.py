@@ -225,7 +225,7 @@ appstats.update({
         (s['Total Bytes Read'] / float(s['Total Requests'])) or
         0.0
     ),
-    'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
+    'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s) if s['Uptime'] > 0 else 0,
     'Bytes Written/Request': lambda s: (
         s['Total Requests'] and
         (s['Total Bytes Written'] / float(s['Total Requests'])) or
@@ -236,7 +236,7 @@ appstats.update({
     ),
     'Current Time': lambda s: time.time(),
     'Current Requests': 0,
-    'Requests/Second': lambda s: float(s['Total Requests']) / s['Uptime'](s),
+    'Requests/Second': lambda s: float(s['Total Requests']) / s['Uptime'](s) if s['Uptime'] > 0 else 0,
     'Server Version': cherrypy.__version__,
     'Start Time': time.time(),
     'Total Bytes Read': 0,
