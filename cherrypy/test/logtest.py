@@ -14,6 +14,7 @@ try:
     import msvcrt
 
     def getchar():
+        """Handle windows case for get char."""
         return msvcrt.getch()
 except ImportError:
     # Unix getchr
@@ -21,6 +22,7 @@ except ImportError:
     import termios
 
     def getchar():
+        """Handle unix case for get char."""
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
@@ -92,6 +94,7 @@ class LogCase(object):
             sys.stdout.write(p + ' ')
 
     def exit(self):
+        """Exit."""
         sys.exit()
 
     def emptyLog(self):

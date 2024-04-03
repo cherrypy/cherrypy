@@ -44,6 +44,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 def read_process(cmd, args=''):
+    """Handle read process."""
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
@@ -94,15 +95,18 @@ PythonDebug On
 
 
 class ModPythonSupervisor(helper.Supervisor):
+    """ModPythonSupervisor class."""
 
     using_apache = True
     using_wsgi = False
     template = None
 
     def __str__(self):
+        """Retusn string representation of ModPythonSupervisor."""
         return 'ModPython Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
+        """Handle start."""
         mpconf = CONF_PATH
         if not os.path.isabs(mpconf):
             mpconf = os.path.join(curdir, mpconf)
@@ -125,6 +129,7 @@ loaded = False
 
 
 def wsgisetup(req):
+    """Handle WGSI setup."""
     global loaded
     if not loaded:
         loaded = True
@@ -147,6 +152,7 @@ def wsgisetup(req):
 
 
 def cpmodpysetup(req):
+    """Handle CP Mod Python setup."""
     global loaded
     if not loaded:
         loaded = True

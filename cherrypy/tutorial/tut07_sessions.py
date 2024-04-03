@@ -1,5 +1,5 @@
 """
-Tutorial - Sessions
+Tutorial - Sessions.
 
 Storing session data in CherryPy applications is very easy: cherrypy
 provides a dictionary called "session" that represents the session
@@ -14,11 +14,13 @@ import cherrypy
 
 
 class HitCounter:
+    """HitCounter Class."""
 
     _cp_config = {'tools.sessions.on': True}
 
     @cherrypy.expose
     def index(self):
+        """Index route hander."""
         # Increase the silly hit counter
         count = cherrypy.session.get('count', 0) + 1
 

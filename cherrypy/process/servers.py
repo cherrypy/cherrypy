@@ -1,4 +1,6 @@
 r"""
+Server Objects.
+
 Starting in CherryPy 3.1, cherrypy.server is implemented as an
 :ref:`Engine Plugin<plugins>`. It's an instance of
 :class:`cherrypy._cpserver.Server`, which is a subclass of
@@ -127,6 +129,8 @@ import portend
 
 
 class Timeouts:
+    """Timeouts."""
+
     occupied = 5
     free = 1
 
@@ -146,6 +150,7 @@ class ServerAdapter(object):
     """
 
     def __init__(self, bus, httpserver=None, bind_addr=None):
+        """Initialize the HTTP server."""
         self.bus = bus
         self.httpserver = httpserver
         self.bind_addr = bind_addr
@@ -153,10 +158,12 @@ class ServerAdapter(object):
         self.running = False
 
     def subscribe(self):
+        """Subscribe the HTTP server."""
         self.bus.subscribe('start', self.start)
         self.bus.subscribe('stop', self.stop)
 
     def unsubscribe(self):
+        """Unsubcribe the HTTP server."""
         self.bus.unsubscribe('start', self.start)
         self.bus.unsubscribe('stop', self.stop)
 
@@ -212,7 +219,9 @@ class ServerAdapter(object):
         return '%s://%s' % (scheme, host)
 
     def _start_http_thread(self):
-        """HTTP servers MUST be running in new threads, so that the
+        """Start Http Thread.
+
+        HTTP servers MUST be running in new threads, so that the
         main thread persists to receive KeyboardInterrupt's. If an
         exception is raised in the httpserver's thread then it's
         trapped here, and the bus (and therefore our httpserver)
@@ -258,8 +267,9 @@ class ServerAdapter(object):
 
     @property
     def bound_addr(self):
-        """
-        The bind address, or if it's an ephemeral port and the
+        """The bind Address.
+
+        or if it's an ephemeral port and the
         socket has been bound, return the actual port bound.
         """
         host, port = self.bind_addr
@@ -292,6 +302,7 @@ class FlupCGIServer(object):
     """Adapter for a flup.server.cgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize Flup CGI Server."""
         self.args = args
         self.kwargs = kwargs
         self.ready = False
@@ -315,6 +326,7 @@ class FlupFCGIServer(object):
     """Adapter for a flup.server.fcgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize Flup FCGI Server."""
         if kwargs.get('bindAddress', None) is None:
             import socket
             if not hasattr(socket, 'fromfd'):
@@ -360,6 +372,7 @@ class FlupSCGIServer(object):
     """Adapter for a flup.server.scgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize Flup SCGI Server."""
         self.args = args
         self.kwargs = kwargs
         self.ready = False
@@ -395,7 +408,8 @@ class FlupSCGIServer(object):
 
 @contextlib.contextmanager
 def _safe_wait(host, port):
-    """
+    """Warn when bind interface is ambiguous.
+
     On systems where a loopback interface is not available and the
     server is bound to all interfaces, it's difficult to determine
     whether the server is in fact occupying the port. In this case,

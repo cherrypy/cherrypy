@@ -1,6 +1,5 @@
 """
-
-Tutorial: File upload and download
+Tutorial: File upload and download.
 
 Uploads
 -------
@@ -51,9 +50,11 @@ absDir = os.path.join(os.getcwd(), localDir)
 
 
 class FileDemo(object):
+    """FileDemo request handler."""
 
     @cherrypy.expose
     def index(self):
+        """Handle index route."""
         return """
         <html><body>
             <h2>Upload a file</h2>
@@ -68,6 +69,7 @@ class FileDemo(object):
 
     @cherrypy.expose
     def upload(self, myFile):
+        """Handle upload route."""
         out = """<html>
         <body>
             myFile length: %s<br />
@@ -91,6 +93,7 @@ class FileDemo(object):
 
     @cherrypy.expose
     def download(self):
+        """Handle download route."""
         path = os.path.join(absDir, 'pdf_file.pdf')
         return static.serve_file(path, 'application/x-download',
                                  'attachment', os.path.basename(path))

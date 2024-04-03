@@ -42,6 +42,7 @@ class Hook(object):
     callable on each call."""
 
     def __init__(self, callback, failsafe=None, priority=None, **kwargs):
+        """Initialize Hook."""
         self.callback = callback
 
         if failsafe is None:
@@ -56,6 +57,14 @@ class Hook(object):
 
     def __lt__(self, other):
         """
+        Less-Than Hook Operator.
+
+        :param other: A Hook Object to compare priority with
+        :type other: Hook
+
+        :return: Other Hook's priority is higher than this one
+        :rtype: Bool
+
         Hooks sort by priority, ascending, such that
         hooks of lower priority are run first.
         """
@@ -66,6 +75,7 @@ class Hook(object):
         return self.callback(**self.kwargs)
 
     def __repr__(self):
+        """Represent Hook."""
         cls = self.__class__
         return ('%s.%s(callback=%r, failsafe=%r, priority=%r, %s)'
                 % (cls.__module__, cls.__name__, self.callback,
@@ -78,12 +88,14 @@ class HookMap(dict):
     """A map of call points to lists of callbacks (Hook objects)."""
 
     def __new__(cls, points=None):
+        """Handle New HookMap."""
         d = dict.__new__(cls)
         for p in points or []:
             d[p] = []
         return d
 
     def __init__(self, *a, **kw):
+        """Initialize HookMap."""
         pass
 
     def attach(self, point, callback, failsafe=None, priority=None, **kwargs):
@@ -124,6 +136,7 @@ class HookMap(dict):
                 raise
 
     def __copy__(self):
+        """Copy."""
         newmap = self.__class__()
         # We can't just use 'update' because we want copies of the
         # mutable values (each is a list) as well.
@@ -133,6 +146,7 @@ class HookMap(dict):
     copy = __copy__
 
     def __repr__(self):
+        """Represent HookMap."""
         cls = self.__class__
         return '%s.%s(points=%r)' % (
             cls.__module__,
@@ -541,7 +555,7 @@ class Request(object):
             self.stage = 'close'
 
     def run(self, method, path, query_string, req_protocol, headers, rfile):
-        r"""Process the Request. (Core)
+        r"""Process the Request (Core).
 
         method, path, query_string, and req_protocol should be pulled directly
         from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
@@ -815,6 +829,7 @@ class ResponseBody(object):
                    'if you wish to return unicode.')
 
     def __get__(self, obj, objclass=None):
+        """Handle get for ReponseBody."""
         if obj is None:
             # When calling on the class instead of an instance...
             return self
@@ -822,7 +837,7 @@ class ResponseBody(object):
             return obj._body
 
     def __set__(self, obj, value):
-        # Convert the given value to an iterable object.
+        """Convert the given value to an iterable object."""
         if isinstance(value, str):
             raise ValueError(self.unicode_err)
         elif isinstance(value, list):
@@ -874,6 +889,7 @@ class Response(object):
     """If False, buffer the response body."""
 
     def __init__(self):
+        """Intialize Response."""
         self.status = None
         self.header_list = None
         self._body = []
@@ -896,8 +912,13 @@ class Response(object):
         return new_body
 
     def _flush_body(self):
-        """Discard self.body but consume any generator such that any
-        finalization can occur, such as is required by caching.tee_output()."""
+        """_flush_body Response.
+
+        :rtype: None
+
+        Discard self.body but consume any generator such that any
+        finalization can occur, such as is required by caching.tee_output().
+        """
         consume(iter(self.body))
 
     def finalize(self):
@@ -951,6 +972,8 @@ class Response(object):
 
 
 class LazyUUID4(object):
+    """LazyUUID4 class."""
+
     def __str__(self):
         """Return UUID4 and keep it for future calls."""
         return str(self.uuid4)

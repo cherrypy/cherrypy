@@ -47,9 +47,11 @@ size_cache = {}
 
 
 class Root:
+    """Root class."""
 
     @cherrypy.expose
     def index(self):
+        """Handle index for Root."""
         return """<html>
 <head>
     <title>CherryPy Benchmark</title>
@@ -67,10 +69,12 @@ class Root:
 
     @cherrypy.expose
     def hello(self):
+        """Handle hello for Root."""
         return 'Hello, world\r\n'
 
     @cherrypy.expose
     def sizer(self, size):
+        """Handle sizer for Root."""
         resp = size_cache.get(size, None)
         if resp is None:
             size_cache[size] = resp = 'X' * int(size)
@@ -78,7 +82,7 @@ class Root:
 
 
 def init():
-
+    """Initialize server."""
     cherrypy.config.update({
         'log.error.file': '',
         'environment': 'production',
@@ -109,12 +113,15 @@ class NullRequest:
     """A null HTTP request class, returning 200 and an empty body."""
 
     def __init__(self, local, remote, scheme='http'):
+        """Initialize NullRequest."""
         pass
 
     def close(self):
+        """Close NullRequest."""
         pass
 
     def run(self, method, path, query_string, protocol, headers, rfile):
+        """Run NullRequest."""
         cherrypy.response.status = '200 OK'
         cherrypy.response.header_list = [('Content-Type', 'text/html'),
                                          ('Server', 'Null CherryPy'),
@@ -126,6 +133,8 @@ class NullRequest:
 
 
 class NullResponse:
+    """NullResponse class."""
+
     pass
 
 
@@ -206,11 +215,13 @@ class ABSession:
 
     def __init__(self, path=SCRIPT_NAME + '/hello', requests=1000,
                  concurrency=10):
+        """Initialize ABSession."""
         self.path = path
         self.requests = requests
         self.concurrency = concurrency
 
     def args(self):
+        """Get ABSession arguments."""
         port = cherrypy.server.socket_port
         assert self.concurrency > 0
         assert self.requests > 0
@@ -221,6 +232,7 @@ class ABSession:
                 (self.requests, self.concurrency, port, self.path))
 
     def run(self):
+        """Run ABSession."""
         # Parse output of ab, setting attributes on self
         try:
             self.output = _cpmodpy.read_process(AB_PATH or 'ab', self.args())
@@ -244,6 +256,7 @@ if sys.platform in ('win32',):
 
 
 def thread_report(path=SCRIPT_NAME + '/hello', concurrency=safe_threads):
+    """Report on threads from ABSession."""
     sess = ABSession(path)
     attrs, names, patterns = list(zip(*sess.parse_patterns))
     avg = dict.fromkeys(attrs, 0.0)
@@ -271,6 +284,7 @@ def thread_report(path=SCRIPT_NAME + '/hello', concurrency=safe_threads):
 
 def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
                 concurrency=50):
+    """Report sizing from ABSession."""
     sess = ABSession(concurrency=concurrency)
     attrs, names, patterns = list(zip(*sess.parse_patterns))
     yield ('bytes',) + names
@@ -281,6 +295,7 @@ def size_report(sizes=(10, 100, 1000, 10000, 100000, 100000000),
 
 
 def print_report(rows):
+    """Print rows to standard out."""
     for row in rows:
         print('')
         for val in row:
@@ -289,6 +304,7 @@ def print_report(rows):
 
 
 def run_standard_benchmarks():
+    """Run Standard Benchmarks."""
     print('')
     print('Client Thread Report (1000 requests, 14 byte response body, '
           '%s server threads):' % cherrypy.server.thread_pool)
@@ -308,8 +324,7 @@ def run_standard_benchmarks():
 #                         modpython and other WSGI                         #
 
 def startup_modpython(req=None):
-    """Start the CherryPy app server in 'serverless' mode (for modpython/WSGI).
-    """
+    """Start CherryPy app server in 'serverless' mode (for modpython/WSGI)."""
     if cherrypy.engine.state == cherrypy._cpengine.STOPPED:
         if req:
             if 'nullreq' in req.get_options():

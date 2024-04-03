@@ -45,6 +45,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 def read_process(cmd, args=''):
+    """Handle read process."""
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
@@ -78,15 +79,18 @@ FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 
 
 class ModFCGISupervisor(helper.LocalSupervisor):
+    """ModFCGISupervisor class."""
 
     using_apache = True
     using_wsgi = True
     template = conf_fcgid
 
     def __str__(self):
+        """Return string representation of ModFCGISupervisor."""
         return 'FCGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
+        """Handle start."""
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
         cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
@@ -96,6 +100,7 @@ class ModFCGISupervisor(helper.LocalSupervisor):
         helper.LocalServer.start(self, modulename)
 
     def start_apache(self):
+        """Handle start Apache."""
         fcgiconf = CONF_PATH
         if not os.path.isabs(fcgiconf):
             fcgiconf = os.path.join(curdir, fcgiconf)
@@ -118,4 +123,5 @@ class ModFCGISupervisor(helper.LocalSupervisor):
         helper.LocalServer.stop(self)
 
     def sync_apps(self):
+        """Handle sync apps."""
         cherrypy.server.httpserver.fcgiserver.application = self.get_app()

@@ -1,5 +1,5 @@
 """
-Bonus Tutorial: Using generators to return result bodies
+Bonus Tutorial: Using generators to return result bodies.
 
 Instead of returning a complete result string, you can use the yield
 statement to return one result part after another. This may be convenient
@@ -13,15 +13,19 @@ import cherrypy
 
 
 class GeneratorDemo:
+    """GeneratorDemo class."""
 
     def header(self):
+        """Header html content."""
         return '<html><body><h2>Generators rule!</h2>'
 
     def footer(self):
+        """Footer html content."""
         return '</body></html>'
 
     @cherrypy.expose
     def index(self):
+        """Return index html content."""
         # Let's make up a list of users for presentation purposes
         users = ['Remi', 'Carlos', 'Hendrik', 'Lorenzo Lamas']
 

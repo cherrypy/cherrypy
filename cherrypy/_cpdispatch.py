@@ -25,6 +25,7 @@ class PageHandler(object):
     """Callable which sets response.body."""
 
     def __init__(self, callable, *args, **kwargs):
+        """Initialize PageHandler."""
         self.callable = callable
         self.args = args
         self.kwargs = kwargs
@@ -36,6 +37,7 @@ class PageHandler(object):
 
     @args.setter
     def args(self, args):
+        """Setter for ordered args."""
         cherrypy.serving.request.args = args
         return cherrypy.serving.request.args
 
@@ -46,10 +48,12 @@ class PageHandler(object):
 
     @kwargs.setter
     def kwargs(self, kwargs):
+        """Setter for named kwargs."""
         cherrypy.serving.request.kwargs = kwargs
         return cherrypy.serving.request.kwargs
 
     def __call__(self):
+        """Call handler for PageHandler."""
         try:
             return self.callable(*self.args, **self.kwargs)
         except TypeError:
@@ -203,15 +207,18 @@ try:
     import inspect
 except ImportError:
     def test_callable_spec(callable, args, kwargs):  # noqa: F811
+        """Test callable spec."""
         return None
 else:
     def getargspec(callable):
+        """Get arg spec."""
         return inspect.getfullargspec(callable)[:4]
 
 
 class LateParamPageHandler(PageHandler):
+    """LateParamPageHandler PageHandler class.
 
-    """When passing cherrypy.request.params to the page handler, we do not
+    When passing cherrypy.request.params to the page handler, we do not
     want to capture that dict too early; we want to give tools like the
     decoding tool a chance to modify the params dict in-between the lookup
     of the handler and the actual calling of the handler. This subclass
@@ -221,7 +228,7 @@ class LateParamPageHandler(PageHandler):
 
     @property
     def kwargs(self):
-        """Page handler kwargs (with cherrypy.request.params copied in)."""
+        """Page handler kwargs with cherrypy.request.params copied in."""
         kwargs = cherrypy.serving.request.params.copy()
         if self._kwargs:
             kwargs.update(self._kwargs)
@@ -229,6 +236,7 @@ class LateParamPageHandler(PageHandler):
 
     @kwargs.setter
     def kwargs(self, kwargs):
+        """Setter for kwargs."""
         cherrypy.serving.request.kwargs = kwargs
         self._kwargs = kwargs
 
@@ -238,6 +246,7 @@ if sys.version_info < (3, 0):
         string.punctuation, '_' * len(string.punctuation))
 
     def validate_translator(t):
+        """Validate translator."""
         if not isinstance(t, str) or len(t) != 256:
             raise ValueError(
                 'The translate argument must be a str of len 256.')
@@ -246,6 +255,7 @@ else:
         string.punctuation, '_' * len(string.punctuation))
 
     def validate_translator(t):
+        """Validate translator."""
         if not isinstance(t, dict):
             raise ValueError('The translate argument must be a dict.')
 
@@ -273,6 +283,7 @@ class Dispatcher(object):
 
     def __init__(self, dispatch_method_name=None,
                  translate=punctuation_to_underscores):
+        """Initialize Dispatcher."""
         validate_translator(translate)
         self.translate = translate
         if dispatch_method_name:
@@ -389,8 +400,7 @@ class Dispatcher(object):
             object_trail.append([name, node, nodeconf, segleft])
 
         def set_conf():
-            """Collapse all object_trail config into cherrypy.request.config.
-            """
+            """Collapse all object_trail conf into cherrypy.request.config."""
             base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.
@@ -505,10 +515,12 @@ class RoutesDispatcher(object):
         self.mapper.controller_scan = self.controllers.keys
 
     def connect(self, name, route, controller, **kwargs):
+        """Connect."""
         self.controllers[name] = controller
         self.mapper.connect(name, route, controller=name, **kwargs)
 
     def redirect(self, url):
+        """Redirect."""
         raise cherrypy.HTTPRedirect(url)
 
     def __call__(self, path_info):
@@ -602,6 +614,7 @@ class RoutesDispatcher(object):
 
 
 def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
+    """Xml RPC Dispatcher class."""
     from cherrypy.lib import xmlrpcutil
 
     def xmlrpc_dispatch(path_info):

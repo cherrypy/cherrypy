@@ -1,3 +1,4 @@
+"""Encoding module."""
 import struct
 import time
 import io
@@ -41,32 +42,41 @@ def decode(encoding=None, default_encoding='utf-8'):
 
 
 class UTF8StreamEncoder:
+    """UTF8 Stream Encoder."""
+
     def __init__(self, iterator):
+        """Initialize UTF8StreamEncoder."""
         self._iterator = iterator
 
     def __iter__(self):
+        """Iterate for UTF8StreamEncoder."""
         return self
 
     def next(self):
+        """Next for UTF8StreamEncoder."""
         return self.__next__()
 
     def __next__(self):
+        """Next for UTF8StreamEncoder."""
         res = next(self._iterator)
         if isinstance(res, str):
             res = res.encode('utf-8')
         return res
 
     def close(self):
+        """Close for UTF8StreamEncoder."""
         if is_closable_iterator(self._iterator):
             self._iterator.close()
 
     def __getattr__(self, attr):
+        """Get attr for UTF8StreamEncoder."""
         if attr.startswith('__'):
             raise AttributeError(self, attr)
         return getattr(self._iterator, attr)
 
 
 class ResponseEncoder:
+    """Response Encoder."""
 
     default_encoding = 'utf-8'
     failmsg = 'Response body could not be encoded with %r.'
@@ -77,6 +87,7 @@ class ResponseEncoder:
     debug = False
 
     def __init__(self, **kwargs):
+        """Initialize ResponseEncoder."""
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -124,6 +135,7 @@ class ResponseEncoder:
         return True
 
     def find_acceptable_charset(self):
+        """Find acceptable charset."""
         request = cherrypy.serving.request
         response = cherrypy.serving.response
 
@@ -219,6 +231,7 @@ class ResponseEncoder:
         raise cherrypy.HTTPError(406, msg)
 
     def __call__(self, *args, **kwargs):
+        """Call for ResponseEncoder."""
         response = cherrypy.serving.response
         self.body = self.oldhandler(*args, **kwargs)
 
@@ -330,6 +343,7 @@ def compress(body, compress_level):
 
 
 def decompress(body):
+    """Decompress."""
     import gzip
 
     zbuf = io.BytesIO()

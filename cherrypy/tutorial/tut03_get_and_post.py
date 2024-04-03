@@ -1,5 +1,5 @@
 """
-Tutorial - Passing variables
+Tutorial - Passing variables.
 
 This tutorial shows you how to pass GET/POST variables to methods.
 """
@@ -10,10 +10,15 @@ import cherrypy
 
 
 class WelcomePage:
+    """WelcomePage Class for Tutorial 03."""
 
     @cherrypy.expose
     def index(self):
-        # Ask for the user's name.
+        """
+        Index WelcomePage.
+
+        Ask for the user's name.
+        """
         return '''
             <form action="greetUser" method="GET">
             What is your name?
@@ -23,14 +28,17 @@ class WelcomePage:
 
     @cherrypy.expose
     def greetUser(self, name=None):
-        # CherryPy passes all GET and POST variables as method parameters.
-        # It doesn't make a difference where the variables come from, how
-        # large their contents are, and so on.
-        #
-        # You can define default parameter values as usual. In this
-        # example, the "name" parameter defaults to None so we can check
-        # if a name was actually specified.
+        """
+        Greet User WelcomePage.
 
+        CherryPy passes all GET and POST variables as method parameters.
+        It doesn't make a difference where the variables come from, how
+        large their contents are, and so on.
+
+        You can define default parameter values as usual. In this
+        example, the "name" parameter defaults to None so we can check
+        if a name was actually specified.
+        """
         if name:
             # Greet the user!
             return "Hey %s, what's up?" % name

@@ -31,6 +31,7 @@ class Supervisor(object):
     """Base class for modeling and controlling servers during testing."""
 
     def __init__(self, **kwargs):
+        """Initialize Supervisor."""
         for k, v in kwargs.items():
             if k == 'port':
                 setattr(self, k, int(v))
@@ -38,12 +39,12 @@ class Supervisor(object):
 
 
 def log_to_stderr(msg, level):
+    """Log to Standard Error."""
     return sys.stderr.write(msg + os.linesep)
 
 
 class LocalSupervisor(Supervisor):
-    """Base class for modeling/controlling servers which run in the same
-    process.
+    """Base for modeling/controlling servers which run in the same process.
 
     When the server side runs in a different process, start/stop can
     dump all state between each test module easily. When the server side
@@ -55,6 +56,7 @@ class LocalSupervisor(Supervisor):
     using_wsgi = False
 
     def __init__(self, **kwargs):
+        """Initialize LocalSupervisor."""
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -85,6 +87,7 @@ class LocalSupervisor(Supervisor):
         pass
 
     def stop(self):
+        """Stop the HTTP server."""
         td = getattr(self, 'teardown', None)
         if td:
             td()
@@ -104,6 +107,7 @@ class NativeServerSupervisor(LocalSupervisor):
     using_wsgi = False
 
     def __str__(self):
+        """Represent NativeServerSupervisor as a string."""
         return 'Builtin HTTP Server on %s:%s' % (self.host, self.port)
 
 
@@ -115,10 +119,11 @@ class LocalWSGISupervisor(LocalSupervisor):
     using_wsgi = True
 
     def __str__(self):
+        """Represent LocalWSGISupervisor as a string."""
         return 'Builtin WSGI Server on %s:%s' % (self.host, self.port)
 
     def sync_apps(self):
-        """Hook a new WSGI app into the origin server."""
+        """Create Hook into a new WSGI app into the origin server."""
         cherrypy.server.httpserver.wsgi_app = self.get_app()
 
     def get_app(self, app=None):
@@ -140,6 +145,7 @@ class LocalWSGISupervisor(LocalSupervisor):
 
 
 def get_cpmodpy_supervisor(**options):
+    """Get CherryPy mod_python supervisor."""
     from cherrypy.test import modpy
     sup = modpy.ModPythonSupervisor(**options)
     sup.template = modpy.conf_cpmodpy
@@ -147,6 +153,7 @@ def get_cpmodpy_supervisor(**options):
 
 
 def get_modpygw_supervisor(**options):
+    """Get CherryPy mod_python gateway supervisor."""
     from cherrypy.test import modpy
     sup = modpy.ModPythonSupervisor(**options)
     sup.template = modpy.conf_modpython_gateway
@@ -155,26 +162,31 @@ def get_modpygw_supervisor(**options):
 
 
 def get_modwsgi_supervisor(**options):
+    """Get CherryPy mod_wsgi supervisor."""
     from cherrypy.test import modwsgi
     return modwsgi.ModWSGISupervisor(**options)
 
 
 def get_modfcgid_supervisor(**options):
+    """Get CherryPy mod_fcgi supervisor."""
     from cherrypy.test import modfcgid
     return modfcgid.ModFCGISupervisor(**options)
 
 
 def get_modfastcgi_supervisor(**options):
+    """Get CherryPy mod_fastcgi supervisor."""
     from cherrypy.test import modfastcgi
     return modfastcgi.ModFCGISupervisor(**options)
 
 
 def get_wsgi_u_supervisor(**options):
+    """Get CherryPy wsgi supervisor."""
     cherrypy.server.wsgi_version = ('u', 0)
     return LocalWSGISupervisor(**options)
 
 
 class CPWebCase(webtest.WebCase):
+    """CherryPy Web Test Case."""
 
     script_name = ''
     scheme = 'http'
@@ -236,8 +248,7 @@ class CPWebCase(webtest.WebCase):
 
     @classmethod
     def setup_class(cls):
-        ''
-        # Creates a server
+        """Create a server."""
         conf = {
             'scheme': 'http',
             'protocol': 'HTTP/1.1',
@@ -274,13 +285,14 @@ class CPWebCase(webtest.WebCase):
 
     @classmethod
     def teardown_class(cls):
-        ''
+        """Teardown a server."""
         if hasattr(cls, 'setup_server'):
             cls.supervisor.stop()
 
     do_gc_test = False
 
     def test_gc(self):
+        """Test /gc."""
         if not self.do_gc_test:
             return
 
@@ -291,9 +303,11 @@ class CPWebCase(webtest.WebCase):
             'Failures occur intermittently. See #1420'
 
     def prefix(self):
+        """Get prefix."""
         return self.script_name.rstrip('/')
 
     def base(self):
+        """Return base."""
         if ((self.scheme == 'http' and self.PORT == 80) or
                 (self.scheme == 'https' and self.PORT == 443)):
             port = ''
@@ -304,6 +318,7 @@ class CPWebCase(webtest.WebCase):
                                 self.script_name.rstrip('/'))
 
     def exit(self):
+        """Exit."""
         sys.exit()
 
     def getPage(self, url, *args, **kwargs):
@@ -313,6 +328,7 @@ class CPWebCase(webtest.WebCase):
         return webtest.WebCase.getPage(self, url, *args, **kwargs)
 
     def skip(self, msg='skipped '):
+        """Skip."""
         pytest.skip(msg)
 
     def assertErrorPage(self, status, message=None, pattern=''):
@@ -321,7 +337,6 @@ class CPWebCase(webtest.WebCase):
         The function will optionally look for the regexp pattern, within
         the exception embedded in the error page.
         """
-
         # This will never contain a traceback
         page = cherrypy._cperror.get_error_page(status, message=message)
 
@@ -394,6 +409,7 @@ def setup_client():
 
 
 class CPProcess(object):
+    """CherryPy Process Spawning Helper."""
 
     pid_file = os.path.join(thisdir, 'test.pid')
     config_file = os.path.join(thisdir, 'test.conf')
@@ -412,6 +428,7 @@ log.access_file: r'%(access_log)s'
 
     def __init__(self, wait=False, daemonize=False, ssl=False,
                  socket_host=None, socket_port=None):
+        """Initialize CPProcess."""
         self.wait = wait
         self.daemonize = daemonize
         self.ssl = ssl
@@ -419,6 +436,7 @@ log.access_file: r'%(access_log)s'
         self.port = socket_port or cherrypy.server.socket_port
 
     def write_conf(self, extra=''):
+        """Write CPProcess config."""
         if self.ssl:
             serverpem = os.path.join(thisdir, 'test.pem')
             ssl = """
@@ -498,6 +516,7 @@ server.ssl_private_key: r'%s'
             time.sleep(1)
 
     def get_pid(self):
+        """Get PID."""
         if self.daemonize:
             with open(self.pid_file, 'rb') as f:
                 return int(f.read())

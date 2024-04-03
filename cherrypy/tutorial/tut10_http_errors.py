@@ -1,11 +1,9 @@
 """
-
-Tutorial: HTTP errors
+Tutorial: HTTP errors.
 
 HTTPError is used to return an error response to the client.
 CherryPy has lots of options regarding how such errors are
 logged, displayed, and formatted.
-
 """
 
 import os
@@ -18,6 +16,7 @@ curpath = os.path.normpath(os.path.join(os.getcwd(), localDir))
 
 
 class HTTPErrorDemo(object):
+    """HTTPErrorDemo request handler."""
 
     # Set a custom response for 403 errors.
     _cp_config = {'error_page.403':
@@ -25,6 +24,7 @@ class HTTPErrorDemo(object):
 
     @cherrypy.expose
     def index(self):
+        """Handle index route."""
         # display some links that will result in errors
         tracebacks = cherrypy.request.show_tracebacks
         if tracebacks:
@@ -55,6 +55,7 @@ class HTTPErrorDemo(object):
 
     @cherrypy.expose
     def toggleTracebacks(self):
+        """Handle toggleTracebacks route."""
         # simple function to toggle tracebacks on and off
         tracebacks = cherrypy.request.show_tracebacks
         cherrypy.config.update({'request.show_tracebacks': not tracebacks})
@@ -64,11 +65,13 @@ class HTTPErrorDemo(object):
 
     @cherrypy.expose
     def error(self, code):
+        """Handle error route."""
         # raise an error based on the get query
         raise cherrypy.HTTPError(status=code)
 
     @cherrypy.expose
     def messageArg(self):
+        """Handle messageArg route."""
         message = ("If you construct an HTTPError with a 'message' "
                    'argument, it wil be placed on the error page '
                    '(underneath the status line by default).')

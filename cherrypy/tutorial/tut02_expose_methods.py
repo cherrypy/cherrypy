@@ -1,5 +1,5 @@
 """
-Tutorial - Multiple methods
+Tutorial - Multiple methods.
 
 This tutorial shows you how to link to other methods of your request
 handler.
@@ -11,15 +11,24 @@ import cherrypy
 
 
 class HelloWorld:
+    """HelloWorld class for tutorial."""
 
     @cherrypy.expose
     def index(self):
-        # Let's link to another method here.
+        """
+        Index HelloWorld.
+
+        Let's link to another method here.
+        """
         return 'We have an <a href="show_msg">important message</a> for you!'
 
     @cherrypy.expose
     def show_msg(self):
-        # Here's the important message!
+        """
+        Show_msg HelloWorld.
+
+        Here's the important message!
+        """
         return 'Hello world!'
 
 

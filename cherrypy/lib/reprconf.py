@@ -92,10 +92,12 @@ class NamespaceSet(dict):
                     handler(k, v)
 
     def __repr__(self):
+        """Represent NamespaceSet."""
         return '%s.%s(%s)' % (self.__module__, self.__class__.__name__,
                               dict.__repr__(self))
 
     def __copy__(self):
+        """Handle copy."""
         newobj = self.__class__()
         newobj.update(self)
         return newobj
@@ -113,6 +115,7 @@ class Config(dict):
     namespaces = NamespaceSet()
 
     def __init__(self, file=None, **kwargs):
+        """Initialize config."""
         self.reset()
         if file is not None:
             self.update(file)
@@ -141,20 +144,24 @@ class Config(dict):
         self.namespaces(config)
 
     def __setitem__(self, k, v):
+        """Handle set item."""
         dict.__setitem__(self, k, v)
         self.namespaces({k: v})
 
 
 class Parser(configparser.ConfigParser):
+    """A config parser.
 
-    """Sub-class of ConfigParser that keeps the case of options and that
+    Sub-class of ConfigParser that keeps the case of options and that
     raises an exception if the file cannot be read.
     """
 
     def optionxform(self, optionstr):
+        """Option X form."""
         return optionstr
 
     def read(self, filenames):
+        """Handle read."""
         if isinstance(filenames, text_or_bytes):
             filenames = [filenames]
         for filename in filenames:
@@ -186,6 +193,7 @@ class Parser(configparser.ConfigParser):
         return result
 
     def dict_from_file(self, file):
+        """Generate a dict from a file."""
         if hasattr(file, 'read'):
             self.read_file(file)
         else:
@@ -235,8 +243,9 @@ class _Builder:
         return self.build(o.value)
 
     def _build_call35(self, o):
-        """
-        Workaround for python 3.5 _ast.Call signature, docs found here
+        """Workaround for python 3.5.
+
+        _ast.Call signature, docs found here
         https://greentreesnakes.readthedocs.org/en/latest/nodes.html
         """
         import ast
@@ -375,7 +384,6 @@ def modules(modulePath):
 
 def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
-
     # Parse out the path, module, and attribute
     last_dot = full_attribute_name.rfind('.')
     attr_name = full_attribute_name[last_dot + 1:]

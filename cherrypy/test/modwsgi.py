@@ -48,6 +48,7 @@ curdir = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_process(cmd, args=''):
+    """Read Process of supplied  command."""
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
@@ -101,9 +102,11 @@ class ModWSGISupervisor(helper.Supervisor):
     template = conf_modwsgi
 
     def __str__(self):
+        """Represent ModWSGISupervisor as a string."""
         return 'ModWSGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
+        """Start Mod WSGI Supervisor."""
         mpconf = CONF_PATH
         if not os.path.isabs(mpconf):
             mpconf = os.path.join(curdir, mpconf)
@@ -133,6 +136,7 @@ loaded = False
 
 
 def application(environ, start_response):
+    """Application to load test mod."""
     global loaded
     if not loaded:
         loaded = True

@@ -172,7 +172,6 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
     default, 'remote' is set to 'X-Forwarded-For'. If you do not want to
     rewrite remote.ip, set the 'remote' arg to an empty string.
     """
-
     request = cherrypy.serving.request
 
     if scheme:
@@ -288,6 +287,7 @@ class SessionAuth(object):
     debug = False
 
     def check_username_and_password(self, username, password):
+        """Check username and password stub."""
         pass
 
     def anonymous(self):
@@ -295,16 +295,20 @@ class SessionAuth(object):
         pass
 
     def on_login(self, username):
+        """Login event stub."""
         pass
 
     def on_logout(self, username):
+        """Logout event stub."""
         pass
 
     def on_check(self, username):
+        """Check event stub."""
         pass
 
     def login_screen(self, from_page='..', username='', error_msg='',
                      **kwargs):
+        """Login screen."""
         return (str("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
@@ -385,6 +389,7 @@ Message: %(error_msg)s
         cherrypy.log(template % context, 'TOOLS.SESSAUTH')
 
     def run(self):
+        """Handle run."""
         request = cherrypy.serving.request
         response = cherrypy.serving.response
 
@@ -592,19 +597,21 @@ def accept(media=None, debug=False):
 
 
 class MonitoredHeaderMap(_httputil.HeaderMap):
+    """MonitoredHeaderMap class."""
 
     def transform_key(self, key):
+        """Transform key."""
         self.accessed_headers.add(key)
         return super(MonitoredHeaderMap, self).transform_key(key)
 
     def __init__(self):
+        """Initialize MonitoredHeaderMap."""
         self.accessed_headers = set()
         super(MonitoredHeaderMap, self).__init__()
 
 
 def autovary(ignore=None, debug=False):
-    """Auto-populate the Vary response header based on request.header access.
-    """
+    """Auto-populate Vary response header based on request.header access."""
     request = cherrypy.serving.request
 
     req_h = request.headers

@@ -1,5 +1,5 @@
 """
-Tutorial - Multiple objects
+Tutorial - Multiple objects.
 
 This tutorial shows you how to create a site structure through multiple
 possibly nested request handler objects.
@@ -11,9 +11,11 @@ import cherrypy
 
 
 class HomePage:
+    """HomePage class."""
 
     @cherrypy.expose
     def index(self):
+        """Handle index for HomePage."""
         return '''
             <p>Hi, this is the home page! Check out the other
             fun stuff on this site:</p>
@@ -25,9 +27,11 @@ class HomePage:
 
 
 class JokePage:
+    """JokePage class."""
 
     @cherrypy.expose
     def index(self):
+        """Handle index for JokePage."""
         return '''
             <p>"In Python, how do you create a string of random
             characters?" -- "Read a Perl file!"</p>
@@ -35,8 +39,10 @@ class JokePage:
 
 
 class LinksPage:
+    """LinksPage class."""
 
     def __init__(self):
+        """Initialize LinksPage."""
         # Request handler objects can create their own nested request
         # handler objects. Simply create them inside their __init__
         # methods!
@@ -44,6 +50,7 @@ class LinksPage:
 
     @cherrypy.expose
     def index(self):
+        """Handle index for LinksPage."""
         # Note the way we link to the extra links page (and back).
         # As you can see, this object doesn't really care about its
         # absolute position in the site tree, since we use relative
@@ -68,9 +75,11 @@ class LinksPage:
 
 
 class ExtraLinksPage:
+    """ExtraLinksPage class."""
 
     @cherrypy.expose
     def index(self):
+        """Handle index for ExtraLinksPage."""
         # Note the relative link back to the Links page!
         return '''
             <p>Here are some extra useful links:</p>

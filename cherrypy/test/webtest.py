@@ -1,4 +1,4 @@
-# for compatibility, expose cheroot webtest here
+"""For compatibility, expose cheroot webtest here."""
 import warnings
 
 from cheroot.test.webtest import (  # noqa

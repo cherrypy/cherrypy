@@ -57,6 +57,7 @@ class Tool(object):
     namespace = 'tools'
 
     def __init__(self, point, callable, name=None, priority=50):
+        """Initialize Tool."""
         self._point = point
         self.callable = callable
         self._name = name
@@ -66,10 +67,12 @@ class Tool(object):
 
     @property
     def on(self):
+        """Property on."""
         raise AttributeError(_attr_error)
 
     @on.setter
     def on(self, value):
+        """Setter for on property."""
         raise AttributeError(_attr_error)
 
     def _setargs(self):
@@ -133,7 +136,7 @@ class Tool(object):
         return tool_decorator
 
     def _setup(self):
-        """Hook this tool into cherrypy.request.
+        """Hooking this tool into cherrypy.request.
 
         The standard CherryPy request object will automatically call
         this method when the tool is "turned on" in config.
@@ -159,6 +162,7 @@ class HandlerTool(Tool):
     """
 
     def __init__(self, callable, name=None):
+        """Initialize HandlerTool."""
         Tool.__init__(self, 'before_handler', callable, name)
 
     def handler(self, *args, **kwargs):
@@ -183,7 +187,7 @@ class HandlerTool(Tool):
             cherrypy.serving.request.handler = None
 
     def _setup(self):
-        """Hook this tool into cherrypy.request.
+        """Hooking this tool into cherrypy.request.
 
         The standard CherryPy request object will automatically call
         this method when the tool is "turned on" in config.
@@ -217,12 +221,14 @@ class HandlerWrapperTool(Tool):
 
     def __init__(self, newhandler, point='before_handler', name=None,
                  priority=50):
+        """Initialize HandlerWrapperTool."""
         self.newhandler = newhandler
         self._point = point
         self._name = name
         self._priority = priority
 
     def callable(self, *args, **kwargs):
+        """Make HandlerWrapperTool callable."""
         innerfunc = cherrypy.serving.request.handler
 
         def wrap(*args, **kwargs):
@@ -234,13 +240,14 @@ class ErrorTool(Tool):
     """Tool which is used to replace the default request.error_response."""
 
     def __init__(self, callable, name=None):
+        """Initialize ErrorTool."""
         Tool.__init__(self, None, callable, name)
 
     def _wrapper(self):
         self.callable(**self._merged_args())
 
     def _setup(self):
-        """Hook this tool into cherrypy.request.
+        """Hooking this tool into cherrypy.request.
 
         The standard CherryPy request object will automatically call
         this method when the tool is "turned on" in config.
@@ -270,6 +277,7 @@ class SessionTool(Tool):
     """
 
     def __init__(self):
+        """Initialize SessionTool."""
         # _sessions.init must be bound after headers are read
         Tool.__init__(self, 'before_request_body', _sessions.init)
 
@@ -277,7 +285,7 @@ class SessionTool(Tool):
         cherrypy.serving.session.acquire_lock()
 
     def _setup(self):
-        """Hook this tool into cherrypy.request.
+        """Hooking this tool into cherrypy.request.
 
         The standard CherryPy request object will automatically call
         this method when the tool is "turned on" in config.
@@ -360,6 +368,7 @@ class XMLRPCController(object):
 
     @expose
     def default(self, *vpath, **params):
+        """Handle default XMLRPCController."""
         rpcparams, rpcmethod = _xmlrpc.process_body()
 
         subhandler = self
@@ -384,6 +393,8 @@ class XMLRPCController(object):
 
 
 class SessionAuthTool(HandlerTool):
+    """Stub for SessionAuthTool."""
+
     pass
 
 
@@ -402,7 +413,7 @@ class CachingTool(Tool):
     _wrapper.priority = 90
 
     def _setup(self):
-        """Hook caching into cherrypy.request."""
+        """Hooking caching into cherrypy.request."""
         conf = self._merged_args()
 
         p = conf.pop('priority', None)
@@ -419,9 +430,11 @@ class Toolbox(object):
     """
 
     def __init__(self, namespace):
+        """Initialize Toolbox."""
         self.namespace = namespace
 
     def __setattr__(self, name, value):
+        """Set attribute for Toolbox."""
         # If the Tool._name is None, supply it from the attribute name.
         if isinstance(value, Tool):
             if value._name is None:
@@ -449,7 +462,8 @@ class Toolbox(object):
                     tool._setup()
 
     def register(self, point, **kwargs):
-        """
+        """Register Toolbox.
+
         Return a decorator which registers the function
         at the given hook point.
         """
