@@ -336,7 +336,7 @@ jobs:
                 mode=FILE_APPEND_MODE,
         ) as outputs_file:
             print(
-                "sdist=${{ steps.dist.outputs.name }}-${{
+                "sdist=cherrypy-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
