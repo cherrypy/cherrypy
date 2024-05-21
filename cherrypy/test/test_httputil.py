@@ -108,10 +108,12 @@ def test_invalid_status(status_code, error_msg):
     ]
 )
 def test_header_element(header_content, value, params):
-    """ Test that value and params are parsed from headers.
+    """Test that ``value`` and ``params`` are extracted from headers.
 
-        Testing that the value and params are parsed from
-        headers passed to HeaderElement from httputils """
+    This is a positive test case, checking that the value and
+    params are parsed from headers that are being passed into
+    the :py:class:`~cherrypy.httputil.HeaderElement` class.
+    """
     hdr_elem = httputil.HeaderElement.from_str(header_content)
 
     assert hdr_elem.value == value
@@ -136,8 +138,11 @@ def test_header_element(header_content, value, params):
     ]
 )
 def test_accept_element(header_content, media_type, qvalue):
-    """ Test that value and qvalue are parsed from headers passed to
-        AcceptElement from httputils """
+   """Test that ``value`` and ``qvalue`` are extracted from headers.
+
+   This is being checked in the context of the
+   :py:class:`~cherrypy.httputil.AcceptElement` class.
+   """
     acc_elem = httputil.AcceptElement.from_str(header_content)
     assert acc_elem.value == media_type
     assert acc_elem.qvalue == qvalue
@@ -157,7 +162,9 @@ def test_accept_element(header_content, media_type, qvalue):
     ]
 )
 def test_accept_element_raises_400(header_content, media_type, qvalue):
-    """ Test that headers passed to AcceptElement from httputils
-        raise an expected HTTPError """
+    """Check bad headers crash :class:`cherrypy.httputil.AcceptElement`.
+
+    The expected exception is :exc:`~cherrypy.HTTPError`.
+    """
     httputil.AcceptElement.from_str(header_content)
     assert pytest.raises(cherrypy.HTTPError)
