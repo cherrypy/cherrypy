@@ -84,7 +84,7 @@ def test_invalid_status(status_code, error_msg):
 
 @pytest.mark.parametrize(
     ('header_content', 'value', 'params'),
-    [
+    (
         ('application/x-www-form-urlencoded',
          'application/x-www-form-urlencoded', {}),  # default_content_type
         ('application/json;charset="utf8"',
@@ -105,7 +105,7 @@ def test_invalid_status(status_code, error_msg):
          'text/plain', {}),
         ('text/xml',
          'text/xml', {}),
-    ]
+    ),
 )
 def test_header_element(header_content, value, params):
     """Test that ``value`` and ``params`` are extracted from headers.
@@ -120,7 +120,7 @@ def test_header_element(header_content, value, params):
 
 @pytest.mark.parametrize(
     ('header_content', 'media_type', 'qvalue'),
-    [
+    (
         ('application/x-www-form-urlencoded',
          'application/x-www-form-urlencoded', 1.0),  # default_content_type
         ('application/json;charset="utf8"',
@@ -133,7 +133,7 @@ def test_header_element(header_content, value, params):
          'text/plain', 1.0),
         ('text/xml',
          'text/xml', 1.0),
-    ]
+    ),
 )
 def test_accept_element(header_content, media_type, qvalue):
    """Test that ``value`` and ``qvalue`` are extracted from headers.
@@ -147,7 +147,7 @@ def test_accept_element(header_content, media_type, qvalue):
 
 @pytest.mark.parametrize(
     ('header_content', 'media_type', 'qvalue'),
-    [
+    (
         ('audio/*; q=0.2, audio/basic',
          'audio/*', {'q': '0.2, audio/basic'}),
         ('text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c',
@@ -156,7 +156,7 @@ def test_accept_element(header_content, media_type, qvalue):
          'gzip', {'q': '0'}),
         ('da, en-gb;q=0.8, en;q=0.7',
          'da, en-gb', 0.8),
-    ]
+    ),
 )
 def test_accept_element_raises_400(header_content, media_type, qvalue):
     """Check bad headers crash :class:`cherrypy.httputil.AcceptElement`.
