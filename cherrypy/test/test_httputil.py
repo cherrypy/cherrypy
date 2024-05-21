@@ -85,8 +85,12 @@ def test_invalid_status(status_code, error_msg):
 @pytest.mark.parametrize(
     ('header_content', 'value', 'params'),
     (
-        ('application/x-www-form-urlencoded',
-         'application/x-www-form-urlencoded', {}),  # default_content_type
+        pytest.param(
+            'application/x-www-form-urlencoded',
+            'application/x-www-form-urlencoded',
+            {},
+            id='default-content-type',
+        ),
         ('application/json;charset="utf8"',
          'application/json', {'charset': 'utf8'}),
         ('audio/*; q=0.2, audio/basic',
@@ -121,8 +125,12 @@ def test_header_element(header_content, value, params):
 @pytest.mark.parametrize(
     ('header_content', 'media_type', 'qvalue'),
     (
-        ('application/x-www-form-urlencoded',
-         'application/x-www-form-urlencoded', 1.0),  # default_content_type
+        pytest.param(
+            'application/x-www-form-urlencoded',
+            'application/x-www-form-urlencoded',
+            1.0,
+            id='default-content-type',
+        ),
         ('application/json;charset="utf8"',
          'application/json', 1.0),
         ('text/*, text/html, text/html;level=1, */*',
