@@ -120,7 +120,7 @@ def test_header_element(header_content, value, params):
 
 
 @pytest.mark.parametrize(
-    'header_content,media_type,qvalue',
+    ('header_content', 'media_type', 'qvalue'),
     [
         ('application/x-www-form-urlencoded',
          'application/x-www-form-urlencoded', 1.0),  # default_content_type
@@ -147,7 +147,7 @@ def test_accept_element(header_content, media_type, qvalue):
 
 
 @pytest.mark.parametrize(
-    'header_content,media_type,qvalue',
+    ('header_content', 'media_type', 'qvalue'),
     [
         ('audio/*; q=0.2, audio/basic',
          'audio/*', {'q': '0.2, audio/basic'}),
