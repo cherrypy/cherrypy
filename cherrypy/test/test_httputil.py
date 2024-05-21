@@ -171,5 +171,8 @@ def test_accept_element_raises_400(header_content, media_type, qvalue):
 
     The expected exception is :exc:`~cherrypy.HTTPError`.
     """
-    httputil.AcceptElement.from_str(header_content)
-    assert pytest.raises(cherrypy.HTTPError)
+    with pytest.raises(
+            cherrypy.HTTPError,
+            match=r'^Malformed HTTP header: `[^`]+`$',
+    ):
+        httputil.AcceptElement.from_str(header_content)
