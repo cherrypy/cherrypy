@@ -115,7 +115,6 @@ def test_header_element(header_content, value, params):
     the :py:class:`~cherrypy.httputil.HeaderElement` class.
     """
     hdr_elem = httputil.HeaderElement.from_str(header_content)
-
     assert (hdr_elem.value, hdr_elem.params) == (value, params)
 
 
