@@ -144,11 +144,11 @@ def test_header_element(header_content, value, params):
     ),
 )
 def test_accept_element(header_content, media_type, qvalue):
-   """Test that ``value`` and ``qvalue`` are extracted from headers.
+    """Test that ``value`` and ``qvalue`` are extracted from headers.
 
-   This is being checked in the context of the
-   :py:class:`~cherrypy.httputil.AcceptElement` class.
-   """
+    This is being checked in the context of the
+    :py:class:`~cherrypy.httputil.AcceptElement` class.
+    """
     acc_elem = httputil.AcceptElement.from_str(header_content)
     assert (acc_elem.value, acc_elem.qvalue) == (media_type, qvalue)
 
