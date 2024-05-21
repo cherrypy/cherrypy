@@ -116,8 +116,7 @@ def test_header_element(header_content, value, params):
     """
     hdr_elem = httputil.HeaderElement.from_str(header_content)
 
-    assert hdr_elem.value == value
-    assert hdr_elem.params == params
+    assert (hdr_elem.value, hdr_elem.params) == (value, params)
 
 
 @pytest.mark.parametrize(
@@ -144,8 +143,7 @@ def test_accept_element(header_content, media_type, qvalue):
    :py:class:`~cherrypy.httputil.AcceptElement` class.
    """
     acc_elem = httputil.AcceptElement.from_str(header_content)
-    assert acc_elem.value == media_type
-    assert acc_elem.qvalue == qvalue
+    assert (acc_elem.value, acc_elem.qvalue) == (media_type, qvalue)
 
 
 @pytest.mark.parametrize(
