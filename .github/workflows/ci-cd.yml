@@ -552,7 +552,6 @@ jobs:
         # - linkcheck-docs
         # - metadata-validation
         - pre-commit
-        - pre-commit-pep257
         - setup-check
         # - spellcheck-docs
       fail-fast: false
@@ -574,7 +573,7 @@ jobs:
     - name: Grab the source from Git
       if: >-
         contains(
-        fromJSON('["pre-commit", "pre-commit-pep257", "spellcheck-docs"]'),
+        fromJSON('["pre-commit", "spellcheck-docs"]'),
         matrix.toxenv
         )
       uses: actions/checkout@v3
@@ -583,7 +582,7 @@ jobs:
     - name: Retrieve the project source from an sdist inside the GHA artifact
       if: >-
         !contains(
-        fromJSON('["pre-commit", "pre-commit-pep257", "spellcheck-docs"]'),
+        fromJSON('["pre-commit", "spellcheck-docs"]'),
         matrix.toxenv
         )
       uses: re-actors/checkout-python-sdist@release/v1

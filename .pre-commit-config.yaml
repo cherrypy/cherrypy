@@ -39,23 +39,6 @@ repos:
   rev: 6.3.0
   hooks:
   - id: pydocstyle
-    exclude: |
-        (?x)
-        tests/dist|
-        cherrypy/(
-            _cp(
-                compat|modpy|logging|error|wsgi|dispatch|tools|reqbody|request
-            )|
-            (
-                lib/(
-                    auth|auth_basic|auth_digest|caching|covercp|
-                    cpstats|cptools|encoding|gctools|httpauth|httputil|
-                    jsontools|lockfile|locking|profiler|reprconf|sessions
-                )|
-                process/(plugins|servers|win32)
-            ).py|
-            test|tutorial
-        )
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
   rev: v1.5.4
