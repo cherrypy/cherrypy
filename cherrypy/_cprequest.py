@@ -42,7 +42,7 @@ class Hook(object):
     callable on each call."""
 
     def __init__(self, callback, failsafe=None, priority=None, **kwargs):
-        """Initialize Hook."""
+        """Initialize the hook instance."""
         self.callback = callback
 
         if failsafe is None:
@@ -75,7 +75,7 @@ class Hook(object):
         return self.callback(**self.kwargs)
 
     def __repr__(self):
-        """Represent Hook."""
+        """Render a string representation of :class:`Hook` instance."""
         cls = self.__class__
         return ('%s.%s(callback=%r, failsafe=%r, priority=%r, %s)'
                 % (cls.__module__, cls.__name__, self.callback,
@@ -88,14 +88,14 @@ class HookMap(dict):
     """A map of call points to lists of callbacks (Hook objects)."""
 
     def __new__(cls, points=None):
-        """Handle New HookMap."""
+        """Construct a fresh hook map instance."""
         d = dict.__new__(cls)
         for p in points or []:
             d[p] = []
         return d
 
     def __init__(self, *a, **kw):
-        """Initialize HookMap."""
+        """Initialize a hook map instance post-construction."""
         pass
 
     def attach(self, point, callback, failsafe=None, priority=None, **kwargs):
@@ -136,7 +136,7 @@ class HookMap(dict):
                 raise
 
     def __copy__(self):
-        """Copy."""
+        """Duplicate object per the copy protocol."""
         newmap = self.__class__()
         # We can't just use 'update' because we want copies of the
         # mutable values (each is a list) as well.
@@ -146,7 +146,7 @@ class HookMap(dict):
     copy = __copy__
 
     def __repr__(self):
-        """Represent HookMap."""
+        """Render a string representation of :class:`HookMap`."""
         cls = self.__class__
         return '%s.%s(points=%r)' % (
             cls.__module__,
@@ -555,7 +555,9 @@ class Request(object):
             self.stage = 'close'
 
     def run(self, method, path, query_string, req_protocol, headers, rfile):
-        r"""Process the Request (Core).
+        r"""Process the request.
+
+        *(core)*
 
         method, path, query_string, and req_protocol should be pulled directly
         from the Request-Line (e.g. "GET /path?key=val HTTP/1.0").
@@ -829,7 +831,7 @@ class ResponseBody(object):
                    'if you wish to return unicode.')
 
     def __get__(self, obj, objclass=None):
-        """Handle get for ReponseBody."""
+        """Return a response body through the descriptor protocol."""
         if obj is None:
             # When calling on the class instead of an instance...
             return self
@@ -837,7 +839,10 @@ class ResponseBody(object):
             return obj._body
 
     def __set__(self, obj, value):
-        """Convert the given value to an iterable object."""
+        """Set a response body through the descriptor protocol.
+
+        Convert the given value to an iterable object.
+        """
         if isinstance(value, str):
             raise ValueError(self.unicode_err)
         elif isinstance(value, list):
@@ -889,7 +894,7 @@ class Response(object):
     """If False, buffer the response body."""
 
     def __init__(self):
-        """Intialize Response."""
+        """Intialize the HTTP response instance."""
         self.status = None
         self.header_list = None
         self._body = []
@@ -912,12 +917,12 @@ class Response(object):
         return new_body
 
     def _flush_body(self):
-        """_flush_body Response.
+        """Exhaust the body iterator.
 
         :rtype: None
 
-        Discard self.body but consume any generator such that any
-        finalization can occur, such as is required by caching.tee_output().
+        Discard ``self.body`` but consume any generator such that any
+        finalization can occur, such as is required by ``caching.tee_output()``.
         """
         consume(iter(self.body))
 
@@ -972,7 +977,7 @@ class Response(object):
 
 
 class LazyUUID4(object):
-    """LazyUUID4 class."""
+    """A delayed UUID4 string maker."""
 
     def __str__(self):
         """Return UUID4 and keep it for future calls."""
