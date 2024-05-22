@@ -138,8 +138,6 @@ from cherrypy.lib import httputil as _httputil
 class CherryPyException(Exception):
     """A base class for CherryPy exceptions."""
 
-    pass
-
 
 class InternalRedirect(CherryPyException):
     """Exception raised to switch to the handler for a different URL.
