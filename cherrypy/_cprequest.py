@@ -922,7 +922,8 @@ class Response(object):
         :rtype: None
 
         Discard ``self.body`` but consume any generator such that any
-        finalization can occur, such as is required by ``caching.tee_output()``.
+        finalization can occur, such as is required by
+        ``caching.tee_output()``.
         """
         consume(iter(self.body))
 
