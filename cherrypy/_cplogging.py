@@ -1,5 +1,5 @@
 """
-Cherrpy Logging module.
+CherryPy logging module.
 
 Simple config
 =============
