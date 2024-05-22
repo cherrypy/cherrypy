@@ -149,7 +149,7 @@ class InternalRedirect(CherryPyException):
     """
 
     def __init__(self, path, query_string=''):
-        """Initialize InternalRedirect."""
+        """Initialize the internal redirect exception."""
         self.request = cherrypy.serving.request
 
         self.query_string = query_string
@@ -202,7 +202,7 @@ class HTTPRedirect(CherryPyException):
     """The encoding when passed urls are not native strings."""
 
     def __init__(self, urls, status=None, encoding=None):
-        """Initialize HTTPRedirect."""
+        """Initialize the HTTP redirect exception."""
         self.urls = abs_urls = [
             # Note that urljoin will "do the right thing" whether url is:
             #  1. a complete URL with host (e.g. "http://www.example.com/test")
@@ -228,7 +228,9 @@ class HTTPRedirect(CherryPyException):
 
     @classproperty
     def default_status(cls):
-        """Redirect status for the request, this is the default handler.
+        """Redirect status for the request.
+
+        This is the default handler.
 
         RFC 2616 indicates a 301 response code fits our goal; however,
         browser support for 301 is quite messy. Use 302/303 instead. See
@@ -243,7 +245,7 @@ class HTTPRedirect(CherryPyException):
         return status
 
     def set_response(self):
-        """Modify cherrypy.response to represent self.
+        """Modify ``cherrypy.response`` to represent ``self``.
 
         Modifies status, headers, and body.
 
@@ -368,7 +370,7 @@ class HTTPError(CherryPyException):
     """The HTTP Reason-Phrase string."""
 
     def __init__(self, status=500, message=None):
-        """Initialize HTTPError."""
+        """Initialize an HTTP error."""
         self.status = status
         try:
             self.code, self.reason, defaultmsg = _httputil.valid_status(status)
@@ -384,7 +386,7 @@ class HTTPError(CherryPyException):
         CherryPyException.__init__(self, status, message)
 
     def set_response(self):
-        """Modify cherrypy.response to represent self.
+        """Modify ``cherrypy.response`` to represent ``self``.
 
         Modifies status, headers, and body.
 
@@ -412,7 +414,7 @@ class HTTPError(CherryPyException):
         _be_ie_unfriendly(self.code)
 
     def get_error_page(self, *args, **kwargs):
-        """Get error page."""
+        """Compose an HTML page with error information."""
         return get_error_page(*args, **kwargs)
 
     def __call__(self):
@@ -437,7 +439,7 @@ class NotFound(HTTPError):
     """
 
     def __init__(self, path=None):
-        """Initialize NotFound HTTPError."""
+        """Initialize an HTTP Not Found error."""
         if path is None:
             request = cherrypy.serving.request
             path = request.script_name + request.path_info
