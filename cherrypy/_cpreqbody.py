@@ -220,7 +220,10 @@ def process_multipart(entity):
 
 
 def process_multipart_form_data(entity):
-    """Read multipart/form-data parts into entity.parts or entity.params."""
+    """Read ``multipart/form-data`` parts.
+
+    This function saves them into ``entity.parts`` or ``entity.params``.
+    """
     process_multipart(entity)
 
     kept_parts = []
@@ -410,7 +413,7 @@ class Entity(object):
     """
 
     def __init__(self, fp, headers, params=None, parts=None):
-        """Initialize Entity."""
+        """Initialize an HTTP entity."""
         # Make an instance-specific copy of the class processors
         # so Tools, etc. can replace them per-request.
         self.processors = self.processors.copy()
@@ -479,30 +482,30 @@ class Entity(object):
                 self.filename = unquote(str(filename), encoding)
 
     def read(self, size=None, fp_out=None):
-        """Handle read."""
+        """Read bytes from the connection."""
         return self.fp.read(size, fp_out)
 
     def readline(self, size=None):
-        """Handle readline."""
+        """Read a line of bytes from the connection."""
         return self.fp.readline(size)
 
     def readlines(self, sizehint=None):
-        """Handle readlines."""
+        """Read some byte lines from the connection."""
         return self.fp.readlines(sizehint)
 
     def __iter__(self):
-        """Handle iterations."""
+        """Set up the iterator."""
         return self
 
     def __next__(self):
-        """Handle next."""
+        """Return the next line of bytes."""
         line = self.readline()
         if not line:
             raise StopIteration
         return line
 
     def next(self):
-        """Handle next."""
+        """Return the next line of bytes."""  # FIXME: python 2?
         return self.__next__()
 
     def read_into_file(self, fp_out=None):
@@ -570,10 +573,10 @@ class Entity(object):
             proc(self)
 
     def default_proc(self):
-        """Handle default proc.
+        """Process unknown data as a fallback.
 
         Called if a more-specific processor is not found for the
-        ``Content-Type``
+        ``Content-Type``.
         """
         # Leave the fp alone for someone else to read. This works fine
         # for request.body, but the Part subclasses need to override this
@@ -622,7 +625,7 @@ class Part(Entity):
     """
 
     def __init__(self, fp, headers, boundary):
-        """Initialize Part."""
+        """Initialize an entity part."""
         Entity.__init__(self, fp, headers)
         self.boundary = boundary
         self.file = None
@@ -630,13 +633,13 @@ class Part(Entity):
 
     @classmethod
     def from_fp(cls, fp, boundary):
-        """Load from fp."""
+        """Initialize an entity part from a file handle."""
         headers = cls.read_headers(fp)
         return cls(fp, headers, boundary)
 
     @classmethod
     def read_headers(cls, fp):
-        """Read headers."""
+        """Read HTTP headers from a file handle."""
         headers = httputil.HeaderMap()
         while True:
             line = fp.readline()
@@ -724,7 +727,7 @@ class Part(Entity):
             return fp_out
 
     def default_proc(self):
-        """Handle default proc.
+        """Process unknown data as a fallback.
 
         Called if a more-specific processor is not found for the
         ``Content-Type``.
@@ -756,11 +759,11 @@ inf = float('inf')
 
 
 class SizedReader:
-    """SizedReader class."""
+    """A buffered/sized reader."""
 
     def __init__(self, fp, length, maxbytes, bufsize=DEFAULT_BUFFER_SIZE,
                  has_trailers=False):
-        """Initialize SizedReader."""
+        """Initialize buffered file handle reader."""
         # Wrap our fp in a buffer so peek() works
         self.fp = fp
         self.length = length
@@ -903,7 +906,7 @@ class SizedReader:
         return lines
 
     def finish(self):
-        """Handle finish."""
+        """Finalize reading the HTTP trailer headers."""
         self.done = True
         if self.has_trailers and hasattr(self.fp, 'read_trailer_lines'):
             self.trailers = {}
@@ -961,7 +964,7 @@ class RequestBody(Entity):
     """
 
     def __init__(self, fp, headers, params=None, request_params=None):
-        """Initialize RequestBody."""
+        """Initialize a request body entity."""
         Entity.__init__(self, fp, headers, params)
 
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
