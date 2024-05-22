@@ -72,7 +72,7 @@ from cherrypy.lib import httputil
 
 
 def setup(req):
-    """Handle setup."""
+    """Execute pre-initialization functions."""
     from mod_python import apache
 
     # Run any setup functions defined by a "PythonOption cherrypy.setup"
@@ -141,7 +141,7 @@ _isSetUp = False
 
 
 def handler(req):
-    """Run handler."""
+    """Invoke the HTTP handler."""
     from mod_python import apache
     try:
         global _isSetUp
@@ -253,7 +253,7 @@ def handler(req):
 
 
 def send_response(req, status, headers, body, stream=False):
-    """Handle sending response."""
+    """Send the HTTP response to the client."""
     # Set response status
     req.status = int(status[:3])
 
@@ -279,20 +279,20 @@ try:
     import subprocess
 
     def popen(fullcmd):
-        """Open process."""
+        """Invoke a subprocess via :mod:`subprocess`."""
         p = subprocess.Popen(fullcmd, shell=True,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              close_fds=True)
         return p.stdout
 except ImportError:
     def popen(fullcmd):
-        """Open process."""
+        """Invoke a subprocess via :mod:`os`."""
         pipein, pipeout = os.popen4(fullcmd)
         return pipeout
 
 
 def read_process(cmd, args=''):
-    """Handle read process."""
+    """Return a subprocess standard output."""
     fullcmd = '%s %s' % (cmd, args)
     pipeout = popen(fullcmd)
     try:
@@ -311,7 +311,7 @@ def read_process(cmd, args=''):
 
 
 class ModPythonServer(object):
-    """Mod Python Server class."""
+    """A server wrapper for ``mod_python``."""
 
     template = """
 # Apache2 server configuration file for running CherryPy with mod_python.
@@ -330,7 +330,7 @@ LoadModule python_module modules/mod_python.so
 
     def __init__(self, loc='/', port=80, opts=None, apache_path='apache',
                  handler='cherrypy._cpmodpy::handler'):
-        """Initialize ModPythonServer."""
+        """Initialize a ``mod_python`` server."""
         self.loc = loc
         self.port = port
         self.opts = opts
@@ -338,7 +338,7 @@ LoadModule python_module modules/mod_python.so
         self.handler = handler
 
     def start(self):
-        """Handle start."""
+        """Start an Apache2/httpd server."""
         opts = ''.join(['    PythonOption %s %s\n' % (k, v)
                         for k, v in self.opts])
         conf_data = self.template % {'port': self.port,
@@ -356,6 +356,6 @@ LoadModule python_module modules/mod_python.so
         return response
 
     def stop(self):
-        """Handle stop."""
+        """Stop an Apache2/httpd server."""
         os.popen('apache -k stop')
         self.ready = False
