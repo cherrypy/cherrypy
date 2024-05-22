@@ -231,7 +231,8 @@ class LateParamPageHandler(PageHandler):
         """Page handler keyword arguments.
 
         The returned value contains data merged in
-        from ``cherrypy.request.params``."""
+        from ``cherrypy.request.params``.
+        """
         kwargs = cherrypy.serving.request.params.copy()
         if self._kwargs:
             kwargs.update(self._kwargs)
@@ -405,7 +406,8 @@ class Dispatcher(object):
         def set_conf():
             """Collapse all ``object_trail`` conf into config.
 
-            The config being ``cherrypy.request.config``."""
+            The config being ``cherrypy.request.config``.
+            """
             base = cherrypy.config.copy()
             # Note that we merge the config from each node
             # even if that node was None.
