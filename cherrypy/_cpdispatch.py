@@ -621,7 +621,7 @@ class RoutesDispatcher(object):
 
 
 def XMLRPCDispatcher(next_dispatcher=Dispatcher()):
-    """An HTTP dispatcher variant implementing XML-RPC."""
+    """Chain an HTTP dispatcher variant implementing XML-RPC."""
     from cherrypy.lib import xmlrpcutil
 
     def xmlrpc_dispatch(path_info):
