@@ -173,7 +173,7 @@ class HttpDigestAuthorization(object):
 
     @classmethod
     def matches(cls, header):
-        """Compare cls.scheme to header.scheme."""
+        """Check if header scheme matches auth implementation."""
         scheme, _, _ = header.partition(' ')
         return scheme.lower() == cls.scheme
 
