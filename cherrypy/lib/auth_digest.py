@@ -389,7 +389,7 @@ def www_authenticate(
 def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     """Perform HTTP Digest Access Authentication.
 
-    A CherryPy tool that hooks at before_handler to perform
+    A CherryPy tool that hooks at ``before_handler`` to perform
     HTTP Digest Access Authentication, as specified in :rfc:`2617`.
 
     If the request has an 'authorization' header with a 'Digest' scheme,
