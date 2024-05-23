@@ -240,7 +240,7 @@ class HttpDigestAuthorization(object):
                                 'neither cnonce nor nc can be present'))
 
     def __str__(self):
-        """Stringify represetation of HttpDigestAuthorization."""
+        """Render an HTTP  Digest Auth header as a string."""
         return 'authorization : %s' % self.auth_header
 
     def validate_nonce(self, s, key):
