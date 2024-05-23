@@ -181,7 +181,7 @@ class HttpDigestAuthorization(object):
         self, auth_header, http_method,
         debug=False, accept_charset=DEFAULT_CHARSET[:],
     ):
-        """Initialize HttpDigestAuthorization."""
+        """Initialize an HTTP Digest Authorization parser."""
         self.http_method = http_method
         self.debug = debug
 
