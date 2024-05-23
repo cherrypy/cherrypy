@@ -143,7 +143,7 @@ def synthesize_nonce(s, key, timestamp=None):
 
 
 def H(s):
-    """Return an md5_hex hash."""
+    """Return an ``md5`` HEX hash."""
     return md5_hex(s)
 
 
