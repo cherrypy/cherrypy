@@ -168,7 +168,7 @@ class HttpDigestAuthorization(object):
     scheme = 'digest'
 
     def errmsg(self, s):
-        """Error message for HttpDigestAuthorization."""
+        """Make an error message for HTTP Digest Authorization."""
         return 'Digest Authorization header: %s' % s
 
     @classmethod
