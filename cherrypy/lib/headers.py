@@ -19,9 +19,10 @@ def parse_header(line):
 
     Return the main content-type and a dictionary of options.
 
-    Copied from removed stdlib cgi module. Couldn't find
-    something to replace it with that provided same functionality
-    from the email module as suggested.
+    Copied from removed stdlib cgi module. See
+    `cherrypy/cherrypy#2014 (comment)
+    <https://github.com/cherrypy/cherrypy/issues/2014#issuecomment-1883774891>`_
+    for background.
     """
     parts = _parse_param(';' + line)
     key = parts.__next__()
