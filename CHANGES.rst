@@ -3,7 +3,7 @@ v18.10.0
 
 * Removed the use of :mod:`cgi` deprecated in Python 3.11
   -- by :user:`radez`.
-* Various `changes <https://github.com/cherrypy/cherrypy/compare/7104cfb3cfc6e6582f0773529142d777b1aff1bd...v18.10.0>`_.
+* Various `changes <https://github.com/cherrypy/cherrypy/compare/v18.9.0...7104cfb3cfc6e6582f0773529142d777b1aff1bd>`_.
 
 v18.9.0
 -------
