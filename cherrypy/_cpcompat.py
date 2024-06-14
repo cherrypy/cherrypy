@@ -21,43 +21,6 @@ and their .encode/.decode methods as needed.
 import http.client
 
 
-def _cgi_parseparam(s):
-    while s[:1] == ';':
-        s = s[1:]
-        end = s.find(';')
-        while end > 0 and (s.count('"', 0, end) - s.count('\\"', 0, end)) % 2:
-            end = s.find(';', end + 1)
-        if end < 0:
-            end = len(s)
-        f = s[:end]
-        yield f.strip()
-        s = s[end:]
-
-
-def cgi_parse_header(line):
-    """Parse a Content-type like header.
-
-    Return the main content-type and a dictionary of options.
-
-    Copied from removed stdlib cgi module. Couldn't find
-    something to replace it with that provided same functionality
-    from the email module as suggested.
-    """
-    parts = _cgi_parseparam(';' + line)
-    key = parts.__next__()
-    pdict = {}
-    for p in parts:
-        i = p.find('=')
-        if i >= 0:
-            name = p[:i].strip().lower()
-            value = p[i + 1:].strip()
-            if len(value) >= 2 and value[0] == value[-1] == '"':
-                value = value[1:-1]
-                value = value.replace('\\\\', '\\').replace('\\"', '"')
-            pdict[name] = value
-    return key, pdict
-
-
 def ntob(n, encoding='ISO-8859-1'):
     """Return the given native string as a byte string in the given
     encoding.
