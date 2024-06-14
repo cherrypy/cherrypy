@@ -1,3 +1,9 @@
+v(next)
+-------
+
+* Removed the use of :mod:`cgi` deprecated in Python 3.11
+  -- by :user:`radez`.
+
 v18.9.0
 -------
 
