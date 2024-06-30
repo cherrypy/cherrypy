@@ -1,5 +1,5 @@
 """
-CherryPy Cache implementation.
+CherryPy cache tooling.
 
 CherryPy implements a simple caching system as a pluggable Tool. This tool
 tries to be an (in-process) HTTP/1.1-compliant cache. It's not quite there
