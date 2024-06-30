@@ -69,10 +69,10 @@ _count = 0
 
 
 class Profiler(object):
-    """Profiler class."""
+    """A profiling app."""
 
     def __init__(self, path=None):
-        """Initialize Profiler."""
+        """Prepare the profiling app resources."""
         if not path:
             path = os.path.join(os.path.dirname(__file__), 'profile')
         self.path = path
@@ -90,17 +90,19 @@ class Profiler(object):
         return result
 
     def statfiles(self):
-        """Statistics files.
+        """Compose a list of statistics file names.
 
-        :rtype: list of available profiles.
+        :returns: A list of available profiles.
+        :rtype: list[str]
         """
         return [f for f in os.listdir(self.path)
                 if f.startswith('cp_') and f.endswith('.prof')]
 
     def stats(self, filename, sortby='cumulative'):
-        """Generate statistics.
+        """Generate statistics from given profile.
 
-        :rtype stats(index): output of print_stats() for the given profile.
+        :returns: The sorted stats index printout.
+        :rtype: str
         """
         sio = io.StringIO()
         if sys.version_info >= (2, 5):
@@ -126,7 +128,7 @@ class Profiler(object):
 
     @cherrypy.expose
     def index(self):
-        """Index page html content."""
+        """Render the profiling viewer index page."""
         return """<html>
         <head><title>CherryPy profile data</title></head>
         <frameset cols='200, 1*'>
@@ -138,7 +140,7 @@ class Profiler(object):
 
     @cherrypy.expose
     def menu(self):
-        """Menu page html content."""
+        """Render the profiler menu page html layout."""
         yield '<h2>Profiling runs</h2>'
         yield '<p>Click on one of the runs below to see profiling data.</p>'
         runs = self.statfiles()
@@ -149,23 +151,23 @@ class Profiler(object):
 
     @cherrypy.expose
     def report(self, filename):
-        """Report statistics."""
+        """Render a statistics report."""
         cherrypy.response.headers['Content-Type'] = 'text/plain'
         return self.stats(filename)
 
 
 class ProfileAggregator(Profiler):
-    """ProfileAggregator class."""
+    """A profiling aggregator app."""
 
     def __init__(self, path=None):
-        """Initialize ProfileAggregator."""
+        """Prepare the profiling aggregator app resources."""
         Profiler.__init__(self, path)
         global _count
         self.count = _count = _count + 1
         self.profiler = profile.Profile()
 
     def run(self, func, *args, **params):
-        """Run ProfileAggregator."""
+        """Dump aggeregated profile data into ``self.path``."""
         path = os.path.join(self.path, 'cp_%04d.prof' % self.count)
         result = self.profiler.runcall(func, *args, **params)
         self.profiler.dump_stats(path)
@@ -173,7 +175,7 @@ class ProfileAggregator(Profiler):
 
 
 class make_app:
-    """Make app class."""
+    """Profiling WSGI middleware wrapper."""
 
     def __init__(self, nextapp, path=None, aggregate=False):
         """Make a WSGI middleware app which wraps 'nextapp' with profiling.
@@ -207,7 +209,7 @@ class make_app:
             self.profiler = Profiler(path)
 
     def __call__(self, environ, start_response):
-        """Call make app."""
+        """Process a WSGI request."""
         def gather():
             result = []
             for line in self.nextapp(environ, start_response):
@@ -217,7 +219,7 @@ class make_app:
 
 
 def serve(path=None, port=8080):
-    """Serve Profiler."""
+    """Serve the web app with profiler activated."""
     if profile is None or pstats is None:
         msg = ('Your installation of Python does not have a profile module. '
                "If you're on Debian, try "
