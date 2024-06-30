@@ -56,14 +56,13 @@ class Hook(object):
         self.kwargs = kwargs
 
     def __lt__(self, other):
-        """
-        Less-Than Hook Operator.
+        """Check if this hook's priority is lower than the other's.
 
-        :param other: A Hook Object to compare priority with
+        :param other: Another object to compare priority with.
         :type other: Hook
 
-        :return: Other Hook's priority is higher than this one
-        :rtype: Bool
+        :returns: Whether the other Hook's priority is higher than this one's.
+        :rtype: bool
 
         Hooks sort by priority, ascending, such that
         hooks of lower priority are run first.
