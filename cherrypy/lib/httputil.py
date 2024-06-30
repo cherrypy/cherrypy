@@ -129,31 +129,31 @@ class HeaderElement(object):
     """An element (with parameters) from an HTTP header's element list."""
 
     def __init__(self, value, params=None):
-        """Initialize HeaderElement."""
+        """Initialize an HTTP header value representation."""
         self.value = value
         if params is None:
             params = {}
         self.params = params
 
     def __cmp__(self, other):
-        """Compare values."""
+        """Compare current HTTP header to another by value only."""
         return builtins.cmp(self.value, other.value)
 
     def __lt__(self, other):
-        """Less-Than values."""
+        """Check if this header value is less than the other."""
         return self.value < other.value
 
     def __str__(self):
-        """Stringify HeaderElement."""
+        """Render the HTTP header value as a string."""
         p = [';%s=%s' % (k, v) for k, v in self.params.items()]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
-        """Bytesify HeaderElement."""
+        """Turn the HTTP header value string representation to bytes."""
         return ntob(self.__str__())
 
     def __unicode__(self):
-        """Unicodeify HeaderElement."""
+        """Render the HTTP header value as a string."""
         return ntou(self.__str__())
 
     @staticmethod
@@ -185,7 +185,7 @@ class AcceptElement(HeaderElement):
 
     @classmethod
     def from_str(cls, elementstr):
-        """Initialize AcceptElement from string."""
+        """Make an :class:`AcceptElement` instance from a string."""
         qvalue = None
         # The first "q" parameter (if any) separates the initial
         # media-range parameter(s) (if any) from the accept-params.
@@ -221,14 +221,17 @@ class AcceptElement(HeaderElement):
             ) from val_err
 
     def __cmp__(self, other):
-        """Compare qvalues."""
+        """Compare current header to another by qvalues then strings."""
         diff = builtins.cmp(self.qvalue, other.qvalue)
         if diff == 0:
             diff = builtins.cmp(str(self), str(other))
         return diff
 
     def __lt__(self, other):
-        """Less-Than qvalues."""
+        """Check if this header qvalue is less than the other.
+
+        This method uses string comparison as the second factor.
+        """
         if self.qvalue == other.qvalue:
             return str(self) < str(other)
         else:
@@ -239,7 +242,7 @@ RE_HEADER_SPLIT = re.compile(',(?=(?:[^"]*"[^"]*")*[^"]*$)')
 
 
 def header_elements(fieldname, fieldvalue):
-    """Return sorted HeaderElement list.
+    """Return a sorted :class:`HeaderElement` list.
 
     Constucted from a comma-separated header string.
     """
@@ -399,7 +402,7 @@ class CaseInsensitiveDict(jaraco.collections.KeyTransformingDict):
 
     @staticmethod
     def transform_key(key):
-        """Transform key to title."""
+        """Title-case an HTTP header name."""
         if key is None:
             # TODO(#1830): why?
             return 'None'
@@ -453,7 +456,7 @@ class HeaderMap(CaseInsensitiveDict):
 
     @classmethod
     def encode_header_items(cls, header_items):
-        """Encode Header Items.
+        """Emit tuples of wire-ready HTTP headers.
 
         Prepare the sequence of name, value tuples into a form suitable for
         transmitting on the wire for HTTP.
@@ -466,7 +469,7 @@ class HeaderMap(CaseInsensitiveDict):
 
     @classmethod
     def encode_header_item(cls, item):
-        """Encode Header Item."""
+        """Encode an HTTP header for sending over the wire."""
         if isinstance(item, str):
             item = cls.encode(item)
 
@@ -512,7 +515,7 @@ class Host(object):
     name = 'unknown.tld'
 
     def __init__(self, ip, port, name=None):
-        """Initialize Host."""
+        """Initialize a TCP service representation."""
         self.ip = ip
         self.port = port
         if name is None:
@@ -520,12 +523,12 @@ class Host(object):
         self.name = name
 
     def __repr__(self):
-        """Represent Host object."""
+        """Render a :class:`Host` instance representation."""
         return 'httputil.Host(%r, %r, %r)' % (self.ip, self.port, self.name)
 
 
 class SanitizedHost(str):
-    r"""Sanitize host header.
+    r"""A normalized host header value.
 
     Wraps a raw host header received from the network in
     a sanitized version that elides dangerous characters.
@@ -544,7 +547,7 @@ class SanitizedHost(str):
     dangerous = re.compile(r'[\n\r]')
 
     def __new__(cls, raw):
-        """Create new SanitizedHost."""
+        """Construct a new :class:`SanitizedHost` instance."""
         sanitized = cls._sanitize(raw)
         if sanitized == raw:
             return raw
@@ -554,5 +557,5 @@ class SanitizedHost(str):
 
     @classmethod
     def _sanitize(cls, raw):
-        """Sanitize class data."""
+        """Clean up the CR LF chars from input."""
         return cls.dangerous.sub('', raw)
