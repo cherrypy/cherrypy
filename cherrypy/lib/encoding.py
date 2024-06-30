@@ -45,38 +45,38 @@ class UTF8StreamEncoder:
     """UTF8 Stream Encoder."""
 
     def __init__(self, iterator):
-        """Initialize UTF8StreamEncoder."""
+        """Initialize a UTF-8 stream encoder instance."""
         self._iterator = iterator
 
     def __iter__(self):
-        """Iterate for UTF8StreamEncoder."""
+        """Make a UTF-8-encoded stream iterator."""
         return self
 
     def next(self):
-        """Next for UTF8StreamEncoder."""
+        """UTF-8-encode the next chunk of the stream."""
         return self.__next__()
 
     def __next__(self):
-        """Next for UTF8StreamEncoder."""
+        """UTF-8-encode the next chunk of the stream."""
         res = next(self._iterator)
         if isinstance(res, str):
             res = res.encode('utf-8')
         return res
 
     def close(self):
-        """Close for UTF8StreamEncoder."""
+        """Close the underlying byte stream."""
         if is_closable_iterator(self._iterator):
             self._iterator.close()
 
     def __getattr__(self, attr):
-        """Get attr for UTF8StreamEncoder."""
+        """Return the underlying byte stream attribute value."""
         if attr.startswith('__'):
             raise AttributeError(self, attr)
         return getattr(self._iterator, attr)
 
 
 class ResponseEncoder:
-    """Response Encoder."""
+    """An HTTP response payload encoder."""
 
     default_encoding = 'utf-8'
     failmsg = 'Response body could not be encoded with %r.'
@@ -87,7 +87,7 @@ class ResponseEncoder:
     debug = False
 
     def __init__(self, **kwargs):
-        """Initialize ResponseEncoder."""
+        """Initialize HTTP response payload encoder."""
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -135,7 +135,7 @@ class ResponseEncoder:
         return True
 
     def find_acceptable_charset(self):
-        """Find acceptable charset."""
+        """Deduce acceptable charset for HTTP response."""
         request = cherrypy.serving.request
         response = cherrypy.serving.response
 
@@ -231,7 +231,7 @@ class ResponseEncoder:
         raise cherrypy.HTTPError(406, msg)
 
     def __call__(self, *args, **kwargs):
-        """Call for ResponseEncoder."""
+        """Set up encoding for the HTTP response."""
         response = cherrypy.serving.response
         self.body = self.oldhandler(*args, **kwargs)
 
@@ -343,7 +343,7 @@ def compress(body, compress_level):
 
 
 def decompress(body):
-    """Decompress."""
+    """Decompress a blob of bytes."""
     import gzip
 
     zbuf = io.BytesIO()
