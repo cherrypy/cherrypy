@@ -1,4 +1,4 @@
-"""Json tools."""
+"""JSON tools."""
 import cherrypy
 from cherrypy import _json as json
 from cherrypy._cpcompat import text_or_bytes, ntou
@@ -58,7 +58,7 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
 
 
 def json_handler(*args, **kwargs):
-    """Handle JSON."""
+    """Convert decorated HTTP handler-returned object to JSON string."""
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     return json.encode(value)
 
