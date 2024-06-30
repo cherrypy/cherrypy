@@ -38,7 +38,7 @@ try:
     the_coverage = coverage(data_file=localFile)
 
     def start():
-        """Start coverage."""
+        """Start collecting coverage."""
         the_coverage.start()
 except ImportError:
     # Setting the_coverage to None will raise errors
@@ -51,7 +51,7 @@ except ImportError:
         'coverage.py could not be imported.')
 
     def start():
-        """Start coverage."""
+        """Start collecting coverage."""
         pass
 start.priority = 20
 
@@ -286,10 +286,10 @@ def get_tree(base, exclude, coverage=the_coverage):
 
 
 class CoverStats(object):
-    """CoverStats route handler."""
+    """HTTP handler for the coverage stats."""
 
     def __init__(self, coverage, root=None):
-        """Initialize CoverStats."""
+        """Initialize the coverage stats application."""
         self.coverage = coverage
         if root is None:
             # Guess initial depth. Files outside this path will not be
@@ -299,13 +299,13 @@ class CoverStats(object):
 
     @cherrypy.expose
     def index(self):
-        """Index of CoverStats."""
+        """Render the coverage stats index page."""
         return TEMPLATE_FRAMESET % self.root.lower()
 
     @cherrypy.expose
     def menu(self, base='/', pct='50', showpct='',
              exclude=r'python\d\.\d|test|tut\d|tutorial'):
-        """Return menu html content."""
+        """Render HTML menu web page."""
         # The coverage module uses all-lower-case names.
         base = base.lower().rstrip(os.sep)
 
@@ -339,7 +339,7 @@ class CoverStats(object):
         yield '</body></html>'
 
     def annotated_file(self, filename, statements, excluded, missing):
-        """Return annotated file."""
+        """Annotate given file with coverage information."""
         with open(filename, 'r') as source:
             lines = source.readlines()
         buffer = []
@@ -364,7 +364,7 @@ class CoverStats(object):
 
     @cherrypy.expose
     def report(self, name):
-        """Report coverage stats."""
+        """Render coverage stats as HTML."""
         filename, statements, excluded, missing, _ = self.coverage.analysis2(
             name)
         pc = _percent(statements, missing)
@@ -381,7 +381,7 @@ class CoverStats(object):
 
 
 def serve(path=localFile, port=8080, root=None):
-    """Serve coverage server."""
+    """Serve the coverage app over HTTP."""
     if coverage is None:
         raise ImportError('The coverage module could not be imported.')
     from coverage import coverage
