@@ -163,7 +163,7 @@ class MemoryCache(Cache):
     debug = False
 
     def __init__(self):
-        """Initialize Memory Caching."""
+        """Initialize in-memory cache store."""
         self.clear()
 
         # Run self.expire_cache in a separate daemon thread.
