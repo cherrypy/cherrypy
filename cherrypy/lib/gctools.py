@@ -1,4 +1,4 @@
-"""GCtools."""
+"""Garbage collection inspection tooling."""
 import gc
 import inspect
 import sys
@@ -20,7 +20,7 @@ class ReferrerTree(object):
     peek_length = 40
 
     def __init__(self, ignore=None, maxdepth=2, maxparents=10):
-        """Initialize ReferrerTree."""
+        """Initialize a referrer tree structure."""
         self.ignore = ignore or []
         self.ignore.append(inspect.currentframe().f_back)
         self.maxdepth = maxdepth
@@ -106,18 +106,18 @@ def get_instances(cls):
 
 
 class RequestCounter(SimplePlugin):
-    """RequestCounter class."""
+    """An HTTP request counter plugin."""
 
     def start(self):
-        """Start request counter."""
+        """Initialize the internal counter."""
         self.count = 0
 
     def before_request(self):
-        """Run before request."""
+        """Increment the counter before HTTP request."""
         self.count += 1
 
     def after_request(self):
-        """Run after request."""
+        """Decrement the counter after HTTP request."""
         self.count -= 1
 
 
@@ -126,7 +126,7 @@ request_counter.subscribe()
 
 
 def get_context(obj):
-    """Get context."""
+    """Compute object's runtime context information."""
     if isinstance(obj, _cprequest.Request):
         return 'path=%s;stage=%s' % (obj.path_info, obj.stage)
     elif isinstance(obj, _cprequest.Response):
@@ -152,12 +152,12 @@ class GCRoot(object):
 
     @cherrypy.expose
     def index(self):
-        """Handle index route."""
+        """Render the index page HTML content."""
         return 'Hello, world!'
 
     @cherrypy.expose
     def stats(self):
-        """Handle stats route."""
+        """Render garbage collection statistics page HTML content."""
         output = ['Statistics:']
 
         for trial in range(10):
