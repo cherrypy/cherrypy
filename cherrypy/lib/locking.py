@@ -1,12 +1,12 @@
-"""Locking module."""
+"""Lock acquisition helpers."""
 import datetime
 
 
 class NeverExpires(object):
-    """NeverExpires class."""
+    """A representation of a never expiring object."""
 
     def expired(self):
-        """Expired check."""
+        """Communicate that the object hasn't expired."""
         return False
 
 
@@ -25,7 +25,7 @@ class Timer(object):
         )
 
     def expired(self):
-        """Expired check."""
+        """Check whether the timer has expired."""
         return datetime.datetime.now(
             datetime.timezone.utc,
         ) >= self.expiration
@@ -39,7 +39,7 @@ class LockChecker(object):
     """Keep track of the time and detect if a timeout has expired."""
 
     def __init__(self, session_id, timeout):
-        """Initialize LockChecker."""
+        """Initialize a lock acquisition tracker."""
         self.session_id = session_id
         if timeout:
             self.timer = Timer.after(timeout)
@@ -47,7 +47,7 @@ class LockChecker(object):
             self.timer = NeverExpires()
 
     def expired(self):
-        """Expired check."""
+        """Check whether the lock checker has expired."""
         if self.timer.expired():
             raise LockTimeout(
                 'Timeout acquiring lock for %(session_id)s' % vars(self))
