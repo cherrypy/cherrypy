@@ -361,7 +361,6 @@ class Session(object):
     def get(self, key, default=None):
         """Retrieve a session-stored object.
 
-
         D.get(k[,d]) -> D[k] if k in D, else d.
         d defaults to None.
         """
