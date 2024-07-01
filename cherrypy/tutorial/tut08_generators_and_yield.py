@@ -13,19 +13,19 @@ import cherrypy
 
 
 class GeneratorDemo:
-    """GeneratorDemo class."""
+    """HTTP response streaming app."""
 
     def header(self):
-        """Header html content."""
+        """Render HTML layout header."""
         return '<html><body><h2>Generators rule!</h2>'
 
     def footer(self):
-        """Footer html content."""
+        """Render HTML layout footer."""
         return '</body></html>'
 
     @cherrypy.expose
     def index(self):
-        """Return index html content."""
+        """Stream HTTP response body of generator app index URI."""
         # Let's make up a list of users for presentation purposes
         users = ['Remi', 'Carlos', 'Hendrik', 'Lorenzo Lamas']
 
