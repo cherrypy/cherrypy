@@ -17,7 +17,7 @@ class HelloWorld:
     # publish methods that don't have the exposed attribute set to True.
     @cherrypy.expose
     def index(self):
-        """Handle index."""
+        """Produce HTTP response body of hello world app index URI."""
         # CherryPy will call this method for the root URI ("/") and send
         # its return value to the client. Because this is tutorial
         # lesson number 01, we'll just send something really simple.
