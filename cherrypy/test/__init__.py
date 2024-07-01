@@ -5,22 +5,20 @@ import sys
 
 
 def newexit():
-    """Handle Exit."""
+    """Exit the process with return code of 1."""
     os._exit(1)
 
 
 def setup():
-    """Handle Setup.
-
-    We want to monkey patch sys.exit so that we can get some
-    information about where exit is being called.
-    """
+    """Monkey-patch ``sys.exit()``.
+    # We want to monkey patch sys.exit so that we can get some
+    # information about where exit is being called.
     newexit._old = sys.exit
     sys.exit = newexit
 
 
 def teardown():
-    """Handle Teardown."""
+    """Recover the original ``sys.exit()``."""
     try:
         sys.exit = sys.exit._old
     except AttributeError:
