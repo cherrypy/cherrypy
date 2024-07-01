@@ -11,24 +11,17 @@ import cherrypy
 
 
 class HelloWorld:
-    """HelloWorld class for tutorial."""
+    """Hello world app."""
 
     @cherrypy.expose
     def index(self):
-        """
-        Index HelloWorld.
-
-        Let's link to another method here.
-        """
+        """Produce HTTP response body of hello world app index URI."""
+        # Let's link to another method here.
         return 'We have an <a href="show_msg">important message</a> for you!'
 
     @cherrypy.expose
     def show_msg(self):
-        """
-        Show_msg HelloWorld.
-
-        Here's the important message!
-        """
+        """Render a "Hello world!" message on ``/show_msg`` URI."""
         return 'Hello world!'
 
 
