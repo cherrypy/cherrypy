@@ -1,5 +1,5 @@
 r"""
-Server Objects.
+Server interfaces.
 
 Starting in CherryPy 3.1, cherrypy.server is implemented as an
 :ref:`Engine Plugin<plugins>`. It's an instance of
@@ -129,7 +129,7 @@ import portend
 
 
 class Timeouts:
-    """Timeouts."""
+    """Timeout constants."""
 
     occupied = 5
     free = 1
@@ -150,7 +150,7 @@ class ServerAdapter(object):
     """
 
     def __init__(self, bus, httpserver=None, bind_addr=None):
-        """Initialize the HTTP server."""
+        """Initialize the HTTP server plugin."""
         self.bus = bus
         self.httpserver = httpserver
         self.bind_addr = bind_addr
@@ -158,12 +158,12 @@ class ServerAdapter(object):
         self.running = False
 
     def subscribe(self):
-        """Subscribe the HTTP server."""
+        """Subscribe control methods to the bus lifecycle events."""
         self.bus.subscribe('start', self.start)
         self.bus.subscribe('stop', self.stop)
 
     def unsubscribe(self):
-        """Unsubcribe the HTTP server."""
+        """Unsubcribe control methods to the bus lifecycle events."""
         self.bus.unsubscribe('start', self.start)
         self.bus.unsubscribe('stop', self.stop)
 
@@ -219,7 +219,7 @@ class ServerAdapter(object):
         return '%s://%s' % (scheme, host)
 
     def _start_http_thread(self):
-        """Start Http Thread.
+        """Start the HTTP server thread.
 
         HTTP servers MUST be running in new threads, so that the
         main thread persists to receive KeyboardInterrupt's. If an
@@ -267,10 +267,10 @@ class ServerAdapter(object):
 
     @property
     def bound_addr(self):
-        """The bind Address.
+        """The bind address.
 
-        or if it's an ephemeral port and the
-        socket has been bound, return the actual port bound.
+        If it's an ephemeral port and the socket has been bound,
+        return the actual port bound.
         """
         host, port = self.bind_addr
         if port == 0 and self.httpserver.socket:
@@ -302,7 +302,7 @@ class FlupCGIServer(object):
     """Adapter for a flup.server.cgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
-        """Initialize Flup CGI Server."""
+        """Initialize the flup CGI Server plugin."""
         self.args = args
         self.kwargs = kwargs
         self.ready = False
@@ -326,7 +326,7 @@ class FlupFCGIServer(object):
     """Adapter for a flup.server.fcgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
-        """Initialize Flup FCGI Server."""
+        """Initialize the FCGI server parameters."""
         if kwargs.get('bindAddress', None) is None:
             import socket
             if not hasattr(socket, 'fromfd'):
@@ -372,7 +372,7 @@ class FlupSCGIServer(object):
     """Adapter for a flup.server.scgi.WSGIServer."""
 
     def __init__(self, *args, **kwargs):
-        """Initialize Flup SCGI Server."""
+        """Initialize the SCGI server parameters."""
         self.args = args
         self.kwargs = kwargs
         self.ready = False
