@@ -14,13 +14,13 @@ import cherrypy
 
 
 class HitCounter:
-    """HitCounter Class."""
+    """Hit counter app."""
 
     _cp_config = {'tools.sessions.on': True}
 
     @cherrypy.expose
     def index(self):
-        """Index route hander."""
+        """Produce HTTP response body of hit counter app index URI."""
         # Increase the silly hit counter
         count = cherrypy.session.get('count', 0) + 1
 
