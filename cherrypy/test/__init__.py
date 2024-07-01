@@ -10,7 +10,7 @@ def newexit():
 
 
 def setup():
-    """Monkey-patch ``sys.exit()``.
+    """Monkey-patch ``sys.exit()``."""
     # We want to monkey patch sys.exit so that we can get some
     # information about where exit is being called.
     newexit._old = sys.exit
