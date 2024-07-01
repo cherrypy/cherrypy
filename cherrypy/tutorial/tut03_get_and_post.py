@@ -10,15 +10,12 @@ import cherrypy
 
 
 class WelcomePage:
-    """WelcomePage Class for Tutorial 03."""
+    """Welcome page app."""
 
     @cherrypy.expose
     def index(self):
-        """
-        Index WelcomePage.
-
-        Ask for the user's name.
-        """
+        """Produce HTTP response body of welcome app index URI."""
+        # Ask for the user's name.
         return '''
             <form action="greetUser" method="GET">
             What is your name?
@@ -28,17 +25,14 @@ class WelcomePage:
 
     @cherrypy.expose
     def greetUser(self, name=None):
-        """
-        Greet User WelcomePage.
-
-        CherryPy passes all GET and POST variables as method parameters.
-        It doesn't make a difference where the variables come from, how
-        large their contents are, and so on.
-
-        You can define default parameter values as usual. In this
-        example, the "name" parameter defaults to None so we can check
-        if a name was actually specified.
-        """
+        """Render a greeting or form on ``/greetUser`` URI."""
+        # CherryPy passes all GET and POST variables as method parameters.
+        # It doesn't make a difference where the variables come from, how
+        # large their contents are, and so on.
+        #
+        # You can define default parameter values as usual. In this
+        # example, the "name" parameter defaults to None so we can check
+        # if a name was actually specified.
         if name:
             # Greet the user!
             return "Hey %s, what's up?" % name
