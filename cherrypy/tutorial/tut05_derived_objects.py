@@ -13,13 +13,13 @@ import cherrypy
 
 
 class Page:
-    """Page base route handler."""
+    """Web page base class."""
 
     # Store the page title in a class attribute
     title = 'Untitled Page'
 
     def header(self):
-        """Header html content."""
+        """Render HTML layout header."""
         return '''
             <html>
             <head>
@@ -30,7 +30,7 @@ class Page:
         ''' % (self.title, self.title)
 
     def footer(self):
-        """Footer html content."""
+        """Render HTML layout footer."""
         return '''
             </body>
             </html>
@@ -44,19 +44,19 @@ class Page:
 
 
 class HomePage(Page):
-    """HomePage route handler."""
+    """Home page app."""
 
     # Different title for this page
     title = 'Tutorial 5'
 
     def __init__(self):
-        """Initialize HomePage."""
+        """Mount another page into the home page app."""
         # create a subpage
         self.another = AnotherPage()
 
     @cherrypy.expose
     def index(self):
-        """Handle index."""
+        """Produce HTTP response body of home page app index URI."""
         # Note that we call the header and footer methods inherited
         # from the Page class!
         return self.header() + '''
@@ -68,13 +68,13 @@ class HomePage(Page):
 
 
 class AnotherPage(Page):
-    """AnotherPage route handler."""
+    """Another page app."""
 
     title = 'Another Page'
 
     @cherrypy.expose
     def index(self):
-        """Handle index."""
+        """Produce HTTP response body of another page app index URI."""
         return self.header() + '''
             <p>
             And this is the amazing second page!
