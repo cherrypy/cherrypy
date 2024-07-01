@@ -1,4 +1,5 @@
-"""For compatibility, expose cheroot webtest here."""
+"""A deprecated web app testing helper interface."""
+# for compatibility, expose cheroot webtest
 import warnings
 
 from cheroot.test.webtest import (  # noqa
