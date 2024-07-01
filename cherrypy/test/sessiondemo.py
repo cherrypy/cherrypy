@@ -98,10 +98,10 @@ function init() {
 
 
 class Root(object):
-    """Root request handler."""
+    """Session demo app."""
 
     def page(self):
-        """Handle page route."""
+        """Render HTTP request-related details."""
         changemsg = []
         if cherrypy.session.id != cherrypy.session.originalid:
             if cherrypy.session.originalid is None:
@@ -139,20 +139,20 @@ class Root(object):
 
     @cherrypy.expose
     def index(self):
-        """Handle index route."""
+        """Save green color in session at app index URI."""
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'green'
         return self.page()
 
     @cherrypy.expose
     def expire(self):
-        """Handle expire route."""
+        """Expire the existing session."""
         sessions.expire()
         return self.page()
 
     @cherrypy.expose
     def regen(self):
-        """Handle regen route."""
+        """Regenerate the session, storing yellow color in it."""
         cherrypy.session.regenerate()
         # Must modify data or the session will not be saved.
         cherrypy.session['color'] = 'yellow'
