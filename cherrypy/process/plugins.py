@@ -38,7 +38,7 @@ class SimplePlugin(object):
     """
 
     def __init__(self, bus):
-        """Initialize SimplePlugin."""
+        """Initialize a simple plugin."""
         self.bus = bus
 
     def subscribe(self):
@@ -94,7 +94,7 @@ class SignalHandler(object):
     del k, v
 
     def __init__(self, bus):
-        """Initialize SignalHandler."""
+        """Initialize a signal handler plugin."""
         self.bus = bus
         # Set default handlers
         self.handlers = {'SIGTERM': self.bus.exit,
@@ -119,7 +119,7 @@ class SignalHandler(object):
         self.bus.exit()
 
     def _is_daemonized(self):
-        """Return boolean indicating if current process is running as a daemon.
+        """Check if current process is running as a daemon.
 
         The criteria to determine the `daemon` condition is to verify
         if the current pid is not the same as the one that got used on
@@ -224,7 +224,7 @@ class DropPrivileges(SimplePlugin):
     """
 
     def __init__(self, bus, umask=None, uid=None, gid=None):
-        """Initialize DropPrivileges."""
+        """Initialize the privilege dropping plugin."""
         SimplePlugin.__init__(self, bus)
         self.finalized = False
         self.uid = uid
@@ -290,7 +290,7 @@ class DropPrivileges(SimplePlugin):
         self._umask = val
 
     def start(self):
-        """Start DropPrivilages."""
+        """Drop the process privileges."""
         # uid/gid
         def current_ids():
             """Return the current (uid, gid) if available."""
@@ -356,7 +356,7 @@ class Daemonizer(SimplePlugin):
 
     def __init__(self, bus, stdin='/dev/null', stdout='/dev/null',
                  stderr='/dev/null'):
-        """Initialize Daemonizer."""
+        """Initialize the daemonizer plugin."""
         SimplePlugin.__init__(self, bus)
         self.stdin = stdin
         self.stdout = stdout
@@ -364,7 +364,7 @@ class Daemonizer(SimplePlugin):
         self.finalized = False
 
     def start(self):
-        """Start Daemonizer."""
+        """Attempt to daemonize the process."""
         if self.finalized:
             self.bus.log('Already deamonized.')
 
@@ -387,7 +387,7 @@ class Daemonizer(SimplePlugin):
     def daemonize(
             stdin='/dev/null', stdout='/dev/null', stderr='/dev/null',
             logger=lambda msg: None):
-        """Daemonize Daemonizer."""
+        """Daemonize the process."""
         # See http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         # (or http://www.faqs.org/faqs/unix-faq/programmer/faq/ section 1.7)
         # and http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
@@ -434,13 +434,13 @@ class PIDFile(SimplePlugin):
     """Maintain a PID file via a WSPBus."""
 
     def __init__(self, bus, pidfile):
-        """Initialize PIDFile."""
+        """Initialize the PID file plugin."""
         SimplePlugin.__init__(self, bus)
         self.pidfile = pidfile
         self.finalized = False
 
     def start(self):
-        """Start PIDFile."""
+        """Write a PID file to disk."""
         pid = os.getpid()
         if self.finalized:
             self.bus.log('PID %r already written to %r.' % (pid, self.pidfile))
@@ -452,7 +452,7 @@ class PIDFile(SimplePlugin):
     start.priority = 70
 
     def exit(self):
-        """Exit PIDFile."""
+        """Delete the PID file from disk."""
         try:
             os.remove(self.pidfile)
             self.bus.log('PID file removed: %r.' % self.pidfile)
@@ -476,7 +476,7 @@ class PerpetualTimer(threading.Timer):
         super(PerpetualTimer, self).__init__(*args, **kwargs)
 
     def run(self):
-        """Run PerpetualTimer."""
+        """Run an infinitely repeated callable."""
         while True:
             self.finished.wait(self.interval)
             if self.finished.isSet():
@@ -504,7 +504,7 @@ class BackgroundTask(threading.Thread):
     """
 
     def __init__(self, interval, function, args=[], kwargs={}, bus=None):
-        """Override parent constructor to assign provides properties."""
+        """Initialize a background task parameters."""
         super(BackgroundTask, self).__init__()
         self.interval = interval
         self.function = function
@@ -517,11 +517,11 @@ class BackgroundTask(threading.Thread):
         self.daemon = True
 
     def cancel(self):
-        """Cancel BackgroundTask."""
+        """Set a task cancellation flag."""
         self.running = False
 
     def run(self):
-        """Run BackgroundTask."""
+        """Start running the repeated background task in the loop."""
         self.running = True
         while self.running:
             time.sleep(self.interval)
@@ -552,7 +552,7 @@ class Monitor(SimplePlugin):
     """
 
     def __init__(self, bus, callback, frequency=60, name=None):
-        """Initialize Monitor Plugin."""
+        """Initialize the monitor plugin."""
         SimplePlugin.__init__(self, bus)
         self.callback = callback
         self.frequency = frequency
@@ -625,7 +625,7 @@ class Autoreloader(Monitor):
     """A regular expression by which to match filenames."""
 
     def __init__(self, bus, frequency=1, match='.*'):
-        """Initialize Autoreloader Monitor Plugin."""
+        """Initialize the auto-reloader monitor plugin."""
         self.mtimes = {}
         self.files = set()
         self.match = match
@@ -732,7 +732,7 @@ class ThreadManager(SimplePlugin):
     """A map of {thread ident: index number} pairs."""
 
     def __init__(self, bus):
-        """Initialize ThreadManager Plugin."""
+        """Initialize the thread manager plugin."""
         self.threads = {}
         SimplePlugin.__init__(self, bus)
         self.bus.listeners.setdefault('acquire_thread', set())
