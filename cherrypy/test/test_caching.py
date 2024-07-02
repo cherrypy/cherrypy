@@ -154,7 +154,7 @@ class CacheTest(helper.CPWebCase):
                 assert age >= elapsed
                 elapsed = age
 
-        # POST, PUT, DELETE should not be cached.
+        # POST, PUT, PATCH, DELETE should not be cached.
         self.getPage('/', method='POST')
         self.assertBody('visit #2')
         # Because gzip is turned on, the Vary header should always Vary for
