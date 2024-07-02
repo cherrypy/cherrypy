@@ -44,6 +44,7 @@ curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
 def read_process(cmd, args=''):
+    """Return subprocess' console output."""
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
@@ -81,11 +82,13 @@ FastCgiExternalServer "%(server)s" -host 127.0.0.1:4000
 
 
 def erase_script_name(environ, start_response):
+    """Erase script name from the WSGI environment."""
     environ['SCRIPT_NAME'] = ''
     return cherrypy.tree(environ, start_response)
 
 
 class ModFCGISupervisor(helper.LocalWSGISupervisor):
+    """Server Controller for ModFastCGI and CherryPy."""
 
     httpserver_class = 'cherrypy.process.servers.FlupFCGIServer'
     using_apache = True
@@ -93,9 +96,11 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
     template = conf_fastcgi
 
     def __str__(self):
+        """Render a :class:`ModFastCGISupervisor` instance as a string."""
         return 'FCGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
+        """Spawn an Apache ``mod_fastcgi`` supervisor process."""
         cherrypy.server.httpserver = servers.FlupFCGIServer(
             application=erase_script_name, bindAddress=('127.0.0.1', 4000))
         cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
@@ -107,6 +112,7 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
         self.sync_apps()
 
     def start_apache(self):
+        """Start Apache instance."""
         fcgiconf = CONF_PATH
         if not os.path.isabs(fcgiconf):
             fcgiconf = os.path.join(curdir, fcgiconf)
@@ -129,5 +135,6 @@ class ModFCGISupervisor(helper.LocalWSGISupervisor):
         helper.LocalWSGISupervisor.stop(self)
 
     def sync_apps(self):
+        """Set up the FastCGI request handler."""
         cherrypy.server.httpserver.fcgiserver.application = self.get_app(
             erase_script_name)

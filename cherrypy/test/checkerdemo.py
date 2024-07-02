@@ -11,7 +11,7 @@ thisdir = os.path.dirname(os.path.abspath(__file__))
 
 
 class Root:
-    pass
+    """Demo web app."""
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 """
-Tutorial - Object inheritance
+Tutorial - Object inheritance.
 
 You are free to derive your request handler classes from any base
 class you wish. In most real-world applications, you will probably
@@ -13,10 +13,13 @@ import cherrypy
 
 
 class Page:
+    """Web page base class."""
+
     # Store the page title in a class attribute
     title = 'Untitled Page'
 
     def header(self):
+        """Render HTML layout header."""
         return '''
             <html>
             <head>
@@ -27,6 +30,7 @@ class Page:
         ''' % (self.title, self.title)
 
     def footer(self):
+        """Render HTML layout footer."""
         return '''
             </body>
             </html>
@@ -40,15 +44,19 @@ class Page:
 
 
 class HomePage(Page):
+    """Home page app."""
+
     # Different title for this page
     title = 'Tutorial 5'
 
     def __init__(self):
+        """Mount another page into the home page app."""
         # create a subpage
         self.another = AnotherPage()
 
     @cherrypy.expose
     def index(self):
+        """Produce HTTP response body of home page app index URI."""
         # Note that we call the header and footer methods inherited
         # from the Page class!
         return self.header() + '''
@@ -60,10 +68,13 @@ class HomePage(Page):
 
 
 class AnotherPage(Page):
+    """Another page app."""
+
     title = 'Another Page'
 
     @cherrypy.expose
     def index(self):
+        """Produce HTTP response body of another page app index URI."""
         return self.header() + '''
             <p>
             And this is the amazing second page!
