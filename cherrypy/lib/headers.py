@@ -1,4 +1,4 @@
-"""headers."""
+"""HTTP header parsing helpers."""
 
 
 def _parse_param(s):
@@ -15,11 +15,11 @@ def _parse_param(s):
 
 
 def parse_header(line):
-    """Parse a Content-type like header.
+    """Parse a ``Content-Type`` like header.
 
-    Return the main content-type and a dictionary of options.
+    Return the main ``Content-Type`` and a dictionary of options.
 
-    Copied from removed stdlib cgi module. See
+    Copied from removed stdlib :mod:`cgi` module. See
     `cherrypy/cherrypy#2014 (comment)
     <https://github.com/cherrypy/cherrypy/issues/2014#issuecomment-1883774891>`_
     for background.
