@@ -160,9 +160,10 @@ def _try_decode_header(header, charset):
 
 
 class HttpDigestAuthorization(object):
-    """Parses a Digest Authorization header.
+    """Digest Authorization implementation.
 
-    Parses and performs re-calculation of the digest.
+    Parses a Digest Authorization header and performs
+    re-calculation of the digest.
     """
 
     scheme = 'digest'
