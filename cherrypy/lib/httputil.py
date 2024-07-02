@@ -20,7 +20,9 @@ import jaraco.collections
 
 import cherrypy
 from cherrypy._cpcompat import ntob, ntou
-from .headers import parse_header
+
+from .._private_api.compat.headers import parse_header
+
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 

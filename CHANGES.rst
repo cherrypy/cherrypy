@@ -1,3 +1,9 @@
+v(next)
+-------
+
+* Deprecated the accidentally exposed ``cherrypy.lib.headers``
+  -- by :user:`webknjaz`.
+
 v18.10.0
 --------
 
