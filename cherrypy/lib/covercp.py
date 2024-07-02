@@ -2,7 +2,8 @@
 
 To use this module, or the coverage tools in the test suite,
 you need to download 'coverage.py', either Gareth Rees' `original
-implementation <http://www.garethrees.org/2001/12/04/python-coverage/>`_
+implementation
+<https://web.archive.org/web/20231108042640/https://garethrees.org/2001/12/04/python-coverage/>`_
 or Ned Batchelder's `enhanced version:
 <http://www.nedbatchelder.com/code/modules/coverage.html>`_
 
