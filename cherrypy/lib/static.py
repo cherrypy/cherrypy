@@ -298,7 +298,7 @@ def _attempt(filename, content_types, debug=False):
 
 
 def staticdir(section, dir, root='', match='', content_types=None, index='',
-              debug=False):
+              abs_index=False, debug=False):
     """Serve a static resource from the given (root +) dir.
 
     match
@@ -316,6 +316,12 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
         serve for directory requests. For example, if the dir argument is
         '/home/me', the Request-URI is 'myapp', and the index arg is
         'index.html', the file '/home/me/myapp/index.html' will be sought.
+    abs_index
+        If set to True it changes the behavior of index.
+        Now index is the absolute name of a file to serve for directory
+        requests, ignoring the Request-URI. For example, if the dir
+        argument is '/home/me', the Request-URI is 'myapp', and the index
+        arg is 'index.html', the file '/home/me/index.html' will be sought.
     """
     request = cherrypy.serving.request
     if request.method not in ('GET', 'HEAD'):
@@ -373,7 +379,11 @@ def staticdir(section, dir, root='', match='', content_types=None, index='',
     if not handled:
         # Check for an index file if a folder was requested.
         if index:
-            handled = _attempt(os.path.join(filename, index), content_types)
+            if abs_index:
+                handled = _attempt(os.path.join(dir, index), content_types)
+            else:
+                handled = _attempt(
+                    os.path.join(filename, index), content_types)
             if handled:
                 request.is_index = filename[-1] in (r'\/')
     return handled
