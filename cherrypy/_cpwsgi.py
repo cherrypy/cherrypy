@@ -53,6 +53,7 @@ class VirtualHost(object):
 
         cherrypy.tree.graft(vhost)
     """
+
     default = None
     """The default WSGI application.
 
