@@ -96,6 +96,7 @@ params = dict(
             'requests_toolbelt',
             'pytest-services>=2',
             'setuptools',
+            'brotli',
         ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],
