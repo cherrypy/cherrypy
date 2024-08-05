@@ -9,7 +9,7 @@ repos:
 #     - --in-place
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v1.1.1
+  rev: v4.6.0
   hooks:
   - id: trailing-whitespace
     exclude: cherrypy/test/static/index.html
@@ -40,7 +40,7 @@ repos:
   - id: pydocstyle
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 7.1.0
+  rev: 7.1.1
   hooks:
   - id: flake8
     additional_dependencies:
@@ -50,7 +50,7 @@ repos:
     # - flake8-pytest-style ~= 1.7.2
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.5.4
+  rev: v1.5.5
   hooks:
   - id: remove-tabs
 
@@ -60,7 +60,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.34.0
+  rev: v1.35.1
   hooks:
   - id: yamllint
     files: \.(yaml|yml)$
