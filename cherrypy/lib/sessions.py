@@ -598,7 +598,8 @@ class FileSession(Session):
         """Clean up expired sessions."""
         now = self.now()
         # Iterate over all session files in self.storage_path
-        for fname in os.listdir(self.storage_path):
+        for entry in os.scandir(self.storage_path):
+            fname = entry.name
             have_session = (
                 fname.startswith(self.SESSION_PREFIX)
                 and not fname.endswith(self.LOCK_SUFFIX)
@@ -606,7 +607,7 @@ class FileSession(Session):
             if have_session:
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
-                path = os.path.join(self.storage_path, fname)
+                path = entry.path
                 self.acquire_lock(path)
                 if self.debug:
                     # This is a bit of a hack, since we're calling clean_up
