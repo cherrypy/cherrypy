@@ -92,7 +92,7 @@ params = dict(
             'pytest-cov',
             'pytest-forked',
             'pytest-sugar',
-            'path.py',
+            'path',
             'requests_toolbelt',
             'pytest-services>=2',
             'setuptools',
