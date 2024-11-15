@@ -108,7 +108,7 @@ import threading
 import binascii
 import pickle
 
-import zc.lockfile
+from filelock import FileLock, Timeout
 
 import cherrypy
 from cherrypy.lib import httputil
@@ -579,19 +579,21 @@ class FileSession(Session):
         path += self.LOCK_SUFFIX
         checker = locking.LockChecker(self.id, self.lock_timeout)
         while not checker.expired():
+            lock = FileLock(path)
+            timeout = 0.1
             try:
-                self.lock = zc.lockfile.LockFile(path)
-            except zc.lockfile.LockError:
-                time.sleep(0.1)
-            else:
+                lock.acquire(timeout=timeout)
+                self.lock = lock
                 break
+            except Timeout:
+                time.sleep(timeout)
         self.locked = True
         if self.debug:
             cherrypy.log('Lock acquired.', 'TOOLS.SESSIONS')
 
     def release_lock(self, path=None):
         """Release the lock on the currently-loaded session data."""
-        self.lock.close()
+        self.lock.release()
         self.locked = False
 
     def clean_up(self):
