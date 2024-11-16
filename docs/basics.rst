@@ -579,7 +579,7 @@ it is distributed and a good choice if you want to
 share sessions outside of the process running CherryPy.
 
 Requires that the Python
-`memcached package <https://pypi.org/project/memcached>`_
+`memcached package <https://pypi.org/project/pymemcache>`_
 is installed, which may be indicated by installing
 ``cherrypy[memcached_session]``.
 
