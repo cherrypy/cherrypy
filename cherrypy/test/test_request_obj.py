@@ -135,6 +135,14 @@ class RequestObjectTests(helper.CPWebCase):
             def no_positional_kwargs(self, **kwargs):
                 return 'data'
 
+            @cherrypy.expose
+            def two_positional_only(self, param1, param2, /):
+                return 'data'
+
+            @cherrypy.expose
+            def two_keyword_only(self, *, param1, param2):
+                return 'data'
+
             callable_object = ParamErrorsCallable()
 
             @cherrypy.expose
@@ -143,11 +151,19 @@ class RequestObjectTests(helper.CPWebCase):
 
             @cherrypy.expose
             def raise_type_error_with_default_param(self, x, y=None):
-                return '%d' % 'a'  # throw an exception
+                raise TypeError('Client Error')
 
             @cherrypy.expose
             @handler_dec
             def raise_type_error_decorated(self, *args, **kwargs):
+                raise TypeError('Client Error')
+
+            @cherrypy.expose
+            def raise_type_error_positional_only(self, param1, param2, /):
+                raise TypeError('Client Error')
+
+            @cherrypy.expose
+            def raise_type_error_keyword_only(self, *, param1, param2):
                 raise TypeError('Client Error')
 
         def callable_error_page(status, **kwargs):
@@ -419,6 +435,8 @@ class RequestObjectTests(helper.CPWebCase):
                 'param2=bar&param3=baz',
                 '/paramerrors/no_positional_kwargs?param1=foo&param2=bar',
                 '/paramerrors/callable_object',
+                '/paramerrors/two_positional_only/abc/def',
+                '/paramerrors/two_keyword_only?param2=def&param1=abc',
         ):
             self.getPage(uri)
             self.assertStatus(200)
@@ -468,6 +486,8 @@ class RequestObjectTests(helper.CPWebCase):
              error_msgs[1]),
             ('/paramerrors/callable_object?param1=foo', error_msgs[3]),
             ('/paramerrors/callable_object/boo', error_msgs[1]),
+            ('/paramerrors/two_positional_only/abc/', error_msgs[0]),
+            ('/paramerrors/two_keyword_only?param2=def', error_msgs[0]),
         ):
             for show_mismatched_params in (True, False):
                 cherrypy.config.update(
@@ -478,6 +498,9 @@ class RequestObjectTests(helper.CPWebCase):
                     self.assertInBody(msg)
                 else:
                     self.assertInBody('Not Found')
+                    # "Nothing matches the given URI" is in all responses.
+                    if msg != error_msgs[1]:
+                        self.assertNotInBody(msg)
 
         # if body parameters are wrong, a 400 must be returned.
         for uri, body, msg in (
@@ -508,6 +531,10 @@ class RequestObjectTests(helper.CPWebCase):
                 else:
                     self.assertInBody('400 Bad')
 
+                    # "Nothing matches the given URI" is in all responses.
+                    if msg != error_msgs[1]:
+                        self.assertNotInBody(msg)
+
         # even if body parameters are wrong, if we get the uri wrong, then
         # it's a 404
         for uri, body, msg in (
@@ -536,6 +563,10 @@ class RequestObjectTests(helper.CPWebCase):
                 else:
                     self.assertInBody('Not Found')
 
+                    # "Nothing matches the given URI" is in all responses.
+                    if msg != error_msgs[1]:
+                        self.assertNotInBody(msg)
+
         # In the case that a handler raises a TypeError we should
         # let that type error through.
         for uri in (
@@ -543,10 +574,13 @@ class RequestObjectTests(helper.CPWebCase):
                 '/paramerrors/raise_type_error_with_default_param?x=0',
                 '/paramerrors/raise_type_error_with_default_param?x=0&y=0',
                 '/paramerrors/raise_type_error_decorated',
+                '/paramerrors/raise_type_error_positional_only/abc/def',
+                ('/paramerrors/raise_type_error_keyword_only?'
+                 'param2=abc&param1=def'),
         ):
             self.getPage(uri, method='GET')
             self.assertStatus(500)
-            self.assertTrue('Client Error', self.body)
+            self.assertInBody('Client Error', self.body)
 
     def testErrorHandling(self):
         self.getPage('/error/missing')
