@@ -10,6 +10,8 @@ The default dispatcher discovers the page handler by matching path_info
 to a hierarchical arrangement of objects, starting at request.app.root.
 """
 
+import inspect
+import re
 import string
 import sys
 import types
@@ -67,14 +69,46 @@ class PageHandler(object):
             raise
 
 
+# For test_callable_spec, we build a list of regular expressions that match
+# error strings from the inspect module, and how we would report the error
+# in the response if "show_mismatched_params" is enabled.
+_SIGNATURE_ERRORS = []
+for _inspect_error, _qs_error_msg in [
+    # We don't define "too many positional arguments" as we can't extract a
+    # parameter name from it.
+    (
+        "missing a required argument: '(.*?)'",
+        'Missing parameters: {}'
+    ),
+    (
+        "got an unexpected keyword argument '(.*?)'",
+        'Unexpected query string parameters: {}'
+    ),
+    (
+        "multiple values for argument '(.*?)'",
+        'Multiple values for parameters: {}'
+    ),
+    (
+        "'(.*?)' parameter is positional only, but was passed as a keyword",
+        'Unexpected query string parameters: {}'
+    ),
+]:
+    _body_error_msg = _qs_error_msg.replace('query string', 'body')
+    _SIGNATURE_ERRORS.append((
+        re.compile(_inspect_error), _qs_error_msg, _body_error_msg
+    ))
+del re, _inspect_error, _qs_error_msg
+
+
 def test_callable_spec(callable, callable_args, callable_kwargs):
     """Inspect callable and test to see if the given args are suitable for it.
 
-    When an error occurs during the handler's invoking stage there are 2
+    When an error occurs during the handler's invoking stage there are 3
     erroneous cases:
     1.  Too many parameters passed to a function which doesn't define
         one of *args or **kwargs.
     2.  Too little parameters are passed to the function.
+    3.  A parameter passed as a keyword, which is positional only.
 
     There are 3 sources of parameters to a cherrypy handler.
     1.  query string parameters are passed as keyword parameters to the
@@ -86,133 +120,39 @@ def test_callable_spec(callable, callable_args, callable_kwargs):
     incorrect, then a 404 Not Found should be raised. Conversely the body
     parameters are part of the request; if they are invalid a 400 Bad Request.
     """
+    # See if the arguments provided are compatible with the callable.
+    s = inspect.signature(callable)
+    try:
+        s.bind(*callable_args, **callable_kwargs)
+        return
+    except TypeError as e:
+        # The error message should indicate the reason why we can't invoke it.
+        error_str = str(e)
+
     show_mismatched_params = getattr(
         cherrypy.serving.request, 'show_mismatched_params', False)
-    try:
-        (args, varargs, varkw, defaults) = getargspec(callable)
-    except TypeError:
-        if isinstance(callable, object) and hasattr(callable, '__call__'):
-            (args, varargs, varkw,
-             defaults) = getargspec(callable.__call__)
-        else:
-            # If it wasn't one of our own types, re-raise
-            # the original error
-            raise
 
-    if args and (
-            # For callable objects, which have a __call__(self) method
-            hasattr(callable, '__call__') or
-            # For normal methods
-            inspect.ismethod(callable)
-    ):
-        # Strip 'self'
-        args = args[1:]
+    # If the error message matches any of the regular expressions, then we can
+    # use it to determine which parameter was the problematic one.
+    for the_regex, qs_error, body_error in _SIGNATURE_ERRORS:
+        msg_re = the_regex.match(error_str)
+        if not msg_re:
+            continue
 
-    arg_usage = dict([(arg, 0,) for arg in args])
-    vararg_usage = 0
-    varkw_usage = 0
-    extra_kwargs = set()
+        # The error matches - we'll return a 404 unless the parameter seems
+        # to be related to what was submitted in the body.
+        error_code, error_tmpl = 404, qs_error
+        bad_param = msg_re.group(1)
+        if bad_param in (cherrypy.serving.request.body.params or []):
+            error_code, error_tmpl = 400, body_error
 
-    for i, value in enumerate(callable_args):
-        try:
-            arg_usage[args[i]] += 1
-        except IndexError:
-            vararg_usage += 1
+        # Raise a custom error message which will explain the problematic
+        # parameter (unless show_mismatched_params is false).
+        msg = error_tmpl.format(bad_param) if show_mismatched_params else None
+        raise cherrypy.HTTPError(error_code, message=msg)
 
-    for key in callable_kwargs.keys():
-        try:
-            arg_usage[key] += 1
-        except KeyError:
-            varkw_usage += 1
-            extra_kwargs.add(key)
-
-    # figure out which args have defaults.
-    args_with_defaults = args[-len(defaults or []):]
-    for i, val in enumerate(defaults or []):
-        # Defaults take effect only when the arg hasn't been used yet.
-        if arg_usage[args_with_defaults[i]] == 0:
-            arg_usage[args_with_defaults[i]] += 1
-
-    missing_args = []
-    multiple_args = []
-    for key, usage in arg_usage.items():
-        if usage == 0:
-            missing_args.append(key)
-        elif usage > 1:
-            multiple_args.append(key)
-
-    if missing_args:
-        # In the case where the method allows body arguments
-        # there are 3 potential errors:
-        # 1. not enough query string parameters -> 404
-        # 2. not enough body parameters -> 400
-        # 3. not enough path parts (partial matches) -> 404
-        #
-        # We can't actually tell which case it is,
-        # so I'm raising a 404 because that covers 2/3 of the
-        # possibilities
-        #
-        # In the case where the method does not allow body
-        # arguments it's definitely a 404.
-        message = None
-        if show_mismatched_params:
-            message = 'Missing parameters: %s' % ','.join(missing_args)
-        raise cherrypy.HTTPError(404, message=message)
-
-    # the extra positional arguments come from the path - 404 Not Found
-    if not varargs and vararg_usage > 0:
-        raise cherrypy.HTTPError(404)
-
-    body_params = cherrypy.serving.request.body.params or {}
-    body_params = set(body_params.keys())
-    qs_params = set(callable_kwargs.keys()) - body_params
-
-    if multiple_args:
-        if qs_params.intersection(set(multiple_args)):
-            # If any of the multiple parameters came from the query string then
-            # it's a 404 Not Found
-            error = 404
-        else:
-            # Otherwise it's a 400 Bad Request
-            error = 400
-
-        message = None
-        if show_mismatched_params:
-            message = 'Multiple values for parameters: '\
-                '%s' % ','.join(multiple_args)
-        raise cherrypy.HTTPError(error, message=message)
-
-    if not varkw and varkw_usage > 0:
-
-        # If there were extra query string parameters, it's a 404 Not Found
-        extra_qs_params = set(qs_params).intersection(extra_kwargs)
-        if extra_qs_params:
-            message = None
-            if show_mismatched_params:
-                message = 'Unexpected query string '\
-                    'parameters: %s' % ', '.join(extra_qs_params)
-            raise cherrypy.HTTPError(404, message=message)
-
-        # If there were any extra body parameters, it's a 400 Not Found
-        extra_body_params = set(body_params).intersection(extra_kwargs)
-        if extra_body_params:
-            message = None
-            if show_mismatched_params:
-                message = 'Unexpected body parameters: '\
-                    '%s' % ', '.join(extra_body_params)
-            raise cherrypy.HTTPError(400, message=message)
-
-
-try:
-    import inspect
-except ImportError:
-    def test_callable_spec(callable, args, kwargs):  # noqa: F811
-        """Do nothing as a no-op."""
-        return None
-else:
-    def getargspec(callable):
-        """Get argument specification using :mod:`inspect`."""
-        return inspect.getfullargspec(callable)[:4]
+    # We couldn't determine the problematic parameter, so raise a generic 404.
+    raise cherrypy.HTTPError(404)
 
 
 class LateParamPageHandler(PageHandler):
