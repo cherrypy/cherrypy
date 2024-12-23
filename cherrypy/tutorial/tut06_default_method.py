@@ -30,11 +30,11 @@ class UsersPage:
         # Since this is just a stupid little example, we'll simply
         # display a list of links to random, made-up users. In a real
         # application, this could be generated from a database result set.
-        return '''
+        return """
             <a href="./remi">Remi Delon</a><br/>
             <a href="./hendrik">Hendrik Mans</a><br/>
             <a href="./lorenzo">Lorenzo Lamas</a><br/>
-        '''
+        """
 
     @cherrypy.expose
     def default(self, user):
@@ -43,21 +43,21 @@ class UsersPage:
         # path that could not be mapped to an object method. In a real
         # application, we would probably do some database lookups here
         # instead of the silly if/elif/else construct.
-        if user == 'remi':
-            out = 'Remi Delon, CherryPy lead developer'
-        elif user == 'hendrik':
-            out = 'Hendrik Mans, CherryPy co-developer & crazy German'
-        elif user == 'lorenzo':
-            out = 'Lorenzo Lamas, famous actor and singer!'
+        if user == "remi":
+            out = "Remi Delon, CherryPy lead developer"
+        elif user == "hendrik":
+            out = "Hendrik Mans, CherryPy co-developer & crazy German"
+        elif user == "lorenzo":
+            out = "Lorenzo Lamas, famous actor and singer!"
         else:
-            out = 'Unknown user. :-('
+            out = "Unknown user. :-("
 
         return '%s (<a href="./">back</a>)' % out
 
 
-tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
+tutconf = os.path.join(os.path.dirname(__file__), "tutorial.conf")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # CherryPy always starts with app.root when trying to map request URIs
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().

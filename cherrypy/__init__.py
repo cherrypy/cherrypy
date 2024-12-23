@@ -66,8 +66,11 @@ except ImportError:
 from threading import local as _local
 
 from ._cperror import (
-    HTTPError, HTTPRedirect, InternalRedirect,
-    NotFound, CherryPyException,
+    HTTPError,
+    HTTPRedirect,
+    InternalRedirect,
+    NotFound,
+    CherryPyException,
 )
 
 from . import _cpdispatch as dispatch
@@ -83,8 +86,10 @@ from ._cptree import Application
 from . import _cpwsgi as wsgi
 
 from . import process
+
 try:
     from .process import win32
+
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
@@ -94,30 +99,47 @@ except ImportError:
 from . import _cpchecker
 
 __all__ = (
-    'HTTPError', 'HTTPRedirect', 'InternalRedirect',
-    'NotFound', 'CherryPyException',
-    'dispatch', 'tools', 'Tool', 'Application',
-    'wsgi', 'process', 'tree', 'engine',
-    'quickstart', 'serving', 'request', 'response', 'thread_data',
-    'log', 'expose', 'popargs', 'url', 'config',
+    "HTTPError",
+    "HTTPRedirect",
+    "InternalRedirect",
+    "NotFound",
+    "CherryPyException",
+    "dispatch",
+    "tools",
+    "Tool",
+    "Application",
+    "wsgi",
+    "process",
+    "tree",
+    "engine",
+    "quickstart",
+    "serving",
+    "request",
+    "response",
+    "thread_data",
+    "log",
+    "expose",
+    "popargs",
+    "url",
+    "config",
 )
 
 
-__import__('cherrypy._cptools')
-__import__('cherrypy._cprequest')
+__import__("cherrypy._cptools")
+__import__("cherrypy._cprequest")
 
 
 tree = _cptree.Tree()
 
 
 try:
-    __version__ = importlib_metadata.version('cherrypy')
+    __version__ = importlib_metadata.version("cherrypy")
 except Exception:
-    __version__ = 'unknown'
+    __version__ = "unknown"
 
 
-engine.listeners['before_request'] = set()
-engine.listeners['after_request'] = set()
+engine.listeners["before_request"] = set()
+engine.listeners["after_request"] = set()
 
 
 engine.autoreload = process.plugins.Autoreloader(engine)
@@ -140,9 +162,9 @@ class _HandleSignalsPlugin(object):
 
     def subscribe(self):
         """Add the handlers based on the platform."""
-        if hasattr(self.bus, 'signal_handler'):
+        if hasattr(self.bus, "signal_handler"):
             self.bus.signal_handler.subscribe()
-        if hasattr(self.bus, 'console_control_handler'):
+        if hasattr(self.bus, "console_control_handler"):
             self.bus.console_control_handler.subscribe()
 
 
@@ -153,7 +175,7 @@ server = _cpserver.Server()
 server.subscribe()
 
 
-def quickstart(root=None, script_name='', config=None):
+def quickstart(root=None, script_name="", config=None):
     """Mount the given root, start the builtin server (and engine), then block.
 
     root: an instance of a "controller class" (a collection of page handler
@@ -191,8 +213,9 @@ class _Serving(_local):
     globals in a thread-safe way.
     """
 
-    request = _cprequest.Request(_httputil.Host('127.0.0.1', 80),
-                                 _httputil.Host('127.0.0.1', 1111))
+    request = _cprequest.Request(
+        _httputil.Host("127.0.0.1", 80), _httputil.Host("127.0.0.1", 1111)
+    )
     """The request object for the current thread.
 
     In the main thread, and any threads which are not receiving HTTP
@@ -219,8 +242,7 @@ serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
-
-    __slots__ = ['__attrname__', '__dict__']
+    __slots__ = ["__attrname__", "__dict__"]
 
     def __init__(self, attrname):
         self.__attrname__ = attrname
@@ -230,7 +252,7 @@ class _ThreadLocalProxy(object):
         return getattr(child, name)
 
     def __setattr__(self, name, value):
-        if name in ('__attrname__', ):
+        if name in ("__attrname__",):
             object.__setattr__(self, name, value)
         else:
             child = getattr(serving, self.__attrname__)
@@ -270,6 +292,7 @@ class _ThreadLocalProxy(object):
     def __nonzero__(self):
         child = getattr(serving, self.__attrname__)
         return bool(child)
+
     # Python 3
     __bool__ = __nonzero__
 
@@ -277,8 +300,8 @@ class _ThreadLocalProxy(object):
 # Create request and response object (the same objects will be used
 #   throughout the entire life of the webserver, but will redirect
 #   to the "serving" object)
-request = _ThreadLocalProxy('request')
-response = _ThreadLocalProxy('response')
+request = _ThreadLocalProxy("request")
+response = _ThreadLocalProxy("response")
 
 # Create thread_data object as a thread-specific all-purpose storage
 
@@ -303,6 +326,7 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
 
 try:
     import pydoc as _pydoc
+
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
 except ImportError:
@@ -327,7 +351,7 @@ class _GlobalLogManager(_cplogging.LogManager):
         """
         # Do NOT use try/except here. See
         # https://github.com/cherrypy/cherrypy/issues/945
-        if hasattr(request, 'app') and hasattr(request.app, 'log'):
+        if hasattr(request, "app") and hasattr(request.app, "log"):
             log = request.app.log
         else:
             log = self
@@ -348,29 +372,29 @@ class _GlobalLogManager(_cplogging.LogManager):
 log = _GlobalLogManager()
 # Set a default screen handler on the global log.
 log.screen = True
-log.error_file = ''
+log.error_file = ""
 # Using an access file makes CP about 10% slower. Leave off by default.
-log.access_file = ''
+log.access_file = ""
 
 
-@engine.subscribe('log')
+@engine.subscribe("log")
 def _buslog(msg, level):
-    log.error(msg, 'ENGINE', severity=level)
+    log.error(msg, "ENGINE", severity=level)
 
 
 # Use _global_conf_alias so quickstart can use 'config' as an arg
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
 config.defaults = {
-    'tools.log_tracebacks.on': True,
-    'tools.log_headers.on': True,
-    'tools.trailing_slash.on': True,
-    'tools.encode.on': True
+    "tools.log_tracebacks.on": True,
+    "tools.log_headers.on": True,
+    "tools.trailing_slash.on": True,
+    "tools.encode.on": True,
 }
-config.namespaces['log'] = lambda k, v: setattr(log, k, v)
-config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)
+config.namespaces["log"] = lambda k, v: setattr(log, k, v)
+config.namespaces["checker"] = lambda k, v: setattr(checker, k, v)
 # Must reset to get our defaults applied.
 config.reset()
 
 checker = _cpchecker.Checker()
-engine.subscribe('start', checker)
+engine.subscribe("start", checker)

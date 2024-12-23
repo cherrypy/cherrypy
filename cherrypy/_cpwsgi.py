@@ -21,13 +21,13 @@ def downgrade_wsgi_ux_to_1x(environ):
     """Return new environ dict for WSGI 1.x from provided WSGI u.x environ."""
     env1x = {}
 
-    url_encoding = environ[ntou('wsgi.url_encoding')]
+    url_encoding = environ[ntou("wsgi.url_encoding")]
     for k, v in environ.copy().items():
-        if k in [ntou('PATH_INFO'), ntou('SCRIPT_NAME'), ntou('QUERY_STRING')]:
+        if k in [ntou("PATH_INFO"), ntou("SCRIPT_NAME"), ntou("QUERY_STRING")]:
             v = v.encode(url_encoding)
         elif isinstance(v, str):
-            v = v.encode('ISO-8859-1')
-        env1x[k.encode('ISO-8859-1')] = v
+            v = v.encode("ISO-8859-1")
+        env1x[k.encode("ISO-8859-1")] = v
 
     return env1x
 
@@ -99,9 +99,9 @@ class VirtualHost(object):
 
     def __call__(self, environ, start_response):
         """Route WSGI requests based on host names."""
-        domain = environ.get('HTTP_HOST', '')
+        domain = environ.get("HTTP_HOST", "")
         if self.use_x_forwarded_host:
-            domain = environ.get('HTTP_X_FORWARDED_HOST', domain)
+            domain = environ.get("HTTP_X_FORWARDED_HOST", domain)
 
         nextapp = self.domains.get(domain)
         if nextapp is None:
@@ -126,14 +126,14 @@ class InternalRedirector(object):
                 return self.nextapp(environ, start_response)
             except _cherrypy.InternalRedirect:
                 ir = _sys.exc_info()[1]
-                sn = environ.get('SCRIPT_NAME', '')
-                path = environ.get('PATH_INFO', '')
-                qs = environ.get('QUERY_STRING', '')
+                sn = environ.get("SCRIPT_NAME", "")
+                path = environ.get("PATH_INFO", "")
+                qs = environ.get("QUERY_STRING", "")
 
                 # Add the *previous* path_info + qs to redirections.
                 old_uri = sn + path
                 if qs:
-                    old_uri += '?' + qs
+                    old_uri += "?" + qs
                 redirections.append(old_uri)
 
                 if not self.recursive:
@@ -141,21 +141,19 @@ class InternalRedirector(object):
                     # already
                     new_uri = sn + ir.path
                     if ir.query_string:
-                        new_uri += '?' + ir.query_string
+                        new_uri += "?" + ir.query_string
                     if new_uri in redirections:
                         ir.request.close()
-                        tmpl = (
-                            'InternalRedirector visited the same URL twice: %r'
-                        )
+                        tmpl = "InternalRedirector visited the same URL twice: %r"
                         raise RuntimeError(tmpl % new_uri)
 
                 # Munge the environment and try again.
-                environ['REQUEST_METHOD'] = 'GET'
-                environ['PATH_INFO'] = ir.path
-                environ['QUERY_STRING'] = ir.query_string
-                environ['wsgi.input'] = io.BytesIO()
-                environ['CONTENT_LENGTH'] = '0'
-                environ['cherrypy.previous_request'] = ir.request
+                environ["REQUEST_METHOD"] = "GET"
+                environ["PATH_INFO"] = ir.path
+                environ["QUERY_STRING"] = ir.query_string
+                environ["wsgi.input"] = io.BytesIO()
+                environ["CONTENT_LENGTH"] = "0"
+                environ["cherrypy.previous_request"] = ir.request
 
 
 class ExceptionTrapper(object):
@@ -168,16 +166,10 @@ class ExceptionTrapper(object):
 
     def __call__(self, environ, start_response):
         """Handle exceptions while processing a WSGI request."""
-        return _TrappedResponse(
-            self.nextapp,
-            environ,
-            start_response,
-            self.throws
-        )
+        return _TrappedResponse(self.nextapp, environ, start_response, self.throws)
 
 
 class _TrappedResponse(object):
-
     response = iter([])
 
     def __init__(self, nextapp, environ, start_response, throws):
@@ -187,7 +179,9 @@ class _TrappedResponse(object):
         self.throws = throws
         self.started_response = False
         self.response = self.trap(
-            self.nextapp, self.environ, self.start_response,
+            self.nextapp,
+            self.environ,
+            self.start_response,
         )
         self.iter_response = iter(self.response)
 
@@ -199,7 +193,7 @@ class _TrappedResponse(object):
         return self.trap(next, self.iter_response)
 
     def close(self):
-        if hasattr(self.response, 'close'):
+        if hasattr(self.response, "close"):
             self.response.close()
 
     def trap(self, func, *args, **kwargs):
@@ -213,15 +207,12 @@ class _TrappedResponse(object):
             tb = _cperror.format_exc()
             _cherrypy.log(tb, severity=40)
             if not _cherrypy.request.show_tracebacks:
-                tb = ''
+                tb = ""
             s, h, b = _cperror.bare_error(tb)
             if True:
                 # What fun.
-                s = s.decode('ISO-8859-1')
-                h = [
-                    (k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
-                    for k, v in h
-                ]
+                s = s.decode("ISO-8859-1")
+                h = [(k.decode("ISO-8859-1"), v.decode("ISO-8859-1")) for k, v in h]
             if self.started_response:
                 # Empty our iterable (so future calls raise StopIteration)
                 self.iter_response = iter([])
@@ -240,7 +231,7 @@ class _TrappedResponse(object):
                 raise
 
             if self.started_response:
-                return b''.join(b)
+                return b"".join(b)
             else:
                 return b
 
@@ -262,17 +253,15 @@ class AppResponse(object):
 
             outstatus = r.output_status
             if not isinstance(outstatus, bytes):
-                raise TypeError('response.output_status is not a byte string.')
+                raise TypeError("response.output_status is not a byte string.")
 
             outheaders = []
             for k, v in r.header_list:
                 if not isinstance(k, bytes):
-                    tmpl = 'response.header_list key %r is not a byte string.'
+                    tmpl = "response.header_list key %r is not a byte string."
                     raise TypeError(tmpl % k)
                 if not isinstance(v, bytes):
-                    tmpl = (
-                        'response.header_list value %r is not a byte string.'
-                    )
+                    tmpl = "response.header_list value %r is not a byte string."
                     raise TypeError(tmpl % v)
                 outheaders.append((k, v))
 
@@ -281,9 +270,9 @@ class AppResponse(object):
                 # status and headers must be bytes masquerading as unicode;
                 # that is, they must be of type "str" but are restricted to
                 # code points in the "latin-1" set.
-                outstatus = outstatus.decode('ISO-8859-1')
+                outstatus = outstatus.decode("ISO-8859-1")
                 outheaders = [
-                    (k.decode('ISO-8859-1'), v.decode('ISO-8859-1'))
+                    (k.decode("ISO-8859-1"), v.decode("ISO-8859-1"))
                     for k, v in outheaders
                 ]
 
@@ -325,49 +314,49 @@ class AppResponse(object):
         env = self.environ.get
 
         local = httputil.Host(
-            '',
-            int(env('SERVER_PORT', 80) or -1),
-            env('SERVER_NAME', ''),
+            "",
+            int(env("SERVER_PORT", 80) or -1),
+            env("SERVER_NAME", ""),
         )
         remote = httputil.Host(
-            env('REMOTE_ADDR', ''),
-            int(env('REMOTE_PORT', -1) or -1),
-            env('REMOTE_HOST', ''),
+            env("REMOTE_ADDR", ""),
+            int(env("REMOTE_PORT", -1) or -1),
+            env("REMOTE_HOST", ""),
         )
-        scheme = env('wsgi.url_scheme')
-        sproto = env('ACTUAL_SERVER_PROTOCOL', 'HTTP/1.1')
+        scheme = env("wsgi.url_scheme")
+        sproto = env("ACTUAL_SERVER_PROTOCOL", "HTTP/1.1")
         request, resp = self.cpapp.get_serving(local, remote, scheme, sproto)
 
         # LOGON_USER is served by IIS, and is the name of the
         # user after having been mapped to a local account.
         # Both IIS and Apache set REMOTE_USER, when possible.
-        request.login = env('LOGON_USER') or env('REMOTE_USER') or None
-        request.multithread = self.environ['wsgi.multithread']
-        request.multiprocess = self.environ['wsgi.multiprocess']
+        request.login = env("LOGON_USER") or env("REMOTE_USER") or None
+        request.multithread = self.environ["wsgi.multithread"]
+        request.multiprocess = self.environ["wsgi.multiprocess"]
         request.wsgi_environ = self.environ
-        request.prev = env('cherrypy.previous_request', None)
+        request.prev = env("cherrypy.previous_request", None)
 
-        meth = self.environ['REQUEST_METHOD']
+        meth = self.environ["REQUEST_METHOD"]
 
         path = httputil.urljoin(
-            self.environ.get('SCRIPT_NAME', ''),
-            self.environ.get('PATH_INFO', ''),
+            self.environ.get("SCRIPT_NAME", ""),
+            self.environ.get("PATH_INFO", ""),
         )
-        qs = self.environ.get('QUERY_STRING', '')
+        qs = self.environ.get("QUERY_STRING", "")
 
         path, qs = self.recode_path_qs(path, qs) or (path, qs)
 
-        rproto = self.environ.get('SERVER_PROTOCOL')
+        rproto = self.environ.get("SERVER_PROTOCOL")
         headers = self.translate_headers(self.environ)
-        rfile = self.environ['wsgi.input']
+        rfile = self.environ["wsgi.input"]
         request.run(meth, path, qs, rproto, headers, rfile)
 
     headerNames = {
-        'HTTP_CGI_AUTHORIZATION': 'Authorization',
-        'CONTENT_LENGTH': 'Content-Length',
-        'CONTENT_TYPE': 'Content-Type',
-        'REMOTE_HOST': 'Remote-Host',
-        'REMOTE_ADDR': 'Remote-Addr',
+        "HTTP_CGI_AUTHORIZATION": "Authorization",
+        "CONTENT_LENGTH": "Content-Length",
+        "CONTENT_TYPE": "Content-Type",
+        "REMOTE_HOST": "Remote-Host",
+        "REMOTE_ADDR": "Remote-Addr",
     }
 
     def recode_path_qs(self, path, qs):
@@ -375,10 +364,11 @@ class AppResponse(object):
         # This isn't perfect; if the given PATH_INFO is in the
         # wrong encoding, it may fail to match the appropriate config
         # section URI. But meh.
-        old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
+        old_enc = self.environ.get("wsgi.url_encoding", "ISO-8859-1")
         new_enc = self.cpapp.find_config(
-            self.environ.get('PATH_INFO', ''),
-            'request.uri_encoding', 'utf-8',
+            self.environ.get("PATH_INFO", ""),
+            "request.uri_encoding",
+            "utf-8",
         )
         if new_enc.lower() == old_enc.lower():
             return
@@ -402,9 +392,9 @@ class AppResponse(object):
             # We assume all incoming header keys are uppercase already.
             if cgiName in self.headerNames:
                 yield self.headerNames[cgiName], environ[cgiName]
-            elif cgiName[:5] == 'HTTP_':
+            elif cgiName[:5] == "HTTP_":
                 # Hackish attempt at recovering original header names.
-                translatedHeader = cgiName[5:].replace('_', '-')
+                translatedHeader = cgiName[5:].replace("_", "-")
                 yield translatedHeader, environ[cgiName]
 
 
@@ -412,8 +402,8 @@ class CPWSGIApp(object):
     """A WSGI application object for a CherryPy Application."""
 
     pipeline = [
-        ('ExceptionTrapper', ExceptionTrapper),
-        ('InternalRedirector', InternalRedirector),
+        ("ExceptionTrapper", ExceptionTrapper),
+        ("InternalRedirector", InternalRedirector),
     ]
     """A list of (name, wsgiapp) pairs.
 
@@ -472,16 +462,16 @@ class CPWSGIApp(object):
 
     def namespace_handler(self, k, v):
         """Config handler for the 'wsgi' namespace."""
-        if k == 'pipeline':
+        if k == "pipeline":
             # Note this allows multiple 'wsgi.pipeline' config entries
             # (but each entry will be processed in a 'random' order).
             # It should also allow developers to set default middleware
             # in code (passed to self.__init__) that deployers can add to
             # (but not remove) via config.
             self.pipeline.extend(v)
-        elif k == 'response_class':
+        elif k == "response_class":
             self.response_class = v
         else:
-            name, arg = k.split('.', 1)
+            name, arg = k.split(".", 1)
             bucket = self.config.setdefault(name, {})
             bucket[arg] = v

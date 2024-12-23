@@ -12,19 +12,25 @@ def expose(func=None, alias=None):
 
     Optionally provide an alias or set of aliases.
     """
+
     def expose_(func):
         func.exposed = True
         if alias is not None:
             if isinstance(alias, text_or_bytes):
-                parents[alias.replace('.', '_')] = func
+                parents[alias.replace(".", "_")] = func
             else:
                 for a in alias:
-                    parents[a.replace('.', '_')] = func
+                    parents[a.replace(".", "_")] = func
         return func
 
     import sys
     import types
-    decoratable_types = types.FunctionType, types.MethodType, type,
+
+    decoratable_types = (
+        types.FunctionType,
+        types.MethodType,
+        type,
+    )
     if isinstance(func, decoratable_types):
         if alias is None:
             # @expose
@@ -144,7 +150,7 @@ def popargs(*args, **kwargs):
     handler = None
     handler_call = False
     for k, v in kwargs.items():
-        if k == 'handler':
+        if k == "handler":
             handler = v
         else:
             tm = "cherrypy.popargs() got an unexpected keyword argument '{0}'"
@@ -152,8 +158,9 @@ def popargs(*args, **kwargs):
 
     import inspect
 
-    if handler is not None \
-            and (hasattr(handler, '__call__') or inspect.isclass(handler)):
+    if handler is not None and (
+        hasattr(handler, "__call__") or inspect.isclass(handler)
+    ):
         handler_call = True
 
     def decorated(cls_or_self=None, vpath=None):
@@ -192,7 +199,7 @@ def popargs(*args, **kwargs):
     return decorated
 
 
-def url(path='', qs='', script_name=None, base=None, relative=None):
+def url(path="", qs="", script_name=None, base=None, relative=None):
     """Create an absolute URL for the given path.
 
     If 'path' starts with a slash ('/'), this will return
@@ -223,22 +230,22 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
     if isinstance(qs, (tuple, list, dict)):
         qs = urllib.parse.urlencode(qs)
     if qs:
-        qs = '?' + qs
+        qs = "?" + qs
 
     if cherrypy.request.app:
-        if not path.startswith('/'):
+        if not path.startswith("/"):
             # Append/remove trailing slash from path_info as needed
             # (this is to support mistyped URL's without redirecting;
             # if you want to redirect, use tools.trailing_slash).
             pi = cherrypy.request.path_info
             if cherrypy.request.is_index is True:
-                if not pi.endswith('/'):
-                    pi = pi + '/'
+                if not pi.endswith("/"):
+                    pi = pi + "/"
             elif cherrypy.request.is_index is False:
-                if pi.endswith('/') and pi != '/':
+                if pi.endswith("/") and pi != "/":
                     pi = pi[:-1]
 
-            if path == '':
+            if path == "":
                 path = pi
             else:
                 path = urllib.parse.urljoin(pi, path)
@@ -257,48 +264,48 @@ def url(path='', qs='', script_name=None, base=None, relative=None):
         if base is None:
             base = cherrypy.server.base()
 
-        path = (script_name or '') + path
+        path = (script_name or "") + path
         newurl = base + normalize_path(path) + qs
 
     # At this point, we should have a fully-qualified absolute URL.
 
     if relative is None:
-        relative = getattr(cherrypy.request.app, 'relative_urls', False)
+        relative = getattr(cherrypy.request.app, "relative_urls", False)
 
     # See http://www.ietf.org/rfc/rfc2396.txt
-    if relative == 'server':
+    if relative == "server":
         # "A relative reference beginning with a single slash character is
         # termed an absolute-path reference, as defined by <abs_path>..."
         # This is also sometimes called "server-relative".
-        newurl = '/' + '/'.join(newurl.split('/', 3)[3:])
+        newurl = "/" + "/".join(newurl.split("/", 3)[3:])
     elif relative:
         # "A relative reference that does not begin with a scheme name
         # or a slash character is termed a relative-path reference."
-        old = url(relative=False).split('/')[:-1]
-        new = newurl.split('/')
+        old = url(relative=False).split("/")[:-1]
+        new = newurl.split("/")
         while old and new:
             a, b = old[0], new[0]
             if a != b:
                 break
             old.pop(0)
             new.pop(0)
-        new = (['..'] * len(old)) + new
-        newurl = '/'.join(new)
+        new = ([".."] * len(old)) + new
+        newurl = "/".join(new)
 
     return newurl
 
 
 def normalize_path(path):
     """Resolve given path from relative into absolute form."""
-    if './' not in path:
+    if "./" not in path:
         return path
 
     # Normalize the URL by removing ./ and ../
     atoms = []
-    for atom in path.split('/'):
-        if atom == '.':
+    for atom in path.split("/"):
+        if atom == ".":
             pass
-        elif atom == '..':
+        elif atom == "..":
             # Don't pop from empty list
             # (i.e. ignore redundant '..')
             if atoms:
@@ -306,10 +313,10 @@ def normalize_path(path):
         elif atom:
             atoms.append(atom)
 
-    newpath = '/'.join(atoms)
+    newpath = "/".join(atoms)
     # Preserve leading '/'
-    if path.startswith('/'):
-        newpath = '/' + newpath
+    if path.startswith("/"):
+        newpath = "/" + newpath
 
     return newpath
 
@@ -345,4 +352,6 @@ def classproperty(func):  # noqa: D401; irrelevant for properties
         func = classmethod(func)
 
     return _ClassPropertyDescriptor(func)
+
+
 ####

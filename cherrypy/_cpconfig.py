@@ -140,10 +140,11 @@ def merge(base, other):
     for section, value_map in reprconf.Parser.load(other).items():
         if not isinstance(value_map, dict):
             raise ValueError(
-                'Application config must include section headers, but the '
+                "Application config must include section headers, but the "
                 "config you tried to merge doesn't have any sections. "
-                'Wrap your config in another dict with paths as section '
-                "headers, for example: {'/': config}.")
+                "Wrap your config in another dict with paths as section "
+                "headers, for example: {'/': config}."
+            )
         base.setdefault(section, {}).update(value_map)
 
 
@@ -157,20 +158,22 @@ class Config(reprconf.Config):
 
     def _apply(self, config):
         """Update self from a dict."""
-        if isinstance(config.get('global'), dict):
+        if isinstance(config.get("global"), dict):
             if len(config) > 1:
                 cherrypy.checker.global_config_contained_paths = True
-            config = config['global']
-        if 'tools.staticdir.dir' in config:
-            config['tools.staticdir.section'] = 'global'
+            config = config["global"]
+        if "tools.staticdir.dir" in config:
+            config["tools.staticdir.section"] = "global"
         super(Config, self)._apply(config)
 
     @staticmethod
     def __call__(**kwargs):
         """Decorate for page handlers to set _cp_config."""
+
         def tool_decorator(f):
-            _Vars(f).setdefault('_cp_config', {}).update(kwargs)
+            _Vars(f).setdefault("_cp_config", {}).update(kwargs)
             return f
+
         return tool_decorator
 
 
@@ -188,39 +191,39 @@ class _Vars(object):
 
 # Sphinx begin config.environments
 Config.environments = environments = {
-    'staging': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
+    "staging": {
+        "engine.autoreload.on": False,
+        "checker.on": False,
+        "tools.log_headers.on": False,
+        "request.show_tracebacks": False,
+        "request.show_mismatched_params": False,
     },
-    'production': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
-        'log.screen': False,
+    "production": {
+        "engine.autoreload.on": False,
+        "checker.on": False,
+        "tools.log_headers.on": False,
+        "request.show_tracebacks": False,
+        "request.show_mismatched_params": False,
+        "log.screen": False,
     },
-    'embedded': {
+    "embedded": {
         # For use with CherryPy embedded in another deployment stack.
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
-        'log.screen': False,
-        'engine.SIGHUP': None,
-        'engine.SIGTERM': None,
+        "engine.autoreload.on": False,
+        "checker.on": False,
+        "tools.log_headers.on": False,
+        "request.show_tracebacks": False,
+        "request.show_mismatched_params": False,
+        "log.screen": False,
+        "engine.SIGHUP": None,
+        "engine.SIGTERM": None,
     },
-    'test_suite': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': True,
-        'request.show_mismatched_params': True,
-        'log.screen': False,
+    "test_suite": {
+        "engine.autoreload.on": False,
+        "checker.on": False,
+        "tools.log_headers.on": False,
+        "request.show_tracebacks": True,
+        "request.show_mismatched_params": True,
+        "log.screen": False,
     },
 }
 # Sphinx end config.environments
@@ -228,21 +231,22 @@ Config.environments = environments = {
 
 def _server_namespace_handler(k, v):
     """Config handler for the "server" namespace."""
-    atoms = k.split('.', 1)
+    atoms = k.split(".", 1)
     if len(atoms) > 1:
         # Special-case config keys of the form 'server.servername.socket_port'
         # to configure additional HTTP servers.
-        if not hasattr(cherrypy, 'servers'):
+        if not hasattr(cherrypy, "servers"):
             cherrypy.servers = {}
 
         servername, k = atoms
         if servername not in cherrypy.servers:
             from cherrypy import _cpserver
+
             cherrypy.servers[servername] = _cpserver.Server()
             # On by default, but 'on = False' can unsubscribe it (see below).
             cherrypy.servers[servername].subscribe()
 
-        if k == 'on':
+        if k == "on":
             if v:
                 cherrypy.servers[servername].subscribe()
             else:
@@ -253,23 +257,23 @@ def _server_namespace_handler(k, v):
         setattr(cherrypy.server, k, v)
 
 
-Config.namespaces['server'] = _server_namespace_handler
+Config.namespaces["server"] = _server_namespace_handler
 
 
 def _engine_namespace_handler(k, v):
     """Config handler for the "engine" namespace."""
     engine = cherrypy.engine
 
-    if k in {'SIGHUP', 'SIGTERM'}:
+    if k in {"SIGHUP", "SIGTERM"}:
         engine.subscribe(k, v)
         return
 
-    if '.' in k:
-        plugin, attrname = k.split('.', 1)
+    if "." in k:
+        plugin, attrname = k.split(".", 1)
         plugin = getattr(engine, plugin)
-        op = 'subscribe' if v else 'unsubscribe'
+        op = "subscribe" if v else "unsubscribe"
         sub_unsub = getattr(plugin, op, None)
-        if attrname == 'on' and callable(sub_unsub):
+        if attrname == "on" and callable(sub_unsub):
             sub_unsub()
             return
         setattr(plugin, attrname, v)
@@ -277,7 +281,7 @@ def _engine_namespace_handler(k, v):
         setattr(engine, k, v)
 
 
-Config.namespaces['engine'] = _engine_namespace_handler
+Config.namespaces["engine"] = _engine_namespace_handler
 
 
 def _tree_namespace_handler(k, v):
@@ -285,11 +289,11 @@ def _tree_namespace_handler(k, v):
     if isinstance(v, dict):
         for script_name, app in v.items():
             cherrypy.tree.graft(app, script_name)
-            msg = 'Mounted: %s on %s' % (app, script_name or '/')
+            msg = "Mounted: %s on %s" % (app, script_name or "/")
             cherrypy.engine.log(msg)
     else:
         cherrypy.tree.graft(v, v.script_name)
-        cherrypy.engine.log('Mounted: %s on %s' % (v, v.script_name or '/'))
+        cherrypy.engine.log("Mounted: %s on %s" % (v, v.script_name or "/"))
 
 
-Config.namespaces['tree'] = _tree_namespace_handler
+Config.namespaces["tree"] = _tree_namespace_handler
