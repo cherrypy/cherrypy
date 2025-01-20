@@ -11,7 +11,7 @@ from cherrypy.test import helper
 
 
 def usocket_path():
-    fd, path = tempfile.mkstemp("cp_test.sock")
+    fd, path = tempfile.mkstemp('cp_test.sock')
     os.close(fd)
     os.remove(path)
     return path
@@ -24,7 +24,7 @@ class USocketHTTPConnection(HTTPConnection):
     """HTTPConnection over a unix socket."""
 
     def __init__(self, path):
-        HTTPConnection.__init__(self, "localhost")
+        HTTPConnection.__init__(self, 'localhost')
         self.path = path
 
     def __call__(self, *args, **kwargs):
@@ -52,37 +52,39 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
 
     It exercises the config option `server.socket_file`.
     """
-
     HTTP_CONN = USocketHTTPConnection(USOCKET_PATH)
 
     @staticmethod
     def setup_server():
         class Root(object):
+
             @cherrypy.expose
             def index(self):
-                return "Test OK"
+                return 'Test OK'
 
             @cherrypy.expose
             def error(self):
-                raise Exception("Invalid page")
+                raise Exception('Invalid page')
 
-        config = {"server.socket_file": USOCKET_PATH}
+        config = {
+            'server.socket_file': USOCKET_PATH
+        }
         cherrypy.config.update(config)
         cherrypy.tree.mount(Root())
 
     def tearDown(self):
-        cherrypy.config.update({"server.socket_file": None})
+        cherrypy.config.update({'server.socket_file': None})
 
     def test_simple_request(self):
-        self.getPage("/")
-        self.assertStatus("200 OK")
-        self.assertInBody("Test OK")
+        self.getPage('/')
+        self.assertStatus('200 OK')
+        self.assertInBody('Test OK')
 
     def test_not_found(self):
-        self.getPage("/invalid_path")
-        self.assertStatus("404 Not Found")
+        self.getPage('/invalid_path')
+        self.assertStatus('404 Not Found')
 
     def test_internal_error(self):
-        self.getPage("/error")
-        self.assertStatus("500 Internal Server Error")
-        self.assertInBody("Invalid page")
+        self.getPage('/error')
+        self.assertStatus('500 Internal Server Error')
+        self.assertInBody('Invalid page')

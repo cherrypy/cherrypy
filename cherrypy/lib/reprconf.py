@@ -55,8 +55,8 @@ class NamespaceSet(dict):
         # Separate the given config into namespaces
         ns_confs = {}
         for k in config:
-            if "." in k:
-                ns, name = k.split(".", 1)
+            if '.' in k:
+                ns, name = k.split('.', 1)
                 bucket = ns_confs.setdefault(ns, {})
                 bucket[name] = config[k]
 
@@ -67,7 +67,7 @@ class NamespaceSet(dict):
         #         for k, v in ns_confs.get(ns, {}).items():
         #             callable(k, v)
         for ns, handler in self.items():
-            exit = getattr(handler, "__exit__", None)
+            exit = getattr(handler, '__exit__', None)
             if exit:
                 callable = handler.__enter__()
                 no_exc = True
@@ -93,18 +93,14 @@ class NamespaceSet(dict):
 
     def __repr__(self):
         """Render representation of a :class:`NamespaceSet` instance."""
-        return "%s.%s(%s)" % (
-            self.__module__,
-            self.__class__.__name__,
-            dict.__repr__(self),
-        )
+        return '%s.%s(%s)' % (self.__module__, self.__class__.__name__,
+                              dict.__repr__(self))
 
     def __copy__(self):
         """Make a copy of this instance."""
         newobj = self.__class__()
         newobj.update(self)
         return newobj
-
     copy = __copy__
 
 
@@ -137,7 +133,7 @@ class Config(dict):
 
     def _apply(self, config):
         """Update self from a dict."""
-        which_env = config.get("environment")
+        which_env = config.get('environment')
         if which_env:
             env = self.environments[which_env]
             for k in env:
@@ -189,18 +185,16 @@ class Parser(configparser.ConfigParser):
                     value = unrepr(value)
                 except Exception:
                     x = sys.exc_info()[1]
-                    msg = (
-                        "Config error in section: %r, option: %r, "
-                        "value: %r. Config values must be valid Python."
-                        % (section, option, value)
-                    )
+                    msg = ('Config error in section: %r, option: %r, '
+                           'value: %r. Config values must be valid Python.' %
+                           (section, option, value))
                     raise ValueError(msg, x.__class__.__name__, x.args)
                 result[section][option] = value
         return result
 
     def dict_from_file(self, file):
         """Generate a dict from a file."""
-        if hasattr(file, "read"):
+        if hasattr(file, 'read'):
             self.read_file(file)
         else:
             self.read(file)
@@ -213,7 +207,7 @@ class Parser(configparser.ConfigParser):
             # Filename
             isinstance(input, text_or_bytes)
             # Open file object
-            or hasattr(input, "read")
+            or hasattr(input, 'read')
         )
         return Parser().dict_from_file(input) if is_file else input.copy()
 
@@ -222,10 +216,12 @@ class Parser(configparser.ConfigParser):
 
 
 class _Builder:
+
     def build(self, o):
-        m = getattr(self, "build_" + o.__class__.__name__, None)
+        m = getattr(self, 'build_' + o.__class__.__name__, None)
         if m is None:
-            raise TypeError("unrepr does not recognize %s" % repr(o.__class__.__name__))
+            raise TypeError('unrepr does not recognize %s' %
+                            repr(o.__class__.__name__))
         return m(o)
 
     def astnode(self, s):
@@ -237,7 +233,7 @@ class _Builder:
             # e.g. IronPython 1.0.
             return eval(s)
 
-        p = ast.parse("__tempvalue__ = " + s)
+        p = ast.parse('__tempvalue__ = ' + s)
         return p.body[0].value
 
     def build_Subscript(self, o):
@@ -251,7 +247,6 @@ class _Builder:
         # Workaround for python 3.5. _ast.Call signature, docs found at
         # https://greentreesnakes.readthedocs.org/en/latest/nodes.html
         import ast
-
         callee = self.build(o.func)
         args = []
         if o.args is not None:
@@ -265,9 +260,8 @@ class _Builder:
             if kw.arg is None:  # double asterix `**`
                 rst = self.build(kw.value)
                 if not isinstance(rst, dict):
-                    raise TypeError(
-                        "Invalid argument for call." "Must be a mapping object."
-                    )
+                    raise TypeError('Invalid argument for call.'
+                                    'Must be a mapping object.')
                 # give preference to the keys set directly from arg=value
                 for k, v in rst.items():
                     if k not in kwargs:
@@ -312,18 +306,19 @@ class _Builder:
         return o.n
 
     def build_Dict(self, o):
-        return dict([(self.build(k), self.build(v)) for k, v in zip(o.keys, o.values)])
+        return dict([(self.build(k), self.build(v))
+                     for k, v in zip(o.keys, o.values)])
 
     def build_Tuple(self, o):
         return tuple(self.build_List(o))
 
     def build_Name(self, o):
         name = o.id
-        if name == "None":
+        if name == 'None':
             return None
-        if name == "True":
+        if name == 'True':
             return True
-        if name == "False":
+        if name == 'False':
             return False
 
         # See if the Name is a package or module. If it is, import it.
@@ -338,7 +333,7 @@ class _Builder:
         except AttributeError:
             pass
 
-        raise TypeError("unrepr could not resolve the name %s" % repr(name))
+        raise TypeError('unrepr could not resolve the name %s' % repr(name))
 
     def build_NameConstant(self, o):
         return o.value
@@ -388,8 +383,8 @@ def modules(modulePath):
 def attributes(full_attribute_name):
     """Load a module and retrieve an attribute of that module."""
     # Parse out the path, module, and attribute
-    last_dot = full_attribute_name.rfind(".")
-    attr_name = full_attribute_name[last_dot + 1 :]
+    last_dot = full_attribute_name.rfind('.')
+    attr_name = full_attribute_name[last_dot + 1:]
     mod_path = full_attribute_name[:last_dot]
 
     mod = modules(mod_path)
@@ -397,9 +392,8 @@ def attributes(full_attribute_name):
     try:
         attr = getattr(mod, attr_name)
     except AttributeError:
-        raise AttributeError(
-            "'%s' object has no attribute '%s'" % (mod_path, attr_name)
-        )
+        raise AttributeError("'%s' object has no attribute '%s'"
+                             % (mod_path, attr_name))
 
     # Return a reference to the attribute.
     return attr

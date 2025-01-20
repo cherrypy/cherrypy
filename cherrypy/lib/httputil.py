@@ -27,17 +27,13 @@ from .._private_api.compat.headers import parse_header
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
 # From https://github.com/cherrypy/cherrypy/issues/361
-response_codes[500] = (
-    "Internal Server Error",
-    "The server encountered an unexpected condition "
-    "which prevented it from fulfilling the request.",
-)
-response_codes[503] = (
-    "Service Unavailable",
-    "The server is currently unable to handle the "
-    "request due to a temporary overloading or "
-    "maintenance of the server.",
-)
+response_codes[500] = ('Internal Server Error',
+                       'The server encountered an unexpected condition '
+                       'which prevented it from fulfilling the request.')
+response_codes[503] = ('Service Unavailable',
+                       'The server is currently unable to handle the '
+                       'request due to a temporary overloading or '
+                       'maintenance of the server.')
 
 
 HTTPDate = functools.partial(email.utils.formatdate, usegmt=True)
@@ -49,11 +45,11 @@ def urljoin(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = "/".join([x for x in atoms if x])
-    while "//" in url:
-        url = url.replace("//", "/")
+    url = '/'.join([x for x in atoms if x])
+    while '//' in url:
+        url = url.replace('//', '/')
     # Special-case the final url of "", and return "/" instead.
-    return url or "/"
+    return url or '/'
 
 
 def urljoin_bytes(*atoms):
@@ -62,11 +58,11 @@ def urljoin_bytes(*atoms):
     This will correctly join a SCRIPT_NAME and PATH_INFO into the
     original URL, even if either atom is blank.
     """
-    url = b"/".join([x for x in atoms if x])
-    while b"//" in url:
-        url = url.replace(b"//", b"/")
+    url = b'/'.join([x for x in atoms if x])
+    while b'//' in url:
+        url = url.replace(b'//', b'/')
     # Special-case the final url of "", and return "/" instead.
-    return url or b"/"
+    return url or b'/'
 
 
 def protocol_from_http(protocol_str):
@@ -88,9 +84,9 @@ def get_ranges(headervalue, content_length):
         return None
 
     result = []
-    bytesunit, byteranges = headervalue.split("=", 1)
-    for brange in byteranges.split(","):
-        start, stop = [x.strip() for x in brange.split("-", 1)]
+    bytesunit, byteranges = headervalue.split('=', 1)
+    for brange in byteranges.split(','):
+        start, stop = [x.strip() for x in brange.split('-', 1)]
         if start:
             if not stop:
                 stop = content_length - 1
@@ -151,8 +147,8 @@ class HeaderElement(object):
 
     def __str__(self):
         """Render the HTTP header value as a string."""
-        p = [";%s=%s" % (k, v) for k, v in self.params.items()]
-        return str("%s%s" % (self.value, "".join(p)))
+        p = [';%s=%s' % (k, v) for k, v in self.params.items()]
+        return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
         """Turn the HTTP header value string representation to bytes."""
@@ -175,7 +171,7 @@ class HeaderElement(object):
         return cls(ival, params)
 
 
-q_separator = re.compile(r"; *q *=")
+q_separator = re.compile(r'; *q *=')
 
 
 class AcceptElement(HeaderElement):
@@ -204,13 +200,13 @@ class AcceptElement(HeaderElement):
 
         media_type, params = cls.parse(media_range)
         if qvalue is not None:
-            params["q"] = qvalue
+            params['q'] = qvalue
         return cls(media_type, params)
 
     @property
     def qvalue(self):
         """The qvalue, or priority, of this value."""
-        val = self.params.get("q", "1")
+        val = self.params.get('q', '1')
         if isinstance(val, HeaderElement):
             val = val.value
         try:
@@ -222,7 +218,8 @@ class AcceptElement(HeaderElement):
             """
             raise cherrypy.HTTPError(
                 400,
-                "Malformed HTTP header: `{}`".format(str(self)),
+                'Malformed HTTP header: `{}`'.
+                format(str(self)),
             ) from val_err
 
     def __cmp__(self, other):
@@ -256,7 +253,7 @@ def header_elements(fieldname, fieldvalue):
 
     result = []
     for element in RE_HEADER_SPLIT.split(fieldvalue):
-        if fieldname.startswith("Accept") or fieldname == "TE":
+        if fieldname.startswith('Accept') or fieldname == 'TE':
             hv = AcceptElement.from_str(element)
         else:
             hv = HeaderElement.from_str(element)
@@ -272,7 +269,7 @@ def decode_TEXT(value):
     True
     """
     atoms = decode_header(value)
-    decodedvalue = ""
+    decodedvalue = ''
     for atom, charset in atoms:
         if charset is not None:
             atom = atom.decode(charset)
@@ -282,7 +279,7 @@ def decode_TEXT(value):
 
 def decode_TEXT_maybe(value):
     """Decode the text but only if '=?' appears in it."""
-    return decode_TEXT(value) if "=?" in value else value
+    return decode_TEXT(value) if '=?' in value else value
 
 
 def valid_status(status):
@@ -306,24 +303,22 @@ def valid_status(status):
 
     code, reason = status, None
     if isinstance(status, str):
-        code, _, reason = status.partition(" ")
+        code, _, reason = status.partition(' ')
         reason = reason.strip() or None
 
     try:
         code = int(code)
     except (TypeError, ValueError):
-        raise ValueError(
-            "Illegal response status from server " "(%s is non-numeric)." % repr(code)
-        )
+        raise ValueError('Illegal response status from server '
+                         '(%s is non-numeric).' % repr(code))
 
     if code < 100 or code > 599:
-        raise ValueError(
-            "Illegal response status from server " "(%s is out of range)." % repr(code)
-        )
+        raise ValueError('Illegal response status from server '
+                         '(%s is out of range).' % repr(code))
 
     if code not in response_codes:
         # code is unknown but not illegal
-        default_reason, message = "", ""
+        default_reason, message = '', ''
     else:
         default_reason, message = response_codes[code]
 
@@ -337,8 +332,7 @@ def valid_status(status):
 # in the python3.0 source - we need to pass through an encoding to the unquote
 # method, but the default parse_qs function doesn't allow us to.  These do.
 
-
-def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding="utf-8"):
+def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding='utf-8'):
     """Parse a query given as a string argument.
 
     Arguments:
@@ -356,23 +350,23 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding="utf-8"):
 
     Returns a dict, as G-d intended.
     """
-    pairs = [s2 for s1 in qs.split("&") for s2 in s1.split(";")]
+    pairs = [s2 for s1 in qs.split('&') for s2 in s1.split(';')]
     d = {}
     for name_value in pairs:
         if not name_value and not strict_parsing:
             continue
-        nv = name_value.split("=", 1)
+        nv = name_value.split('=', 1)
         if len(nv) != 2:
             if strict_parsing:
-                raise ValueError("bad query field: %r" % (name_value,))
+                raise ValueError('bad query field: %r' % (name_value,))
             # Handle case of a control-name with no equal sign
             if keep_blank_values:
-                nv.append("")
+                nv.append('')
             else:
                 continue
         if len(nv[1]) or keep_blank_values:
-            name = unquote_plus(nv[0], encoding, errors="strict")
-            value = unquote_plus(nv[1], encoding, errors="strict")
+            name = unquote_plus(nv[0], encoding, errors='strict')
+            value = unquote_plus(nv[1], encoding, errors='strict')
             if name in d:
                 if not isinstance(d[name], list):
                     d[name] = [d[name]]
@@ -382,10 +376,10 @@ def _parse_qs(qs, keep_blank_values=0, strict_parsing=0, encoding="utf-8"):
     return d
 
 
-image_map_pattern = re.compile(r"[0-9]+,[0-9]+")
+image_map_pattern = re.compile(r'[0-9]+,[0-9]+')
 
 
-def parse_query_string(query_string, keep_blank_values=True, encoding="utf-8"):
+def parse_query_string(query_string, keep_blank_values=True, encoding='utf-8'):
     """Build a params dictionary from a query_string.
 
     Duplicate key/value pairs in the provided query_string will be
@@ -395,8 +389,8 @@ def parse_query_string(query_string, keep_blank_values=True, encoding="utf-8"):
     if image_map_pattern.match(query_string):
         # Server-side image map. Map the coords to 'x' and 'y'
         # (like CGI::Request does).
-        pm = query_string.split(",")
-        pm = {"x": int(pm[0]), "y": int(pm[1])}
+        pm = query_string.split(',')
+        pm = {'x': int(pm[0]), 'y': int(pm[1])}
     else:
         pm = _parse_qs(query_string, keep_blank_values, encoding=encoding)
     return pm
@@ -413,7 +407,7 @@ class CaseInsensitiveDict(jaraco.collections.KeyTransformingDict):
         """Title-case an HTTP header name."""
         if key is None:
             # TODO(#1830): why?
-            return "None"
+            return 'None'
         return key.title()
 
 
@@ -423,8 +417,9 @@ class CaseInsensitiveDict(jaraco.collections.KeyTransformingDict):
 # field continuation. It is expected that the folding LWS will be
 # replaced with a single SP before interpretation of the TEXT value."
 if str == bytes:
-    header_translate_table = "".join([chr(i) for i in range(256)])
-    header_translate_deletechars = "".join([chr(i) for i in range(32)]) + chr(127)
+    header_translate_table = ''.join([chr(i) for i in range(256)])
+    header_translate_deletechars = ''.join(
+        [chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
     header_translate_deletechars = bytes(range(32)) + bytes([127])
@@ -440,7 +435,7 @@ class HeaderMap(CaseInsensitiveDict):
     """
 
     protocol = (1, 1)
-    encodings = ["ISO-8859-1"]
+    encodings = ['ISO-8859-1']
 
     # Someday, when http-bis is done, this will probably get dropped
     # since few servers, clients, or intermediaries do it. But until then,
@@ -482,7 +477,8 @@ class HeaderMap(CaseInsensitiveDict):
 
         # See header_translate_* constants above.
         # Replace only if you really know what you're doing.
-        return item.translate(header_translate_table, header_translate_deletechars)
+        return item.translate(
+            header_translate_table, header_translate_deletechars)
 
     @classmethod
     def encode(cls, v):
@@ -499,13 +495,12 @@ class HeaderMap(CaseInsensitiveDict):
             # We do our own here instead of using the email module
             # because we never want to fold lines--folding has
             # been deprecated by the HTTP working group.
-            v = b2a_base64(v.encode("utf-8"))
-            return b"=?utf-8?b?" + v.strip(b"\n") + b"?="
+            v = b2a_base64(v.encode('utf-8'))
+            return (b'=?utf-8?b?' + v.strip(b'\n') + b'?=')
 
-        raise ValueError(
-            "Could not encode header part %r using "
-            "any of the encodings %r." % (v, cls.encodings)
-        )
+        raise ValueError('Could not encode header part %r using '
+                         'any of the encodings %r.' %
+                         (v, cls.encodings))
 
 
 class Host(object):
@@ -517,9 +512,9 @@ class Host(object):
 
     """
 
-    ip = "0.0.0.0"
+    ip = '0.0.0.0'
     port = 80
-    name = "unknown.tld"
+    name = 'unknown.tld'
 
     def __init__(self, ip, port, name=None):
         """Initialize a TCP service representation."""
@@ -531,7 +526,7 @@ class Host(object):
 
     def __repr__(self):
         """Render a :class:`Host` instance representation."""
-        return "httputil.Host(%r, %r, %r)" % (self.ip, self.port, self.name)
+        return 'httputil.Host(%r, %r, %r)' % (self.ip, self.port, self.name)
 
 
 class SanitizedHost(str):
@@ -551,7 +546,7 @@ class SanitizedHost(str):
     False
     """
 
-    dangerous = re.compile(r"[\n\r]")
+    dangerous = re.compile(r'[\n\r]')
 
     def __new__(cls, raw):
         """Construct a new :class:`SanitizedHost` instance."""
@@ -565,4 +560,4 @@ class SanitizedHost(str):
     @classmethod
     def _sanitize(cls, raw):
         """Clean up the CR LF chars from input."""
-        return cls.dangerous.sub("", raw)
+        return cls.dangerous.sub('', raw)

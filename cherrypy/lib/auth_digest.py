@@ -29,29 +29,28 @@ import cherrypy
 from cherrypy._cpcompat import ntob, tonative
 
 
-__author__ = "visteya"
-__date__ = "April 2009"
+__author__ = 'visteya'
+__date__ = 'April 2009'
 
 
 def md5_hex(s):
     """Return hexdigest of md5sum."""
-    return md5(ntob(s, "utf-8")).hexdigest()
+    return md5(ntob(s, 'utf-8')).hexdigest()
 
 
-qop_auth = "auth"
-qop_auth_int = "auth-int"
+qop_auth = 'auth'
+qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
 
-valid_algorithms = ("MD5", "MD5-sess")
+valid_algorithms = ('MD5', 'MD5-sess')
 
-FALLBACK_CHARSET = "ISO-8859-1"
-DEFAULT_CHARSET = "UTF-8"
+FALLBACK_CHARSET = 'ISO-8859-1'
+DEFAULT_CHARSET = 'UTF-8'
 
 
 def TRACE(msg):
     """Log message in TOOLS.AUTH_DIGEST context."""
-    cherrypy.log(msg, context="TOOLS.AUTH_DIGEST")
-
+    cherrypy.log(msg, context='TOOLS.AUTH_DIGEST')
 
 # Three helper functions for users of the tool, providing three variants
 # of get_ha1() functions for three different kinds of credential stores.
@@ -66,11 +65,10 @@ def get_ha1_dict_plain(user_password_dict):
     passwords, use get_ha1_dict_plain(my_userpass_dict) as the value for the
     get_ha1 argument to digest_auth().
     """
-
     def get_ha1(realm, username):
         password = user_password_dict.get(username)
         if password:
-            return md5_hex("%s:%s:%s" % (username, realm, password))
+            return md5_hex('%s:%s:%s' % (username, realm, password))
         return None
 
     return get_ha1
@@ -86,7 +84,6 @@ def get_ha1_dict(user_ha1_dict):
     get_ha1_dict(my_userha1_dict) as the value for the get_ha1
     argument to digest_auth().
     """
-
     def get_ha1(realm, username):
         return user_ha1_dict.get(username)
 
@@ -108,12 +105,11 @@ def get_ha1_file_htdigest(filename):
     get_ha1 argument to digest_auth().  It is recommended that the filename
     argument be an absolute path, to avoid problems.
     """
-
     def get_ha1(realm, username):
         result = None
-        with open(filename, "r") as f:
+        with open(filename, 'r') as f:
             for line in f:
-                u, r, ha1 = line.rstrip().split(":")
+                u, r, ha1 = line.rstrip().split(':')
                 if u == username and r == realm:
                     result = ha1
                     break
@@ -141,8 +137,8 @@ def synthesize_nonce(s, key, timestamp=None):
     """
     if timestamp is None:
         timestamp = int(time.time())
-    h = md5_hex("%s:%s:%s" % (timestamp, s, key))
-    nonce = "%s:%s" % (timestamp, h)
+    h = md5_hex('%s:%s:%s' % (timestamp, s, key))
+    nonce = '%s:%s' % (timestamp, h)
     return nonce
 
 
@@ -156,7 +152,7 @@ def _try_decode_header(header, charset):
 
     for enc in (charset, FALLBACK_CHARSET):
         try:
-            return tonative(ntob(tonative(header, "latin1"), "latin1"), enc)
+            return tonative(ntob(tonative(header, 'latin1'), 'latin1'), enc)
         except ValueError as ve:
             last_err = ve
     else:
@@ -170,24 +166,21 @@ class HttpDigestAuthorization(object):
     re-calculation of the digest.
     """
 
-    scheme = "digest"
+    scheme = 'digest'
 
     def errmsg(self, s):
         """Make an error message for HTTP Digest Authorization."""
-        return "Digest Authorization header: %s" % s
+        return 'Digest Authorization header: %s' % s
 
     @classmethod
     def matches(cls, header):
         """Check if header scheme matches auth implementation."""
-        scheme, _, _ = header.partition(" ")
+        scheme, _, _ = header.partition(' ')
         return scheme.lower() == cls.scheme
 
     def __init__(
-        self,
-        auth_header,
-        http_method,
-        debug=False,
-        accept_charset=DEFAULT_CHARSET[:],
+        self, auth_header, http_method,
+        debug=False, accept_charset=DEFAULT_CHARSET[:],
     ):
         """Initialize an HTTP Digest Authorization parser."""
         self.http_method = http_method
@@ -198,56 +191,58 @@ class HttpDigestAuthorization(object):
 
         self.auth_header = _try_decode_header(auth_header, accept_charset)
 
-        scheme, params = self.auth_header.split(" ", 1)
+        scheme, params = self.auth_header.split(' ', 1)
 
         # make a dict of the params
         items = parse_http_list(params)
         paramsd = parse_keqv_list(items)
 
-        self.realm = paramsd.get("realm")
-        self.username = paramsd.get("username")
-        self.nonce = paramsd.get("nonce")
-        self.uri = paramsd.get("uri")
-        self.method = paramsd.get("method")
-        self.response = paramsd.get("response")  # the response digest
-        self.algorithm = paramsd.get("algorithm", "MD5").upper()
-        self.cnonce = paramsd.get("cnonce")
-        self.opaque = paramsd.get("opaque")
-        self.qop = paramsd.get("qop")  # qop
-        self.nc = paramsd.get("nc")  # nonce count
+        self.realm = paramsd.get('realm')
+        self.username = paramsd.get('username')
+        self.nonce = paramsd.get('nonce')
+        self.uri = paramsd.get('uri')
+        self.method = paramsd.get('method')
+        self.response = paramsd.get('response')  # the response digest
+        self.algorithm = paramsd.get('algorithm', 'MD5').upper()
+        self.cnonce = paramsd.get('cnonce')
+        self.opaque = paramsd.get('opaque')
+        self.qop = paramsd.get('qop')  # qop
+        self.nc = paramsd.get('nc')  # nonce count
 
         # perform some correctness checks
         if self.algorithm not in valid_algorithms:
             raise ValueError(
-                self.errmsg("Unsupported value for algorithm: '%s'" % self.algorithm)
-            )
+                self.errmsg("Unsupported value for algorithm: '%s'" %
+                            self.algorithm))
 
         has_reqd = (
-            self.username and self.realm and self.nonce and self.uri and self.response
+            self.username and
+            self.realm and
+            self.nonce and
+            self.uri and
+            self.response
         )
         if not has_reqd:
-            raise ValueError(self.errmsg("Not all required parameters are present."))
+            raise ValueError(
+                self.errmsg('Not all required parameters are present.'))
 
         if self.qop:
             if self.qop not in valid_qops:
                 raise ValueError(
-                    self.errmsg("Unsupported value for qop: '%s'" % self.qop)
-                )
+                    self.errmsg("Unsupported value for qop: '%s'" % self.qop))
             if not (self.cnonce and self.nc):
                 raise ValueError(
-                    self.errmsg("If qop is sent then " "cnonce and nc MUST be present")
-                )
+                    self.errmsg('If qop is sent then '
+                                'cnonce and nc MUST be present'))
         else:
             if self.cnonce or self.nc:
                 raise ValueError(
-                    self.errmsg(
-                        "If qop is not sent, " "neither cnonce nor nc can be present"
-                    )
-                )
+                    self.errmsg('If qop is not sent, '
+                                'neither cnonce nor nc can be present'))
 
     def __str__(self):
         """Render an HTTP  Digest Auth header as a string."""
-        return "authorization : %s" % self.auth_header
+        return 'authorization : %s' % self.auth_header
 
     def validate_nonce(self, s, key):
         """Validate the nonce.
@@ -266,11 +261,12 @@ class HttpDigestAuthorization(object):
         the nonce we are trying to validate.
         """
         try:
-            timestamp, hashpart = self.nonce.split(":", 1)
-            s_timestamp, s_hashpart = synthesize_nonce(s, key, timestamp).split(":", 1)
+            timestamp, hashpart = self.nonce.split(':', 1)
+            s_timestamp, s_hashpart = synthesize_nonce(
+                s, key, timestamp).split(':', 1)
             is_valid = s_hashpart == hashpart
             if self.debug:
-                TRACE("validate_nonce: %s" % is_valid)
+                TRACE('validate_nonce: %s' % is_valid)
             return is_valid
         except ValueError:  # split() error
             pass
@@ -284,16 +280,16 @@ class HttpDigestAuthorization(object):
         ensure the plaintext timestamp is not spoofed.
         """
         try:
-            timestamp, hashpart = self.nonce.split(":", 1)
+            timestamp, hashpart = self.nonce.split(':', 1)
             if int(timestamp) + max_age_seconds > int(time.time()):
                 return False
         except ValueError:  # int() error
             pass
         if self.debug:
-            TRACE("nonce is stale")
+            TRACE('nonce is stale')
         return True
 
-    def HA2(self, entity_body=""):
+    def HA2(self, entity_body=''):
         """Return the H(A2) string.
 
         See :rfc:`2617` section 3.2.2.3.
@@ -305,17 +301,17 @@ class HttpDigestAuthorization(object):
         #
         # If the "qop" value is "auth-int", then A2 is:
         #    A2 = method ":" digest-uri-value ":" H(entity-body)
-        if self.qop is None or self.qop == "auth":
-            a2 = "%s:%s" % (self.http_method, self.uri)
-        elif self.qop == "auth-int":
-            a2 = "%s:%s:%s" % (self.http_method, self.uri, H(entity_body))
+        if self.qop is None or self.qop == 'auth':
+            a2 = '%s:%s' % (self.http_method, self.uri)
+        elif self.qop == 'auth-int':
+            a2 = '%s:%s:%s' % (self.http_method, self.uri, H(entity_body))
         else:
             # in theory, this should never happen, since I validate qop in
             # __init__()
-            raise ValueError(self.errmsg("Unrecognized value for qop!"))
+            raise ValueError(self.errmsg('Unrecognized value for qop!'))
         return H(a2)
 
-    def request_digest(self, ha1, entity_body=""):
+    def request_digest(self, ha1, entity_body=''):
         """Calculate the Request-Digest. See :rfc:`2617` section 3.2.2.1.
 
         ha1
@@ -332,9 +328,10 @@ class HttpDigestAuthorization(object):
         ha2 = self.HA2(entity_body)
         # Request-Digest -- RFC 2617 3.2.2.1
         if self.qop:
-            req = "%s:%s:%s:%s:%s" % (self.nonce, self.nc, self.cnonce, self.qop, ha2)
+            req = '%s:%s:%s:%s:%s' % (
+                self.nonce, self.nc, self.cnonce, self.qop, ha2)
         else:
-            req = "%s:%s" % (self.nonce, ha2)
+            req = '%s:%s' % (self.nonce, ha2)
 
         # RFC 2617 3.2.2.2
         #
@@ -347,27 +344,26 @@ class HttpDigestAuthorization(object):
         # receipt of a WWW-Authenticate challenge from the server.
         # A1 = H( unq(username-value) ":" unq(realm-value) ":" passwd )
         #         ":" unq(nonce-value) ":" unq(cnonce-value)
-        if self.algorithm == "MD5-sess":
-            ha1 = H("%s:%s:%s" % (ha1, self.nonce, self.cnonce))
+        if self.algorithm == 'MD5-sess':
+            ha1 = H('%s:%s:%s' % (ha1, self.nonce, self.cnonce))
 
-        digest = H("%s:%s" % (ha1, req))
+        digest = H('%s:%s' % (ha1, req))
         return digest
 
 
 def _get_charset_declaration(charset):
     global FALLBACK_CHARSET
     charset = charset.upper()
-    return (', charset="%s"' % charset) if charset != FALLBACK_CHARSET else ""
+    return (
+        (', charset="%s"' % charset)
+        if charset != FALLBACK_CHARSET
+        else ''
+    )
 
 
 def www_authenticate(
-    realm,
-    key,
-    algorithm="MD5",
-    nonce=None,
-    qop=qop_auth,
-    stale=False,
-    accept_charset=DEFAULT_CHARSET[:],
+    realm, key, algorithm='MD5', nonce=None, qop=qop_auth,
+    stale=False, accept_charset=DEFAULT_CHARSET[:],
 ):
     """Construct a WWW-Authenticate header for Digest authentication."""
     if qop not in valid_qops:
@@ -375,26 +371,23 @@ def www_authenticate(
     if algorithm not in valid_algorithms:
         raise ValueError("Unsupported value for algorithm: '%s'" % algorithm)
 
-    HEADER_PATTERN = 'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"%s%s'
+    HEADER_PATTERN = (
+        'Digest realm="%s", nonce="%s", algorithm="%s", qop="%s"%s%s'
+    )
 
     if nonce is None:
         nonce = synthesize_nonce(realm, key)
 
-    stale_param = ', stale="true"' if stale else ""
+    stale_param = ', stale="true"' if stale else ''
 
     charset_declaration = _get_charset_declaration(accept_charset)
 
     return HEADER_PATTERN % (
-        realm,
-        nonce,
-        algorithm,
-        qop,
-        stale_param,
-        charset_declaration,
+        realm, nonce, algorithm, qop, stale_param, charset_declaration,
     )
 
 
-def digest_auth(realm, get_ha1, key, debug=False, accept_charset="utf-8"):
+def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
     """Perform HTTP Digest Access Authentication.
 
     A CherryPy tool that hooks at ``before_handler`` to perform
@@ -424,20 +417,19 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset="utf-8"):
     """
     request = cherrypy.serving.request
 
-    auth_header = request.headers.get("authorization")
+    auth_header = request.headers.get('authorization')
 
-    respond_401 = functools.partial(_respond_401, realm, key, accept_charset, debug)
+    respond_401 = functools.partial(
+        _respond_401, realm, key, accept_charset, debug)
 
-    if not HttpDigestAuthorization.matches(auth_header or ""):
+    if not HttpDigestAuthorization.matches(auth_header or ''):
         respond_401()
 
-    msg = "The Authorization header could not be parsed."
+    msg = 'The Authorization header could not be parsed.'
     with cherrypy.HTTPError.handle(ValueError, 400, msg):
         auth = HttpDigestAuthorization(
-            auth_header,
-            request.method,
-            debug=debug,
-            accept_charset=accept_charset,
+            auth_header, request.method,
+            debug=debug, accept_charset=accept_charset,
         )
 
     if debug:
@@ -460,7 +452,7 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset="utf-8"):
 
     # authenticated
     if debug:
-        TRACE("digest matches auth.response")
+        TRACE('digest matches auth.response')
     # Now check if nonce is stale.
     # The choice of ten minutes' lifetime for nonce is somewhat
     # arbitrary
@@ -469,13 +461,18 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset="utf-8"):
 
     request.login = auth.username
     if debug:
-        TRACE("authentication of %s successful" % auth.username)
+        TRACE('authentication of %s successful' % auth.username)
 
 
 def _respond_401(realm, key, accept_charset, debug, **kwargs):
     """Respond with 401 status and a WWW-Authenticate header."""
-    header = www_authenticate(realm, key, accept_charset=accept_charset, **kwargs)
+    header = www_authenticate(
+        realm, key,
+        accept_charset=accept_charset,
+        **kwargs
+    )
     if debug:
         TRACE(header)
-    cherrypy.serving.response.headers["WWW-Authenticate"] = header
-    raise cherrypy.HTTPError(401, "You are not authorized to access that resource")
+    cherrypy.serving.response.headers['WWW-Authenticate'] = header
+    raise cherrypy.HTTPError(
+        401, 'You are not authorized to access that resource')

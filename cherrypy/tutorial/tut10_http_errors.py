@@ -19,7 +19,8 @@ class HTTPErrorDemo(object):
     """HTTP error representation app."""
 
     # Set a custom response for 403 errors.
-    _cp_config = {"error_page.403": os.path.join(curpath, "custom_error.html")}
+    _cp_config = {'error_page.403':
+                  os.path.join(curpath, 'custom_error.html')}
 
     @cherrypy.expose
     def index(self):
@@ -27,12 +28,11 @@ class HTTPErrorDemo(object):
         # display some links that will result in errors
         tracebacks = cherrypy.request.show_tracebacks
         if tracebacks:
-            trace = "off"
+            trace = 'off'
         else:
-            trace = "on"
+            trace = 'on'
 
-        return (
-            """
+        return """
         <html><body>
             <p>Toggle tracebacks <a href="toggleTracebacks">%s</a></p>
             <p><a href="/doesNotExist">Click me; I'm a broken link!</a></p>
@@ -51,19 +51,17 @@ class HTTPErrorDemo(object):
             <p><a href="/messageArg">You can also set the response body
             when you raise an error.</a></p>
         </body></html>
-        """
-            % trace
-        )
+        """ % trace
 
     @cherrypy.expose
     def toggleTracebacks(self):
         """Switch tracebacks setting on ``/toggleTracebacks`` URI."""
         # simple function to toggle tracebacks on and off
         tracebacks = cherrypy.request.show_tracebacks
-        cherrypy.config.update({"request.show_tracebacks": not tracebacks})
+        cherrypy.config.update({'request.show_tracebacks': not tracebacks})
 
         # redirect back to the index
-        raise cherrypy.HTTPRedirect("/")
+        raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose
     def error(self, code):
@@ -74,17 +72,15 @@ class HTTPErrorDemo(object):
     @cherrypy.expose
     def messageArg(self):
         """Respond with an HTTP 500 and a custom message."""
-        message = (
-            "If you construct an HTTPError with a 'message' "
-            "argument, it wil be placed on the error page "
-            "(underneath the status line by default)."
-        )
+        message = ("If you construct an HTTPError with a 'message' "
+                   'argument, it wil be placed on the error page '
+                   '(underneath the status line by default).')
         raise cherrypy.HTTPError(500, message=message)
 
 
-tutconf = os.path.join(os.path.dirname(__file__), "tutorial.conf")
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # CherryPy always starts with app.root when trying to map request URIs
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().

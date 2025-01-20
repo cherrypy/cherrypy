@@ -16,30 +16,27 @@ import cherrypy
 class HitCounter:
     """Hit counter app."""
 
-    _cp_config = {"tools.sessions.on": True}
+    _cp_config = {'tools.sessions.on': True}
 
     @cherrypy.expose
     def index(self):
         """Produce HTTP response body of hit counter app index URI."""
         # Increase the silly hit counter
-        count = cherrypy.session.get("count", 0) + 1
+        count = cherrypy.session.get('count', 0) + 1
 
         # Store the new value in the session dictionary
-        cherrypy.session["count"] = count
+        cherrypy.session['count'] = count
 
         # And display a silly hit count message!
-        return (
-            """
+        return '''
             During your current session, you've viewed this
             page %s times! Your life is a patio of fun!
-        """
-            % count
-        )
+        ''' % count
 
 
-tutconf = os.path.join(os.path.dirname(__file__), "tutorial.conf")
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # CherryPy always starts with app.root when trying to map request URIs
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().

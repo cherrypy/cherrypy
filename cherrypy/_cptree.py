@@ -32,7 +32,7 @@ class Application(object):
     of {key: value} pairs."""
 
     namespaces = reprconf.NamespaceSet()
-    toolboxes = {"tools": cherrypy.tools}
+    toolboxes = {'tools': cherrypy.tools}
 
     log = None
     """A LogManager instance.
@@ -51,7 +51,7 @@ class Application(object):
 
     relative_urls = False
 
-    def __init__(self, root, script_name="", config=None):
+    def __init__(self, root, script_name='', config=None):
         """Initialize Application with given root."""
         self.log = _cplogging.LogManager(id(self), cherrypy.log.logger_root)
         self.root = root
@@ -59,8 +59,8 @@ class Application(object):
         self.wsgiapp = _cpwsgi.CPWSGIApp(self)
 
         self.namespaces = self.namespaces.copy()
-        self.namespaces["log"] = lambda k, v: setattr(self.log, k, v)
-        self.namespaces["wsgi"] = self.wsgiapp.namespace_handler
+        self.namespaces['log'] = lambda k, v: setattr(self.log, k, v)
+        self.namespaces['wsgi'] = self.wsgiapp.namespace_handler
 
         self.config = self.__class__.config.copy()
         if config:
@@ -68,12 +68,8 @@ class Application(object):
 
     def __repr__(self):
         """Generate a representation of the Application instance."""
-        return "%s.%s(%r, %r)" % (
-            self.__module__,
-            self.__class__.__name__,
-            self.root,
-            self.script_name,
-        )
+        return '%s.%s(%r, %r)' % (self.__module__, self.__class__.__name__,
+                                  self.root, self.script_name)
 
     script_name_doc = """The URI "mount point" for this app. A mount point
     is that portion of the URI which is constant for all URIs that are
@@ -117,12 +113,12 @@ class Application(object):
 
         # A `_script_name` with a value of None signals that the script name
         # should be pulled from WSGI environ.
-        return cherrypy.serving.request.wsgi_environ["SCRIPT_NAME"].rstrip("/")
+        return cherrypy.serving.request.wsgi_environ['SCRIPT_NAME'].rstrip('/')
 
     @script_name.setter
     def script_name(self, value):
         if value:
-            value = value.rstrip("/")
+            value = value.rstrip('/')
         self._script_name = value
 
     def merge(self, config):
@@ -130,22 +126,22 @@ class Application(object):
         _cpconfig.merge(self.config, config)
 
         # Handle namespaces specified in config.
-        self.namespaces(self.config.get("/", {}))
+        self.namespaces(self.config.get('/', {}))
 
     def find_config(self, path, key, default=None):
         """Return the most-specific value for key along path, or default."""
-        trail = path or "/"
+        trail = path or '/'
         while trail:
             nodeconf = self.config.get(trail, {})
 
             if key in nodeconf:
                 return nodeconf[key]
 
-            lastslash = trail.rfind("/")
+            lastslash = trail.rfind('/')
             if lastslash == -1:
                 break
-            elif lastslash == 0 and trail != "/":
-                trail = "/"
+            elif lastslash == 0 and trail != '/':
+                trail = '/'
             else:
                 trail = trail[:lastslash]
 
@@ -161,8 +157,8 @@ class Application(object):
 
         resp = self.response_class()
         cherrypy.serving.load(req, resp)
-        cherrypy.engine.publish("acquire_thread")
-        cherrypy.engine.publish("before_request")
+        cherrypy.engine.publish('acquire_thread')
+        cherrypy.engine.publish('before_request')
 
         return req, resp
 
@@ -170,7 +166,7 @@ class Application(object):
         """Release the current serving (request and response)."""
         req = cherrypy.serving.request
 
-        cherrypy.engine.publish("after_request")
+        cherrypy.engine.publish('after_request')
 
         try:
             req.close()
@@ -203,7 +199,7 @@ class Tree(object):
         """Initialize registry Tree."""
         self.apps = {}
 
-    def mount(self, root, script_name="", config=None):
+    def mount(self, root, script_name='', config=None):
         """Mount a new app from a root object, script_name, and config.
 
         root
@@ -228,37 +224,35 @@ class Tree(object):
         if script_name is None:
             raise TypeError(
                 "The 'script_name' argument may not be None. Application "
-                "objects may, however, possess a script_name of None (in "
-                "order to inpect the WSGI environ for SCRIPT_NAME upon each "
-                "request). You cannot mount such Applications on this Tree; "
-                "you must pass them to a WSGI server interface directly."
-            )
+                'objects may, however, possess a script_name of None (in '
+                'order to inpect the WSGI environ for SCRIPT_NAME upon each '
+                'request). You cannot mount such Applications on this Tree; '
+                'you must pass them to a WSGI server interface directly.')
 
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
-        script_name = script_name.rstrip("/")
+        script_name = script_name.rstrip('/')
 
         if isinstance(root, Application):
             app = root
-            if script_name != "" and script_name != app.script_name:
+            if script_name != '' and script_name != app.script_name:
                 raise ValueError(
-                    "Cannot specify a different script name and pass an "
-                    "Application instance to cherrypy.mount"
-                )
+                    'Cannot specify a different script name and pass an '
+                    'Application instance to cherrypy.mount')
             script_name = app.script_name
         else:
             app = Application(root, script_name)
 
             # If mounted at "", add favicon.ico
             needs_favicon = (
-                script_name == ""
+                script_name == ''
                 and root is not None
-                and not hasattr(root, "favicon_ico")
+                and not hasattr(root, 'favicon_ico')
             )
             if needs_favicon:
                 favicon = os.path.join(
                     os.getcwd(),
                     os.path.dirname(__file__),
-                    "favicon.ico",
+                    'favicon.ico',
                 )
                 root.favicon_ico = tools.staticfile.handler(favicon)
 
@@ -269,10 +263,10 @@ class Tree(object):
 
         return app
 
-    def graft(self, wsgi_callable, script_name=""):
+    def graft(self, wsgi_callable, script_name=''):
         """Mount a wsgi callable at the given script_name."""
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
-        script_name = script_name.rstrip("/")
+        script_name = script_name.rstrip('/')
         self.apps[script_name] = wsgi_callable
 
     def script_name(self, path=None):
@@ -283,7 +277,8 @@ class Tree(object):
         if path is None:
             try:
                 request = cherrypy.serving.request
-                path = httputil.urljoin(request.script_name, request.path_info)
+                path = httputil.urljoin(request.script_name,
+                                        request.path_info)
             except AttributeError:
                 return None
 
@@ -291,11 +286,11 @@ class Tree(object):
             if path in self.apps:
                 return path
 
-            if path == "":
+            if path == '':
                 return None
 
             # Move one node up the tree and try again.
-            path = path[: path.rfind("/")]
+            path = path[:path.rfind('/')]
 
     def __call__(self, environ, start_response):
         """Pre-initialize WSGI env and call WSGI-callable."""
@@ -303,18 +298,17 @@ class Tree(object):
         # to '' (some WSGI servers always set SCRIPT_NAME to '').
         # Try to look up the app using the full path.
         env1x = environ
-        path = httputil.urljoin(
-            env1x.get("SCRIPT_NAME", ""), env1x.get("PATH_INFO", "")
-        )
-        sn = self.script_name(path or "/")
+        path = httputil.urljoin(env1x.get('SCRIPT_NAME', ''),
+                                env1x.get('PATH_INFO', ''))
+        sn = self.script_name(path or '/')
         if sn is None:
-            start_response("404 Not Found", [])
+            start_response('404 Not Found', [])
             return []
 
         app = self.apps[sn]
 
         # Correct the SCRIPT_NAME and PATH_INFO environ entries.
         environ = environ.copy()
-        environ["SCRIPT_NAME"] = sn
-        environ["PATH_INFO"] = path[len(sn.rstrip("/")) :]
+        environ['SCRIPT_NAME'] = sn
+        environ['PATH_INFO'] = path[len(sn.rstrip('/')):]
         return app(environ, start_response)

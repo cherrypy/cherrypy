@@ -121,7 +121,7 @@ from cherrypy import _cperror
 
 # Silence the no-handlers "warning" (stderr write!) in stdlib logging
 logging.Logger.manager.emittedNoHandlerWarning = 1
-logfmt = logging.Formatter("%(message)s")
+logfmt = logging.Formatter('%(message)s')
 
 
 class NullHandler(logging.Handler):
@@ -171,16 +171,18 @@ class LogManager(object):
         cherrypy.access.<appid>
     """
 
-    def __init__(self, appid=None, logger_root="cherrypy"):
+    def __init__(self, appid=None, logger_root='cherrypy'):
         """Initialize a CherryPy log manager."""
         self.logger_root = logger_root
         self.appid = appid
         if appid is None:
-            self.error_log = logging.getLogger("%s.error" % logger_root)
-            self.access_log = logging.getLogger("%s.access" % logger_root)
+            self.error_log = logging.getLogger('%s.error' % logger_root)
+            self.access_log = logging.getLogger('%s.access' % logger_root)
         else:
-            self.error_log = logging.getLogger("%s.error.%s" % (logger_root, appid))
-            self.access_log = logging.getLogger("%s.access.%s" % (logger_root, appid))
+            self.error_log = logging.getLogger(
+                '%s.error.%s' % (logger_root, appid))
+            self.access_log = logging.getLogger(
+                '%s.access.%s' % (logger_root, appid))
         self.error_log.setLevel(logging.INFO)
         self.access_log.setLevel(logging.INFO)
 
@@ -188,7 +190,7 @@ class LogManager(object):
         self.error_log.addHandler(NullHandler())
         self.access_log.addHandler(NullHandler())
 
-        cherrypy.engine.subscribe("graceful", self.reopen_files)
+        cherrypy.engine.subscribe('graceful', self.reopen_files)
 
     def reopen_files(self):
         """Close and reopen all file handlers."""
@@ -200,7 +202,8 @@ class LogManager(object):
                     h.stream = open(h.baseFilename, h.mode)
                     h.release()
 
-    def error(self, msg="", context="", severity=logging.INFO, traceback=False):
+    def error(self, msg='', context='', severity=logging.INFO,
+              traceback=False):
         """Write the given ``msg`` to the error log.
 
         This is not just for errors! Applications may call this at any time
@@ -215,7 +218,7 @@ class LogManager(object):
 
         self.error_log.log(
             severity,
-            " ".join((self.time(), context, msg)),
+            ' '.join((self.time(), context, msg)),
             exc_info=exc_info,
         )
 
@@ -248,29 +251,28 @@ class LogManager(object):
         outheaders = response.headers
         inheaders = request.headers
         if response.output_status is None:
-            status = "-"
+            status = '-'
         else:
-            status = response.output_status.split(b" ", 1)[0]
-            status = status.decode("ISO-8859-1")
+            status = response.output_status.split(b' ', 1)[0]
+            status = status.decode('ISO-8859-1')
 
-        atoms = {
-            "h": remote.name or remote.ip,
-            "l": "-",
-            "u": getattr(request, "login", None) or "-",
-            "t": self.time(),
-            "r": request.request_line,
-            "s": status,
-            "b": dict.get(outheaders, "Content-Length", "") or "-",
-            "f": dict.get(inheaders, "Referer", ""),
-            "a": dict.get(inheaders, "User-Agent", ""),
-            "o": dict.get(inheaders, "Host", "-"),
-            "i": request.unique_id,
-            "z": LazyRfc3339UtcTime(),
-        }
+        atoms = {'h': remote.name or remote.ip,
+                 'l': '-',
+                 'u': getattr(request, 'login', None) or '-',
+                 't': self.time(),
+                 'r': request.request_line,
+                 's': status,
+                 'b': dict.get(outheaders, 'Content-Length', '') or '-',
+                 'f': dict.get(inheaders, 'Referer', ''),
+                 'a': dict.get(inheaders, 'User-Agent', ''),
+                 'o': dict.get(inheaders, 'Host', '-'),
+                 'i': request.unique_id,
+                 'z': LazyRfc3339UtcTime(),
+                 }
         for k, v in atoms.items():
             if not isinstance(v, str):
                 v = str(v)
-            v = v.replace('"', '\\"').encode("utf8")
+            v = v.replace('"', '\\"').encode('utf8')
             # Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
             # and backslash for us. All we have to do is strip the quotes.
             v = repr(v)[2:-1]
@@ -278,58 +280,41 @@ class LogManager(object):
             # in python 3.0 the repr of bytes (as returned by encode)
             # uses double \'s.  But then the logger escapes them yet, again
             # resulting in quadruple slashes.  Remove the extra one here.
-            v = v.replace("\\\\", "\\")
+            v = v.replace('\\\\', '\\')
 
             # Escape double-quote.
             atoms[k] = v
 
         try:
-            self.access_log.log(logging.INFO, self.access_log_format.format(**atoms))
+            self.access_log.log(
+                logging.INFO, self.access_log_format.format(**atoms))
         except Exception:
             self(traceback=True)
 
     def time(self):
         """Return now() in Apache Common Log Format (no timezone)."""
         now = datetime.datetime.now()
-        monthnames = [
-            "jan",
-            "feb",
-            "mar",
-            "apr",
-            "may",
-            "jun",
-            "jul",
-            "aug",
-            "sep",
-            "oct",
-            "nov",
-            "dec",
-        ]
+        monthnames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                      'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
         month = monthnames[now.month - 1].capitalize()
-        return "[%02d/%s/%04d:%02d:%02d:%02d]" % (
-            now.day,
-            month,
-            now.year,
-            now.hour,
-            now.minute,
-            now.second,
-        )
+        return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
+                (now.day, month, now.year, now.hour, now.minute, now.second))
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
-            if getattr(h, "_cpbuiltin", None) == key:
+            if getattr(h, '_cpbuiltin', None) == key:
                 return h
 
     # ------------------------- Screen handlers ------------------------- #
     def _set_screen_handler(self, log, enable, stream=None):
-        h = self._get_builtin_handler(log, "screen")
+        h = self._get_builtin_handler(log, 'screen')
         if enable:
             if not h:
                 if stream is None:
                     stream = sys.stderr
                 h = logging.StreamHandler(stream)
                 h.setFormatter(logfmt)
-                h._cpbuiltin = "screen"
+                h._cpbuiltin = 'screen'
                 log.addHandler(h)
         elif h:
             log.handlers.remove(h)
@@ -342,7 +327,7 @@ class LogManager(object):
         for you. If you set it to False, it will remove the handler.
         """
         h = self._get_builtin_handler
-        has_h = h(self.error_log, "screen") or h(self.access_log, "screen")
+        has_h = h(self.error_log, 'screen') or h(self.access_log, 'screen')
         return bool(has_h)
 
     @screen.setter
@@ -355,11 +340,11 @@ class LogManager(object):
     def _add_builtin_file_handler(self, log, fname):
         h = logging.FileHandler(fname)
         h.setFormatter(logfmt)
-        h._cpbuiltin = "file"
+        h._cpbuiltin = 'file'
         log.addHandler(h)
 
     def _set_file_handler(self, log, filename):
-        h = self._get_builtin_handler(log, "file")
+        h = self._get_builtin_handler(log, 'file')
         if filename:
             if h:
                 if h.baseFilename != os.path.abspath(filename):
@@ -380,10 +365,10 @@ class LogManager(object):
         If you set this to a string, it'll add the appropriate FileHandler for
         you. If you set it to ``None`` or ``''``, it will remove the handler.
         """
-        h = self._get_builtin_handler(self.error_log, "file")
+        h = self._get_builtin_handler(self.error_log, 'file')
         if h:
             return h.baseFilename
-        return ""
+        return ''
 
     @error_file.setter
     def error_file(self, newvalue):
@@ -396,10 +381,10 @@ class LogManager(object):
         If you set this to a string, it'll add the appropriate FileHandler for
         you. If you set it to ``None`` or ``''``, it will remove the handler.
         """
-        h = self._get_builtin_handler(self.access_log, "file")
+        h = self._get_builtin_handler(self.access_log, 'file')
         if h:
             return h.baseFilename
-        return ""
+        return ''
 
     @access_file.setter
     def access_file(self, newvalue):
@@ -408,12 +393,12 @@ class LogManager(object):
     # ------------------------- WSGI handlers ------------------------- #
 
     def _set_wsgi_handler(self, log, enable):
-        h = self._get_builtin_handler(log, "wsgi")
+        h = self._get_builtin_handler(log, 'wsgi')
         if enable:
             if not h:
                 h = WSGIErrorHandler()
                 h.setFormatter(logfmt)
-                h._cpbuiltin = "wsgi"
+                h._cpbuiltin = 'wsgi'
                 log.addHandler(h)
         elif h:
             log.handlers.remove(h)
@@ -427,7 +412,7 @@ class LogManager(object):
         (which writes errors to ``wsgi.errors``).
         If you set it to False, it will remove the handler.
         """
-        return bool(self._get_builtin_handler(self.error_log, "wsgi"))
+        return bool(self._get_builtin_handler(self.error_log, 'wsgi'))
 
     @wsgi.setter
     def wsgi(self, newvalue):
@@ -443,7 +428,7 @@ class WSGIErrorHandler(logging.Handler):
     def flush(self):
         """Flushes the stream."""
         try:
-            stream = cherrypy.serving.request.wsgi_environ.get("wsgi.errors")
+            stream = cherrypy.serving.request.wsgi_environ.get('wsgi.errors')
         except (AttributeError, KeyError):
             pass
         else:
@@ -452,23 +437,22 @@ class WSGIErrorHandler(logging.Handler):
     def emit(self, record):
         """Emit a record."""
         try:
-            stream = cherrypy.serving.request.wsgi_environ.get("wsgi.errors")
+            stream = cherrypy.serving.request.wsgi_environ.get('wsgi.errors')
         except (AttributeError, KeyError):
             pass
         else:
             try:
                 msg = self.format(record)
-                fs = "%s\n"
+                fs = '%s\n'
                 import types
-
                 # if no unicode support...
-                if not hasattr(types, "UnicodeType"):
+                if not hasattr(types, 'UnicodeType'):
                     stream.write(fs % msg)
                 else:
                     try:
                         stream.write(fs % msg)
                     except UnicodeError:
-                        stream.write(fs % msg.encode("UTF-8"))
+                        stream.write(fs % msg.encode('UTF-8'))
                 self.flush()
             except Exception:
                 self.handleError(record)
@@ -481,5 +465,5 @@ class LazyRfc3339UtcTime(object):
         """Return datetime in RFC3339 UTC Format."""
         iso_formatted_now = datetime.datetime.now(
             datetime.timezone.utc,
-        ).isoformat("T")
-        return f"{iso_formatted_now!s}Z"
+        ).isoformat('T')
+        return f'{iso_formatted_now!s}Z'

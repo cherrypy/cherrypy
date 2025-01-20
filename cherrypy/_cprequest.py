@@ -46,11 +46,11 @@ class Hook(object):
         self.callback = callback
 
         if failsafe is None:
-            failsafe = getattr(callback, "failsafe", False)
+            failsafe = getattr(callback, 'failsafe', False)
         self.failsafe = failsafe
 
         if priority is None:
-            priority = getattr(callback, "priority", 50)
+            priority = getattr(callback, 'priority', 50)
         self.priority = priority
 
         self.kwargs = kwargs
@@ -76,14 +76,11 @@ class Hook(object):
     def __repr__(self):
         """Render a string representation of :class:`Hook` instance."""
         cls = self.__class__
-        return "%s.%s(callback=%r, failsafe=%r, priority=%r, %s)" % (
-            cls.__module__,
-            cls.__name__,
-            self.callback,
-            self.failsafe,
-            self.priority,
-            ", ".join(["%s=%r" % (k, v) for k, v in self.kwargs.items()]),
-        )
+        return ('%s.%s(callback=%r, failsafe=%r, priority=%r, %s)'
+                % (cls.__module__, cls.__name__, self.callback,
+                   self.failsafe, self.priority,
+                   ', '.join(['%s=%r' % (k, v)
+                              for k, v in self.kwargs.items()])))
 
 
 class HookMap(dict):
@@ -125,7 +122,7 @@ class HookMap(dict):
             cherrypy.HTTPRedirect,
             cherrypy.InternalRedirect,
         )
-        safe = filter(operator.attrgetter("failsafe"), hooks)
+        safe = filter(operator.attrgetter('failsafe'), hooks)
         for hook in hooks:
             try:
                 hook()
@@ -145,24 +142,26 @@ class HookMap(dict):
         for k, v in self.items():
             newmap[k] = v[:]
         return newmap
-
     copy = __copy__
 
     def __repr__(self):
         """Render a string representation of :class:`HookMap`."""
         cls = self.__class__
-        return "%s.%s(points=%r)" % (cls.__module__, cls.__name__, list(self))
+        return '%s.%s(points=%r)' % (
+            cls.__module__,
+            cls.__name__,
+            list(self)
+        )
 
 
 # Config namespace handlers
-
 
 def hooks_namespace(k, v):
     """Attach bare hooks declared in config."""
     # Use split again to allow multiple hooks for a single
     # hookpoint per path (e.g. "hooks.before_handler.1").
     # Little-known fact you only get from reading source ;)
-    hookpoint = k.split(".", 1)[0]
+    hookpoint = k.split('.', 1)[0]
     if isinstance(v, str):
         v = cherrypy.lib.reprconf.attributes(v)
     if not isinstance(v, Hook):
@@ -174,7 +173,7 @@ def request_namespace(k, v):
     """Attach request attributes declared in config."""
     # Provides config entries to set request.body attrs (like
     # attempt_charsets).
-    if k[:5] == "body.":
+    if k[:5] == 'body.':
         setattr(cherrypy.serving.request.body, k[5:], v)
     else:
         setattr(cherrypy.serving.request, k, v)
@@ -184,29 +183,23 @@ def response_namespace(k, v):
     """Attach response attributes declared in config."""
     # Provides config entries to set default response headers
     # http://cherrypy.dev/ticket/889
-    if k[:8] == "headers.":
-        cherrypy.serving.response.headers[k.split(".", 1)[1]] = v
+    if k[:8] == 'headers.':
+        cherrypy.serving.response.headers[k.split('.', 1)[1]] = v
     else:
         setattr(cherrypy.serving.response, k, v)
 
 
 def error_page_namespace(k, v):
     """Attach error pages declared in config."""
-    if k != "default":
+    if k != 'default':
         k = int(k)
     cherrypy.serving.request.error_page[k] = v
 
 
-hookpoints = [
-    "on_start_resource",
-    "before_request_body",
-    "before_handler",
-    "before_finalize",
-    "on_end_resource",
-    "on_end_request",
-    "before_error_response",
-    "after_error_response",
-]
+hookpoints = ['on_start_resource', 'before_request_body',
+              'before_handler', 'before_finalize',
+              'on_end_resource', 'on_end_request',
+              'before_error_response', 'after_error_response']
 
 
 class Request(object):
@@ -229,24 +222,24 @@ class Request(object):
     """
 
     # Conversation/connection attributes
-    local = httputil.Host("127.0.0.1", 80)
-    "An httputil.Host(ip, port, hostname) object for the server socket."
+    local = httputil.Host('127.0.0.1', 80)
+    'An httputil.Host(ip, port, hostname) object for the server socket.'
 
-    remote = httputil.Host("127.0.0.1", 1111)
-    "An httputil.Host(ip, port, hostname) object for the client socket."
+    remote = httputil.Host('127.0.0.1', 1111)
+    'An httputil.Host(ip, port, hostname) object for the client socket.'
 
-    scheme = "http"
+    scheme = 'http'
     """The protocol used between client and server.
 
     In most cases, this will be either 'http' or 'https'.
     """
 
-    server_protocol = "HTTP/1.1"
+    server_protocol = 'HTTP/1.1'
     """
     The HTTP version for which the HTTP server is at least
     conditionally compliant."""
 
-    base = ""
+    base = ''
     """The (scheme://host) portion of the requested URL.
 
     In some cases (e.g. when proxying via mod_rewrite), this may contain
@@ -256,14 +249,14 @@ class Request(object):
     """
 
     # Request-Line attributes
-    request_line = ""
+    request_line = ''
     """The complete Request-Line received from the client.
 
     This is a single string consisting of the request method, URI, and
     protocol version (joined by spaces). Any final CRLF is removed.
     """
 
-    method = "GET"
+    method = 'GET'
     """Indicates the HTTP method to be performed on the resource identified by
     the Request-URI.
 
@@ -273,7 +266,7 @@ class Request(object):
     applications SHOULD restrict the set (on a per-URI basis).
     """
 
-    query_string = ""
+    query_string = ''
     """
     The query component of the Request-URI, a string of information to be
     interpreted by the resource. The query portion of a URI follows the
@@ -281,7 +274,7 @@ class Request(object):
     'http://www.cherrypy.dev/wiki?a=3&b=4' has the query component,
     'a=3&b=4'."""
 
-    query_string_encoding = "utf8"
+    query_string_encoding = 'utf8'
     """
     The encoding expected for query string arguments after % HEX HEX decoding).
     If a query string is provided that cannot be decoded with this encoding,
@@ -352,7 +345,7 @@ class Request(object):
     If True, the rfile (if any) is automatically read and parsed,
     and the result placed into request.params or request.body."""
 
-    methods_with_bodies = ("POST", "PUT", "PATCH")
+    methods_with_bodies = ('POST', 'PUT', 'PATCH')
     """
     A sequence of HTTP methods for which CherryPy will automatically
     attempt to read a body from the rfile. If you are going to change
@@ -383,14 +376,14 @@ class Request(object):
     request.app.root. See help(cherrypy.dispatch) for more information.
     """
 
-    script_name = ""
+    script_name = ''
     """The 'mount point' of the application which is handling this request.
 
     This attribute MUST NOT end in a slash. If the script_name refers to
     the root of the URI, it MUST be an empty string (not "/").
     """
 
-    path_info = "/"
+    path_info = '/'
     """The 'relative path' portion of the Request-URI.
 
     This is relative to the script_name ('mount point') of the
@@ -516,18 +509,15 @@ class Request(object):
     """A lazy object generating and memorizing UUID4 on ``str()`` render."""
 
     namespaces = reprconf.NamespaceSet(
-        **{
-            "hooks": hooks_namespace,
-            "request": request_namespace,
-            "response": response_namespace,
-            "error_page": error_page_namespace,
-            "tools": cherrypy.tools,
-        }
-    )
+        **{'hooks': hooks_namespace,
+           'request': request_namespace,
+           'response': response_namespace,
+           'error_page': error_page_namespace,
+           'tools': cherrypy.tools,
+           })
 
-    def __init__(
-        self, local_host, remote_host, scheme="http", server_protocol="HTTP/1.1"
-    ):
+    def __init__(self, local_host, remote_host, scheme='http',
+                 server_protocol='HTTP/1.1'):
         """Populate a new Request object.
 
         local_host should be an httputil.Host object with the server
@@ -559,9 +549,9 @@ class Request(object):
         """
         if not self.closed:
             self.closed = True
-            self.stage = "on_end_request"
-            self.hooks.run("on_end_request")
-            self.stage = "close"
+            self.stage = 'on_end_request'
+            self.hooks.run('on_end_request')
+            self.stage = 'close'
 
     def run(self, method, path, query_string, req_protocol, headers, rfile):
         r"""Process the request.
@@ -597,13 +587,13 @@ class Request(object):
         attributes to build the outbound stream.
         """
         response = cherrypy.serving.response
-        self.stage = "run"
+        self.stage = 'run'
         try:
             self.error_response = cherrypy.HTTPError(500).set_response
 
             self.method = method
-            path = path or "/"
-            self.query_string = query_string or ""
+            path = path or '/'
+            self.query_string = query_string or ''
             self.params = {}
 
             # Compare request and server HTTP protocol versions, in case our
@@ -626,8 +616,8 @@ class Request(object):
             # Rebuild first line of the request (e.g. "GET /path HTTP/1.0").
             url = path
             if query_string:
-                url += "?" + query_string
-            self.request_line = "%s %s %s" % (method, url, req_protocol)
+                url += '?' + query_string
+            self.request_line = '%s %s %s' % (method, url, req_protocol)
 
             self.header_list = list(headers)
             self.headers = httputil.HeaderMap()
@@ -641,9 +631,9 @@ class Request(object):
             # path_info should be the path from the
             # app root (script_name) to the handler.
             self.script_name = self.app.script_name
-            self.path_info = pi = path[len(self.script_name) :]
+            self.path_info = pi = path[len(self.script_name):]
 
-            self.stage = "respond"
+            self.stage = 'respond'
             self.respond(pi)
 
         except self.throws:
@@ -658,11 +648,11 @@ class Request(object):
                 if self.show_tracebacks:
                     body = format_exc()
                 else:
-                    body = ""
+                    body = ''
                 r = bare_error(body)
                 response.output_status, response.header_list, response.body = r
 
-        if self.method == "HEAD":
+        if self.method == 'HEAD':
             # HEAD requests MUST NOT return a message-body in the response.
             response.body = []
 
@@ -685,12 +675,12 @@ class Request(object):
                 except (cherrypy.HTTPRedirect, cherrypy.HTTPError):
                     inst = sys.exc_info()[1]
                     inst.set_response()
-                    self.stage = "before_finalize (HTTPError)"
-                    self.hooks.run("before_finalize")
+                    self.stage = 'before_finalize (HTTPError)'
+                    self.hooks.run('before_finalize')
                     cherrypy.serving.response.finalize()
             finally:
-                self.stage = "on_end_resource"
-                self.hooks.run("on_end_resource")
+                self.stage = 'on_end_resource'
+                self.hooks.run('on_end_resource')
         except self.throws:
             raise
         except Exception:
@@ -708,44 +698,43 @@ class Request(object):
         self.toolmaps = {}
 
         # Get the 'Host' header, so we can HTTPRedirect properly.
-        self.stage = "process_headers"
+        self.stage = 'process_headers'
         self.process_headers()
 
-        self.stage = "get_resource"
+        self.stage = 'get_resource'
         self.get_resource(path_info)
 
         self.body = _cpreqbody.RequestBody(
-            self.rfile, self.headers, request_params=self.params
-        )
+            self.rfile, self.headers, request_params=self.params)
 
         self.namespaces(self.config)
 
-        self.stage = "on_start_resource"
-        self.hooks.run("on_start_resource")
+        self.stage = 'on_start_resource'
+        self.hooks.run('on_start_resource')
 
         # Parse the querystring
-        self.stage = "process_query_string"
+        self.stage = 'process_query_string'
         self.process_query_string()
 
         # Process the body
         if self.process_request_body:
             if self.method not in self.methods_with_bodies:
                 self.process_request_body = False
-        self.stage = "before_request_body"
-        self.hooks.run("before_request_body")
+        self.stage = 'before_request_body'
+        self.hooks.run('before_request_body')
         if self.process_request_body:
             self.body.process()
 
         # Run the handler
-        self.stage = "before_handler"
-        self.hooks.run("before_handler")
+        self.stage = 'before_handler'
+        self.hooks.run('before_handler')
         if self.handler:
-            self.stage = "handler"
+            self.stage = 'handler'
             response.body = self.handler()
 
         # Finalize
-        self.stage = "before_finalize"
-        self.hooks.run("before_finalize")
+        self.stage = 'before_finalize'
+        self.hooks.run('before_finalize')
         response.finalize()
 
     def process_query_string(self):
@@ -755,15 +744,12 @@ class Request(object):
         """
         try:
             p = httputil.parse_query_string(
-                self.query_string, encoding=self.query_string_encoding
-            )
+                self.query_string, encoding=self.query_string_encoding)
         except UnicodeDecodeError:
             raise cherrypy.HTTPError(
-                404,
-                "The given query string could not be processed. Query "
-                "strings for this resource must be encoded with %r."
-                % self.query_string_encoding,
-            )
+                404, 'The given query string could not be processed. Query '
+                'strings for this resource must be encoded with %r.' %
+                self.query_string_encoding)
 
         self.params.update(p)
 
@@ -785,13 +771,13 @@ class Request(object):
             # Some clients, notably Konquoror, supply multiple
             # cookies on different lines with the same key. To
             # handle this case, store all cookies in self.cookie.
-            if name == "Cookie":
+            if name == 'Cookie':
                 try:
                     self.cookie.load(value)
                 except CookieError as exc:
                     raise cherrypy.HTTPError(400, str(exc))
 
-        if not dict.__contains__(headers, "Host"):
+        if not dict.__contains__(headers, 'Host'):
             # All Internet-based HTTP/1.1 servers MUST respond with a 400
             # (Bad Request) status code to any HTTP/1.1 request message
             # which lacks a Host header field.
@@ -799,12 +785,12 @@ class Request(object):
                 msg = "HTTP/1.1 requires a 'Host' request header."
                 raise cherrypy.HTTPError(400, msg)
         else:
-            headers["Host"] = httputil.SanitizedHost(dict.get(headers, "Host"))
+            headers['Host'] = httputil.SanitizedHost(dict.get(headers, 'Host'))
 
-        host = dict.get(headers, "Host")
+        host = dict.get(headers, 'Host')
         if not host:
             host = self.local.name or self.local.ip
-        self.base = "%s://%s" % (self.scheme, host)
+        self.base = '%s://%s' % (self.scheme, host)
 
     def get_resource(self, path):
         """Call a dispatcher (which sets self.handler and .config).
@@ -814,7 +800,8 @@ class Request(object):
         # First, see if there is a custom dispatch at this URI. Custom
         # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
-        dispatch = self.app.find_config(path, "request.dispatch", self.dispatch)
+        dispatch = self.app.find_config(
+            path, 'request.dispatch', self.dispatch)
 
         # dispatch() should set self.handler and self.config
         dispatch(path)
@@ -825,10 +812,10 @@ class Request(object):
         (Core)
         """
         try:
-            self.hooks.run("before_error_response")
+            self.hooks.run('before_error_response')
             if self.error_response:
                 self.error_response()
-            self.hooks.run("after_error_response")
+            self.hooks.run('after_error_response')
             cherrypy.serving.response.finalize()
         except cherrypy.HTTPRedirect:
             inst = sys.exc_info()[1]
@@ -839,10 +826,8 @@ class Request(object):
 class ResponseBody(object):
     """The body of the HTTP response (the response entity)."""
 
-    unicode_err = (
-        "Page handlers MUST return bytes. Use tools.encode "
-        "if you wish to return unicode."
-    )
+    unicode_err = ('Page handlers MUST return bytes. Use tools.encode '
+                   'if you wish to return unicode.')
 
     def __get__(self, obj, objclass=None):
         """Return a response body through the descriptor protocol."""
@@ -870,7 +855,7 @@ class ResponseBody(object):
 class Response(object):
     """An HTTP Response, including status, headers, and body."""
 
-    status = ""
+    status = ''
     """The HTTP Status-Code and Reason-Phrase."""
 
     header_list = []
@@ -917,19 +902,16 @@ class Response(object):
         self.headers = httputil.HeaderMap()
         # Since we know all our keys are titled strings, we can
         # bypass HeaderMap.update and get a big speed boost.
-        dict.update(
-            self.headers,
-            {
-                "Content-Type": "text/html",
-                "Server": "CherryPy/" + cherrypy.__version__,
-                "Date": httputil.HTTPDate(self.time),
-            },
-        )
+        dict.update(self.headers, {
+            'Content-Type': 'text/html',
+            'Server': 'CherryPy/' + cherrypy.__version__,
+            'Date': httputil.HTTPDate(self.time),
+        })
         self.cookie = SimpleCookie()
 
     def collapse_body(self):
         """Collapse self.body to a single string; replace it and return it."""
-        new_body = b"".join(self.body)
+        new_body = b''.join(self.body)
         self.body = new_body
         return new_body
 
@@ -956,38 +938,39 @@ class Response(object):
 
         headers = self.headers
 
-        self.status = "%s %s" % (code, reason)
-        self.output_status = ntob(str(code), "ascii") + b" " + headers.encode(reason)
+        self.status = '%s %s' % (code, reason)
+        self.output_status = ntob(str(code), 'ascii') + \
+            b' ' + headers.encode(reason)
 
         if self.stream:
             # The upshot: wsgiserver will chunk the response if
             # you pop Content-Length (or set it explicitly to None).
             # Note that lib.static sets C-L to the file's st_size.
-            if dict.get(headers, "Content-Length") is None:
-                dict.pop(headers, "Content-Length", None)
+            if dict.get(headers, 'Content-Length') is None:
+                dict.pop(headers, 'Content-Length', None)
         elif code < 200 or code in (204, 205, 304):
             # "All 1xx (informational), 204 (no content),
             # and 304 (not modified) responses MUST NOT
             # include a message-body."
-            dict.pop(headers, "Content-Length", None)
+            dict.pop(headers, 'Content-Length', None)
             self._flush_body()
-            self.body = b""
+            self.body = b''
         else:
             # Responses which are not streamed should have a Content-Length,
             # but allow user code to set Content-Length if desired.
-            if dict.get(headers, "Content-Length") is None:
+            if dict.get(headers, 'Content-Length') is None:
                 content = self.collapse_body()
-                dict.__setitem__(headers, "Content-Length", len(content))
+                dict.__setitem__(headers, 'Content-Length', len(content))
 
         # Transform our header dict into a list of tuples.
         self.header_list = h = headers.output()
 
         cookie = self.cookie.output()
         if cookie:
-            for line in cookie.split("\r\n"):
-                name, value = line.split(": ", 1)
+            for line in cookie.split('\r\n'):
+                name, value = line.split(': ', 1)
                 if isinstance(name, str):
-                    name = name.encode("ISO-8859-1")
+                    name = name.encode('ISO-8859-1')
                 if isinstance(value, str):
                     value = headers.encode(value)
                 h.append((name, value))

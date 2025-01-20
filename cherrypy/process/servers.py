@@ -159,66 +159,64 @@ class ServerAdapter(object):
 
     def subscribe(self):
         """Subscribe control methods to the bus lifecycle events."""
-        self.bus.subscribe("start", self.start)
-        self.bus.subscribe("stop", self.stop)
+        self.bus.subscribe('start', self.start)
+        self.bus.subscribe('stop', self.stop)
 
     def unsubscribe(self):
         """Unsubcribe control methods to the bus lifecycle events."""
-        self.bus.unsubscribe("start", self.start)
-        self.bus.unsubscribe("stop", self.stop)
+        self.bus.unsubscribe('start', self.start)
+        self.bus.unsubscribe('stop', self.stop)
 
     def start(self):
         """Start the HTTP server."""
         if self.running:
-            self.bus.log("Already serving on %s" % self.description)
+            self.bus.log('Already serving on %s' % self.description)
             return
 
         self.interrupt = None
         if not self.httpserver:
-            raise ValueError("No HTTP server has been created.")
+            raise ValueError('No HTTP server has been created.')
 
-        if not os.environ.get("LISTEN_PID", None):
+        if not os.environ.get('LISTEN_PID', None):
             # Start the httpserver in a new thread.
             if isinstance(self.bind_addr, tuple):
                 portend.free(*self.bind_addr, timeout=Timeouts.free)
 
         import threading
-
         t = threading.Thread(target=self._start_http_thread)
-        t.name = "HTTPServer " + t.name
+        t.name = 'HTTPServer ' + t.name
         t.start()
 
         self.wait()
         self.running = True
-        self.bus.log("Serving on %s" % self.description)
-
+        self.bus.log('Serving on %s' % self.description)
     start.priority = 75
 
     @property
     def description(self):
         """A description about where this server is bound."""
         if self.bind_addr is None:
-            on_what = "unknown interface (dynamic?)"
+            on_what = 'unknown interface (dynamic?)'
         elif isinstance(self.bind_addr, tuple):
             on_what = self._get_base()
         else:
-            on_what = "socket file: %s" % self.bind_addr
+            on_what = 'socket file: %s' % self.bind_addr
         return on_what
 
     def _get_base(self):
         if not self.httpserver:
-            return ""
+            return ''
         host, port = self.bound_addr
-        if getattr(self.httpserver, "ssl_adapter", None):
-            scheme = "https"
+        if getattr(self.httpserver, 'ssl_adapter', None):
+            scheme = 'https'
             if port != 443:
-                host += ":%s" % port
+                host += ':%s' % port
         else:
-            scheme = "http"
+            scheme = 'http'
             if port != 80:
-                host += ":%s" % port
+                host += ':%s' % port
 
-        return "%s://%s" % (scheme, host)
+        return '%s://%s' % (scheme, host)
 
     def _start_http_thread(self):
         """Start the HTTP server thread.
@@ -232,31 +230,30 @@ class ServerAdapter(object):
         try:
             self.httpserver.start()
         except KeyboardInterrupt:
-            self.bus.log("<Ctrl-C> hit: shutting down HTTP server")
+            self.bus.log('<Ctrl-C> hit: shutting down HTTP server')
             self.interrupt = sys.exc_info()[1]
             self.bus.exit()
         except SystemExit:
-            self.bus.log("SystemExit raised: shutting down HTTP server")
+            self.bus.log('SystemExit raised: shutting down HTTP server')
             self.interrupt = sys.exc_info()[1]
             self.bus.exit()
             raise
         except Exception:
             self.interrupt = sys.exc_info()[1]
-            self.bus.log(
-                "Error in HTTP server: shutting down", traceback=True, level=40
-            )
+            self.bus.log('Error in HTTP server: shutting down',
+                         traceback=True, level=40)
             self.bus.exit()
             raise
 
     def wait(self):
         """Wait until the HTTP server is ready to receive requests."""
-        while not getattr(self.httpserver, "ready", False):
+        while not getattr(self.httpserver, 'ready', False):
             if self.interrupt:
                 raise self.interrupt
-            time.sleep(0.1)
+            time.sleep(.1)
 
         # bypass check when LISTEN_PID is set
-        if os.environ.get("LISTEN_PID", None):
+        if os.environ.get('LISTEN_PID', None):
             return
 
         # bypass check when running via socket-activation
@@ -290,10 +287,9 @@ class ServerAdapter(object):
             if isinstance(self.bind_addr, tuple):
                 portend.free(*self.bound_addr, timeout=Timeouts.free)
             self.running = False
-            self.bus.log("HTTP Server %s shut down" % self.httpserver)
+            self.bus.log('HTTP Server %s shut down' % self.httpserver)
         else:
-            self.bus.log("HTTP Server %s already shut down" % self.httpserver)
-
+            self.bus.log('HTTP Server %s already shut down' % self.httpserver)
     stop.priority = 25
 
     def restart(self):
@@ -331,15 +327,13 @@ class FlupFCGIServer(object):
 
     def __init__(self, *args, **kwargs):
         """Initialize the FCGI server parameters."""
-        if kwargs.get("bindAddress", None) is None:
+        if kwargs.get('bindAddress', None) is None:
             import socket
-
-            if not hasattr(socket, "fromfd"):
+            if not hasattr(socket, 'fromfd'):
                 raise ValueError(
-                    "Dynamic FCGI server not available on this platform. "
-                    "You must use a static or external one by providing a "
-                    "legal bindAddress."
-                )
+                    'Dynamic FCGI server not available on this platform. '
+                    'You must use a static or external one by providing a '
+                    'legal bindAddress.')
         self.args = args
         self.kwargs = kwargs
         self.ready = False
@@ -349,7 +343,6 @@ class FlupFCGIServer(object):
         # We have to instantiate the server class here because its __init__
         # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.fcgi import WSGIServer
-
         self.fcgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:
@@ -370,7 +363,8 @@ class FlupFCGIServer(object):
         # Forcibly stop the fcgi server main event loop.
         self.fcgiserver._keepGoing = False
         # Force all worker threads to die off.
-        self.fcgiserver._threadPool.maxSpare = self.fcgiserver._threadPool._idleCount
+        self.fcgiserver._threadPool.maxSpare = (
+            self.fcgiserver._threadPool._idleCount)
         self.ready = False
 
 
@@ -388,7 +382,6 @@ class FlupSCGIServer(object):
         # We have to instantiate the server class here because its __init__
         # starts a threadpool. If we do it too early, daemonize won't work.
         from flup.server.scgi import WSGIServer
-
         self.scgiserver = WSGIServer(*self.args, **self.kwargs)
         # TODO: report this bug upstream to flup.
         # If we don't set _oldSIGs on Windows, we get:
@@ -427,5 +420,5 @@ def _safe_wait(host, port):
     except portend.Timeout:
         if host == portend.client_host(host):
             raise
-        msg = "Unable to verify that the server is bound on %r" % port
+        msg = 'Unable to verify that the server is bound on %r' % port
         warnings.warn(msg)

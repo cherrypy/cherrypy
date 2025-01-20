@@ -24,23 +24,21 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
     def start(self):
         """Register handling of the console control events."""
         if self.is_set:
-            self.bus.log("Handler for console events already set.", level=20)
+            self.bus.log('Handler for console events already set.', level=20)
             return
 
         result = win32api.SetConsoleCtrlHandler(self.handle, 1)
         if result == 0:
-            self.bus.log(
-                "Could not SetConsoleCtrlHandler (error %r)" % win32api.GetLastError(),
-                level=40,
-            )
+            self.bus.log('Could not SetConsoleCtrlHandler (error %r)' %
+                         win32api.GetLastError(), level=40)
         else:
-            self.bus.log("Set handler for console events.", level=20)
+            self.bus.log('Set handler for console events.', level=20)
             self.is_set = True
 
     def stop(self):
         """Unregister the console control handlers."""
         if not self.is_set:
-            self.bus.log("Handler for console events already off.", level=20)
+            self.bus.log('Handler for console events already off.', level=20)
             return
 
         try:
@@ -50,25 +48,18 @@ class ConsoleCtrlHandler(plugins.SimplePlugin):
             result = 1
 
         if result == 0:
-            self.bus.log(
-                "Could not remove SetConsoleCtrlHandler (error %r)"
-                % win32api.GetLastError(),
-                level=40,
-            )
+            self.bus.log('Could not remove SetConsoleCtrlHandler (error %r)' %
+                         win32api.GetLastError(), level=40)
         else:
-            self.bus.log("Removed handler for console events.", level=20)
+            self.bus.log('Removed handler for console events.', level=20)
             self.is_set = False
 
     def handle(self, event):
         """Handle console control events (like Ctrl-C)."""
-        if event in (
-            win32con.CTRL_C_EVENT,
-            win32con.CTRL_LOGOFF_EVENT,
-            win32con.CTRL_BREAK_EVENT,
-            win32con.CTRL_SHUTDOWN_EVENT,
-            win32con.CTRL_CLOSE_EVENT,
-        ):
-            self.bus.log("Console event %s: shutting down bus" % event)
+        if event in (win32con.CTRL_C_EVENT, win32con.CTRL_LOGOFF_EVENT,
+                     win32con.CTRL_BREAK_EVENT, win32con.CTRL_SHUTDOWN_EVENT,
+                     win32con.CTRL_CLOSE_EVENT):
+            self.bus.log('Console event %s: shutting down bus' % event)
 
             # Remove self immediately so repeated Ctrl-C doesn't re-call it.
             try:
@@ -99,9 +90,9 @@ class Win32Bus(wspbus.Bus):
         try:
             return self.events[state]
         except KeyError:
-            event = win32event.CreateEvent(
-                None, 0, 0, "WSPBus %s Event (pid=%r)" % (state.name, os.getpid())
-            )
+            event = win32event.CreateEvent(None, 0, 0,
+                                           'WSPBus %s Event (pid=%r)' %
+                                           (state.name, os.getpid()))
             self.events[state] = event
             return event
 
@@ -127,7 +118,8 @@ class Win32Bus(wspbus.Bus):
             # Don't wait for an event that beat us to the punch ;)
             if self.state not in state:
                 events = tuple([self._get_state_event(s) for s in state])
-                win32event.WaitForMultipleObjects(events, 0, win32event.INFINITE)
+                win32event.WaitForMultipleObjects(
+                    events, 0, win32event.INFINITE)
         else:
             # Don't wait for an event that beat us to the punch ;)
             if self.state != state:
@@ -151,17 +143,17 @@ class _ControlCodes(dict):
         for key, val in self.items():
             if val is obj:
                 return key
-        raise ValueError("The given object could not be found: %r" % obj)
+        raise ValueError('The given object could not be found: %r' % obj)
 
 
-control_codes = _ControlCodes({"graceful": 138})
+control_codes = _ControlCodes({'graceful': 138})
 
 
 def signal_child(service, command):
     """Send a control command to a service."""
-    if command == "stop":
+    if command == 'stop':
         win32serviceutil.StopService(service)
-    elif command == "restart":
+    elif command == 'restart':
         win32serviceutil.RestartService(service)
     else:
         win32serviceutil.ControlService(service, control_codes[command])
@@ -170,35 +162,32 @@ def signal_child(service, command):
 class PyWebService(win32serviceutil.ServiceFramework):
     """Python Web Service."""
 
-    _svc_name_ = "Python Web Service"
-    _svc_display_name_ = "Python Web Service"
-    _svc_deps_ = None  # sequence of service names on which this depends
-    _exe_name_ = "pywebsvc"
-    _exe_args_ = None  # Default to no arguments
+    _svc_name_ = 'Python Web Service'
+    _svc_display_name_ = 'Python Web Service'
+    _svc_deps_ = None        # sequence of service names on which this depends
+    _exe_name_ = 'pywebsvc'
+    _exe_args_ = None        # Default to no arguments
 
     # Only exists on Windows 2000 or later, ignored on windows NT
-    _svc_description_ = "Python Web Service"
+    _svc_description_ = 'Python Web Service'
 
     def SvcDoRun(self):
         """Start the service."""
         from cherrypy import process
-
         process.bus.start()
         process.bus.block()
 
     def SvcStop(self):
         """Stop the service."""
         from cherrypy import process
-
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         process.bus.exit()
 
     def SvcOther(self, control):
         """Send a command to the service."""
         from cherrypy import process
-
         process.bus.publish(control_codes.key_for(control))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     win32serviceutil.HandleCommandLine(PyWebService)

@@ -10,10 +10,9 @@ def is_iterator(obj):
     iterators themselves.
     """
     from types import GeneratorType
-
     if isinstance(obj, GeneratorType):
         return True
-    elif not hasattr(obj, "__iter__"):
+    elif not hasattr(obj, '__iter__'):
         return False
     else:
         # Types which implement the protocol must return themselves when
@@ -29,12 +28,11 @@ def is_closable_iterator(obj):
 
     # A generator - the easiest thing to deal with.
     import inspect
-
     if inspect.isgenerator(obj):
         return True
 
     # A custom iterator. Look for a close method...
-    if not (hasattr(obj, "close") and callable(obj.close)):
+    if not (hasattr(obj, 'close') and callable(obj.close)):
         return False
 
     #  ... which doesn't require any arguments.
@@ -67,15 +65,14 @@ class file_generator(object):
         if chunk:
             return chunk
         else:
-            if hasattr(self.input, "close"):
+            if hasattr(self.input, 'close'):
                 self.input.close()
             raise StopIteration()
-
     next = __next__
 
     def __del__(self):
         """Close input on descturct."""
-        if hasattr(self.input, "close"):
+        if hasattr(self.input, 'close'):
             self.input.close()
 
 
@@ -97,8 +94,8 @@ def file_generator_limited(fileobj, count, chunk_size=65536):
 
 def set_vary_header(response, header_name):
     """Add a Vary header to a response."""
-    varies = response.headers.get("Vary", "")
-    varies = [x.strip() for x in varies.split(",") if x.strip()]
+    varies = response.headers.get('Vary', '')
+    varies = [x.strip() for x in varies.split(',') if x.strip()]
     if header_name not in varies:
         varies.append(header_name)
-    response.headers["Vary"] = ", ".join(varies)
+    response.headers['Vary'] = ', '.join(varies)

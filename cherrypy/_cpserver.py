@@ -6,7 +6,7 @@ from cherrypy._cpcompat import text_or_bytes
 from cherrypy.process.servers import ServerAdapter
 
 
-__all__ = ("Server",)
+__all__ = ('Server', )
 
 
 class Server(ServerAdapter):
@@ -23,7 +23,7 @@ class Server(ServerAdapter):
     socket_port = 8080
     """The TCP port on which to listen for connections."""
 
-    _socket_host = "127.0.0.1"
+    _socket_host = '127.0.0.1'
 
     @property
     def socket_host(self):  # noqa: D401; irrelevant for properties
@@ -40,12 +40,10 @@ class Server(ServerAdapter):
 
     @socket_host.setter
     def socket_host(self, value):
-        if value == "":
-            raise ValueError(
-                "The empty string ('') is not an allowed value. "
-                "Use '0.0.0.0' instead to listen on all active "
-                "interfaces (INADDR_ANY)."
-            )
+        if value == '':
+            raise ValueError("The empty string ('') is not an allowed value. "
+                             "Use '0.0.0.0' instead to listen on all active "
+                             'interfaces (INADDR_ANY).')
         self._socket_host = value
 
     socket_file = None
@@ -73,7 +71,7 @@ class Server(ServerAdapter):
     shutdown_timeout = 5
     """The time to wait for HTTP worker threads to clean up."""
 
-    protocol_version = "HTTP/1.1"
+    protocol_version = 'HTTP/1.1'
     """The version string to write in the Status-Line of all HTTP responses,
     for example, "HTTP/1.1" (the default). Depending on the HTTP server used,
     this should also limit the supported features used in the response."""
@@ -124,7 +122,7 @@ class Server(ServerAdapter):
     ssl_ciphers = None
     """The ciphers list of SSL."""
 
-    ssl_module = "builtin"
+    ssl_module = 'builtin'
     """The name of a registered SSL adaptation module to use with
     the builtin WSGI server. Builtin options are: 'builtin' (to
     use the SSL library built into recent versions of Python).
@@ -180,7 +178,6 @@ class Server(ServerAdapter):
             httpserver = self.instance
         if httpserver is None:
             from cherrypy import _cpwsgi_server
-
             httpserver = _cpwsgi_server.CPWSGIServer(self)
         if isinstance(httpserver, text_or_bytes):
             # Is anyone using this? Can I add an arg?
@@ -192,7 +189,6 @@ class Server(ServerAdapter):
         if not self.httpserver:
             self.httpserver, self.bind_addr = self.httpserver_from_self()
         super(Server, self).start()
-
     start.priority = 75
 
     @property
@@ -223,11 +219,9 @@ class Server(ServerAdapter):
                 self.socket_host, self.socket_port = value
                 self.socket_file = None
             except ValueError:
-                raise ValueError(
-                    "bind_addr must be a (host, port) tuple "
-                    "(for TCP sockets) or a string (for Unix "
-                    "domain sockets), not %r" % value
-                )
+                raise ValueError('bind_addr must be a (host, port) tuple '
+                                 '(for TCP sockets) or a string (for Unix '
+                                 'domain sockets), not %r' % value)
 
     def base(self):
         """Return the base for this server.
@@ -238,23 +232,22 @@ class Server(ServerAdapter):
             return self.socket_file
 
         host = self.socket_host
-        if host in ("0.0.0.0", "::"):
+        if host in ('0.0.0.0', '::'):
             # 0.0.0.0 is INADDR_ANY and :: is IN6ADDR_ANY.
             # Look up the host name, which should be the
             # safest thing to spit out in a URL.
             import socket
-
             host = socket.gethostname()
 
         port = self.socket_port
 
         if self.ssl_certificate:
-            scheme = "https"
+            scheme = 'https'
             if port != 443:
-                host += ":%s" % port
+                host += ':%s' % port
         else:
-            scheme = "http"
+            scheme = 'http'
             if port != 80:
-                host += ":%s" % port
+                host += ':%s' % port
 
-        return "%s://%s" % (scheme, host)
+        return '%s://%s' % (scheme, host)

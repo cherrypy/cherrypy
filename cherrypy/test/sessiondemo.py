@@ -105,40 +105,43 @@ class Root(object):
         changemsg = []
         if cherrypy.session.id != cherrypy.session.originalid:
             if cherrypy.session.originalid is None:
-                changemsg.append("Created new session because no session id was given.")
+                changemsg.append(
+                    'Created new session because no session id was given.')
             if cherrypy.session.missing:
                 changemsg.append(
-                    "Created new session due to missing "
-                    "(expired or malicious) session."
-                )
+                    'Created new session due to missing '
+                    '(expired or malicious) session.')
             if cherrypy.session.regenerated:
-                changemsg.append("Application generated a new session.")
+                changemsg.append('Application generated a new session.')
 
         try:
-            expires = cherrypy.response.cookie["session_id"]["expires"]
+            expires = cherrypy.response.cookie['session_id']['expires']
         except KeyError:
-            expires = ""
+            expires = ''
 
         return page % {
-            "sessionid": cherrypy.session.id,
-            "changemsg": "<br>".join(changemsg),
-            "respcookie": cherrypy.response.cookie.output(),
-            "reqcookie": cherrypy.request.cookie.output(),
-            "sessiondata": list(cherrypy.session.items()),
-            "servertime": (datetime.now(_timezone.utc).strftime("%Y/%m/%d %H:%M UTC")),
-            "serverunixtime": calendar.timegm(
+            'sessionid': cherrypy.session.id,
+            'changemsg': '<br>'.join(changemsg),
+            'respcookie': cherrypy.response.cookie.output(),
+            'reqcookie': cherrypy.request.cookie.output(),
+            'sessiondata': list(cherrypy.session.items()),
+            'servertime': (
+                datetime.now(_timezone.utc).strftime('%Y/%m/%d %H:%M UTC')
+            ),
+            'serverunixtime':
+            calendar.timegm(
                 datetime.utcnow(_timezone.utc).timetuple(),
             ),
-            "cpversion": cherrypy.__version__,
-            "pyversion": sys.version,
-            "expires": expires,
+            'cpversion': cherrypy.__version__,
+            'pyversion': sys.version,
+            'expires': expires,
         }
 
     @cherrypy.expose
     def index(self):
         """Save green color in session at app index URI."""
         # Must modify data or the session will not be saved.
-        cherrypy.session["color"] = "green"
+        cherrypy.session['color'] = 'green'
         return self.page()
 
     @cherrypy.expose
@@ -152,16 +155,14 @@ class Root(object):
         """Regenerate the session, storing yellow color in it."""
         cherrypy.session.regenerate()
         # Must modify data or the session will not be saved.
-        cherrypy.session["color"] = "yellow"
+        cherrypy.session['color'] = 'yellow'
         return self.page()
 
 
-if __name__ == "__main__":
-    cherrypy.config.update(
-        {
-            # 'environment': 'production',
-            "log.screen": True,
-            "tools.sessions.on": True,
-        }
-    )
+if __name__ == '__main__':
+    cherrypy.config.update({
+        # 'environment': 'production',
+        'log.screen': True,
+        'tools.sessions.on': True,
+    })
     cherrypy.quickstart(Root())

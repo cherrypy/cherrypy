@@ -83,22 +83,23 @@ class AntiStampedeCache(dict):
             if timeout is None:
                 # Ignore the other thread and recalc it ourselves.
                 if debug:
-                    cherrypy.log("No timeout", "TOOLS.CACHING")
+                    cherrypy.log('No timeout', 'TOOLS.CACHING')
                 return None
 
             # Wait until it's done or times out.
             if debug:
-                cherrypy.log("Waiting up to %s seconds" % timeout, "TOOLS.CACHING")
+                cherrypy.log('Waiting up to %s seconds' %
+                             timeout, 'TOOLS.CACHING')
             value.wait(timeout)
             if value.result is not None:
                 # The other thread finished its calculation. Use it.
                 if debug:
-                    cherrypy.log("Result!", "TOOLS.CACHING")
+                    cherrypy.log('Result!', 'TOOLS.CACHING')
                 return value.result
             # Timed out. Stick an Event in the slot so other threads wait
             # on this one to finish calculating the value.
             if debug:
-                cherrypy.log("Timed out", "TOOLS.CACHING")
+                cherrypy.log('Timed out', 'TOOLS.CACHING')
             e = threading.Event()
             e.result = None
             dict.__setitem__(self, key, e)
@@ -108,7 +109,7 @@ class AntiStampedeCache(dict):
             # Stick an Event in the slot so other threads wait
             # on this one to finish calculating the value.
             if debug:
-                cherrypy.log("Timed out", "TOOLS.CACHING")
+                cherrypy.log('Timed out', 'TOOLS.CACHING')
             e = threading.Event()
             e.result = None
             dict.__setitem__(self, key, e)
@@ -166,7 +167,7 @@ class MemoryCache(Cache):
         self.clear()
 
         # Run self.expire_cache in a separate daemon thread.
-        t = threading.Thread(target=self.expire_cache, name="expire_cache")
+        t = threading.Thread(target=self.expire_cache, name='expire_cache')
         self.expiration_thread = t
         t.daemon = True
         t.start()
@@ -218,12 +219,11 @@ class MemoryCache(Cache):
         if uricache is None:
             return None
 
-        header_values = [request.headers.get(h, "") for h in uricache.selecting_headers]
-        variant = uricache.wait(
-            key=tuple(sorted(header_values)),
-            timeout=self.antistampede_timeout,
-            debug=self.debug,
-        )
+        header_values = [request.headers.get(h, '')
+                         for h in uricache.selecting_headers]
+        variant = uricache.wait(key=tuple(sorted(header_values)),
+                                timeout=self.antistampede_timeout,
+                                debug=self.debug)
         if variant is not None:
             self.tot_hist += 1
         return variant
@@ -238,24 +238,22 @@ class MemoryCache(Cache):
         if uricache is None:
             uricache = AntiStampedeCache()
             uricache.selecting_headers = [
-                e.value for e in response.headers.elements("Vary")
-            ]
+                e.value for e in response.headers.elements('Vary')]
             self.store[uri] = uricache
 
         if len(self.store) < self.maxobjects:
             total_size = self.cursize + size
 
             # checks if there's space for the object
-            if size < self.maxobj_size and total_size < self.maxsize:
+            if (size < self.maxobj_size and total_size < self.maxsize):
                 # add to the expirations list
                 expiration_time = response.time + self.delay
                 bucket = self.expirations.setdefault(expiration_time, [])
                 bucket.append((size, uri, uricache.selecting_headers))
 
                 # add to the cache
-                header_values = [
-                    request.headers.get(h, "") for h in uricache.selecting_headers
-                ]
+                header_values = [request.headers.get(h, '')
+                                 for h in uricache.selecting_headers]
                 uricache[tuple(sorted(header_values))] = variant
                 self.tot_puts += 1
                 self.cursize = total_size
@@ -266,7 +264,7 @@ class MemoryCache(Cache):
         self.store.pop(uri, None)
 
 
-def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
+def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
     """Try to obtain cached output. If fresh enough, raise HTTPError(304).
 
     If POST, PUT, or DELETE:
@@ -292,9 +290,9 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
     request = cherrypy.serving.request
     response = cherrypy.serving.response
 
-    if not hasattr(cherrypy, "_cache"):
+    if not hasattr(cherrypy, '_cache'):
         # Make a process-wide Cache object.
-        cherrypy._cache = kwargs.pop("cache_class", MemoryCache)()
+        cherrypy._cache = kwargs.pop('cache_class', MemoryCache)()
 
         # Take all remaining kwargs and set them on the Cache object.
         for k, v in kwargs.items():
@@ -305,17 +303,14 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
     # See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.10.
     if request.method in invalid_methods:
         if debug:
-            cherrypy.log(
-                "request.method %r in invalid_methods %r"
-                % (request.method, invalid_methods),
-                "TOOLS.CACHING",
-            )
+            cherrypy.log('request.method %r in invalid_methods %r' %
+                         (request.method, invalid_methods), 'TOOLS.CACHING')
         cherrypy._cache.delete()
         request.cached = False
         request.cacheable = False
         return False
 
-    if "no-cache" in [e.value for e in request.headers.elements("Pragma")]:
+    if 'no-cache' in [e.value for e in request.headers.elements('Pragma')]:
         request.cached = False
         request.cacheable = True
         return False
@@ -326,32 +321,32 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
     if request.cached:
         # Serve the cached copy.
         max_age = cherrypy._cache.delay
-        for v in [e.value for e in request.headers.elements("Cache-Control")]:
-            atoms = v.split("=", 1)
+        for v in [e.value for e in request.headers.elements('Cache-Control')]:
+            atoms = v.split('=', 1)
             directive = atoms.pop(0)
-            if directive == "max-age":
+            if directive == 'max-age':
                 if len(atoms) != 1 or not atoms[0].isdigit():
-                    raise cherrypy.HTTPError(400, "Invalid Cache-Control header")
+                    raise cherrypy.HTTPError(
+                        400, 'Invalid Cache-Control header')
                 max_age = int(atoms[0])
                 break
-            elif directive == "no-cache":
+            elif directive == 'no-cache':
                 if debug:
                     cherrypy.log(
-                        "Ignoring cache due to Cache-Control: no-cache", "TOOLS.CACHING"
-                    )
+                        'Ignoring cache due to Cache-Control: no-cache',
+                        'TOOLS.CACHING')
                 request.cached = False
                 request.cacheable = True
                 return False
 
         if debug:
-            cherrypy.log("Reading response from cache", "TOOLS.CACHING")
+            cherrypy.log('Reading response from cache', 'TOOLS.CACHING')
         s, h, b, create_time = cache_data
         age = int(response.time - create_time)
-        if age > max_age:
+        if (age > max_age):
             if debug:
-                cherrypy.log(
-                    "Ignoring cache due to age > %d" % max_age, "TOOLS.CACHING"
-                )
+                cherrypy.log('Ignoring cache due to age > %d' % max_age,
+                             'TOOLS.CACHING')
             request.cached = False
             request.cacheable = True
             return False
@@ -363,7 +358,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
             dict.__setitem__(rh, k, dict.__getitem__(h, k))
 
         # Add the required Age header
-        response.headers["Age"] = str(age)
+        response.headers['Age'] = str(age)
 
         try:
             # Note that validate_since depends on a Last-Modified header;
@@ -381,7 +376,7 @@ def get(invalid_methods=("POST", "PUT", "DELETE"), debug=False, **kwargs):
         response.body = b
     else:
         if debug:
-            cherrypy.log("request is not cached", "TOOLS.CACHING")
+            cherrypy.log('request is not cached', 'TOOLS.CACHING')
     return request.cached
 
 
@@ -393,14 +388,13 @@ def tee_output():
     # Used by CachingTool by attaching to request.hooks
 
     request = cherrypy.serving.request
-    if "no-store" in request.headers.values("Cache-Control"):
+    if 'no-store' in request.headers.values('Cache-Control'):
         return
 
     def tee(body):
         """Tee response.body into a list."""
-        if "no-cache" in response.headers.values(
-            "Pragma"
-        ) or "no-store" in response.headers.values("Cache-Control"):
+        if ('no-cache' in response.headers.values('Pragma') or
+                'no-store' in response.headers.values('Cache-Control')):
             for chunk in body:
                 yield chunk
             return
@@ -417,14 +411,12 @@ def tee_output():
         # contains a stale Threading._Event object that will
         # stall all consecutive requests until the _Event times
         # out
-        body = b"".join(output)
+        body = b''.join(output)
         if not body:
             cherrypy._cache.delete()
         else:
-            cherrypy._cache.put(
-                (response.status, response.headers or {}, body, response.time),
-                len(body),
-            )
+            cherrypy._cache.put((response.status, response.headers or {},
+                                 body, response.time), len(body))
 
     response = cherrypy.serving.response
     response.body = tee(response.body)
@@ -459,29 +451,29 @@ def expires(secs=0, force=False, debug=False):
     cacheable = False
     if not force:
         # some header names that indicate that the response can be cached
-        for indicator in ("Etag", "Last-Modified", "Age", "Expires"):
+        for indicator in ('Etag', 'Last-Modified', 'Age', 'Expires'):
             if indicator in headers:
                 cacheable = True
                 break
 
     if not cacheable and not force:
         if debug:
-            cherrypy.log("request is not cacheable", "TOOLS.EXPIRES")
+            cherrypy.log('request is not cacheable', 'TOOLS.EXPIRES')
     else:
         if debug:
-            cherrypy.log("request is cacheable", "TOOLS.EXPIRES")
+            cherrypy.log('request is cacheable', 'TOOLS.EXPIRES')
         if isinstance(secs, datetime.timedelta):
             secs = (86400 * secs.days) + secs.seconds
 
         if secs == 0:
-            if force or ("Pragma" not in headers):
-                headers["Pragma"] = "no-cache"
+            if force or ('Pragma' not in headers):
+                headers['Pragma'] = 'no-cache'
             if cherrypy.serving.request.protocol >= (1, 1):
-                if force or "Cache-Control" not in headers:
-                    headers["Cache-Control"] = "no-cache, must-revalidate"
+                if force or 'Cache-Control' not in headers:
+                    headers['Cache-Control'] = 'no-cache, must-revalidate'
             # Set an explicit Expires date in the past.
             expiry = httputil.HTTPDate(1169942400.0)
         else:
             expiry = httputil.HTTPDate(response.time + secs)
-        if force or "Expires" not in headers:
-            headers["Expires"] = expiry
+        if force or 'Expires' not in headers:
+            headers['Expires'] = expiry

@@ -1,5 +1,4 @@
 """Lock acquisition helpers."""
-
 import datetime
 
 
@@ -27,12 +26,9 @@ class Timer(object):
 
     def expired(self):
         """Check whether the timer has expired."""
-        return (
-            datetime.datetime.now(
-                datetime.timezone.utc,
-            )
-            >= self.expiration
-        )
+        return datetime.datetime.now(
+            datetime.timezone.utc,
+        ) >= self.expiration
 
 
 class LockTimeout(Exception):
@@ -53,5 +49,6 @@ class LockChecker(object):
     def expired(self):
         """Check whether the lock checker has expired."""
         if self.timer.expired():
-            raise LockTimeout("Timeout acquiring lock for %(session_id)s" % vars(self))
+            raise LockTimeout(
+                'Timeout acquiring lock for %(session_id)s' % vars(self))
         return False

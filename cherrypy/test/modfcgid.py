@@ -44,23 +44,22 @@ from cherrypy.test import helper
 curdir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
-def read_process(cmd, args=""):
+def read_process(cmd, args=''):
     """Return subprocess' console output."""
-    pipein, pipeout = os.popen4("%s %s" % (cmd, args))
+    pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if re.search(
-            r"(not recognized|No such file|not found)", firstline, re.IGNORECASE
-        ):
-            raise IOError("%s must be on your system path." % cmd)
+        if (re.search(r'(not recognized|No such file|not found)', firstline,
+                      re.IGNORECASE)):
+            raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:
         pipeout.close()
     return output
 
 
-APACHE_PATH = "httpd"
-CONF_PATH = "fcgi.conf"
+APACHE_PATH = 'httpd'
+CONF_PATH = 'fcgi.conf'
 
 conf_fcgid = """
 # Apache2 server conf file for testing CherryPy with mod_fcgid.
@@ -88,14 +87,13 @@ class ModFCGISupervisor(helper.LocalSupervisor):
 
     def __str__(self):
         """Render a :class:`ModFCGISupervisor` instance as a string."""
-        return "FCGI Server on %s:%s" % (self.host, self.port)
+        return 'FCGI Server on %s:%s' % (self.host, self.port)
 
     def start(self, modulename):
         """Spawn an Apache ``mod_fcgid`` supervisor process."""
         cherrypy.server.httpserver = servers.FlupFCGIServer(
-            application=cherrypy.tree, bindAddress=("127.0.0.1", 4000)
-        )
-        cherrypy.server.httpserver.bind_addr = ("127.0.0.1", 4000)
+            application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
+        cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
         # For FCGI, we both start apache...
         self.start_apache()
         # ...and our local server
@@ -108,23 +106,20 @@ class ModFCGISupervisor(helper.LocalSupervisor):
             fcgiconf = os.path.join(curdir, fcgiconf)
 
         # Write the Apache conf file.
-        with open(fcgiconf, "wb") as f:
-            server = repr(os.path.join(curdir, "fastcgi.pyc"))[1:-1]
-            output = self.template % {
-                "port": self.port,
-                "root": curdir,
-                "server": server,
-            }
-            output = ntob(output.replace("\r\n", "\n"))
+        with open(fcgiconf, 'wb') as f:
+            server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
+            output = self.template % {'port': self.port, 'root': curdir,
+                                      'server': server}
+            output = ntob(output.replace('\r\n', '\n'))
             f.write(output)
 
-        result = read_process(APACHE_PATH, "-k start -f %s" % fcgiconf)
+        result = read_process(APACHE_PATH, '-k start -f %s' % fcgiconf)
         if result:
             print(result)
 
     def stop(self):
         """Gracefully shutdown a server that is serving forever."""
-        read_process(APACHE_PATH, "-k stop")
+        read_process(APACHE_PATH, '-k stop')
         helper.LocalServer.stop(self)
 
     def sync_apps(self):

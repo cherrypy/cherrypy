@@ -35,16 +35,15 @@ def _getargs(func):
     """Return the names of all static arguments to the given function."""
     # Use this instead of importing inspect for less mem overhead.
     import types
-
     if isinstance(func, types.MethodType):
         func = func.__func__
     co = func.__code__
-    return co.co_varnames[: co.co_argcount]
+    return co.co_varnames[:co.co_argcount]
 
 
 _attr_error = (
-    "CherryPy Tools cannot be turned on directly. Instead, turn them "
-    "on via config, or use them as decorators on your page handlers."
+    'CherryPy Tools cannot be turned on directly. Instead, turn them '
+    'on via config, or use them as decorators on your page handlers.'
 )
 
 
@@ -55,7 +54,7 @@ class Tool(object):
     Tool.
     """
 
-    namespace = "tools"
+    namespace = 'tools'
 
     def __init__(self, point, callable, name=None, priority=50):
         """Initialize a CherryPy tool instance."""
@@ -82,7 +81,7 @@ class Tool(object):
             for arg in _getargs(self.callable):
                 setattr(self, arg, None)
         except (TypeError, AttributeError):
-            if hasattr(self.callable, "__call__"):
+            if hasattr(self.callable, '__call__'):
                 for arg in _getargs(self.callable.__call__):
                     setattr(self, arg, None)
         # IronPython 1.0 raises NotImplementedError because
@@ -106,8 +105,8 @@ class Tool(object):
         if self._name in tm:
             conf.update(tm[self._name])
 
-        if "on" in conf:
-            del conf["on"]
+        if 'on' in conf:
+            del conf['on']
 
         return conf
 
@@ -122,20 +121,18 @@ class Tool(object):
                 return cherrypy.request.base
         """
         if args:
-            raise TypeError(
-                "The %r Tool does not accept positional "
-                "arguments; you must use keyword arguments." % self._name
-            )
+            raise TypeError('The %r Tool does not accept positional '
+                            'arguments; you must use keyword arguments.'
+                            % self._name)
 
         def tool_decorator(f):
-            if not hasattr(f, "_cp_config"):
+            if not hasattr(f, '_cp_config'):
                 f._cp_config = {}
-            subspace = self.namespace + "." + self._name + "."
-            f._cp_config[subspace + "on"] = True
+            subspace = self.namespace + '.' + self._name + '.'
+            f._cp_config[subspace + 'on'] = True
             for k, v in kwargs.items():
                 f._cp_config[subspace + k] = v
             return f
-
         return tool_decorator
 
     def _setup(self):
@@ -145,12 +142,11 @@ class Tool(object):
         this method when the tool is "turned on" in config.
         """
         conf = self._merged_args()
-        p = conf.pop("priority", None)
+        p = conf.pop('priority', None)
         if p is None:
-            p = getattr(self.callable, "priority", self._priority)
-        cherrypy.serving.request.hooks.attach(
-            self._point, self.callable, priority=p, **conf
-        )
+            p = getattr(self.callable, 'priority', self._priority)
+        cherrypy.serving.request.hooks.attach(self._point, self.callable,
+                                              priority=p, **conf)
 
 
 class HandlerTool(Tool):
@@ -167,7 +163,7 @@ class HandlerTool(Tool):
 
     def __init__(self, callable, name=None):
         """Initialize a handler tool."""
-        Tool.__init__(self, "before_handler", callable, name)
+        Tool.__init__(self, 'before_handler', callable, name)
 
     def handler(self, *args, **kwargs):
         """Use this tool as a CherryPy page handler.
@@ -178,14 +174,12 @@ class HandlerTool(Tool):
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
         """
-
         @expose
         def handle_func(*a, **kw):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.serving.response.body
-
         return handle_func
 
     def _wrapper(self, **kwargs):
@@ -199,12 +193,11 @@ class HandlerTool(Tool):
         this method when the tool is "turned on" in config.
         """
         conf = self._merged_args()
-        p = conf.pop("priority", None)
+        p = conf.pop('priority', None)
         if p is None:
-            p = getattr(self.callable, "priority", self._priority)
-        cherrypy.serving.request.hooks.attach(
-            self._point, self._wrapper, priority=p, **conf
-        )
+            p = getattr(self.callable, 'priority', self._priority)
+        cherrypy.serving.request.hooks.attach(self._point, self._wrapper,
+                                              priority=p, **conf)
 
 
 class HandlerWrapperTool(Tool):
@@ -226,7 +219,8 @@ class HandlerWrapperTool(Tool):
         cherrypy.tools.jinja = HandlerWrapperTool(interpolator)
     """
 
-    def __init__(self, newhandler, point="before_handler", name=None, priority=50):
+    def __init__(self, newhandler, point='before_handler', name=None,
+                 priority=50):
         """Initialize a handler wrapper tool."""
         self.newhandler = newhandler
         self._point = point
@@ -239,7 +233,6 @@ class HandlerWrapperTool(Tool):
 
         def wrap(*args, **kwargs):
             return self.newhandler(innerfunc, *args, **kwargs)
-
         cherrypy.serving.request.handler = wrap
 
 
@@ -286,7 +279,7 @@ class SessionTool(Tool):
     def __init__(self):
         """Initialize a session tool."""
         # _sessions.init must be bound after headers are read
-        Tool.__init__(self, "before_request_body", _sessions.init)
+        Tool.__init__(self, 'before_request_body', _sessions.init)
 
     def _lock_session(self):
         cherrypy.serving.session.acquire_lock()
@@ -301,24 +294,25 @@ class SessionTool(Tool):
 
         conf = self._merged_args()
 
-        p = conf.pop("priority", None)
+        p = conf.pop('priority', None)
         if p is None:
-            p = getattr(self.callable, "priority", self._priority)
+            p = getattr(self.callable, 'priority', self._priority)
 
         hooks.attach(self._point, self.callable, priority=p, **conf)
 
-        locking = conf.pop("locking", "implicit")
-        if locking == "implicit":
-            hooks.attach("before_handler", self._lock_session)
-        elif locking == "early":
+        locking = conf.pop('locking', 'implicit')
+        if locking == 'implicit':
+            hooks.attach('before_handler', self._lock_session)
+        elif locking == 'early':
             # Lock before the request body (but after _sessions.init runs!)
-            hooks.attach("before_request_body", self._lock_session, priority=60)
+            hooks.attach('before_request_body', self._lock_session,
+                         priority=60)
         else:
             # Don't lock
             pass
 
-        hooks.attach("before_finalize", _sessions.save)
-        hooks.attach("on_end_request", _sessions.close)
+        hooks.attach('before_finalize', _sessions.save)
+        hooks.attach('on_end_request', _sessions.close)
 
     def regenerate(self):
         """Drop the current session and make a new one (with a new id)."""
@@ -326,8 +320,12 @@ class SessionTool(Tool):
         sess.regenerate()
 
         # Grab cookie-relevant tool args
-        relevant = "path", "path_header", "name", "timeout", "domain", "secure"
-        conf = dict((k, v) for k, v in self._merged_args().items() if k in relevant)
+        relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
+        conf = dict(
+            (k, v)
+            for k, v in self._merged_args().items()
+            if k in relevant
+        )
         _sessions.set_response_cookie(**conf)
 
 
@@ -366,7 +364,7 @@ class XMLRPCController(object):
     # Note we're hard-coding this into the 'tools' namespace. We could do
     # a huge amount of work to make it relocatable, but the only reason why
     # would be if someone actually disabled the default_toolbox. Meh.
-    _cp_config = {"tools.xmlrpc.on": True}
+    _cp_config = {'tools.xmlrpc.on': True}
 
     @expose
     def default(self, *vpath, **params):
@@ -374,10 +372,10 @@ class XMLRPCController(object):
         rpcparams, rpcmethod = _xmlrpc.process_body()
 
         subhandler = self
-        for attr in str(rpcmethod).split("."):
+        for attr in str(rpcmethod).split('.'):
             subhandler = getattr(subhandler, attr, None)
 
-        if subhandler and getattr(subhandler, "exposed", False):
+        if subhandler and getattr(subhandler, 'exposed', False):
             body = subhandler(*(vpath + rpcparams), **params)
 
         else:
@@ -387,8 +385,10 @@ class XMLRPCController(object):
             # cherrypy.lib.xmlrpcutil.on_error
             raise Exception('method "%s" is not supported' % attr)
 
-        conf = cherrypy.serving.request.toolmaps["tools"].get("xmlrpc", {})
-        _xmlrpc.respond(body, conf.get("encoding", "utf-8"), conf.get("allow_none", 0))
+        conf = cherrypy.serving.request.toolmaps['tools'].get('xmlrpc', {})
+        _xmlrpc.respond(body,
+                        conf.get('encoding', 'utf-8'),
+                        conf.get('allow_none', 0))
         return cherrypy.serving.response.body
 
 
@@ -406,20 +406,17 @@ class CachingTool(Tool):
         else:
             if request.cacheable:
                 # Note the devious technique here of adding hooks on the fly
-                request.hooks.attach(
-                    "before_finalize", _caching.tee_output, priority=100
-                )
-
+                request.hooks.attach('before_finalize', _caching.tee_output,
+                                     priority=100)
     _wrapper.priority = 90
 
     def _setup(self):
         """Wire caching into ``cherrypy.request``."""
         conf = self._merged_args()
 
-        p = conf.pop("priority", None)
-        cherrypy.serving.request.hooks.attach(
-            "before_handler", self._wrapper, priority=p, **conf
-        )
+        p = conf.pop('priority', None)
+        cherrypy.serving.request.hooks.attach('before_handler', self._wrapper,
+                                              priority=p, **conf)
 
 
 class Toolbox(object):
@@ -448,10 +445,9 @@ class Toolbox(object):
         cherrypy.serving.request.toolmaps[self.namespace] = map = {}
 
         def populate(k, v):
-            toolname, arg = k.split(".", 1)
+            toolname, arg = k.split('.', 1)
             bucket = map.setdefault(toolname, {})
             bucket[arg] = v
-
         return populate
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -459,7 +455,7 @@ class Toolbox(object):
         map = cherrypy.serving.request.toolmaps.get(self.namespace)
         if map:
             for name, settings in map.items():
-                if settings.get("on", False):
+                if settings.get('on', False):
                     tool = getattr(self, name)
                     tool._setup()
 
@@ -469,47 +465,45 @@ class Toolbox(object):
         Return a decorator which registers the function
         at the given hook point.
         """
-
         def decorator(func):
-            attr_name = kwargs.get("name", func.__name__)
+            attr_name = kwargs.get('name', func.__name__)
             tool = Tool(point, func, **kwargs)
             setattr(self, attr_name, tool)
             return func
-
         return decorator
 
 
-default_toolbox = _d = Toolbox("tools")
+default_toolbox = _d = Toolbox('tools')
 _d.session_auth = SessionAuthTool(cptools.session_auth)
-_d.allow = Tool("on_start_resource", cptools.allow)
-_d.proxy = Tool("before_request_body", cptools.proxy, priority=30)
-_d.response_headers = Tool("on_start_resource", cptools.response_headers)
-_d.log_tracebacks = Tool("before_error_response", cptools.log_traceback)
-_d.log_headers = Tool("before_error_response", cptools.log_request_headers)
-_d.log_hooks = Tool("on_end_request", cptools.log_hooks, priority=100)
+_d.allow = Tool('on_start_resource', cptools.allow)
+_d.proxy = Tool('before_request_body', cptools.proxy, priority=30)
+_d.response_headers = Tool('on_start_resource', cptools.response_headers)
+_d.log_tracebacks = Tool('before_error_response', cptools.log_traceback)
+_d.log_headers = Tool('before_error_response', cptools.log_request_headers)
+_d.log_hooks = Tool('on_end_request', cptools.log_hooks, priority=100)
 _d.err_redirect = ErrorTool(cptools.redirect)
-_d.etags = Tool("before_finalize", cptools.validate_etags, priority=75)
-_d.decode = Tool("before_request_body", encoding.decode)
+_d.etags = Tool('before_finalize', cptools.validate_etags, priority=75)
+_d.decode = Tool('before_request_body', encoding.decode)
 # the order of encoding, gzip, caching is important
-_d.encode = Tool("before_handler", encoding.ResponseEncoder, priority=70)
-_d.gzip = Tool("before_finalize", encoding.gzip, priority=80)
+_d.encode = Tool('before_handler', encoding.ResponseEncoder, priority=70)
+_d.gzip = Tool('before_finalize', encoding.gzip, priority=80)
 _d.staticdir = HandlerTool(static.staticdir)
 _d.staticfile = HandlerTool(static.staticfile)
 _d.sessions = SessionTool()
 _d.xmlrpc = ErrorTool(_xmlrpc.on_error)
-_d.caching = CachingTool("before_handler", _caching.get, "caching")
-_d.expires = Tool("before_finalize", _caching.expires)
-_d.ignore_headers = Tool("before_request_body", cptools.ignore_headers)
-_d.referer = Tool("before_request_body", cptools.referer)
-_d.trailing_slash = Tool("before_handler", cptools.trailing_slash, priority=60)
-_d.flatten = Tool("before_finalize", cptools.flatten)
-_d.accept = Tool("on_start_resource", cptools.accept)
-_d.redirect = Tool("on_start_resource", cptools.redirect)
-_d.autovary = Tool("on_start_resource", cptools.autovary, priority=0)
-_d.json_in = Tool("before_request_body", jsontools.json_in, priority=30)
-_d.json_out = Tool("before_handler", jsontools.json_out, priority=30)
-_d.auth_basic = Tool("before_handler", auth_basic.basic_auth, priority=1)
-_d.auth_digest = Tool("before_handler", auth_digest.digest_auth, priority=1)
-_d.params = Tool("before_handler", cptools.convert_params, priority=15)
+_d.caching = CachingTool('before_handler', _caching.get, 'caching')
+_d.expires = Tool('before_finalize', _caching.expires)
+_d.ignore_headers = Tool('before_request_body', cptools.ignore_headers)
+_d.referer = Tool('before_request_body', cptools.referer)
+_d.trailing_slash = Tool('before_handler', cptools.trailing_slash, priority=60)
+_d.flatten = Tool('before_finalize', cptools.flatten)
+_d.accept = Tool('on_start_resource', cptools.accept)
+_d.redirect = Tool('on_start_resource', cptools.redirect)
+_d.autovary = Tool('on_start_resource', cptools.autovary, priority=0)
+_d.json_in = Tool('before_request_body', jsontools.json_in, priority=30)
+_d.json_out = Tool('before_handler', jsontools.json_out, priority=30)
+_d.auth_basic = Tool('before_handler', auth_basic.basic_auth, priority=1)
+_d.auth_digest = Tool('before_handler', auth_digest.digest_auth, priority=1)
+_d.params = Tool('before_handler', cptools.convert_params, priority=15)
 
 del _d, cptools, encoding, static

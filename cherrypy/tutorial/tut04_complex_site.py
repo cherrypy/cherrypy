@@ -16,14 +16,14 @@ class HomePage:
     @cherrypy.expose
     def index(self):
         """Produce HTTP response body of home page app index URI."""
-        return """
+        return '''
             <p>Hi, this is the home page! Check out the other
             fun stuff on this site:</p>
 
             <ul>
                 <li><a href="/joke/">A silly joke</a></li>
                 <li><a href="/links/">Useful links</a></li>
-            </ul>"""
+            </ul>'''
 
 
 class JokePage:
@@ -32,10 +32,10 @@ class JokePage:
     @cherrypy.expose
     def index(self):
         """Produce HTTP response body of joke page app index URI."""
-        return """
+        return '''
             <p>"In Python, how do you create a string of random
             characters?" -- "Read a Perl file!"</p>
-            <p>[<a href="../">Return</a>]</p>"""
+            <p>[<a href="../">Return</a>]</p>'''
 
 
 class LinksPage:
@@ -55,7 +55,7 @@ class LinksPage:
         # As you can see, this object doesn't really care about its
         # absolute position in the site tree, since we use relative
         # links exclusively.
-        return """
+        return '''
             <p>Here are some useful links:</p>
 
             <ul>
@@ -71,7 +71,7 @@ class LinksPage:
             links <a href="./extra/">here</a>.</p>
 
             <p>[<a href="../">Return</a>]</p>
-        """
+        '''
 
 
 class ExtraLinksPage:
@@ -81,7 +81,7 @@ class ExtraLinksPage:
     def index(self):
         """Render extra useful links."""
         # Note the relative link back to the Links page!
-        return """
+        return '''
             <p>Here are some extra useful links:</p>
 
             <ul>
@@ -89,7 +89,7 @@ class ExtraLinksPage:
                 <li><a href="http://www.cherrypy.dev">CherryPy</a></li>
             </ul>
 
-            <p>[<a href="../">Return to links page</a>]</p>"""
+            <p>[<a href="../">Return to links page</a>]</p>'''
 
 
 # Of course we can also mount request handler objects right here!
@@ -103,9 +103,9 @@ root.links = LinksPage()
 # creating all contained request handler objects.
 
 
-tutconf = os.path.join(os.path.dirname(__file__), "tutorial.conf")
+tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # CherryPy always starts with app.root when trying to map request URIs
     # to objects, so we need to mount a request handler root. A request
     # to '/' will be mapped to HelloWorld().index().
