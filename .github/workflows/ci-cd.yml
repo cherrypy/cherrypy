@@ -722,9 +722,7 @@ jobs:
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - os: macos-11
-          python-version: pypy-3.6
-        - os: macos-latest
+        - os: macos-15
           python-version: pypy-3.6
         - os: macos-11
           python-version: pypy-3.9
