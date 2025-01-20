@@ -5,6 +5,9 @@ codecov:
   notify:
     require_ci_to_pass: yes
 
+  token: >-  # notsecret  # repo-scoped, upload-only, stability in fork PRs
+    88c87da1-0386-456d-aca6-7cf0580b3f51
+
 coverage:
   precision: 2
   round: down

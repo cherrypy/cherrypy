@@ -953,7 +953,7 @@ jobs:
     - name: Send coverage data to Codecov
       if: >-
         !cancelled()
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         files: .test-results/pytest/cov.xml
         flags: >-
