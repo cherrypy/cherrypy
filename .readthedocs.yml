@@ -1,5 +1,14 @@
 ---
 
+# Required
+version: 2
+
+# Build documentation in the docs/ directory with Sphinx
+sphinx:
+  builder: html
+  configuration: docs/conf.py
+  # fail_on_warning: true
+
 build:
   os: ubuntu-22.04
   tools:
