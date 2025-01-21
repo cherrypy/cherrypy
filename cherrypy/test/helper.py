@@ -18,7 +18,7 @@ import pytest
 from cheroot.test import webtest
 
 import cherrypy
-from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob
+from cherrypy._cpcompat import text_or_bytes, HTTPSConnection, ntob, IS_PYPY
 from cherrypy.lib import httputil
 from cherrypy.lib import gctools
 
@@ -278,7 +278,7 @@ class CPWebCase(webtest.WebCase):
             # Add a resource for verifying there are no refleaks
             # to *every* test class.
             cherrypy.tree.mount(gctools.GCRoot(), '/gc')
-            cls.do_gc_test = True
+            cls.do_gc_test = not IS_PYPY
             supervisor.start(cls.__module__)
 
         cls.supervisor = supervisor

@@ -19,6 +19,10 @@ and their .encode/.decode methods as needed.
 """
 
 import http.client
+import platform
+
+
+IS_PYPY = platform.python_implementation() == 'PyPy'
 
 
 def ntob(n, encoding='ISO-8859-1'):
