@@ -74,3 +74,9 @@
 
 # 🤖 Process docstrings with docformatter
 deeb3ae64c8039d136dbe958b2301049d8dfae72
+
+# 👹 Feed the hobgoblins (delint).
+5fe3dcef35d44ab60e32e5130d2e37089820bc4a
+
+# Revert "👹 Feed the hobgoblins (delint)."
+d968aaf8043a81ce4a636268ba8a42cb717ca316
