@@ -732,6 +732,8 @@ jobs:
           python-version: 3.6  # EOL, only provided for older OSs
         - os: macos-15
           python-version: 3.6  # EOL, only provided for older OSs
+        - os: macos-15
+          python-version: 3.7  # EOL, only provided for older OSs
         include: []  # TODO: include TOXENV=cheroot-master
 
     continue-on-error: >-
