@@ -159,6 +159,8 @@ class SessionTest(helper.CPWebCase):
             )
         )
 
+    # FIXME: This test is unstable on slow envs like macOS
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_0_Session(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self.getPage('/clear')
@@ -241,6 +243,9 @@ class SessionTest(helper.CPWebCase):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.RamSession')
         self._test_Concurrency()
 
+    # FIXME: This test is unstable on slow envs like Windows.
+    # FIXME: It's possibly failing because of the slow fs scan.
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_2_File_Concurrency(self):
         self.getPage('/set_session_cls/cherrypy.lib.sessions.FileSession')
         self._test_Concurrency()

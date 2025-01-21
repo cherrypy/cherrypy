@@ -91,6 +91,7 @@ params = dict(
             'pytest>=5.3.5',
             'pytest-cov',
             'pytest-forked',
+            'pytest-rerunfailures',
             'pytest-sugar',
             'path',
             'requests_toolbelt',
