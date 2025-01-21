@@ -68,7 +68,7 @@ params = dict(
         'cheroot>=8.2.1',
         'portend>=2.1.1',
         'more_itertools',
-        'zc.lockfile',
+        'filelock',
         'jaraco.collections',
         'importlib-metadata; python_version<="3.7"',
     ],
