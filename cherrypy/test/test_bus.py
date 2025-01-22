@@ -280,6 +280,8 @@ def test_block(bus, log_tracker):
     )
 
 
+# FIXME: This test is unstable on slow envs like macOS and such.
+@pytest.mark.flaky(reruns=3, reruns_delay=2, condition=CI_ON_MACOS)
 def test_start_with_callback(bus):
     """Test that callback fires on bus start."""
     try:
