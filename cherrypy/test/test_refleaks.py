@@ -5,8 +5,10 @@ import platform
 import threading
 from http.client import HTTPConnection
 
+import pytest
+
 import cherrypy
-from cherrypy._cpcompat import HTTPSConnection
+from cherrypy._cpcompat import HTTPSConnection, IS_PYPY
 from cherrypy.test import helper
 
 
@@ -27,6 +29,8 @@ class ReferenceTests(helper.CPWebCase):
 
         cherrypy.tree.mount(Root())
 
+    # FIXME: This test is unstable on platforms with custom GC, like PyPy.
+    @pytest.mark.flaky(reruns=3, reruns_delay=2, condition=IS_PYPY)
     def test_threadlocal_garbage(self):
         if platform.system() == 'Darwin':
             self.skip('queue issues; see #1474')
