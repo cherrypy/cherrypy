@@ -33,10 +33,11 @@ on:   # yamllint disable-line rule:truthy
       YOLO:
         default: false
         description: >-
-          Flag whether test results should block the
-          release. Only use this under extraordinary
-          circumstances to ignore the test failures
-          and cut the release regardless.
+          Set this flag to disregard the outcome of the
+          test stage. The test results will block the
+          release otherwise. Only use this under
+          extraordinary circumstances to ignore the test
+          failures and cut the release regardless.
         type: boolean
   schedule:
   - cron: 1 0 * * *  # Run daily at 0:01 UTC
