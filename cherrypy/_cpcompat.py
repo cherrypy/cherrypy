@@ -25,6 +25,10 @@ import platform
 IS_PYPY = platform.python_implementation() == 'PyPy'
 
 
+SYS_PLATFORM = platform.system()
+IS_WINDOWS = SYS_PLATFORM == 'Windows'
+
+
 def ntob(n, encoding='ISO-8859-1'):
     """Convert a native :class:`str` to a :class:`bytes` instance.
 

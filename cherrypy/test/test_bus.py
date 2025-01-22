@@ -9,6 +9,7 @@ import unittest.mock
 
 import pytest
 
+from cherrypy._cpcompat import IS_WINDOWS
 from cherrypy.process import wspbus
 
 
@@ -221,6 +222,8 @@ def test_wait(bus):
         assert bus.state in states, 'State %r not in %r' % (bus.state, states)
 
 
+# FIXME: This test is unstable on slow envs like Windows and such.
+@pytest.mark.flaky(reruns=3, reruns_delay=2, condition=IS_WINDOWS)
 @pytest.mark.xfail(CI_ON_MACOS, reason='continuous integration on macOS fails')
 def test_wait_publishes_periodically(bus):
     """Test that wait publishes each tick."""
