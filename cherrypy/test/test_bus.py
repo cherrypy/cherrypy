@@ -9,7 +9,7 @@ import unittest.mock
 
 import pytest
 
-from cherrypy._cpcompat import IS_WINDOWS
+from cherrypy._cpcompat import IS_PYPY, IS_WINDOWS
 from cherrypy.process import wspbus
 
 
@@ -238,6 +238,8 @@ def test_wait_publishes_periodically(bus):
     assert callback.call_count > 3
 
 
+# FIXME: This test is unstable on platforms with custom GC, like PyPy.
+@pytest.mark.flaky(reruns=3, reruns_delay=2, condition=IS_PYPY)
 def test_block(bus, log_tracker):
     """Test that bus block waits for exiting."""
     def f():  # pylint: disable=invalid-name
