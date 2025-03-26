@@ -252,7 +252,7 @@ class CPWebCase(webtest.WebCase):
         conf = {
             'scheme': 'http',
             'protocol': 'HTTP/1.1',
-            'port': 54583,
+            'port': 24583,
             'host': '127.0.0.1',
             'validate': False,
             'server': 'wsgi',

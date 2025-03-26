@@ -7,8 +7,8 @@ Usage:
 --notests:     start the server but do not run the tests; this allows
                you to check the tested pages with a browser
 --help:        show this help message
---cpmodpy:     run tests via apache on 54583 (with the builtin _cpmodpy)
---modpython:   run tests via apache on 54583 (with modpython_gateway)
+--cpmodpy:     run tests via apache on 24583 (with the builtin _cpmodpy)
+--modpython:   run tests via apache on 24583 (with modpython_gateway)
 --ab=path:     Use the ab script/executable at 'path' (see below)
 --apache=path: Use the apache script/exe at 'path' (see below)
 
@@ -87,7 +87,7 @@ def init():
         'log.error.file': '',
         'environment': 'production',
         'server.socket_host': '127.0.0.1',
-        'server.socket_port': 54583,
+        'server.socket_port': 24583,
         'server.max_request_header_size': 0,
         'server.max_request_body_size': 0,
     })
@@ -159,7 +159,7 @@ class ABSession:
 
     Server Software:        CherryPy/3.1beta
     Server Hostname:        127.0.0.1
-    Server Port:            54583
+    Server Port:            24583
 
     Document Path:          /static/index.html
     Document Length:        14 bytes
@@ -353,12 +353,12 @@ def run_modpython(use_wsgi=False):
         pyopts.append(
             ('wsgi.startup', 'cherrypy.test.benchmark::startup_modpython'))
         handler = 'modpython_gateway::handler'
-        s = s(port=54583, opts=pyopts,
+        s = s(port=24583, opts=pyopts,
               apache_path=APACHE_PATH, handler=handler)
     else:
         pyopts.append(
             ('cherrypy.setup', 'cherrypy.test.benchmark::startup_modpython'))
-        s = s(port=54583, opts=pyopts, apache_path=APACHE_PATH)
+        s = s(port=24583, opts=pyopts, apache_path=APACHE_PATH)
 
     try:
         s.start()
