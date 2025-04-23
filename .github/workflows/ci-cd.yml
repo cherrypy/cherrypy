@@ -63,6 +63,7 @@ env:
   PIP_NO_PYTHON_VERSION_WARNING: 1
   PIP_NO_WARN_SCRIPT_LOCATION: 1
   PRE_COMMIT_COLOR: always
+  PROJECT_NAME: cherrypy
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
   PYTHONLEGACYWINDOWSSTDIO: 1  # Python 3.6 hack
@@ -114,7 +115,6 @@ jobs:
       run:
         shell: python
     outputs:
-      dist-name: ${{ steps.dist.outputs.name }}
       dist-version: >-
         ${{
             steps.request-check.outputs.release-requested == 'true'
@@ -260,18 +260,6 @@ jobs:
                 }}",
                 file=outputs_file,
             )
-    - name: Set the expected dist name
-      id: dist
-      run: |
-        from os import environ
-        from pathlib import Path
-
-        FILE_APPEND_MODE = 'a'
-
-        with Path(environ['GITHUB_OUTPUT']).open(
-                mode=FILE_APPEND_MODE,
-        ) as outputs_file:
-            print("name=${{ env.dists-name }}", file=outputs_file)
     - name: Set the expected dist artifact names
       id: artifact-name
       run: |
@@ -292,7 +280,7 @@ jobs:
                 file=outputs_file,
             )
             print(
-                "wheel=${{ steps.dist.outputs.name }}-${{
+                "wheel=${{ env.PROJECT_NAME }}-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
@@ -836,9 +824,7 @@ jobs:
     environment:
       name: pypi
       url: >-
-        https://pypi.org/project/${{
-          needs.pre-setup.outputs.dist-name
-        }}/${{
+        https://pypi.org/project/${{ env.PROJECT_NAME }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -869,9 +855,7 @@ jobs:
     environment:
       name: testpypi
       url: >-
-        https://pypi.org/project/${{
-          needs.pre-setup.outputs.dist-name
-        }}/${{
+        https://pypi.org/project/${{ env.PROJECT_NAME }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -939,7 +923,7 @@ jobs:
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
         -m 'Published at https://pypi.org/project/${{
-          needs.pre-setup.outputs.dist-name
+          env.PROJECT_NAME
         }}/${{
           needs.pre-setup.outputs.dist-version
         }}'
@@ -997,7 +981,7 @@ jobs:
 
           This release is published to
           https://pypi.org/project/${{
-            needs.pre-setup.outputs.dist-name
+            env.PROJECT_NAME
           }}/${{
             needs.pre-setup.outputs.dist-version
           }}.
