@@ -268,11 +268,14 @@ jobs:
 
         FILE_APPEND_MODE = 'a'
 
+        whl_file_prj_base_name = '${{ env.PROJECT_NAME }}'.replace('-', '_')
+        sdist_file_prj_base_name = whl_file_prj_base_name.replace('.', '_')
+
         with Path(environ['GITHUB_OUTPUT']).open(
                 mode=FILE_APPEND_MODE,
         ) as outputs_file:
             print(
-                "sdist=cherrypy-${{
+                f"sdist={sdist_file_prj_base_name !s}-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
@@ -280,7 +283,7 @@ jobs:
                 file=outputs_file,
             )
             print(
-                "wheel=${{ env.PROJECT_NAME }}-${{
+                f"wheel={whl_file_prj_base_name !s}-${{
                     steps.request-check.outputs.release-requested == 'true'
                     && github.event.inputs.release-version
                     || steps.scm-version.outputs.dist-version
