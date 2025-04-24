@@ -54,8 +54,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  dists-name: CherryPy
-
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
   PIP_DISABLE_PIP_VERSION_CHECK: 1  # Hide "there's a newer pip" message
