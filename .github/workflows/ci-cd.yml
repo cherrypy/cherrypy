@@ -54,7 +54,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  dists-artifact-name: python-package-distributions
   dists-name: CherryPy
 
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
@@ -117,6 +116,9 @@ jobs:
       run:
         shell: python
     outputs:
+      # NOTE: These aren't env vars because the `${{ env }}` context is
+      # NOTE: inaccessible when passing inputs to reusable workflows.
+      dists-artifact-name: python-package-distributions
       dist-version: >-
         ${{
             steps.request-check.outputs.release-requested == 'true'
@@ -428,7 +430,7 @@ jobs:
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         # NOTE: Exact expected file names are specified here
         # NOTE: as a safety measure — if anything weird ends
         # NOTE: up being in this dir or not all dists will be
@@ -499,7 +501,7 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ env.dists-artifact-name }}
+        workflow-artifact-name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Set up pip cache
       uses: re-actors/cache-python-deps@release/v2
@@ -523,7 +525,7 @@ jobs:
       if: matrix.toxenv == 'metadata-validation'
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -628,7 +630,7 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ env.dists-artifact-name }}
+        workflow-artifact-name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Set up pip cache
       uses: re-actors/cache-python-deps@release/v1
@@ -654,7 +656,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
@@ -819,7 +821,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
@@ -850,7 +852,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
         Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
@@ -944,7 +946,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ env.dists-artifact-name }}
+        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
