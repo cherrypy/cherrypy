@@ -315,7 +315,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TOXENV: cleanup-dists,build-dists
+      TOXENV: build-dists
 
     steps:
     - name: Switch to using Python 3.11
