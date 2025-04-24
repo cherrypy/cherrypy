@@ -585,10 +585,10 @@ jobs:
         - pypy-3.6
         - ~3.12.0-0
         os:
-        - ubuntu-22.04
+        - ubuntu-24.04
         - macos-15
         - windows-2022
-        - ubuntu-20.04
+        - ubuntu-22.04
         - macos-13
         - windows-2019
         exclude:
