@@ -450,10 +450,10 @@ jobs:
     - build
     - pre-setup  # transitive, for accessing settings
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runner-vm-os }}-latest
     strategy:
       matrix:
-        os:
+        runner-vm-os:
         - ubuntu
         python-version:
         - 3.11
@@ -556,12 +556,12 @@ jobs:
       🧪 🐍${{
           matrix.python-version
       }} @ ${{
-          matrix.os
+          matrix.runner-vm-os
       }}
     needs:
     - build
     - pre-setup  # transitive, for accessing settings
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner-vm-os }}
     strategy:
       fail-fast: >-  # ${{ runner.debug }} is unavailable in this context
         ${{
@@ -584,7 +584,7 @@ jobs:
         - 3.6
         - pypy-3.6
         - ~3.12.0-0
-        os:
+        runner-vm-os:
         - ubuntu-24.04
         - macos-15
         - windows-2022
@@ -595,31 +595,31 @@ jobs:
         # NOTE: Windows PyPy jobs are excluded to address the tox bug
         # NOTE: https://github.com/tox-dev/tox/issues/1704.
         # NOTE: They should be re-added once it's fixed.
-        - os: windows-2022
+        - runner-vm-os: windows-2022
           python-version: pypy-3.6
-        - os: windows-2019
+        - runner-vm-os: windows-2019
           python-version: pypy-3.6
         # NOTE: Windows PyPy 3.7 jobs are excluded because of the lack
         # NOTE: of the build deps to compile cryptography.
         # NOTE: They should be re-added once it's fixed.
-        - os: windows-2022
+        - runner-vm-os: windows-2022
           python-version: pypy-3.9
-        - os: windows-2019
+        - runner-vm-os: windows-2019
           python-version: pypy-3.9
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - os: macos-15
+        - runner-vm-os: macos-15
           python-version: pypy-3.6
-        - os: macos-11
+        - runner-vm-os: macos-11
           python-version: pypy-3.9
-        - os: macos-12
+        - runner-vm-os: macos-12
           python-version: pypy-3.9
-        - os: ubuntu-22.04
+        - runner-vm-os: ubuntu-22.04
           python-version: 3.6  # EOL, only provided for older OSs
-        - os: macos-15
+        - runner-vm-os: macos-15
           python-version: 3.6  # EOL, only provided for older OSs
-        - os: macos-15
+        - runner-vm-os: macos-15
           python-version: 3.7  # EOL, only provided for older OSs
         include: []  # TODO: include TOXENV=cheroot-master
 
@@ -702,7 +702,7 @@ jobs:
     - name: Windows system info
       run: systeminfo
       if: >-
-        startsWith(matrix.os, 'windows-')
+        startsWith(matrix.runner-vm-os, 'windows-')
     - name: >-
         Log platform.platform()
       run: >-
@@ -797,7 +797,7 @@ jobs:
             runner.os
           }},
           VM-${{
-            matrix.os
+            matrix.runner-vm-os
           }},
           Py-${{
             steps.python-install.outputs.python-version
