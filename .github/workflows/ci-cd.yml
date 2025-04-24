@@ -143,6 +143,7 @@ jobs:
       git-tag: ${{ steps.git-tag.outputs.tag }}
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
+      is-debug-mode: ${{ toJSON(runner.debug == '1') }}
     steps:
     - name: Switch to using Python 3.11 by default
       uses: actions/setup-python@v4
@@ -562,6 +563,12 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: >-  # ${{ runner.debug }} is unavailable in this context
+        ${{
+          fromJSON(needs.pre-setup.outputs.is-debug-mode)
+          && false
+          || true
+        }}
       matrix:
         python-version:
         # NOTE: The latest and the lowest supported Pythons are prioritized
