@@ -59,16 +59,16 @@ env:
 
   FORCE_COLOR: 1  # Request colored output from CLI tools supporting it
   MYPY_FORCE_COLOR: 1  # MyPy's color enforcement
-  PIP_DISABLE_PIP_VERSION_CHECK: 1
-  PIP_NO_PYTHON_VERSION_WARNING: 1
-  PIP_NO_WARN_SCRIPT_LOCATION: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1  # Hide "there's a newer pip" message
+  PIP_NO_PYTHON_VERSION_WARNING: 1  # Hide "this Python is deprecated" message
+  PIP_NO_WARN_SCRIPT_LOCATION: 1  # Hide "script dir is not in $PATH" message
   PRE_COMMIT_COLOR: always
   PROJECT_NAME: cherrypy
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
   PYTHONLEGACYWINDOWSSTDIO: 1  # Python 3.6 hack
   PYTHONUTF8: 1
-  TOX_PARALLEL_NO_SPINNER: 1
+  TOX_PARALLEL_NO_SPINNER: 1  # Disable tox's parallel run spinner animation
   TOX_TESTENV_PASSENV: >-  # Make tox-wrapped tools see color requests
     FORCE_COLOR
     MYPY_FORCE_COLOR
