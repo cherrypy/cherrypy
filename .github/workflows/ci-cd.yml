@@ -1,6 +1,6 @@
 ---
 
-name: CI/CD
+name: 🧪
 
 on:   # yamllint disable-line rule:truthy
   push:
