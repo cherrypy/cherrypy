@@ -145,15 +145,12 @@ class HTTPTests(helper.CPWebCase):
         else:
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
-        # `_get_content_length` is needed for Python 3.6+
         with mock.patch.object(
                 c,
                 '_get_content_length',
                 lambda body, method: None,
                 create=True):
-            # `_set_content_length` is needed for Python 2.7-3.5
-            with mock.patch.object(c, '_set_content_length', create=True):
-                c.request('POST', '/')
+            c.request('POST', '/')
 
         response = c.getresponse()
         self.body = response.fp.read()
@@ -235,12 +232,7 @@ class HTTPTests(helper.CPWebCase):
         c = self.make_connection()
         c._output(b'geT /')
         c._send_output()
-        if hasattr(c, 'strict'):
-            response = c.response_class(c.sock, strict=c.strict, method='GET')
-        else:
-            # Python 3.2 removed the 'strict' feature, saying:
-            # "http.client now always assumes HTTP/1.x compliant servers."
-            response = c.response_class(c.sock, method='GET')
+        response = c.response_class(c.sock, method='GET')
         response.begin()
         self.assertEqual(response.status, 400)
         self.assertEqual(response.fp.read(22), b'Malformed Request-Line')

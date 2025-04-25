@@ -113,8 +113,7 @@ config, and only when you use cherrypy.config.update.
 You can define your own namespaces to be called at the Global, Application,
 or Request level, by adding a named handler to cherrypy.config.namespaces,
 app.namespaces, or app.request_class.namespaces. The name can
-be any string, and the handler must be either a callable or a (Python 2.5
-style) context manager.
+be any string, and the handler must be either a callable or a context manager.
 """
 
 import cherrypy

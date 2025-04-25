@@ -1,6 +1,9 @@
 v(next)
 -------
 
+* Dropped support for Python 3.6, 3.7 and 3.8
+  -- by :user:`webknjaz`.
+
 * Deprecated the accidentally exposed ``cherrypy.lib.headers``
   -- by :user:`webknjaz`.
 

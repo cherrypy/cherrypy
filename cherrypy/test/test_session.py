@@ -146,10 +146,7 @@ class SessionTest(helper.CPWebCase):
     def teardown_class(cls):
         """Clean up sessions."""
         super(cls, cls).teardown_class()
-        try:
-            files_to_clean = localDir.iterdir()  # Python 3.8+
-        except AttributeError:
-            files_to_clean = localDir.listdir()  # Python 3.6-3.7
+        files_to_clean = localDir.iterdir()
 
         consume(
             file.remove_p()
