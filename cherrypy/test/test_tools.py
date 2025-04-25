@@ -2,7 +2,6 @@
 
 import gzip
 import io
-import sys
 import time
 import types
 import unittest
@@ -13,16 +12,6 @@ import cherrypy
 from cherrypy import tools
 from cherrypy._cpcompat import ntou
 from cherrypy.test import helper, _test_decorators
-
-
-*PY_VER_MINOR, _ = PY_VER_PATCH = sys.version_info[:3]
-# Refs:
-# bugs.python.org/issue39389
-# docs.python.org/3.7/whatsnew/changelog.html#python-3-7-7-release-candidate-1
-# docs.python.org/3.8/whatsnew/changelog.html#python-3-8-2-release-candidate-1
-HAS_GZIP_COMPRESSION_HEADER_FIXED = PY_VER_PATCH >= (3, 8, 2) or (
-    PY_VER_MINOR == (3, 7) and PY_VER_PATCH >= (3, 7, 7)
-)
 
 
 timeout = 0.2
@@ -367,13 +356,6 @@ class ToolTests(helper.CPWebCase):
                          ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')])
         self.assertInBody(zbuf.getvalue()[:3])
 
-        if not HAS_GZIP_COMPRESSION_HEADER_FIXED:
-            # NOTE: CherryPy adopts a fix from the CPython bug 39389
-            # NOTE: introducing a variable compression XFL flag that
-            # NOTE: was hardcoded to "best compression" before. And so
-            # NOTE: we can only test it on CPython versions that also
-            # NOTE: implement this fix.
-            return
         zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=6)
         zfile.write(expectedResult)
@@ -403,9 +385,6 @@ class ToolTests(helper.CPWebCase):
         self.assertBody('I am a tarfile')
 
     def testToolWithConfig(self):
-        if not sys.version_info >= (2, 5):
-            return self.skip('skipped (Python 2.5+ only)')
-
         self.getPage('/tooldecs/blah')
         self.assertHeader('Content-Type', 'application/data')
 

@@ -66,7 +66,6 @@ env:
   PROJECT_NAME: cherrypy
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
-  PYTHONLEGACYWINDOWSSTDIO: 1  # Python 3.6 hack
   PYTHONUTF8: 1
   TOX_PARALLEL_NO_SPINNER: 1  # Disable tox's parallel run spinner animation
   TOX_TESTENV_PASSENV: >-  # Make tox-wrapped tools see color requests
@@ -579,10 +578,6 @@ jobs:
         - >-
           3.10
         - 3.9
-        - 3.8
-        - 3.7
-        - 3.6
-        - pypy-3.6
         - ~3.12.0-0
         runner-vm-os:
         - ubuntu-24.04
@@ -592,14 +587,7 @@ jobs:
         - macos-13
         - windows-2019
         exclude:
-        # NOTE: Windows PyPy jobs are excluded to address the tox bug
-        # NOTE: https://github.com/tox-dev/tox/issues/1704.
-        # NOTE: They should be re-added once it's fixed.
-        - runner-vm-os: windows-2022
-          python-version: pypy-3.6
-        - runner-vm-os: windows-2019
-          python-version: pypy-3.6
-        # NOTE: Windows PyPy 3.7 jobs are excluded because of the lack
+        # NOTE: Windows PyPy 3.9 jobs are excluded because of the lack
         # NOTE: of the build deps to compile cryptography.
         # NOTE: They should be re-added once it's fixed.
         - runner-vm-os: windows-2022
@@ -609,18 +597,10 @@ jobs:
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - runner-vm-os: macos-15
-          python-version: pypy-3.6
         - runner-vm-os: macos-11
           python-version: pypy-3.9
         - runner-vm-os: macos-12
           python-version: pypy-3.9
-        - runner-vm-os: ubuntu-22.04
-          python-version: 3.6  # EOL, only provided for older OSs
-        - runner-vm-os: macos-15
-          python-version: 3.6  # EOL, only provided for older OSs
-        - runner-vm-os: macos-15
-          python-version: 3.7  # EOL, only provided for older OSs
         include: []  # TODO: include TOXENV=cheroot-master
 
     continue-on-error: >-
@@ -670,16 +650,6 @@ jobs:
         pip install
         --user
         '${{ env.TOX_VERSION }}'
-
-    - name: Patch tox.ini for Python 3.6 under Windows
-      if: >-
-        runner.os == 'Windows'
-        && matrix.python-version == '3.6'
-      run: >-
-        sed -i
-        's/^package_env\(\s\)\?=.*/package_env = py36-win-dummy/g'
-        tox.ini
-      shell: bash
 
     - name: Download all the dists
       uses: actions/download-artifact@v4

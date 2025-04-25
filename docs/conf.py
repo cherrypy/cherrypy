@@ -14,16 +14,6 @@
 # serve to show the default.
 
 import importlib
-import sys
-
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    # fall back for python <= 3.7
-    # This try/except can be removed with py <= 3.7 support
-    import importlib_metadata
-
-assert sys.version_info > (3, 5), 'Python 3 required to build docs'
 
 
 def try_import(mod_name):
@@ -48,7 +38,7 @@ def get_supported_pythons(classifiers):
 
 custom_sphinx_theme = try_import('alabaster')
 
-prj_meta = importlib_metadata.metadata('cherrypy')
+prj_meta = importlib.metadata.metadata('cherrypy')
 prj_author = prj_meta['Author']
 prj_license = prj_meta['License']
 prj_description = prj_meta['Description']

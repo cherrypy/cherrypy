@@ -56,12 +56,7 @@ These API's are described in the `CherryPy specification
 <https://github.com/cherrypy/cherrypy/wiki/CherryPySpec>`_.
 """
 
-try:
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    # fall back for python <= 3.7
-    # This try/except can be removed with py <= 3.7 support
-    import importlib_metadata
+import importlib.metadata as importlib_metadata
 
 from threading import local as _local
 

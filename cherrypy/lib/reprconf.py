@@ -242,8 +242,8 @@ class _Builder:
     def build_Index(self, o):
         return self.build(o.value)
 
-    def _build_call35(self, o):
-        """Emulate ``build_Call`` under Python 3.5."""
+    def build_Call(self, o):
+        """Emulate ``build_Call`` under Python 3.5+."""
         # Workaround for python 3.5. _ast.Call signature, docs found at
         # https://greentreesnakes.readthedocs.org/en/latest/nodes.html
         import ast
@@ -269,32 +269,6 @@ class _Builder:
             else:  # defined on the call as: arg=value
                 kwargs[kw.arg] = self.build(kw.value)
         return callee(*args, **kwargs)
-
-    def build_Call(self, o):
-        if sys.version_info >= (3, 5):
-            return self._build_call35(o)
-
-        callee = self.build(o.func)
-
-        if o.args is None:
-            args = ()
-        else:
-            args = tuple([self.build(a) for a in o.args])
-
-        if o.starargs is None:
-            starargs = ()
-        else:
-            starargs = tuple(self.build(o.starargs))
-
-        if o.kwargs is None:
-            kwargs = {}
-        else:
-            kwargs = self.build(o.kwargs)
-        if o.keywords is not None:  # direct a=b keywords
-            for kw in o.keywords:
-                # preference because is a direct keyword against **kwargs
-                kwargs[kw.arg] = self.build(kw.value)
-        return callee(*(args + starargs), **kwargs)
 
     def build_List(self, o):
         return list(map(self.build, o.elts))
@@ -335,10 +309,8 @@ class _Builder:
 
         raise TypeError('unrepr could not resolve the name %s' % repr(name))
 
-    def build_NameConstant(self, o):
+    def build_Constant(self, o):
         return o.value
-
-    build_Constant = build_NameConstant  # Python 3.8 change
 
     def build_UnaryOp(self, o):
         op, operand = map(self.build, [o.op, o.operand])
