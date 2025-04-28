@@ -61,6 +61,7 @@ env:
   PIP_NO_WARN_SCRIPT_LOCATION: 1  # Hide "script dir is not in $PATH" message
   PRE_COMMIT_COLOR: always
   PROJECT_NAME: cherrypy
+  PUBLISHING_TO_TESTPYPI_ENABLED: true
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
   PYTHONUTF8: 1
@@ -145,6 +146,7 @@ jobs:
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
       upstream-repository-id: ${{ env.UPSTREAM_REPOSITORY_ID }}
+      publishing-to-testpypi-enabled: ${{ env.PUBLISHING_TO_TESTPYPI_ENABLED }}
       is-debug-mode: ${{ toJSON(runner.debug == '1') }}
     steps:
     - name: Switch to using Python 3.11 by default
@@ -844,6 +846,7 @@ jobs:
         || fromJSON(needs.pre-setup.outputs.release-requested)
       )
       && needs.pre-setup.outputs.upstream-repository-id == github.repository_id
+      && fromJSON(needs.pre-setup.outputs.publishing-to-testpypi-enabled)
     runs-on: ubuntu-latest
 
     environment:
