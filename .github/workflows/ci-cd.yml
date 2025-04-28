@@ -852,7 +852,7 @@ jobs:
     environment:
       name: testpypi
       url: >-
-        https://pypi.org/project/${{ env.PROJECT_NAME }}/${{
+        https://test.pypi.org/project/${{ env.PROJECT_NAME }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
