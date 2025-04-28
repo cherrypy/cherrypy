@@ -80,6 +80,8 @@ env:
     PYTHONLEGACYWINDOWSSTDIO
     PYTHONUTF8
   TOX_VERSION: tox < 4
+  UPSTREAM_REPOSITORY_ID: >-
+    57436777
 
 run-name: >-
   ${{
@@ -142,6 +144,7 @@ jobs:
       git-tag: ${{ steps.git-tag.outputs.tag }}
       sdist-artifact-name: ${{ steps.artifact-name.outputs.sdist }}
       wheel-artifact-name: ${{ steps.artifact-name.outputs.wheel }}
+      upstream-repository-id: ${{ env.UPSTREAM_REPOSITORY_ID }}
       is-debug-mode: ${{ toJSON(runner.debug == '1') }}
     steps:
     - name: Switch to using Python 3.11 by default
@@ -804,6 +807,7 @@ jobs:
       always()
       && needs.check.result == 'success'
       && fromJSON(needs.pre-setup.outputs.release-requested)
+      && needs.pre-setup.outputs.upstream-repository-id == github.repository_id
     runs-on: ubuntu-latest
 
     environment:
@@ -839,6 +843,7 @@ jobs:
         fromJSON(needs.pre-setup.outputs.is-untagged-devel)
         || fromJSON(needs.pre-setup.outputs.release-requested)
       )
+      && needs.pre-setup.outputs.upstream-repository-id == github.repository_id
     runs-on: ubuntu-latest
 
     environment:
