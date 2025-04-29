@@ -8,6 +8,11 @@ repos:
 #     args:
 #     - --in-place
 
+- repo: https://github.com/python-jsonschema/check-jsonschema.git
+  rev: 0.33.0
+  hooks:
+  - id: check-readthedocs
+
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
   rev: v1.1.1
   hooks:
