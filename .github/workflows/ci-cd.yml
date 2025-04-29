@@ -462,14 +462,14 @@ jobs:
     - build
     - pre-setup  # transitive, for accessing settings
 
-    runs-on: ${{ matrix.runner-vm-os }}-latest
+    runs-on: ${{ matrix.runner-vm-os }}
 
     timeout-minutes: 3
 
     strategy:
       matrix:
         runner-vm-os:
-        - ubuntu
+        - ubuntu-latest
         python-version:
         - 3.11
         toxenv:
