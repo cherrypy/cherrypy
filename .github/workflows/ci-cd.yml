@@ -393,7 +393,8 @@ jobs:
         --
         ${{
           fromJSON(needs.pre-setup.outputs.release-requested)
-          && github.event.inputs.release-committish || ''
+          && 1
+          || 0
         }}
 
     - name: Install tomlkit Python distribution package
@@ -812,12 +813,15 @@ jobs:
         allowed-failures: >-
           ${{
             fromJSON(needs.pre-setup.outputs.is-yolo-mode)
-            && 'lint, tests' || ''
+            && 'lint, tests'
+            || ''
           }}
         jobs: ${{ toJSON(needs) }}
 
   publish-pypi:
-    name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
+    name: >-
+      🐍📦
+      Publish ${{ needs.pre-setup.outputs.git-tag }} to PyPI
     needs:
     - check
     - pre-setup  # transitive, for accessing settings
@@ -846,14 +850,18 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
-        Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to PyPI
+        🐍📦
+        Publish ${{ needs.pre-setup.outputs.git-tag }} to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-testpypi:
-    name: Publish 🐍📦 ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+    name: >-
+      🐍📦
+      Publish ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
     needs:
     - check
     - pre-setup  # transitive, for accessing settings
@@ -886,10 +894,12 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
     - name: >-
-        Publish 🐍📦  ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
+        🐍📦
+        Publish ${{ needs.pre-setup.outputs.git-tag }} to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository_url: https://test.pypi.org/legacy/
@@ -967,7 +977,8 @@ jobs:
         to the just published release back to GitHub
       if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
       run: >-
-        git push --atomic origin '${{ needs.pre-setup.outputs.git-tag }}'
+        git push --atomic origin
+        '${{ needs.pre-setup.outputs.git-tag }}'
 
   publish-github-release:
     name: >-
@@ -988,7 +999,8 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
 
     - name: >-
