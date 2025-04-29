@@ -113,6 +113,7 @@ jobs:
   pre-setup:
     name: ⚙️  Mode
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     defaults:
       run:
         shell: python
@@ -319,6 +320,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 2
+
     env:
       TOXENV: build-dists
 
@@ -455,6 +458,7 @@ jobs:
     - pre-setup  # transitive, for accessing settings
 
     runs-on: ${{ matrix.runner-vm-os }}-latest
+    timeout-minutes: 3
     strategy:
       matrix:
         runner-vm-os:
@@ -566,6 +570,7 @@ jobs:
     - build
     - pre-setup  # transitive, for accessing settings
     runs-on: ${{ matrix.runner-vm-os }}
+    timeout-minutes: 5
     strategy:
       fail-fast: >-  # ${{ runner.debug }} is unavailable in this context
         ${{
@@ -789,6 +794,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    timeout-minutes: 1
+
     steps:
     - name: Decide whether the needed jobs succeeded or failed
       uses: re-actors/alls-green@release/v1
@@ -811,6 +818,8 @@ jobs:
       && fromJSON(needs.pre-setup.outputs.release-requested)
       && needs.pre-setup.outputs.upstream-repository-id == github.repository_id
     runs-on: ubuntu-latest
+
+    timeout-minutes: 2  # docker+network are slow sometimes
 
     environment:
       name: pypi
@@ -849,6 +858,8 @@ jobs:
       && fromJSON(needs.pre-setup.outputs.publishing-to-testpypi-enabled)
     runs-on: ubuntu-latest
 
+    timeout-minutes: 2  # docker+network are slow sometimes
+
     environment:
       name: testpypi
       url: >-
@@ -883,6 +894,8 @@ jobs:
       always()
       && needs.publish-pypi.result == 'success'
     runs-on: ubuntu-latest
+
+    timeout-minutes: 1
 
     steps:
     - name: >-
@@ -952,6 +965,8 @@ jobs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
     runs-on: ubuntu-latest
+
+    timeout-minutes: 3
 
     permissions:
       contents: write

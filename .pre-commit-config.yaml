@@ -11,6 +11,14 @@ repos:
 - repo: https://github.com/python-jsonschema/check-jsonschema.git
   rev: 0.33.0
   hooks:
+  - id: check-jsonschema
+    name: Check GitHub Workflows set timeout-minutes
+    args:
+    - --builtin-schema
+    - github-workflows-require-timeout
+    files: ^\.github/workflows/[^/]+$
+    types:
+    - yaml
   - id: check-readthedocs
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
