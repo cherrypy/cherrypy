@@ -473,13 +473,13 @@ jobs:
         python-version:
         - 3.11
         toxenv:
-        - build-docs
+        - pre-commit
+        # - metadata-validation
         - dist-check
+        - setup-check
+        - build-docs
         # - doctest-docs
         # - linkcheck-docs
-        # - metadata-validation
-        - pre-commit
-        - setup-check
         # - spellcheck-docs
       fail-fast: false
 
