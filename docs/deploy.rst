@@ -208,18 +208,23 @@ openssl will then ask you a series of questions. You can enter whatever values a
 
 3. Decide whether you want to use python's built-in SSL library, or the pyOpenSSL library. CherryPy supports either.
 
-    a) *Built-in.* To use python's built-in SSL, add the following line to your CherryPy config:
+    a) *Built-in.* CherryPy uses Python's built-in SSL by default. To set it explicitly, set this line in your CherryPy config:
 
     .. code-block:: python
 
        cherrypy.server.ssl_module = 'builtin'
 
-    b) *pyOpenSSL*. Because python did not have a built-in SSL library when CherryPy was first created, the default setting is to use pyOpenSSL. To use it you'll need to install it (we could recommend you install `cython <http://cython.org/>`_ first):
+    b) *pyOpenSSL*. For better performance you can use CherryPy's pyOpenSSL backend. To use it you'll need to install it (we could recommend you install `cython <http://cython.org/>`_ first):
 
     .. code-block:: bash
 
        $ pip install cython, pyOpenSSL
 
+    Then, in your CherryPy config:
+
+    .. code-block:: python
+
+       cherrypy.server.ssl_module = 'pyopenssl'
 
 4. Add the following lines in your CherryPy config to point to your certificate files:
 
