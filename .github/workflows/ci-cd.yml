@@ -306,7 +306,7 @@ jobs:
 
   build:
     name: >-
-      👷 dists ${{ needs.pre-setup.outputs.git-tag }}
+      📦 ${{ needs.pre-setup.outputs.git-tag }}
       [mode: ${{
         fromJSON(needs.pre-setup.outputs.is-untagged-devel)
         && 'test' || ''
