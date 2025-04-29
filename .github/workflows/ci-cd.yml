@@ -150,7 +150,7 @@ jobs:
       is-debug-mode: ${{ toJSON(runner.debug == '1') }}
     steps:
     - name: Switch to using Python 3.11 by default
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
     - name: >-
@@ -189,7 +189,7 @@ jobs:
     - name: Check out src from Git
       if: >-
         steps.request-check.outputs.release-requested != 'true'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: >-
           ${{
@@ -967,7 +967,7 @@ jobs:
     - name: >-
         Publish a GitHub Release for
         ${{ needs.pre-setup.outputs.git-tag }}
-      uses: ncipollo/release-action@v1.11.1
+      uses: ncipollo/release-action@v1
       with:
         allowUpdates: false
         artifactErrorsFailBuild: false
