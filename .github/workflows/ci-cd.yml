@@ -309,7 +309,7 @@ jobs:
       👷 dists ${{ needs.pre-setup.outputs.git-tag }}
       [mode: ${{
         fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-        && 'nightly' || ''
+        && 'test' || ''
       }}${{
         fromJSON(needs.pre-setup.outputs.release-requested)
         && 'release' || ''
@@ -317,7 +317,7 @@ jobs:
         (
           !fromJSON(needs.pre-setup.outputs.is-untagged-devel)
           && !fromJSON(needs.pre-setup.outputs.release-requested)
-        ) && 'test' || ''
+        ) && 'nightly' || ''
       }}]
     needs:
     - pre-setup  # transitive, for accessing settings
