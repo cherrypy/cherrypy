@@ -95,7 +95,7 @@ params = dict(
             'setuptools',
         ],
         # Enables memcached session support via `cherrypy[memcached_session]`:
-        'memcached_session': ['python-memcached>=1.58'],
+        'memcached_session': ['pymemcache'],
         'xcgi': ['flup'],
 
         # https://docs.cherrypy.dev/en/latest/advanced.html?highlight=windows#windows-console-events

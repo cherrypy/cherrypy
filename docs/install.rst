@@ -26,7 +26,7 @@ dependencies |project| enables you to specify extras in your requirements (e.g.
 - routes_dispatcher -- `routes <http://routes.readthedocs.org/en/latest/>`_ for declarative URL mapping dispatcher
 - ssl -- for `OpenSSL bindings <https://github.com/pyca/pyopenssl>`_, useful in Python environments not having the builtin :mod:`ssl` module
 - testing
-- memcached_session -- enables `memcached <https://github.com/linsomniac/python-memcached>`_ backend session
+- memcached_session -- enables `memcached <https://github.com/pinterest/pymemcache>`_ backend session
 - xcgi
 
 

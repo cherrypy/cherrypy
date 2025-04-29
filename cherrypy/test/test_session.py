@@ -420,7 +420,7 @@ def memcached_server_present():
 
 @pytest.fixture()
 def memcached_client_present():
-    pytest.importorskip('memcache')
+    pytest.importorskip('pymemcache')
 
 
 @pytest.fixture(scope='session')
