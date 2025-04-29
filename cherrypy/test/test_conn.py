@@ -61,7 +61,8 @@ def setup_server():
             if not cherrypy.request.method == 'POST':
                 raise AssertionError("'POST' != request.method %r" %
                                      cherrypy.request.method)
-            return "thanks for '%s'" % cherrypy.request.body.read()
+            request_body_txt = tonative(cherrypy.request.body.read())
+            return f"thanks for '{request_body_txt!s}'"
 
         @cherrypy.expose
         def custom(self, response_code):
@@ -505,7 +506,7 @@ class PipelineTests(helper.CPWebCase):
             response.begin()
             self.status, self.headers, self.body = webtest.shb(response)
             self.assertStatus(200)
-            self.assertBody("thanks for '%s'" % body)
+            self.assertBody("thanks for '%s'" % tonative(body))
         finally:
             conn.close()
 
@@ -582,7 +583,7 @@ class ConnectionTests(helper.CPWebCase):
             response.begin()
             self.status, self.headers, self.body = webtest.shb(response)
             self.assertStatus(200)
-            self.assertBody("thanks for '%s'" % body)
+            self.assertBody("thanks for '%s'" % tonative(body))
             conn.close()
 
     def test_No_Message_Body(self):
@@ -646,7 +647,7 @@ class ConnectionTests(helper.CPWebCase):
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus('200 OK')
-        self.assertBody("thanks for '%s'" % b'xx\r\nxxxxyyyyy')
+        self.assertBody("thanks for '%s'" % 'xx\r\nxxxxyyyyy')
 
         # Try a chunked request that exceeds server.max_request_body_size.
         # Note that the delimiters and trailer are included.

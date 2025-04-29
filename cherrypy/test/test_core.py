@@ -435,7 +435,7 @@ class CoreRequestHandlingTest(helper.CPWebCase):
             from xml.etree import ElementTree
             try:
                 ElementTree.fromstring(
-                    '<html><body>%s</body></html>' % self.body,
+                    '<html><body>%s</body></html>' % self.body.decode('utf-8'),
                 )
             except ElementTree.ParseError:
                 self._handlewebError(
