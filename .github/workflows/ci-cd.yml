@@ -621,7 +621,9 @@ jobs:
           python-version: pypy-3.9
         - runner-vm-os: macos-12
           python-version: pypy-3.9
-        include: []  # TODO: include TOXENV=cheroot-master
+        # yamllint disable rule:comments-indentation
+        # include: []  # TODO: include TOXENV=cheroot-master
+        # yamllint enable rule:comments-indentation
 
     continue-on-error: >-
       ${{
