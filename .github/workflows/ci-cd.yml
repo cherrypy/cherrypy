@@ -515,7 +515,8 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        workflow-artifact-name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Set up pip cache
       uses: re-actors/cache-python-deps@release/v1
@@ -650,7 +651,8 @@ jobs:
       uses: re-actors/checkout-python-sdist@release/v2
       with:
         source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        workflow-artifact-name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Set up pip cache
       uses: re-actors/cache-python-deps@release/v1
