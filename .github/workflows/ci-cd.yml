@@ -518,7 +518,7 @@ jobs:
         workflow-artifact-name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
 
     - name: Set up pip cache
-      uses: re-actors/cache-python-deps@release/v2
+      uses: re-actors/cache-python-deps@release/v1
       with:
         cache-key-for-dependency-files: >-
           ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
