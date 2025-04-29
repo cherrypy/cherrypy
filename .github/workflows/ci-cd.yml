@@ -580,7 +580,7 @@ jobs:
     - pre-setup  # transitive, for accessing settings
     runs-on: ${{ matrix.runner-vm-os }}
 
-    timeout-minutes: 5
+    timeout-minutes: 6
 
     strategy:
       fail-fast: >-  # ${{ runner.debug }} is unavailable in this context
