@@ -357,9 +357,8 @@ jobs:
         - 3.11
         toxenv:
         - pre-commit
-        # - metadata-validation
+        - metadata-validation
         - dist-check
-        - setup-check
         - build-docs
         # - doctest-docs
         # - linkcheck-docs
