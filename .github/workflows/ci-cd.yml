@@ -918,7 +918,7 @@ jobs:
     - name: >-
         Tag the release in the local Git repo
         as ${{ needs.pre-setup.outputs.git-tag }}
-      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
       run: >-
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
