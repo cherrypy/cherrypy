@@ -80,7 +80,6 @@ env:
     PYTHONIOENCODING
     PYTHONLEGACYWINDOWSSTDIO
     PYTHONUTF8
-  TOX_VERSION: tox < 4
   UPSTREAM_REPOSITORY_ID: >-
     57436777
 
@@ -322,149 +321,33 @@ jobs:
     needs:
     - pre-setup  # transitive, for accessing settings
 
-    runs-on: ubuntu-latest
-
-    timeout-minutes: 2
-
-    env:
-      TOXENV: build-dists
-
-    steps:
-    - name: Switch to using Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-
-    - name: Grab the source from Git
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: >-
-          ${{
-              fromJSON(needs.pre-setup.outputs.release-requested)
-              && 1 || 0
-          }}
-        ref: ${{ github.event.inputs.release-committish }}
-
-    - name: Set up pip cache
-      uses: re-actors/cache-python-deps@release/v1
-      with:
-        cache-key-for-dependency-files: >-
-          ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
-    - name: Install tox
-      run: >-
-        python -m
-        pip install
-        --user
-        '${{ env.TOX_VERSION }}'
-
-    - name: Pre-populate the tox env
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --notest
-
-    - name: Drop Git tags from HEAD for non-tag-create events
-      if: >-
-        !fromJSON(needs.pre-setup.outputs.release-requested)
-      run: >-
-        git tag --points-at HEAD
-        |
-        xargs git tag --delete
-      shell: bash
-
-    - name: Setup git user as [bot]
-      if: >-
-        fromJSON(needs.pre-setup.outputs.release-requested)
-        || fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      uses: fregante/setup-git-user@v1.1.0
-    - name: >-
-        Tag the release in the local Git repo
-        as ${{ needs.pre-setup.outputs.git-tag }}
-        for setuptools-scm to set the desired version
-      if: >-
-        fromJSON(needs.pre-setup.outputs.release-requested)
-      run: >-
-        git tag
-        -m '${{ needs.pre-setup.outputs.git-tag }}'
-        '${{ needs.pre-setup.outputs.git-tag }}'
-        --
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@89de3c6be3cd179adf71e28aa4ac5bef60804209  # yamllint disable-line rule:line-length
+    with:
+      cache-key-for-dependency-files: >-
+        ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
+      check-name: Build dists under 🐍3.11
+      checkout-src-git-committish: >-
+        ${{ github.event.inputs.release-committish }}
+      checkout-src-git-fetch-depth: >-
         ${{
           fromJSON(needs.pre-setup.outputs.release-requested)
           && 1
           || 0
         }}
-
-    - name: Install tomlkit Python distribution package
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      run: >-
-        python -m pip install --user tomlkit
-    - name: Instruct setuptools-scm not to add a local version part
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      run: |
-        from pathlib import Path
-
-        import tomlkit
-
-        pyproject_toml_path = Path.cwd() / 'pyproject.toml'
-        pyproject_toml_txt = pyproject_toml_path.read_text()
-        pyproject_toml = tomlkit.loads(pyproject_toml_txt)
-        setuptools_scm_section = pyproject_toml['tool']['setuptools_scm']
-        setuptools_scm_section['local_scheme'] = 'no-local-version'
-        patched_pyproject_toml_txt = tomlkit.dumps(pyproject_toml)
-        pyproject_toml_path.write_text(patched_pyproject_toml_txt)
-      shell: python
-    - name: Pretend that pyproject.toml is unchanged
-      if: >-
-        fromJSON(needs.pre-setup.outputs.is-untagged-devel)
-      run: |
-        git diff --color=always
-        git update-index --assume-unchanged pyproject.toml
-
-    - name: Build dists
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --skip-pkg-install
-    - name: Verify that the artifacts with expected names got created
-      run: >-
-        ls -1
-        'dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}'
-        'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
-        # NOTE: Exact expected file names are specified here
-        # NOTE: as a safety measure — if anything weird ends
-        # NOTE: up being in this dir or not all dists will be
-        # NOTE: produced, this will fail the workflow.
-        path: |
-          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
-          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
-        retention-days: >-
-          ${{
-              (
-                fromJSON(needs.pre-setup.outputs.release-requested)
-              ) && 90 || 30
-          }}
+      job-dependencies-context: >-  # context for hooks
+        ${{ toJSON(needs) }}
+      # python-version: 3.13
+      python-version: 3.11  # FIXME??
+      runner-vm-os: ubuntu-latest
+      timeout-minutes: 2
+      toxenv: build-dists
+      xfail: false
 
   lint:
-    name: 🧹 ${{ matrix.toxenv }}
+    name: 🧹 Linters${{ '' }}  # nest jobs under the same sidebar category
     needs:
     - build
     - pre-setup  # transitive, for accessing settings
-
-    runs-on: ${{ matrix.runner-vm-os }}
-
-    timeout-minutes: 3
 
     strategy:
       matrix:
@@ -474,113 +357,82 @@ jobs:
         - 3.11
         toxenv:
         - pre-commit
-        # - metadata-validation
+        - metadata-validation
         - dist-check
-        - setup-check
         - build-docs
         # - doctest-docs
         # - linkcheck-docs
         # - spellcheck-docs
+        xfail:
+        - false
       fail-fast: false
 
-    env:
-      TOXENV: ${{ matrix.toxenv }}
-
-    steps:
-    - name: >-
-        Switch to using Python v${{ matrix.python-version }}
-        by default
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    # NOTE: `pre-commit --show-diff-on-failure` and `sphinxcontrib-spellcheck`
-    # NOTE: with Git authors allowlist enabled both depend on the presence of a
-    # NOTE: Git repository.
-    - name: Grab the source from Git
-      if: >-
-        contains(
-        fromJSON('["pre-commit", "spellcheck-docs"]'),
-        matrix.toxenv
-        )
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.inputs.release-committish }}
-    - name: Retrieve the project source from an sdist inside the GHA artifact
-      if: >-
-        !contains(
-        fromJSON('["pre-commit", "spellcheck-docs"]'),
-        matrix.toxenv
-        )
-      uses: re-actors/checkout-python-sdist@release/v2
-      with:
-        source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: >-
-          ${{ needs.pre-setup.outputs.dists-artifact-name }}
-
-    - name: Set up pip cache
-      uses: re-actors/cache-python-deps@release/v1
-      with:
-        cache-key-for-dependency-files: >-
-          ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
-    - name: Install tox
-      run: >-
-        python -m
-        pip install
-        --user
-        '${{ env.TOX_VERSION }}'
-
-    - name: Make the env clean of non-test files
-      if: matrix.toxenv == 'metadata-validation'
-      run: |
-        shopt -s extglob
-        rm -rf !tox.ini
-      shell: bash
-    - name: Download all the dists
-      if: matrix.toxenv == 'metadata-validation'
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
-        path: dist/
-
-    - name: >-
-        Pre-populate tox envs: `${{ env.TOXENV }}`
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --notest
-    - name: Initialize pre-commit envs if needed
-      run: >-
-        test -d .tox/pre-commit
-        && .tox/pre-commit/bin/python -m pre_commit install-hooks
-        || :
-    - name: >-
-        Run tox envs: `${{ env.TOXENV }}`
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --skip-pkg-install
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@89de3c6be3cd179adf71e28aa4ac5bef60804209  # yamllint disable-line rule:line-length
+    with:
+      built-wheel-names: >-
+        ${{
+          matrix.toxenv == 'metadata-validation'
+          && needs.pre-setup.outputs.wheel-artifact-name
+          || ''
+        }}
+      cache-key-for-dependency-files: >-
+        ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
+      checkout-src-git-committish: >-
+        ${{ github.event.inputs.release-committish }}
+      checkout-src-git-fetch-depth: >-
+        ${{
+          fromJSON(needs.pre-setup.outputs.release-requested)
+          && 1
+          || 0
+        }}
+      dists-artifact-name: >-
+        ${{ needs.pre-setup.outputs.dists-artifact-name }}
+      post-toxenv-preparation-command: >-
+        ${{
+          matrix.toxenv == 'pre-commit'
+          && 'python -Im pre_commit install-hooks'
+          || ''
+        }}
+      python-version: >-
+        ${{ matrix.python-version }}
+      require-successful-codecov-uploads: >-
+        ${{
+          toJSON(
+          needs.pre-setup.outputs.upstream-repository-id
+          == github.repository_id
+          )
+        }}
+      runner-vm-os: >-
+        ${{ matrix.runner-vm-os }}
+      # NOTE: `pre-commit --show-diff-on-failure` and
+      # NOTE: `sphinxcontrib-spellcheck` with Git authors allowlist enabled
+      # NOTE: both depend on the presence of a Git repository.
+      source-tarball-name: >-
+        ${{
+          !contains(
+            fromJSON('["pre-commit", "spellcheck-docs"]'),
+            matrix.toxenv
+          )
+          && needs.pre-setup.outputs.sdist-artifact-name
+          || ''
+        }}
+      timeout-minutes: 3
+      toxenv: >-
+        ${{ matrix.toxenv }}
+      xfail: >-
+        ${{
+          fromJSON(needs.pre-setup.outputs.is-yolo-mode)
+          || fromJSON(matrix.xfail)
+        }}
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   tests:
-    name: >-
-      🧪 🐍${{
-          matrix.python-version
-      }} @ ${{
-          matrix.runner-vm-os
-      }}
+    name: 🧪 Tests${{ '' }}  # nest jobs under the same sidebar category
 
     needs:
     - build
     - pre-setup  # transitive, for accessing settings
-    runs-on: ${{ matrix.runner-vm-os }}
-
-    timeout-minutes: 6
 
     strategy:
       fail-fast: >-  # ${{ runner.debug }} is unavailable in this context
@@ -607,6 +459,10 @@ jobs:
         - ubuntu-22.04
         - macos-13
         - windows-2019
+        toxenv:
+        - py
+        xfail:
+        - false
         exclude:
         # NOTE: Windows PyPy 3.9 jobs are excluded because of the lack
         # NOTE: of the build deps to compile cryptography.
@@ -626,177 +482,58 @@ jobs:
         # include: []  # TODO: include TOXENV=cheroot-master
         # yamllint enable rule:comments-indentation
 
-    continue-on-error: >-
-      ${{
-          (
-            fromJSON(needs.pre-setup.outputs.is-yolo-mode) ||
-            (
-              startsWith(matrix.python-version, '~')
-            ) ||
-            contains(matrix.python-version, 'alpha')
-          ) && true || false
-      }}
-
-    env:
-      TOXENV: python
-
-    steps:
-    - name: Set up Python ${{ matrix.python-version }}
-      id: python-install
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Retrieve the project source from an sdist inside the GHA artifact
-      uses: re-actors/checkout-python-sdist@release/v2
-      with:
-        source-tarball-name: ${{ needs.pre-setup.outputs.sdist-artifact-name }}
-        workflow-artifact-name: >-
-          ${{ needs.pre-setup.outputs.dists-artifact-name }}
-
-    - name: Set up pip cache
-      uses: re-actors/cache-python-deps@release/v1
-      with:
-        cache-key-for-dependency-files: >-
-          ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
-
-    - name: Upgrade pip with `requires_python`
-      run: >-
-        python -m
-        pip install
-        --user
-        --upgrade
-        --force-reinstall
-        pip-with-requires-python
-    - name: Install tox
-      run: >-
-        python -m
-        pip install
-        --user
-        '${{ env.TOX_VERSION }}'
-
-    - name: Download all the dists
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ needs.pre-setup.outputs.dists-artifact-name }}
-        path: dist/
-
-    - name: >-
-        Pre-populate tox env:
-        ${{ env.TOXENV }}
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-        --notest
-
-    - name: Windows system info
-      run: systeminfo
-      if: >-
-        startsWith(matrix.runner-vm-os, 'windows-')
-    - name: >-
-        Log platform.platform()
-      run: >-
-        python -m platform
-    - name: >-
-        Log platform.version()
-      run: >-
-        python -c "import platform;
-        print(platform.version())"
-    - name: >-
-        Log platform.uname()
-      run: >-
-        python -c "import platform;
-        print(platform.uname())"
-    - name: >-
-        Log platform.release()
-      run: >-
-        python -c "import platform;
-        print(platform.release())"
-    - name: Log stdlib OpenSSL version
-      run: >-
-        python -c
-        "import ssl; print('\nOPENSSL_VERSION: '
-        + ssl.OPENSSL_VERSION + '\nOPENSSL_VERSION_INFO: '
-        + repr(ssl.OPENSSL_VERSION_INFO)
-        + '\nOPENSSL_VERSION_NUMBER: '
-        + repr(ssl.OPENSSL_VERSION_NUMBER))"
-
-    - name: Run the testing
-      run: >-
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
-        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-    - name: Produce markdown test summary from JUnit
-      if: >-
-        !cancelled()
-      uses: test-summary/action@v2.0
-      with:
-        paths: .test-results/pytest/results.xml
-    - name: Check if Cobertura XML coverage files exist
-      if: >-
-        !cancelled()
-        && runner.os == 'Linux'
-      id: coverage-files
-      run: >-
-        compgen -G '.test-results/pytest/cov.xml'
-        && ( echo 'present=true' >> ${GITHUB_OUTPUT} )
-        ;
-        exit 0
-      shell: bash
-    - name: Produce markdown test summary from Cobertura XML
-      if: steps.coverage-files.outputs.present == 'true'
-      uses: irongut/CodeCoverageSummary@v1.3.0
-      with:
-        badge: true
-        filename: .test-results/pytest/cov.xml
-        format: markdown
-        output: both
-    # Ref: https://github.com/irongut/CodeCoverageSummary/issues/66
-    - name: Append coverage results to Job Summary
-      if: steps.coverage-files.outputs.present == 'true'
-      run: >-
-        cat code-coverage-results.md >> "${GITHUB_STEP_SUMMARY}"
-    - name: Re-run the failing tests with maximum verbosity
-      if: >-
-        !cancelled()
-        && failure()
-      run: >-  # `exit 1` makes sure that the job remains red with flaky runs
-        python -m
-        tox
-        --parallel auto
-        --parallel-live
-        --skip-missing-interpreters false
+    uses: tox-dev/workflow/.github/workflows/reusable-tox.yml@89de3c6be3cd179adf71e28aa4ac5bef60804209  # yamllint disable-line rule:line-length
+    with:
+      built-wheel-names: >-
+        ${{ needs.pre-setup.outputs.wheel-artifact-name }}
+      cache-key-for-dependency-files: >-
+        ${{ needs.pre-setup.outputs.cache-key-for-dep-files }}
+      check-name: >-
+        🧪 🐍${{
+          matrix.python-version
+        }} @ ${{
+          matrix.runner-vm-os
+        }}
+      dists-artifact-name: >-
+        ${{ needs.pre-setup.outputs.dists-artifact-name }}
+      job-dependencies-context: >-  # context for hooks
+        ${{ toJSON(needs) }}
+      python-version: >-
+        ${{ matrix.python-version }}
+      require-successful-codecov-uploads: >-
+        ${{
+          toJSON(
+          needs.pre-setup.outputs.upstream-repository-id
+          == github.repository_id
+          )
+        }}
+      runner-vm-os: >-
+        ${{ matrix.runner-vm-os }}
+      source-tarball-name: >-
+        ${{ needs.pre-setup.outputs.sdist-artifact-name }}
+      timeout-minutes: 6
+      toxenv: >-
+        ${{ matrix.toxenv }}
+      # tox-provision-args: >-
+      #   --force-dep '...'
+      tox-run-posargs: >-
+        --cov-report=xml:.tox/.tmp/.test-results/pytest-${{
+          matrix.python-version
+        }}/cobertura.xml
+        --junitxml=.tox/.tmp/.test-results/pytest-${{
+          matrix.python-version
+        }}/test.xml
+      tox-rerun-posargs: >-
+        --no-cov
         -vvvvv
-        --installpkg 'dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}'
-        --
-        --no-cov -vvvvv --lf
-        && exit 1
-      shell: bash
-    - name: Send coverage data to Codecov
-      if: >-
-        !cancelled()
-      uses: codecov/codecov-action@v5
-      with:
-        files: .test-results/pytest/cov.xml
-        flags: >-
-          CI-GHA,
-          OS-${{
-            runner.os
-          }},
-          VM-${{
-            matrix.runner-vm-os
-          }},
-          Py-${{
-            steps.python-install.outputs.python-version
-          }},
-          ${{ needs.pre-setup.outputs.wheel-artifact-name }}
+        --lf
+      xfail: >-
+        ${{
+          fromJSON(needs.pre-setup.outputs.is-yolo-mode)
+          || fromJSON(matrix.xfail)
+        }}
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
   check:  # This job does nothing and is only used for the branch protection
     if: always()

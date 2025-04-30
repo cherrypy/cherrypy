@@ -1,0 +1,127 @@
+---
+
+inputs:
+  calling-job-context:
+    description: A JSON with the calling job inputs
+    type: string
+  job-dependencies-context:
+    default: >-
+      {}
+    description: >-
+      The `$ {{ needs }}` context passed from the calling workflow
+      encoded as a JSON string. The caller is expected to form this
+      input as follows:
+      `job-dependencies-context: $ {{ toJSON(needs) }}`.
+    required: false
+    type: string
+
+runs:
+  using: composite
+  steps:
+  - name: Drop Git tags from HEAD for non-tag-create events
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && !fromJSON(
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.release-requested
+      )
+    run: >-
+      git tag --points-at HEAD
+      |
+      xargs git tag --delete
+    shell: bash
+
+  - name: Setup git user as [bot]
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && (
+        fromJSON(
+          fromJSON(
+            inputs.job-dependencies-context
+          ).pre-setup.outputs.release-requested
+        )
+        || fromJSON(
+          fromJSON(
+            inputs.job-dependencies-context
+          ).pre-setup.outputs.is-untagged-devel
+        )
+      )
+    uses: fregante/setup-git-user@v2
+  - name: >-
+      Tag the release in the local Git repo
+      as ${{
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.git-tag
+      }}
+      for setuptools-scm to set the desired version
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && fromJSON(
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.release-requested
+      )
+    run: >-
+      git tag
+      -m '${{
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.git-tag
+      }}'
+      '${{
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.git-tag
+      }}'
+      --
+      ${{ fromJSON(inputs.calling-job-context).checkout-src-git-committish }}
+    shell: bash
+
+  - name: Install tomlkit Python distribution package
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && fromJSON(
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.is-untagged-devel
+      )
+    run: >-
+      python -m pip install --user tomlkit
+    shell: bash
+  - name: Instruct setuptools-scm not to add a local version part
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && fromJSON(
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.is-untagged-devel
+      )
+    run: |
+      from pathlib import Path
+
+      import tomlkit
+
+      pyproject_toml_path = Path.cwd() / 'pyproject.toml'
+      pyproject_toml_txt = pyproject_toml_path.read_text()
+      pyproject_toml = tomlkit.loads(pyproject_toml_txt)
+      setuptools_scm_section = pyproject_toml['tool']['setuptools_scm']
+      setuptools_scm_section['local_scheme'] = 'no-local-version'
+      patched_pyproject_toml_txt = tomlkit.dumps(pyproject_toml)
+      pyproject_toml_path.write_text(patched_pyproject_toml_txt)
+    shell: python
+  - name: Pretend that pyproject.toml is unchanged
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'build-dists'
+      && fromJSON(
+        fromJSON(
+          inputs.job-dependencies-context
+        ).pre-setup.outputs.is-untagged-devel
+      )
+    run: |
+      git diff --color=always
+      git update-index --assume-unchanged pyproject.toml
+    shell: bash
+
+...

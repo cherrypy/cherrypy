@@ -1,0 +1,39 @@
+---
+
+inputs:
+  calling-job-context:
+    description: A JSON with the calling job inputs
+    type: string
+  job-dependencies-context:
+    default: >-
+      {}
+    description: >-
+      The `$ {{ needs }}` context passed from the calling workflow
+      encoded as a JSON string. The caller is expected to form this
+      input as follows:
+      `job-dependencies-context: $ {{ toJSON(needs) }}`.
+    required: false
+    type: string
+
+runs:
+  using: composite
+  steps:
+  - name: Log setting up pre-commit cache
+    if: fromJSON(inputs.calling-job-context).toxenv == 'pre-commit'
+    run: >-
+      >&2 echo Caching ~/.cache/pre-commit based on
+      the contents of '.pre-commit-config.yaml'...
+    shell: bash
+  - name: Cache pre-commit.com virtualenvs
+    if: fromJSON(inputs.calling-job-context).toxenv == 'pre-commit'
+    uses: actions/cache@v4
+    with:
+      path: ~/.cache/pre-commit
+      key: >-
+        ${{
+          runner.os
+        }}-pre-commit-${{
+          hashFiles('.pre-commit-config.yaml')
+        }}
+
+...
