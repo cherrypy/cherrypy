@@ -3,13 +3,13 @@
 name: 🧪
 
 on:   # yamllint disable-line rule:truthy
-  push:
+  push:  # publishes to TestPyPI pushes to the main branch
     branches-ignore:
-    - dependabot/**
-    - maintenance/pip-tools-constraint-lockfiles
-    - maintenance/pip-tools-constraint-lockfiles-**
-    - patchback/backports/**
-    - pre-commit-ci-update-config
+    - dependabot/**  # Dependabot always creates PRs
+    - maintenance/pip-tools-constraint-lockfiles  # Lock files through PRs
+    - maintenance/pip-tools-constraint-lockfiles-**  # Lock files through PRs
+    - patchback/backports/**  # Patchback always creates PRs
+    - pre-commit-ci-update-config  # pre-commit.ci always creates a PR
   pull_request:
   workflow_dispatch:
     inputs:
