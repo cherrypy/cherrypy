@@ -3,9 +3,11 @@
 name: 🧪
 
 on:
+  merge_group:
   push:  # publishes to TestPyPI pushes to the main branch
     branches-ignore:
     - dependabot/**  # Dependabot always creates PRs
+    - gh-readonly-queue/**  # Temporary merge queue-related GH-made branches
     - maintenance/pip-tools-constraint-lockfiles  # Lock files through PRs
     - maintenance/pip-tools-constraint-lockfiles-**  # Lock files through PRs
     - patchback/backports/**  # Patchback always creates PRs
