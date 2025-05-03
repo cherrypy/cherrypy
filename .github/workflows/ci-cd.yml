@@ -451,7 +451,7 @@ jobs:
         # NOTE: important results first.
         - 3.13
         - 3.9
-        - pypy-3.9
+        - pypy-3.11
         - 3.12
         - 3.11
         - >-
