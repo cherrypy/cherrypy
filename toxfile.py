@@ -2,8 +2,11 @@
 
 import platform
 import ssl
+from base64 import b64encode
+from hashlib import sha256
 from logging import getLogger
-from os import getenv
+from os import environ, getenv
+from pathlib import Path
 
 from tox.execute.request import StdinSource
 from tox.plugin import impl
@@ -11,6 +14,8 @@ from tox.tox_env.api import ToxEnv
 
 
 IS_GITHUB_ACTIONS_RUNTIME = getenv('GITHUB_ACTIONS') == 'true'
+FILE_APPEND_MODE = 'a'
+UNICODE_ENCODING = 'utf-8'
 SYS_PLATFORM = platform.system()
 IS_WINDOWS = SYS_PLATFORM == 'Windows'
 
@@ -121,6 +126,55 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
         f'{ssl.OPENSSL_VERSION_INFO=}\n'
         f'{ssl.OPENSSL_VERSION_NUMBER=}',
     )
+
+
+def _log_debug_after_run_commands(msg: str) -> None:
+    logger.debug(
+        '%s%s> %s',  # noqa: WPS323
+        'toxfile',
+        ':tox_after_run_commands',
+        msg,
+    )
+
+
+def _compute_sha256sum(file_path: Path) -> str:
+    return sha256(file_path.read_bytes()).hexdigest()
+
+
+def _produce_sha256sum_line(file_path: Path) -> str:
+    sha256_str = _compute_sha256sum(file_path)
+    return f'{sha256_str!s}  {file_path.name!s}'
+
+
+@impl
+def tox_after_run_commands(tox_env: ToxEnv) -> None:
+    """Compute combined dists hash post build-dists under GHA.
+
+    :param tox_env: A tox environment object.
+    """
+    if tox_env.name == 'build-dists' and IS_GITHUB_ACTIONS_RUNTIME:
+        _log_debug_after_run_commands(
+            'Computing and storing the base64 representation '
+            'of the combined dists SHA-256 hash in GHA...',
+        )
+        dists_dir_path = Path(__file__).parent / 'dist'
+        emulated_sha256sum_output = '\n'.join(
+            _produce_sha256sum_line(artifact_path)
+            for artifact_path in dists_dir_path.glob('*')
+        )
+        emulated_base64_w0_output = b64encode(
+            emulated_sha256sum_output.encode(),
+        ).decode()
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+            encoding=UNICODE_ENCODING,
+            mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(  # noqa: T201, WPS421
+                'combined-dists-base64-encoded-sha256-hash='
+                f'{emulated_base64_w0_output!s}',
+                file=outputs_file,
+            )
 
 
 def tox_append_version_info() -> str:

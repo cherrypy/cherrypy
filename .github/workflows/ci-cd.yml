@@ -721,13 +721,40 @@ jobs:
         git push --atomic origin
         '${{ needs.pre-setup.outputs.git-tag }}'
 
+  slsa-provenance:
+    name: >-
+      🔏
+      Save in-toto SLSA provenance as a GitHub workflow artifact for
+      ${{ needs.pre-setup.outputs.git-tag }}
+    needs:
+    - build
+    - post-release-repo-update
+    - pre-setup  # transitive, for accessing settings
+
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+
+    # Can't pin with hash due to how this workflow works.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0  # yamllint disable-line rule:line-length
+    with:
+      base64-subjects: >-
+        ${{
+          fromJSON(
+            needs.build.outputs.steps
+          ).tox-run.outputs.combined-dists-base64-encoded-sha256-hash
+        }}
+
   publish-github-release:
     name: >-
+      🏷️
       Publish a GitHub Release for
       ${{ needs.pre-setup.outputs.git-tag }}
     needs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
+    - slsa-provenance
     runs-on: ubuntu-latest
 
     timeout-minutes: 3
@@ -743,6 +770,13 @@ jobs:
         name: >-
           ${{ needs.pre-setup.outputs.dists-artifact-name }}
         path: dist/
+    - name: Download SLSA provenance in-toto files
+      uses: actions/download-artifact@v4
+      with:
+        name: >-
+          ${{ needs.slsa-provenance.outputs.provenance-name }}
+        path: >-
+          ${{ needs.slsa-provenance.outputs.provenance-name }}
 
     - name: >-
         Publish a GitHub Release for
@@ -754,6 +788,7 @@ jobs:
         artifacts: |
           dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
+          ${{ needs.slsa-provenance.outputs.provenance-name }}/*
         artifactContentType: raw  # Because whl and tgz are of different types
         body: >
           # Release ${{ needs.pre-setup.outputs.git-tag }}
