@@ -850,6 +850,45 @@ jobs:
                 file=outputs_file,
             )
       shell: python
+    - name: Prepare the release notes file for the GitHub Releases
+      run: |
+        echo '## 📝 Release notes' | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo '📦 PyPI page: https://pypi.org/project/${{
+          env.PROJECT_NAME
+        }}/${{
+          needs.pre-setup.outputs.dist-version
+        }}' | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo '${{
+          steps.release-maturity-check.outputs.is-pre-release == 'true'
+          && format(
+            '🚧 {0} is marked as a pre-release.',
+            needs.pre-setup.outputs.git-tag
+          )
+          || format(
+            '🌱 {0} is marked as a stable release.',
+            needs.pre-setup.outputs.git-tag
+          )
+        }}' | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo '🔗 This release has been produced by ' \
+        'the following workflow run: ${{
+          github.server_url
+        }}/${{
+          github.repository
+        }}/actions/runs/${{
+          github.run_id
+        }}' | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        echo | tee -a release-notes.md
+        cat '${{
+            needs.pre-setup.outputs.changelog-draft-name-md
+        }}' | tee -a release-notes.md
+      shell: bash
 
     - name: Sign the dists with Sigstore
       uses: sigstore/gh-action-sigstore-python@v3.0.0
@@ -873,31 +912,11 @@ jobs:
           dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}.sigstore.json
           ${{ needs.slsa-provenance.outputs.provenance-name }}/*
         artifactContentType: raw  # Because whl and tgz are of different types
-        body: >
-          # Release ${{ needs.pre-setup.outputs.git-tag }}
-
-
-          This release is published to
-          https://pypi.org/project/${{
-            env.PROJECT_NAME
-          }}/${{
-            needs.pre-setup.outputs.dist-version
-          }}.
-
-
-          This release has been produced by the following workflow run: ${{
-            github.server_url
-          }}/${{
-            github.repository
-          }}/actions/runs/${{
-            github.run_id
-          }}.
-        # bodyFile:  # FIXME: Use once Towncrier is integrated.
+        bodyFile: release-notes.md
         commit: ${{ github.event.inputs.release-committish }}
         discussionCategory: Announcements
         draft: false
         name: ${{ needs.pre-setup.outputs.git-tag }}
-        # omitBody: false
         omitBodyDuringUpdate: true
         omitName: false
         omitNameDuringUpdate: true
