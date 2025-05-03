@@ -825,6 +825,32 @@ jobs:
         path: >-
           ${{ needs.slsa-provenance.outputs.provenance-name }}
 
+    - name: Figure out if the current version is a pre-release
+      id: release-maturity-check
+      run: |
+        from os import environ
+        from pathlib import Path
+
+        release_version = '${{
+          needs.pre-setup.outputs.dist-version
+        }}'
+
+        FILE_APPEND_MODE = 'a'
+
+        is_pre_release = any(
+            hint_char in release_version
+            for hint_char in {'a', 'b', 'd', 'r'}
+        )
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(
+                f'is-pre-release={is_pre_release !s}'.lower(),
+                file=outputs_file,
+            )
+      shell: python
+
     - name: Sign the dists with Sigstore
       uses: sigstore/gh-action-sigstore-python@v3.0.0
       with:
@@ -876,7 +902,7 @@ jobs:
         omitName: false
         omitNameDuringUpdate: true
         omitPrereleaseDuringUpdate: true
-        prerelease: false
+        prerelease: ${{ steps.release-maturity-check.outputs.is-pre-release }}
         removeArtifacts: false
         replacesArtifacts: false
         tag: ${{ needs.pre-setup.outputs.git-tag }}
