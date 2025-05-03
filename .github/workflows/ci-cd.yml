@@ -663,6 +663,9 @@ jobs:
 
     timeout-minutes: 1
 
+    permissions:
+      contents: write  # Mandatory for `git push` to work
+
     steps:
     - name: >-
         Check if the requested tag ${{ needs.pre-setup.outputs.git-tag }}
