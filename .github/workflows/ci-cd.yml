@@ -11,6 +11,9 @@ on:   # yamllint disable-line rule:truthy
     - patchback/backports/**  # Patchback always creates PRs
     - pre-commit-ci-update-config  # pre-commit.ci always creates a PR
   pull_request:
+    ignore-paths:  # changes to the cron workflow are triggered through it
+    - .github/workflows/scheduled-runs.yml
+  workflow_call:  # a way to embed the main tests
   workflow_dispatch:
     inputs:
       release-version:
@@ -39,8 +42,6 @@ on:   # yamllint disable-line rule:truthy
           extraordinary circumstances to ignore the test
           failures and cut the release regardless.
         type: boolean
-  schedule:
-  - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
 concurrency:
   group: >-
