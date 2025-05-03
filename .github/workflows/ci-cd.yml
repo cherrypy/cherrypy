@@ -449,12 +449,13 @@ jobs:
         # NOTE: The latest and the lowest supported Pythons are prioritized
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
-        - 3.11
+        - 3.13
         - pypy-3.9
+        - 3.12
+        - 3.11
         - >-
           3.10
         - 3.9
-        - ~3.12.0-0
         runner-vm-os:
         - ubuntu-24.04
         - macos-15
