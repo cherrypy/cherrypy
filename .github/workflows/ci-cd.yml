@@ -695,7 +695,10 @@ jobs:
         ref: ${{ github.event.inputs.release-committish }}
     - name: Setup git user as [bot]
       if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
-      uses: fregante/setup-git-user@v1.1.0
+      # Refs:
+      # * https://github.community/t/github-actions-bot-email-address/17204/6
+      # * https://github.com/actions/checkout/issues/13#issuecomment-724415212
+      uses: fregante/setup-git-user@v2
 
     - name: >-
         🏷️
