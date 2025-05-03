@@ -688,13 +688,13 @@ jobs:
         fi
 
     - name: Fetch the src snapshot
-      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
         ref: ${{ github.event.inputs.release-committish }}
     - name: Setup git user as [bot]
-      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
       uses: fregante/setup-git-user@v1.1.0
 
     - name: >-
@@ -724,7 +724,7 @@ jobs:
         🏷️
         Push ${{ needs.pre-setup.outputs.git-tag }} tag corresponding
         to the just published release back to GitHub
-      if: steps.existing-remote-tag-check.outputs.already-exists == 'true'
+      if: steps.existing-remote-tag-check.outputs.already-exists != 'true'
       run: >-
         git push --atomic origin
         '${{ needs.pre-setup.outputs.git-tag }}'
