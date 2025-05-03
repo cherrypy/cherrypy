@@ -746,6 +746,43 @@ jobs:
           ).tox-run.outputs.combined-dists-base64-encoded-sha256-hash
         }}
 
+  publish-github-attestations:
+    name: >-
+      🔏
+      Produce a GitHub-native Attestations for
+      ${{ needs.pre-setup.outputs.git-tag }}
+    needs:
+    - post-release-repo-update
+    - pre-setup  # transitive, for accessing settings
+    if: >-
+      always()
+      && needs.post-release-repo-update.result == 'success'
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 3
+
+    permissions:
+      attestations: write  # IMPORTANT: needed to persist attestations
+      contents: read
+      id-token: write  # IMPORTANT: mandatory for Sigstore signing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: >-
+          ${{ needs.pre-setup.outputs.dists-artifact-name }}
+        path: dist/
+
+    - name: >-
+        🔏
+        Generate provenance attestations for the dists
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-path: |
+          dist/${{ needs.pre-setup.outputs.sdist-artifact-name }}
+          dist/${{ needs.pre-setup.outputs.wheel-artifact-name }}
+
   publish-github-release:
     name: >-
       🏷️
@@ -754,6 +791,7 @@ jobs:
     needs:
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
+    - publish-github-attestations
     - slsa-provenance
     runs-on: ubuntu-latest
 
