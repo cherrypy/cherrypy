@@ -450,12 +450,12 @@ jobs:
         # NOTE: to improve the responsiveness. It's nice to see the most
         # NOTE: important results first.
         - 3.13
+        - 3.9
         - pypy-3.9
         - 3.12
         - 3.11
         - >-
           3.10
-        - 3.9
         runner-vm-os:
         - ubuntu-24.04
         - macos-15
