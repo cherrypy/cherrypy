@@ -25,7 +25,7 @@ def expose(func=None, alias=None):
     import sys
     import types
     decoratable_types = types.FunctionType, types.MethodType, type,
-    if isinstance(func, decoratable_types):
+    if isinstance(func, decoratable_types) or hasattr(func, 'func_code'):
         if alias is None:
             # @expose
             func.exposed = True
