@@ -1,0 +1,425 @@
+line-length = 79  # Accessibility-friendly
+
+namespace-packages = [
+  "bin/",
+  "cherrypy/test/",
+  "docs/",
+  "tests/",
+]
+
+[lint]
+ignore = [
+  "CPY001",  # Skip copyright notice requirement at top of files
+
+  # Legitimate cases, no need to "fix" these violations:
+  # E501: "line too long", its function is replaced by `flake8-length`
+  "E501",
+  # W505: "doc line too long", its function is replaced by `flake8-length`
+  "W505",
+
+  "A001",  # builtin-variable-shadowing  # FIXME
+  "A002",  # builtin-argument-shadowing  # FIXME / noqa
+
+  # FIXME: These `flake8-annotations` errors need fixing and removal
+  # ANN001: Missing type annotation for function argument 'argv'
+  "ANN001",
+  # ANN002: Missing type annotation for *exceptions
+  "ANN002",
+  # ANN003: Missing type annotation for **kwargs
+  "ANN003",
+  # ANN201: Missing return type annotation for public function
+  "ANN201",
+  # ANN202: Missing return type annotation for protected function
+  "ANN202",
+  # ANN204: Missing return type annotation for special method
+  "ANN204",
+  # ANN205: Missing return type annotation for staticmethod
+  "ANN205",
+  # ANN206: Missing return type annotation for classmethod
+  "ANN206",
+  "ANN401",  # any-type  # FIXME
+
+  "ARG001",  # unused-function-argument  # FIXME
+  "ARG002",  # unused-method-argument  # FIXME
+  "ARG005",  # unused-lambda-argument  # FIXME
+
+  "B004",  # unreliable-callable-check  # FIXME
+  "B006",  # mutable-argument-default  # FIXME
+  "B007",  # unused-loop-control-variable  # FIXME
+  "B008",  # function-call-in-default-argument  # FIXME
+  "B018",  # useless-expression  # FIXME
+  "B028",  # no-explicit-stacklevel  # FIXME
+  "B904",  # raise-without-from-inside-except  # FIXME
+
+  "BLE001",  # blind-except  # FIXME / noqa
+
+  "C402",  # unnecessary-generator-dict  # FIXME
+  "C403",  # unnecessary-list-comprehension-set  # FIXME
+  "C404",  # unnecessary-list-comprehension-dict  # FIXME
+  "C405",  # unnecessary-literal-set  # FIXME
+  "C408",  # unnecessary-collection-call  # FIXME
+  "C409",  # unnecessary-literal-within-tuple-call  # FIXME
+  "C413",  # unnecessary-call-around-sorted  # FIXME
+  "C417",  # unnecessary-map  # FIXME
+  "C901",  # complex-structure  # FIXME
+
+  "COM812",  # missing-trailing-comma  # FIXME
+  "COM818",  # trailing-comma-on-bare-tuple  # FIXME
+  "COM819",  # prohibited-trailing-comma  # FIXME
+
+  "D102",  # undocumented-public-method  # FIXME
+  "D103",  # undocumented-public-function  # FIXME
+  "D401",  # non-imperative-mood  # FIXME
+
+  # Refs:
+  # * https://github.com/astral-sh/ruff/issues/6606
+  # * https://github.com/astral-sh/ruff/pull/13286
+  "DOC201",  # Ruff doesn't understand sphinx-native param lists
+  "DOC402",  # docstring-missing-yields  # Ruff doesn't understand sphinx-native param lists
+  "DOC501",  # docstring-missing-exception  # Ruff doesn't understand sphinx-native param lists
+
+  "DTZ005",  # call-datetime-now-without-tzinfo  # FIXME
+
+  "E721",  # type-comparison  # FIXME
+
+  "EM101",  # raw-string-in-exception  # FIXME
+  "EM102",  # f-string-in-exception  # FIXME
+  "EM103",  # dot-format-in-exception  # FIXME
+
+  "EXE001",  # shebang-not-executable  # FIXME
+  "EXE002",  # shebang-missing-executable-file  # FIXME
+
+  # Ref: https://github.com/astral-sh/ruff/issues/4845#issuecomment-2816845547
+  "ERA001",  # False-positives in commented-out code
+
+  "F823",  # undefined-local  # FIXME
+
+  "FBT002",  # boolean-default-value-positional-argument  # FIXME / noqa
+  "FBT003",  # boolean-positional-value-in-call  # FIXME / noqa
+
+  "FIX001",  # line-contains-fixme  # FIXME
+  "FIX002",  # line-contains-todo  # FIXME / noqa
+  "FIX004",  # line-contains-hack  # FIXME
+
+  "FLY002",  # static-join-to-f-string  # FIXME
+
+  "FURB101",  # read-whole-file  # FIXME
+  "FURB103",  # write-whole-file  # FIXME
+  "FURB116",  # f-string-number-format  # FIXME
+  "FURB118",  # reimplemented-operator  # FIXME
+  "FURB145",  # slice-copy  # FIXME
+  "FURB171",  # single-item-membership-test  # FIXME
+  "FURB189",  # subclass-builtin  # FIXME
+
+  "I001",  # unsorted-imports  # FIXME
+
+  "INP001",  # implicit-namespace-package  # FIXME
+
+  "ISC002",  # multi-line-implicit-string-concatenation  # FIXME
+  "ISC003",  # explicit-string-concatenation  # FIXME
+
+  "N801",  # invalid-class-name  # FIXME / noqa
+  "N802",  # invalid-function-name  # FIXME
+  "N803",  # invalid-argument-name  # FIXME
+  "N804",  # invalid-first-argument-name-for-class-method  # FIXME
+  "N805",  # invalid-first-argument-name-for-method  # FIXME
+  "N806",  # non-lowercase-variable-in-function  # FIXME
+  "N815",  # mixed-case-variable-in-class-scope  # FIXME
+  "N816",  # mixed-case-variable-in-global-scope  # FIXME
+  "N818",  # error-suffix-on-exception-name  # FIXME / noqa
+
+  "PERF102",  # incorrect-dict-iterator  # FIXME
+  "PERF203",  # try-except-in-loop  # FIXME / noqa
+  "PERF401",  # manual-list-comprehension  # FIXME
+  "PERF402",  # manual-list-copy  # FIXME
+  "PERF403",  # manual-dict-comprehension  # FIXME
+
+  "PIE790",  # unnecessary-placeholder  # FIXME
+  "PIE804",  # unnecessary-dict-kwargs  # FIXME
+
+  "PGH004",  # blanket-noqa  # FIXME
+
+  "PLC0415",  # import-outside-top-level  # FIXME
+  "PLC1901",  # compare-to-empty-string  # FIXME
+  "PLC2701",  # import-private-name  # FIXME
+  "PLC2801",  # unnecessary-dunder-call  # FIXME
+
+  "PLR0904",  # too-many-public-methods  # FIXME
+  "PLR0911",  # too-many-return-statements  # FIXME
+  "PLR0912",  # too-many-branches  # FIXME
+  "PLR0913",  # too-many-arguments  # FIXME / noqa
+  "PLR0914",  # too-many-locals  # FIXME / noqa
+  "PLR0915",  # too-many-statements  # FIXME / noqa
+  "PLR0916",  # too-many-boolean-expressions  # FIXME
+  "PLR0917",  # too-many-positional-arguments  # FIXME / noqa
+  "PLR1702",  # too-many-nested-blocks  # FIXME
+  "PLR1714",  # repeated-equality-comparison  # FIXME
+  "PLR1730",  # if-stmt-min-max  # FIXME
+  "PLR2004",  # magic-value-comparison  # FIXME
+  "PLR5501",  # collapsible-else-if  # FIXME
+  "PLR6104",  # non-augmented-assignment  # FIXME
+  "PLR6201",  # literal-membership  # FIXME
+  "PLR6301",  # no-self-use  # FIXME / noqa
+
+  "PLW0120",  # useless-else-on-loop  # FIXME
+  "PLW0602",  # global-variable-not-assigned  # FIXME
+  "PLW0603",  # global-statement  # FIXME
+  "PLW1514",  # unspecified-encoding  # FIXME
+  "PLW2901",  # redefined-loop-name  # FIXME
+  "PLW3201",  # bad-dunder-method-name  # FIXME
+
+  "PTH100",  # os-path-abspath  # FIXME
+  "PTH101",  # os-chmod  # FIXME
+  "PTH103",  # os-makedirs  # FIXME
+  "PTH107",  # os-remove  # FIXME
+  "PTH108",  # os-unlink  # FIXME
+  "PTH109",  # os-getcwd  # FIXME
+  "PTH110",  # os-path-exists  # FIXME
+  "PTH111",  # os-path-expanduser  # FIXME
+  "PTH112",  # os-path-isdir  # FIXME
+  "PTH113",  # os-path-isfile  # FIXME
+  "PTH116",  # os-stat  # FIXME
+  "PTH117",  # os-path-isabs  # FIXME
+  "PTH118",  # os-path-join  # FIXME
+  "PTH119",  # os-path-basename  # FIXME
+  "PTH120",  # os-path-dirname  # FIXME
+  "PTH122",  # os-path-splitext  # FIXME
+  "PTH123",  # builtin-open  # FIXME
+  "PTH206",  # os-sep-split  # FIXME
+  "PTH208",  # os-listdir  # FIXME
+
+  "PYI001",  # unprefixed-type-param  # FIXME
+  "PYI024",  # collections-named-tuple  # FIXME
+  "PYI066",  # bad-version-info-order  # FIXME
+
+  "Q001",  # bad-quotes-multiline-string  # FIXME
+  "Q003",  # avoidable-escaped-quote  # FIXME
+
+  "RET501",  # unnecessary-return-none  # FIXME
+  "RET502",  # implicit-return-value  # FIXME
+  "RET503",  # implicit-return  # FIXME
+  "RET504",  # unnecessary-assign  # FIXME
+  "RET505",  # superfluous-else-return  # FIXME
+  "RET506",  # superfluous-else-raise  # FIXME
+  "RET508",  # superfluous-else-break  # FIXME
+
+  "RSE102",  # unnecessary-paren-on-raise-exception  # FIXME
+
+  "RUF005",  # collection-literal-concatenation  # FIXME
+  "RUF012",  # mutable-class-default  # FIXME
+  "RUF021",  # parenthesize-chained-operators  # FIXME
+  "RUF022",  # unsorted-dunder-all  # FIXME
+  "RUF031",  # incorrectly-parenthesized-tuple-in-subscript  # FIXME
+  "RUF039",  # unraw-re-pattern  # FIXME
+  "RUF043",  # pytest-raises-ambiguous-pattern  # FIXME
+  "RUF046",  # unnecessary-cast-to-int  # FIXME
+  "RUF048",  # map-int-version-parsing  # FIXME
+  "RUF052",  # used-dummy-variable  # FIXME
+  "RUF059",  # unused-unpacked-variable  # FIXME
+  "RUF100",  # Ruff doesn't know about WPS
+  "RUF102",  # Ruff doesn't know about WPS
+
+  "S101",  # assert  # FIXME
+  "S102",  # exec-builtin  # FIXME
+  "S104",  # hardcoded-bind-all-interfaces  # FIXME / noqa
+  "S110",  # try-except-pass  # FIXME
+  "S301",  # suspicious-pickle-usage  # FIXME
+  "S307",  # suspicious-eval-usage  # FIXME
+  "S324",  # hashlib-insecure-hash-function  # FIXME
+  "S403",  # suspicious-pickle-import  # FIXME
+  "S404",  # suspicious-subprocess-import  # FIXME
+  "S406",  # suspicious-xml-sax-import  # FIXME
+  "S602",  # subprocess-popen-with-shell-equals-true  # FIXME
+  "S605",  # start-process-with-a-shell  # FIXME
+  "S606",  # start-process-with-no-shell  # FIXME
+  "S607",  # start-process-with-partial-path  # FIXME
+
+  "SIM102",  # collapsible-if  # FIXME
+  "SIM105",  # suppressible-exception  # FIXME
+  "SIM108",  # if-else-block-instead-of-if-exp  # FIXME
+  "SIM115",  # open-file-with-context-handler  # FIXME
+  "SIM117",  # multiple-with-statements  # FIXME
+  "SIM118",  # in-dict-keys  # FIXME
+  "SIM300",  # yoda-conditions  # FIXME
+  "SIM910",  # dict-get-with-none-default  # FIXME
+
+  "SLF001",  # private-member-access  # FIXME / noqa
+
+  "SLOT000",  # no-slots-in-str-subclass  # FIXME
+
+  "T201",  # print  # FIXME
+  "T203",  # p-print  # FIXME
+
+  "TC002",  # typing-only-third-party-import  # FIXME
+
+  "TD001",   # invalid-todo-tag  # FIXME
+  "TD002",   # missing-todo-author  # FIXME
+  "TD003",   # missing-todo-link  # FIXME
+  "TD004",   # missing-todo-colon  # FIXME
+  "TD005",   # missing-todo-description  # FIXME
+
+  "TID252",  # relative-imports  # TODO: figure this out
+
+  "TRY002",  # raise-vanilla-class  # FIXME
+  "TRY003",  # raise-vanilla-args  # controversial
+  "TRY004",  # type-check-without-type-error  # FIXME
+  "TRY300",  # try-consider-else  # FIXME
+  "TRY301",  # raise-within-try  # FIXME
+
+  "UP004",  # useless-object-inheritance  # FIXME
+  "UP006",  # non-pep585-annotation  # FIXME
+  "UP007",  # non-pep604-annotation-union  # FIXME
+  "UP008",  # super-call-with-parameters  # FIXME
+  "UP009",  # utf8-encoding-declaration  # FIXME
+  "UP015",  # redundant-open-modes  # FIXME
+  "UP018",  # native-literals  # FIXME
+  "UP020",  # open-alias  # FIXME
+  "UP024",  # os-error-alias  # FIXME
+  "UP028",  # yield-in-for-loop  # FIXME
+  "UP030",  # format-literals  # FIXME
+  "UP031",  # printf-string-formatting  # FIXME
+  "UP032",  # f-string  # FIXME
+  "UP036",  # outdated-version-block  # FIXME
+  "UP045",  # non-pep604-annotation-optional  # FIXME
+]
+preview = true  # Live dangerously
+select = [
+  "ALL",
+]
+task-tags = [
+  "FIXME",
+  "NOTE",
+  "Ref",
+  "Refs",
+  "TODO",
+]
+
+[lint.flake8-pytest-style]
+parametrize-values-type = "tuple"
+
+[lint.flake8-quotes]
+inline-quotes = "single"
+
+[lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+lines-after-imports = 2
+section-order = [
+  "future",
+  "standard-library",
+  "testing",
+  "frameworks",
+  "platforms",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
+
+[lint.isort.sections]
+frameworks = [
+  # "awx",
+  # "django",
+]
+platforms = [
+  # "awx_plugins.interfaces",
+]
+testing = [
+  "hypothesis",
+  "pytest",
+  "pytest_mock",
+  "pytest_subtests",
+]
+
+
+[lint.per-file-ignores]
+# Exceptions for test files
+"cherrypy/test/**.py" = [
+  "ARG002",  # Allow unused arguments in instance methods (required for test stubs)
+  "ARG003",  # unused-class-method-argument  # FIXME
+  "ARG004",  # unused-static-method-argument (hit in WSGI test apps)
+
+  "B009",  # get-attr-with-constant  # FIXME
+  "B015",  # useless-comparison  # FIXME
+
+  "C401",  # unnecessary-generator-set  # FIXME
+  "C410",  # unnecessary-literal-within-list-call  # FIXME
+
+  "D100",  # undocumented-public-module  # FIXME
+  "D101",  # undocumented-public-class  # FIXME
+  "D105",  # undocumented-magic-method  # FIXME
+  "D107",  # undocumented-public-init  # FIXME
+  "D200",  # unnecessary-multiline-docstring  # FIXME
+  "D202",  # blank-line-after-function  # FIXME
+  "D204",  # incorrect-blank-line-after-class  # FIXME
+  "D205",  # missing-blank-line-after-summary  # FIXME
+  "D209",  # new-line-after-last-paragraph  # FIXME
+  "D300",  # triple-single-quotes  # FIXME
+  "D301",  # escape-sequence-in-docstring  # FIXME
+  "D400",  # missing-trailing-period  # FIXME
+  "D403",  # first-word-uncapitalized  # FIXME
+
+  "DTZ003",  # call-datetime-utcnow  # FIXME
+
+  "FURB105",  # print-empty-string  # FIXME
+  "FURB113",  # repeated-append  # FIXME
+  "FURB152",  # math-constant  # FIXME
+  "FURB156",  # hardcoded-string-charset  # FIXME
+
+  "G002",  # logging-percent-format  # FIXME
+
+  "ICN001",  # unconventional-import-alias  # FIXME
+
+  "PLC2701",  # Allow importing internal files needed for testing
+
+  "PLE1307",  # bad-string-format-type  # FIXME
+
+  # "PLR6301",  # Allow 'self' parameter in method definitions (required for test stubs)
+
+  "PT001",  # pytest-fixture-incorrect-parentheses-style  # FIXME
+  "PT006",  # pytest-parametrize-names-wrong-type  # FIXME
+  "PT007",  # pytest-parametrize-values-wrong-type  # FIXME
+  "PT008",  # pytest-patch-with-lambda  # FIXME
+  "PT009",  # pytest-unittest-assertion  # FIXME
+  "PT011",  # pytest-raises-too-broad  # FIXME
+  "PT018",  # pytest-composite-assertion  # FIXME
+  "PT021",  # pytest-fixture-finalizer-callback  # FIXME
+  "PT027",  # pytest-unittest-raises-assertion  # FIXME
+
+  "PTH124",  # py-path  # FIXME
+  "PTH202",  # os-path-getsize  # FIXME
+
+  "Q002",  # bad-quotes-docstring  # FIXME
+
+  "RUF001",  # ambiguous-unicode-character-string  # FIXME
+  "RUF027",  # missing-f-string-syntax  # FIXME
+
+  "S101",  # Allow use of `assert` in test files
+  "S105",  # hardcoded-password-string  # FIXME
+  "S113",  # request-without-timeout  # FIXME
+  "S310",  # suspicious-url-open-usage  # FIXME
+  "S314",  # suspicious-xml-element-tree-usage  # FIXME
+  "S404",  # Allow importing 'subprocess' module to testing call external tools needed by these hooks
+  "S405",  # suspicious-xml-etree-import  # FIXME
+  "S603",  # subprocess-without-shell-equals-true
+
+  "SIM114",  # if-with-same-arms  # FIXME
+
+  "SLF001",  # Private member accessed
+
+  "UP001",  # useless-metaclass-type  # FIXME
+  "UP012",  # unnecessary-encode-utf8  # FIXME
+  "UP025",  # unicode-kind-prefix  # FIXME
+]
+"tests/**.py" = [
+  "S101",  # Allow use of `assert` in test files
+
+  "B017",  # assert-raises-exception  # FIXME
+  "N999",  # invalid-module-name  # FIXME
+  "PT011",  # pytest-raises-too-broad  # FIXME
+  "PTH110",  # os-path-exists  # FIXME
+  "PTH112",  # os-path-isdir  # FIXME
+  "PTH121",  # os-path-samefile  # FIXME
+]
+
+[lint.pydocstyle]
+convention = "pep257"

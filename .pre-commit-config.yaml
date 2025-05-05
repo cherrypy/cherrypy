@@ -13,6 +13,14 @@ repos:
   hooks:
   - id: no_optional
 
+- repo: https://github.com/astral-sh/ruff-pre-commit.git
+  rev: v0.11.7
+  hooks:
+  - id: ruff
+    args:
+    # Ref: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    - --fix  # NOTE: When `--fix` is used, linting should be before ruff-format
+
 - repo: https://github.com/python-jsonschema/check-jsonschema.git
   rev: 0.33.0
   hooks:
@@ -55,11 +63,6 @@ repos:
   - id: detect-private-key
     exclude: cherrypy/test/test.pem
   - id: requirements-txt-fixer
-
-- repo: https://github.com/PyCQA/pydocstyle.git
-  rev: 6.3.0
-  hooks:
-  - id: pydocstyle
 
 - repo: https://github.com/PyCQA/flake8.git
   rev: 7.1.0
