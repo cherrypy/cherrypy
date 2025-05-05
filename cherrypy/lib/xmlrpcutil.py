@@ -1,8 +1,10 @@
 """XML-RPC tool helpers."""
+
 import sys
 from xmlrpc.client import (
-    loads as xmlrpc_loads, dumps as xmlrpc_dumps,
-    Fault as XMLRPCFault
+    loads as xmlrpc_loads,
+    dumps as xmlrpc_dumps,
+    Fault as XMLRPCFault,
 )
 
 import cherrypy
@@ -14,7 +16,7 @@ def process_body():
     try:
         return xmlrpc_loads(cherrypy.request.body.read())
     except Exception:
-        return ('ERROR PARAMS', ), 'ERRORMETHOD'
+        return ('ERROR PARAMS',), 'ERRORMETHOD'
 
 
 def patched_path(path):
@@ -47,10 +49,11 @@ def respond(body, encoding='utf-8', allow_none=0):
 
     _set_response(
         xmlrpc_dumps(
-            body, methodresponse=1,
+            body,
+            methodresponse=1,
             encoding=encoding,
-            allow_none=allow_none
-        )
+            allow_none=allow_none,
+        ),
     )
 
 

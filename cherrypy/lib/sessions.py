@@ -100,6 +100,7 @@ On the other extreme, some users report Firefox sending cookies after their
 expiration date, although this was on a system with an inaccurate system time.
 Maybe FF doesn't trust system time.
 """
+
 import sys
 import datetime
 import os
@@ -197,8 +198,11 @@ class Session(object):
                     cherrypy.log('Set id to %s.' % id, 'TOOLS.SESSIONS')
             else:
                 if self.debug:
-                    cherrypy.log('Expired or malicious session %r; '
-                                 'making a new one' % id, 'TOOLS.SESSIONS')
+                    cherrypy.log(
+                        'Expired or malicious session %r; '
+                        'making a new one' % id,
+                        'TOOLS.SESSIONS',
+                    )
                 # Expired or malicious session. Make a new one.
                 # See https://github.com/cherrypy/cherrypy/issues/709.
                 self.id = None
@@ -224,7 +228,8 @@ class Session(object):
                 cherrypy.log(
                     'Deleting the existing session %r before '
                     'regeneration.' % self.id,
-                    'TOOLS.SESSIONS')
+                    'TOOLS.SESSIONS',
+                )
             self.delete()
 
         old_session_was_locked = self.locked
@@ -240,8 +245,7 @@ class Session(object):
             if self._exists():
                 self.id = None
         if self.debug:
-            cherrypy.log('Set id to generated %s.' % self.id,
-                         'TOOLS.SESSIONS')
+            cherrypy.log('Set id to generated %s.' % self.id, 'TOOLS.SESSIONS')
 
         if old_session_was_locked:
             self.acquire_lock()
@@ -265,15 +269,19 @@ class Session(object):
                 t = datetime.timedelta(seconds=self.timeout * 60)
                 expiration_time = self.now() + t
                 if self.debug:
-                    cherrypy.log('Saving session %r with expiry %s' %
-                                 (self.id, expiration_time),
-                                 'TOOLS.SESSIONS')
+                    cherrypy.log(
+                        'Saving session %r with expiry %s'
+                        % (self.id, expiration_time),
+                        'TOOLS.SESSIONS',
+                    )
                 self._save(expiration_time)
             else:
                 if self.debug:
                     cherrypy.log(
-                        'Skipping save of session %r (no session loaded).' %
-                        self.id, 'TOOLS.SESSIONS')
+                        'Skipping save of session %r (no session loaded).'
+                        % self.id,
+                        'TOOLS.SESSIONS',
+                    )
         finally:
             if self.locked:
                 # Always release the lock if the user didn't release it
@@ -287,13 +295,17 @@ class Session(object):
         # data is either None or a tuple (session_data, expiration_time)
         if data is None or data[1] < self.now():
             if self.debug:
-                cherrypy.log('Expired session %r, flushing data.' % self.id,
-                             'TOOLS.SESSIONS')
+                cherrypy.log(
+                    'Expired session %r, flushing data.' % self.id,
+                    'TOOLS.SESSIONS',
+                )
             self._data = {}
         else:
             if self.debug:
-                cherrypy.log('Data loaded for session %r.' % self.id,
-                             'TOOLS.SESSIONS')
+                cherrypy.log(
+                    'Data loaded for session %r.' % self.id,
+                    'TOOLS.SESSIONS',
+                )
             self._data = data[0]
         self.loaded = True
 
@@ -304,8 +316,11 @@ class Session(object):
             # clean_up is an instancemethod and not a classmethod,
             # so that tool config can be accessed inside the method.
             t = cherrypy.process.plugins.Monitor(
-                cherrypy.engine, self.clean_up, self.clean_freq * 60,
-                name='Session cleanup')
+                cherrypy.engine,
+                self.clean_up,
+                self.clean_freq * 60,
+                name='Session cleanup',
+            )
             t.subscribe()
             cls.clean_thread = t
             t.start()
@@ -316,8 +331,7 @@ class Session(object):
         """Delete stored session data."""
         self._delete()
         if self.debug:
-            cherrypy.log('Deleted session %s.' % self.id,
-                         'TOOLS.SESSIONS')
+            cherrypy.log('Deleted session %s.' % self.id, 'TOOLS.SESSIONS')
 
     # -------------------- Application accessor methods -------------------- #
 
@@ -450,9 +464,8 @@ class RamSession(Session):
 
         # added to remove obsolete lock objects
         for _id in list(self.locks):
-            locked = (
-                _id not in self.cache
-                and self.locks[_id].acquire(blocking=False)
+            locked = _id not in self.cache and self.locks[_id].acquire(
+                blocking=False,
             )
             if locked:
                 lock = self.locks.pop(_id)
@@ -516,7 +529,8 @@ class FileSession(Session):
             self.lock_timeout = datetime.timedelta(seconds=self.lock_timeout)
         if not isinstance(self.lock_timeout, (datetime.timedelta, type(None))):
             raise ValueError(
-                'Lock timeout must be numeric seconds or a timedelta instance.'
+                'Lock timeout must be numeric seconds '
+                'or a timedelta instance.',
             )
 
     @classmethod
@@ -544,8 +558,10 @@ class FileSession(Session):
         return os.path.exists(path)
 
     def _load(self, path=None):
-        assert self.locked, ('The session load without being locked.  '
-                             "Check your tools' priority levels.")
+        assert self.locked, (
+            'The session load without being locked.  '
+            "Check your tools' priority levels."
+        )
         if path is None:
             path = self._get_file_path()
         try:
@@ -554,19 +570,25 @@ class FileSession(Session):
         except (IOError, EOFError):
             e = sys.exc_info()[1]
             if self.debug:
-                cherrypy.log('Error loading the session pickle: %s' %
-                             e, 'TOOLS.SESSIONS')
+                cherrypy.log(
+                    'Error loading the session pickle: %s' % e,
+                    'TOOLS.SESSIONS',
+                )
             return None
 
     def _save(self, expiration_time):
-        assert self.locked, ('The session was saved without being locked.  '
-                             "Check your tools' priority levels.")
+        assert self.locked, (
+            'The session was saved without being locked.  '
+            "Check your tools' priority levels."
+        )
         with open(self._get_file_path(), 'wb') as f:
             pickle.dump((self._data, expiration_time), f, self.pickle_protocol)
 
     def _delete(self):
-        assert self.locked, ('The session deletion without being locked.  '
-                             "Check your tools' priority levels.")
+        assert self.locked, (
+            'The session deletion without being locked.  '
+            "Check your tools' priority levels."
+        )
         try:
             os.unlink(self._get_file_path())
         except OSError:
@@ -601,10 +623,9 @@ class FileSession(Session):
         now = self.now()
         # Iterate over all session files in self.storage_path
         for fname in os.listdir(self.storage_path):
-            have_session = (
-                fname.startswith(self.SESSION_PREFIX)
-                and not fname.endswith(self.LOCK_SUFFIX)
-            )
+            have_session = fname.startswith(
+                self.SESSION_PREFIX,
+            ) and not fname.endswith(self.LOCK_SUFFIX)
             if have_session:
                 # We have a session file: lock and load it and check
                 #   if it's expired. If it fails, nevermind.
@@ -630,9 +651,16 @@ class FileSession(Session):
 
     def __len__(self):
         """Return the number of active sessions."""
-        return len([fname for fname in os.listdir(self.storage_path)
-                    if (fname.startswith(self.SESSION_PREFIX) and
-                        not fname.endswith(self.LOCK_SUFFIX))])
+        return len(
+            [
+                fname
+                for fname in os.listdir(self.storage_path)
+                if (
+                    fname.startswith(self.SESSION_PREFIX)
+                    and not fname.endswith(self.LOCK_SUFFIX)
+                )
+            ],
+        )
 
 
 class MemcachedSession(Session):
@@ -659,6 +687,7 @@ class MemcachedSession(Session):
             setattr(cls, k, v)
 
         import memcache
+
         cls.cache = memcache.Client(cls.servers)
 
     def _exists(self):
@@ -682,7 +711,8 @@ class MemcachedSession(Session):
         try:
             if not self.cache.set(self.id, (self._data, expiration_time), td):
                 raise AssertionError(
-                    'Session data for id %r not set.' % self.id)
+                    'Session data for id %r not set.' % self.id,
+                )
         finally:
             self.mc_lock.release()
 
@@ -707,6 +737,7 @@ class MemcachedSession(Session):
 
 
 # Hook functions (for CherryPy tools)
+
 
 def save():
     """Save any changed session data."""
@@ -749,12 +780,22 @@ close.failsafe = True
 close.priority = 90
 
 
-def init(storage_type=None, path=None, path_header=None, name='session_id',
-         timeout=60, domain=None, secure=False, clean_freq=5,
-         persistent=True, httponly=False, debug=False,
-         # Py27 compat
-         # *, storage_class=RamSession,
-         **kwargs):
+def init(
+    storage_type=None,
+    path=None,
+    path_header=None,
+    name='session_id',
+    timeout=60,
+    domain=None,
+    secure=False,
+    clean_freq=5,
+    persistent=True,
+    httponly=False,
+    debug=False,
+    # Py27 compat
+    # *, storage_class=RamSession,
+    **kwargs,
+):
     """Initialize session object (using cookies).
 
     storage_class
@@ -820,8 +861,10 @@ def init(storage_type=None, path=None, path_header=None, name='session_id',
     if name in request.cookie:
         id = request.cookie[name].value
         if debug:
-            cherrypy.log('ID obtained from request.cookie: %r' % id,
-                         'TOOLS.SESSIONS')
+            cherrypy.log(
+                'ID obtained from request.cookie: %r' % id,
+                'TOOLS.SESSIONS',
+            )
 
     first_time = not hasattr(cherrypy, 'session')
 
@@ -848,6 +891,7 @@ def init(storage_type=None, path=None, path_header=None, name='session_id',
     def update_cookie(id):
         """Update the cookie every time the session id changes."""
         cherrypy.serving.response.cookie[name] = id
+
     sess.id_observers.append(update_cookie)
 
     # Create cherrypy.session which will proxy to cherrypy.serving.session
@@ -860,13 +904,26 @@ def init(storage_type=None, path=None, path_header=None, name='session_id',
         # See http://support.microsoft.com/kb/223799/EN-US/
         # and http://support.mozilla.com/en-US/kb/Cookies
         cookie_timeout = None
-    set_response_cookie(path=path, path_header=path_header, name=name,
-                        timeout=cookie_timeout, domain=domain, secure=secure,
-                        httponly=httponly)
+    set_response_cookie(
+        path=path,
+        path_header=path_header,
+        name=name,
+        timeout=cookie_timeout,
+        domain=domain,
+        secure=secure,
+        httponly=httponly,
+    )
 
 
-def set_response_cookie(path=None, path_header=None, name='session_id',
-                        timeout=60, domain=None, secure=False, httponly=False):
+def set_response_cookie(
+    path=None,
+    path_header=None,
+    name='session_id',
+    timeout=60,
+    domain=None,
+    secure=False,
+    httponly=False,
+):
     """Set a response cookie for the client.
 
     path
@@ -900,9 +957,7 @@ def set_response_cookie(path=None, path_header=None, name='session_id',
     cookie = cherrypy.serving.response.cookie
     cookie[name] = cherrypy.serving.session.id
     cookie[name]['path'] = (
-        path or
-        cherrypy.serving.request.headers.get(path_header) or
-        '/'
+        path or cherrypy.serving.request.headers.get(path_header) or '/'
     )
 
     if timeout:
@@ -933,7 +988,9 @@ def _add_MSIE_max_age_workaround(cookie, timeout):
 def expire():
     """Expire the current session cookie."""
     name = cherrypy.serving.request.config.get(
-        'tools.sessions.name', 'session_id')
+        'tools.sessions.name',
+        'session_id',
+    )
     one_year = 60 * 60 * 24 * 365
     e = time.time() - one_year
     cherrypy.serving.response.cookie[name]['expires'] = httputil.HTTPDate(e)

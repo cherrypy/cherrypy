@@ -48,8 +48,11 @@ def read_process(cmd, args=''):
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r'(not recognized|No such file|not found)', firstline,
-                      re.IGNORECASE)):
+        if re.search(
+            r'(not recognized|No such file|not found)',
+            firstline,
+            re.IGNORECASE,
+        ):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:
@@ -112,9 +115,14 @@ class ModPythonSupervisor(helper.Supervisor):
             mpconf = os.path.join(curdir, mpconf)
 
         with open(mpconf, 'wb') as f:
-            f.write(self.template %
-                    {'port': self.port, 'modulename': modulename,
-                     'host': self.host})
+            f.write(
+                self.template
+                % {
+                    'port': self.port,
+                    'modulename': modulename,
+                    'host': self.host,
+                },
+            )
 
         result = read_process(APACHE_PATH, '-k start -f %s' % mpconf)
         if result:
@@ -135,11 +143,13 @@ def wsgisetup(req):
         loaded = True
         options = req.get_options()
 
-        cherrypy.config.update({
-            'log.error_file': os.path.join(curdir, 'test.log'),
-            'environment': 'test_suite',
-            'server.socket_host': options['socket_host'],
-        })
+        cherrypy.config.update(
+            {
+                'log.error_file': os.path.join(curdir, 'test.log'),
+                'environment': 'test_suite',
+                'server.socket_host': options['socket_host'],
+            },
+        )
 
         modname = options['testmod']
         mod = __import__(modname, globals(), locals(), [''])
@@ -148,6 +158,7 @@ def wsgisetup(req):
         cherrypy.server.unsubscribe()
         cherrypy.engine.start()
     from mod_python import apache
+
     return apache.OK
 
 
@@ -158,10 +169,13 @@ def cpmodpysetup(req):
         loaded = True
         options = req.get_options()
 
-        cherrypy.config.update({
-            'log.error_file': os.path.join(curdir, 'test.log'),
-            'environment': 'test_suite',
-            'server.socket_host': options['socket_host'],
-        })
+        cherrypy.config.update(
+            {
+                'log.error_file': os.path.join(curdir, 'test.log'),
+                'environment': 'test_suite',
+                'server.socket_host': options['socket_host'],
+            },
+        )
     from mod_python import apache
+
     return apache.OK

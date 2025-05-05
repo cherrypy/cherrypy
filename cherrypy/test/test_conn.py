@@ -19,15 +19,14 @@ pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
 
 
 def setup_server():
-
     def raise500():
         raise cherrypy.HTTPError(500)
 
     class Root:
-
         @cherrypy.expose
         def index(self):
             return pov
+
         page1 = index
         page2 = index
         page3 = index
@@ -59,8 +58,9 @@ def setup_server():
         @cherrypy.expose
         def upload(self):
             if not cherrypy.request.method == 'POST':
-                raise AssertionError("'POST' != request.method %r" %
-                                     cherrypy.request.method)
+                raise AssertionError(
+                    "'POST' != request.method %r" % cherrypy.request.method,
+                )
             request_body_txt = tonative(cherrypy.request.body.read())
             return f"thanks for '{request_body_txt!s}'"
 
@@ -94,10 +94,12 @@ def setup_server():
             return newbody
 
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({
-        'server.max_request_body_size': 1001,
-        'server.socket_timeout': timeout,
-    })
+    cherrypy.config.update(
+        {
+            'server.max_request_body_size': 1001,
+            'server.socket_timeout': timeout,
+        },
+    )
 
 
 class ConnectionCloseTests(helper.CPWebCase):
@@ -218,8 +220,10 @@ class ConnectionCloseTests(helper.CPWebCase):
             if set_cl:
                 # When a Content-Length is provided, the content should
                 # stream without closing the connection.
-                self.getPage('/stream?set_cl=Yes',
-                             headers=[('Connection', 'Keep-Alive')])
+                self.getPage(
+                    '/stream?set_cl=Yes',
+                    headers=[('Connection', 'Keep-Alive')],
+                )
                 self.assertHeader('Content-Length')
                 self.assertHeader('Connection', 'Keep-Alive')
                 self.assertNoHeader('Transfer-Encoding')
@@ -351,13 +355,14 @@ class PipelineTests(helper.CPWebCase):
         conn._output(ntob('Host: %s' % self.HOST, 'ascii'))
         conn._send_output()
         response = conn.response_class(conn.sock, method='GET')
-        msg = (
-            "Writing to timed out socket didn't fail as it should have: %s")
+        msg = "Writing to timed out socket didn't fail as it should have: %s"
         try:
             response.begin()
         except Exception:
-            if not isinstance(sys.exc_info()[1],
-                              (socket.error, BadStatusLine)):
+            if not isinstance(
+                sys.exc_info()[1],
+                (socket.error, BadStatusLine),
+            ):
                 self.fail(msg % sys.exc_info()[1])
         else:
             if response.status != 408:
@@ -386,8 +391,10 @@ class PipelineTests(helper.CPWebCase):
         try:
             response.begin()
         except Exception:
-            if not isinstance(sys.exc_info()[1],
-                              (socket.error, BadStatusLine)):
+            if not isinstance(
+                sys.exc_info()[1],
+                (socket.error, BadStatusLine),
+            ):
                 self.fail(msg % sys.exc_info()[1])
         else:
             if response.status != 408:
@@ -493,8 +500,9 @@ class PipelineTests(helper.CPWebCase):
                 line = response.fp.readline().strip()
                 if line:
                     self.fail(
-                        '100 Continue should not output any headers. Got %r' %
-                        line)
+                        '100 Continue should not output any headers. Got %r'
+                        % line,
+                    )
                 else:
                     break
 
@@ -619,8 +627,10 @@ class ConnectionTests(helper.CPWebCase):
         if cherrypy.server.protocol_version != 'HTTP/1.1':
             return self.skip()
 
-        if (hasattr(self, 'harness') and
-                'modpython' in self.harness.__class__.__name__.lower()):
+        if (
+            hasattr(self, 'harness')
+            and 'modpython' in self.harness.__class__.__name__.lower()
+        ):
             # mod_python forbids chunked encoding
             return self.skip()
 
@@ -631,9 +641,11 @@ class ConnectionTests(helper.CPWebCase):
         conn = self.HTTP_CONN
 
         # Try a normal chunked request (with extensions)
-        body = ntob('8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n'
-                    'Content-Type: application/json\r\n'
-                    '\r\n')
+        body = ntob(
+            '8;key=value\r\nxx\r\nxxxx\r\n5\r\nyyyyy\r\n0\r\n'
+            'Content-Type: application/json\r\n'
+            '\r\n',
+        )
         conn.putrequest('POST', '/upload', skip_host=True)
         conn.putheader('Host', self.HOST)
         conn.putheader('Transfer-Encoding', 'chunked')
@@ -678,8 +690,10 @@ class ConnectionTests(helper.CPWebCase):
         response = conn.getresponse()
         self.status, self.headers, self.body = webtest.shb(response)
         self.assertStatus(413)
-        self.assertBody('The entity sent with the request exceeds '
-                        'the maximum allowed bytes.')
+        self.assertBody(
+            'The entity sent with the request exceeds '
+            'the maximum allowed bytes.',
+        )
         conn.close()
 
     def test_Content_Length_out_preheaders(self):
@@ -687,8 +701,11 @@ class ConnectionTests(helper.CPWebCase):
         # the actual bytes in the response body.
         self.persistent = True
         conn = self.HTTP_CONN
-        conn.putrequest('GET', '/custom_cl?body=I+have+too+many+bytes&cl=5',
-                        skip_host=True)
+        conn.putrequest(
+            'GET',
+            '/custom_cl?body=I+have+too+many+bytes&cl=5',
+            skip_host=True,
+        )
         conn.putheader('Host', self.HOST)
         conn.endheaders()
         response = conn.getresponse()
@@ -696,7 +713,8 @@ class ConnectionTests(helper.CPWebCase):
         self.assertStatus(500)
         self.assertBody(
             'The requested resource returned more bytes than the '
-            'declared Content-Length.')
+            'declared Content-Length.',
+        )
         conn.close()
 
     def test_Content_Length_out_postheaders(self):
@@ -705,8 +723,10 @@ class ConnectionTests(helper.CPWebCase):
         self.persistent = True
         conn = self.HTTP_CONN
         conn.putrequest(
-            'GET', '/custom_cl?body=I+too&body=+have+too+many&cl=5',
-            skip_host=True)
+            'GET',
+            '/custom_cl?body=I+too&body=+have+too+many&cl=5',
+            skip_host=True,
+        )
         conn.putheader('Host', self.HOST)
         conn.endheaders()
         response = conn.getresponse()
@@ -741,29 +761,29 @@ class ConnectionTests(helper.CPWebCase):
 
 
 def setup_upload_server():
-
     class Root:
         @cherrypy.expose
         def upload(self):
             if not cherrypy.request.method == 'POST':
-                raise AssertionError("'POST' != request.method %r" %
-                                     cherrypy.request.method)
+                raise AssertionError(
+                    "'POST' != request.method %r" % cherrypy.request.method,
+                )
             return "thanks for '%s'" % tonative(cherrypy.request.body.read())
 
     cherrypy.tree.mount(Root())
-    cherrypy.config.update({
-        'server.max_request_body_size': 1001,
-        'server.socket_timeout': 10,
-        'server.accepted_queue_size': 5,
-        'server.accepted_queue_timeout': 0.1,
-    })
+    cherrypy.config.update(
+        {
+            'server.max_request_body_size': 1001,
+            'server.socket_timeout': 10,
+            'server.accepted_queue_size': 5,
+            'server.accepted_queue_timeout': 0.1,
+        },
+    )
 
 
 reset_names = 'ECONNRESET', 'WSAECONNRESET'
 socket_reset_errors = [
-    getattr(errno, name)
-    for name in reset_names
-    if hasattr(errno, name)
+    getattr(errno, name) for name in reset_names if hasattr(errno, name)
 ]
 'reset error numbers available on this platform'
 
@@ -797,8 +817,12 @@ class LimitedRequestQueueTests(helper.CPWebCase):
             # server immediately.
             overflow_conn = self.HTTP_CONN(self.HOST, self.PORT)
             # Manually connect since httplib won't let us set a timeout
-            for res in socket.getaddrinfo(self.HOST, self.PORT, 0,
-                                          socket.SOCK_STREAM):
+            for res in socket.getaddrinfo(
+                self.HOST,
+                self.PORT,
+                0,
+                socket.SOCK_STREAM,
+            ):
                 af, socktype, proto, canonname, sa = res
                 overflow_conn.sock = socket.socket(af, socktype, proto)
                 overflow_conn.sock.settimeout(5)

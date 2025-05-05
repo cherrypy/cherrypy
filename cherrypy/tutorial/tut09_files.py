@@ -95,8 +95,12 @@ class FileDemo(object):
     def download(self):
         """Send file to the HTTP client accessing ``/download`` URI."""
         path = os.path.join(absDir, 'pdf_file.pdf')
-        return static.serve_file(path, 'application/x-download',
-                                 'attachment', os.path.basename(path))
+        return static.serve_file(
+            path,
+            'application/x-download',
+            'attachment',
+            os.path.basename(path),
+        )
 
 
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')

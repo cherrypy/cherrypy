@@ -3,10 +3,8 @@ from cherrypy.test import helper
 
 
 class SessionAuthenticateTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
-
         def check(username, password):
             # Dummy check_username_and_password function
             if username != 'test' or password != 'password':
@@ -19,10 +17,13 @@ class SessionAuthenticateTest(helper.CPWebCase):
             cherrypy.request.params['test'] = 'test'
 
         cherrypy.tools.augment_params = cherrypy.Tool(
-            'before_handler', augment_params, None, priority=30)
+            'before_handler',
+            augment_params,
+            None,
+            priority=30,
+        )
 
         class Test:
-
             _cp_config = {
                 'tools.sessions.on': True,
                 'tools.session_auth.on': True,

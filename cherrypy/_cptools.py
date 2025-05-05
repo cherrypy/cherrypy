@@ -35,10 +35,11 @@ def _getargs(func):
     """Return the names of all static arguments to the given function."""
     # Use this instead of importing inspect for less mem overhead.
     import types
+
     if isinstance(func, types.MethodType):
         func = func.__func__
     co = func.__code__
-    return co.co_varnames[:co.co_argcount]
+    return co.co_varnames[: co.co_argcount]
 
 
 _attr_error = (
@@ -121,9 +122,10 @@ class Tool(object):
                 return cherrypy.request.base
         """
         if args:
-            raise TypeError('The %r Tool does not accept positional '
-                            'arguments; you must use keyword arguments.'
-                            % self._name)
+            raise TypeError(
+                'The %r Tool does not accept positional '
+                'arguments; you must use keyword arguments.' % self._name,
+            )
 
         def tool_decorator(f):
             if not hasattr(f, '_cp_config'):
@@ -133,6 +135,7 @@ class Tool(object):
             for k, v in kwargs.items():
                 f._cp_config[subspace + k] = v
             return f
+
         return tool_decorator
 
     def _setup(self):
@@ -145,8 +148,12 @@ class Tool(object):
         p = conf.pop('priority', None)
         if p is None:
             p = getattr(self.callable, 'priority', self._priority)
-        cherrypy.serving.request.hooks.attach(self._point, self.callable,
-                                              priority=p, **conf)
+        cherrypy.serving.request.hooks.attach(
+            self._point,
+            self.callable,
+            priority=p,
+            **conf,
+        )
 
 
 class HandlerTool(Tool):
@@ -174,12 +181,14 @@ class HandlerTool(Tool):
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
         """
+
         @expose
         def handle_func(*a, **kw):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.serving.response.body
+
         return handle_func
 
     def _wrapper(self, **kwargs):
@@ -196,8 +205,12 @@ class HandlerTool(Tool):
         p = conf.pop('priority', None)
         if p is None:
             p = getattr(self.callable, 'priority', self._priority)
-        cherrypy.serving.request.hooks.attach(self._point, self._wrapper,
-                                              priority=p, **conf)
+        cherrypy.serving.request.hooks.attach(
+            self._point,
+            self._wrapper,
+            priority=p,
+            **conf,
+        )
 
 
 class HandlerWrapperTool(Tool):
@@ -219,8 +232,13 @@ class HandlerWrapperTool(Tool):
         cherrypy.tools.jinja = HandlerWrapperTool(interpolator)
     """
 
-    def __init__(self, newhandler, point='before_handler', name=None,
-                 priority=50):
+    def __init__(
+        self,
+        newhandler,
+        point='before_handler',
+        name=None,
+        priority=50,
+    ):
         """Initialize a handler wrapper tool."""
         self.newhandler = newhandler
         self._point = point
@@ -233,6 +251,7 @@ class HandlerWrapperTool(Tool):
 
         def wrap(*args, **kwargs):
             return self.newhandler(innerfunc, *args, **kwargs)
+
         cherrypy.serving.request.handler = wrap
 
 
@@ -305,8 +324,11 @@ class SessionTool(Tool):
             hooks.attach('before_handler', self._lock_session)
         elif locking == 'early':
             # Lock before the request body (but after _sessions.init runs!)
-            hooks.attach('before_request_body', self._lock_session,
-                         priority=60)
+            hooks.attach(
+                'before_request_body',
+                self._lock_session,
+                priority=60,
+            )
         else:
             # Don't lock
             pass
@@ -322,9 +344,7 @@ class SessionTool(Tool):
         # Grab cookie-relevant tool args
         relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
         conf = dict(
-            (k, v)
-            for k, v in self._merged_args().items()
-            if k in relevant
+            (k, v) for k, v in self._merged_args().items() if k in relevant
         )
         _sessions.set_response_cookie(**conf)
 
@@ -386,9 +406,11 @@ class XMLRPCController(object):
             raise Exception('method "%s" is not supported' % attr)
 
         conf = cherrypy.serving.request.toolmaps['tools'].get('xmlrpc', {})
-        _xmlrpc.respond(body,
-                        conf.get('encoding', 'utf-8'),
-                        conf.get('allow_none', 0))
+        _xmlrpc.respond(
+            body,
+            conf.get('encoding', 'utf-8'),
+            conf.get('allow_none', 0),
+        )
         return cherrypy.serving.response.body
 
 
@@ -406,8 +428,12 @@ class CachingTool(Tool):
         else:
             if request.cacheable:
                 # Note the devious technique here of adding hooks on the fly
-                request.hooks.attach('before_finalize', _caching.tee_output,
-                                     priority=100)
+                request.hooks.attach(
+                    'before_finalize',
+                    _caching.tee_output,
+                    priority=100,
+                )
+
     _wrapper.priority = 90
 
     def _setup(self):
@@ -415,8 +441,12 @@ class CachingTool(Tool):
         conf = self._merged_args()
 
         p = conf.pop('priority', None)
-        cherrypy.serving.request.hooks.attach('before_handler', self._wrapper,
-                                              priority=p, **conf)
+        cherrypy.serving.request.hooks.attach(
+            'before_handler',
+            self._wrapper,
+            priority=p,
+            **conf,
+        )
 
 
 class Toolbox(object):
@@ -448,6 +478,7 @@ class Toolbox(object):
             toolname, arg = k.split('.', 1)
             bucket = map.setdefault(toolname, {})
             bucket[arg] = v
+
         return populate
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -465,11 +496,13 @@ class Toolbox(object):
         Return a decorator which registers the function
         at the given hook point.
         """
+
         def decorator(func):
             attr_name = kwargs.get('name', func.__name__)
             tool = Tool(point, func, **kwargs)
             setattr(self, attr_name, tool)
             return func
+
         return decorator
 
 

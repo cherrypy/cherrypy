@@ -13,6 +13,7 @@ from cherrypy.lib import is_iterator
 
 #                     Conditional HTTP request support                     #
 
+
 def validate_etags(autotags=False, debug=False):
     """Validate the current ETag against If-Match, If-None-Match headers.
 
@@ -69,26 +70,38 @@ def validate_etags(autotags=False, debug=False):
         conditions = request.headers.elements('If-Match') or []
         conditions = [str(x) for x in conditions]
         if debug:
-            cherrypy.log('If-Match conditions: %s' % repr(conditions),
-                         'TOOLS.ETAGS')
+            cherrypy.log(
+                'If-Match conditions: %s' % repr(conditions),
+                'TOOLS.ETAGS',
+            )
         if conditions and not (conditions == ['*'] or etag in conditions):
-            raise cherrypy.HTTPError(412, 'If-Match failed: ETag %r did '
-                                     'not match %r' % (etag, conditions))
+            raise cherrypy.HTTPError(
+                412,
+                'If-Match failed: ETag %r did '
+                'not match %r' % (etag, conditions),
+            )
 
         conditions = request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
         if debug:
-            cherrypy.log('If-None-Match conditions: %s' % repr(conditions),
-                         'TOOLS.ETAGS')
+            cherrypy.log(
+                'If-None-Match conditions: %s' % repr(conditions),
+                'TOOLS.ETAGS',
+            )
         if conditions == ['*'] or etag in conditions:
             if debug:
-                cherrypy.log('request.method: %s' %
-                             request.method, 'TOOLS.ETAGS')
+                cherrypy.log(
+                    'request.method: %s' % request.method,
+                    'TOOLS.ETAGS',
+                )
             if request.method in ('GET', 'HEAD'):
                 raise cherrypy.HTTPRedirect([], 304)
             else:
-                raise cherrypy.HTTPError(412, 'If-None-Match failed: ETag %r '
-                                         'matched %r' % (etag, conditions))
+                raise cherrypy.HTTPError(
+                    412,
+                    'If-None-Match failed: ETag %r '
+                    'matched %r' % (etag, conditions),
+                )
 
 
 def validate_since():
@@ -120,6 +133,7 @@ def validate_since():
 
 #                                Tool code                                #
 
+
 def allow(methods=None, debug=False):
     """Raise 405 if request.method not in methods (default ['GET', 'HEAD']).
 
@@ -141,17 +155,28 @@ def allow(methods=None, debug=False):
     cherrypy.response.headers['Allow'] = ', '.join(methods)
     if cherrypy.request.method not in methods:
         if debug:
-            cherrypy.log('request.method %r not in methods %r' %
-                         (cherrypy.request.method, methods), 'TOOLS.ALLOW')
+            cherrypy.log(
+                'request.method %r not in methods %r'
+                % (cherrypy.request.method, methods),
+                'TOOLS.ALLOW',
+            )
         raise cherrypy.HTTPError(405)
     else:
         if debug:
-            cherrypy.log('request.method %r in methods %r' %
-                         (cherrypy.request.method, methods), 'TOOLS.ALLOW')
+            cherrypy.log(
+                'request.method %r in methods %r'
+                % (cherrypy.request.method, methods),
+                'TOOLS.ALLOW',
+            )
 
 
-def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
-          scheme='X-Forwarded-Proto', debug=False):
+def proxy(
+    base=None,
+    local='X-Forwarded-Host',
+    remote='X-Forwarded-For',
+    scheme='X-Forwarded-Proto',
+    debug=False,
+):
     """Change the base URL (scheme://host[:port][/path]).
 
     For running a CP server behind Apache, lighttpd, or other HTTP
@@ -185,7 +210,7 @@ def proxy(base=None, local='X-Forwarded-Host', remote='X-Forwarded-For',
             # This is for lighttpd/pound/Mongrel's 'X-Forwarded-Proto: https'
             scheme = s
     if not scheme:
-        scheme = request.base[:request.base.find('://')]
+        scheme = request.base[: request.base.find('://')]
 
     if local:
         lbase = request.headers.get(local, None)
@@ -225,25 +250,35 @@ def ignore_headers(headers=('Range',), debug=False):
     for name in headers:
         if name in request.headers:
             if debug:
-                cherrypy.log('Ignoring request header %r' % name,
-                             'TOOLS.IGNORE_HEADERS')
+                cherrypy.log(
+                    'Ignoring request header %r' % name,
+                    'TOOLS.IGNORE_HEADERS',
+                )
             del request.headers[name]
 
 
 def response_headers(headers=None, debug=False):
     """Set headers on the response."""
     if debug:
-        cherrypy.log('Setting response headers: %s' % repr(headers),
-                     'TOOLS.RESPONSE_HEADERS')
-    for name, value in (headers or []):
+        cherrypy.log(
+            'Setting response headers: %s' % repr(headers),
+            'TOOLS.RESPONSE_HEADERS',
+        )
+    for name, value in headers or []:
         cherrypy.serving.response.headers[name] = value
 
 
 response_headers.failsafe = True
 
 
-def referer(pattern, accept=True, accept_missing=False, error=403,
-            message='Forbidden Referer header.', debug=False):
+def referer(
+    pattern,
+    accept=True,
+    accept_missing=False,
+    error=403,
+    message='Forbidden Referer header.',
+    debug=False,
+):
     """Raise HTTPError if Referer header does/does not match the given pattern.
 
     pattern
@@ -267,8 +302,10 @@ def referer(pattern, accept=True, accept_missing=False, error=403,
         ref = cherrypy.serving.request.headers['Referer']
         match = bool(re.match(pattern, ref))
         if debug:
-            cherrypy.log('Referer %r matches %r' % (ref, pattern),
-                         'TOOLS.REFERER')
+            cherrypy.log(
+                'Referer %r matches %r' % (ref, pattern),
+                'TOOLS.REFERER',
+            )
         if accept == match:
             return
     except KeyError:
@@ -323,10 +360,16 @@ class SessionAuth(object):
         :type username: str
         """
 
-    def login_screen(self, from_page='..', username='', error_msg='',
-                     **kwargs):
+    def login_screen(
+        self,
+        from_page='..',
+        username='',
+        error_msg='',
+        **kwargs,
+    ):
         """Render the login HTML page."""
-        return (str("""<html><body>
+        return (
+            str("""<html><body>
 Message: %(error_msg)s
 <form method="post" action="do_login">
     Login: <input type="text" name="username" value="%(username)s" size="10" />
@@ -337,7 +380,9 @@ Message: %(error_msg)s
     <br />
     <input type="submit" />
 </form>
-</body></html>""") % vars()).encode('utf-8')
+</body></html>""")
+            % vars()
+        ).encode('utf-8')
 
     def do_login(self, username, password, from_page='..', **kwargs):
         """Login.
@@ -434,14 +479,18 @@ Message: %(error_msg)s
 
 
 def session_auth(**kwargs):
-    """Session authentication hook.
+    (
+        """Session authentication hook.
 
     Any attribute of the SessionAuth class may be overridden
     via a keyword arg to this function:
-    """ + '\n' + '\n    '.join(
-        '{!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
-        for k in dir(SessionAuth)
-        if not k.startswith('__')
+    """
+        + '\n'
+        + '\n    '.join(
+            '{!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
+            for k in dir(SessionAuth)
+            if not k.startswith('__')
+        )
     )
     sa = SessionAuth()
     for k, v in kwargs.items():
@@ -467,6 +516,7 @@ def log_hooks(debug=False):
     msg = []
     # Sort by the standard points if possible.
     from cherrypy import _cprequest
+
     points = _cprequest.hookpoints
     for k in request.hooks.keys():
         if k not in points:
@@ -478,16 +528,20 @@ def log_hooks(debug=False):
         v.sort()
         for h in v:
             msg.append('        %r' % h)
-    cherrypy.log('\nRequest Hooks for ' + cherrypy.url() +
-                 ':\n' + '\n'.join(msg), 'HTTP')
+    cherrypy.log(
+        '\nRequest Hooks for ' + cherrypy.url() + ':\n' + '\n'.join(msg),
+        'HTTP',
+    )
 
 
 def redirect(url='', internal=True, debug=False):
     """Raise InternalRedirect or HTTPRedirect to the given url."""
     if debug:
-        cherrypy.log('Redirecting %sto: %s' %
-                     ({True: 'internal ', False: ''}[internal], url),
-                     'TOOLS.REDIRECT')
+        cherrypy.log(
+            'Redirecting %sto: %s'
+            % ({True: 'internal ', False: ''}[internal], url),
+            'TOOLS.REDIRECT',
+        )
     if internal:
         raise cherrypy.InternalRedirect(url)
     else:
@@ -500,9 +554,11 @@ def trailing_slash(missing=True, extra=False, status=None, debug=False):
     pi = request.path_info
 
     if debug:
-        cherrypy.log('is_index: %r, missing: %r, extra: %r, path_info: %r' %
-                     (request.is_index, missing, extra, pi),
-                     'TOOLS.TRAILING_SLASH')
+        cherrypy.log(
+            'is_index: %r, missing: %r, extra: %r, path_info: %r'
+            % (request.is_index, missing, extra, pi),
+            'TOOLS.TRAILING_SLASH',
+        )
     if request.is_index is True:
         if missing:
             if not pi.endswith('/'):
@@ -522,6 +578,7 @@ def flatten(debug=False):
     This allows cherrypy.response.body to consist of 'nested
     generators'; that is, a set of generators that yield generators.
     """
+
     def flattener(input):
         numchunks = 0
         for x in input:
@@ -534,6 +591,7 @@ def flatten(debug=False):
                     yield y
         if debug:
             cherrypy.log('Flattened %d chunks' % numchunks, 'TOOLS.FLATTEN')
+
     response = cherrypy.serving.response
     response.body = flattener(response.body)
 
@@ -591,15 +649,19 @@ def accept(media=None, debug=False):
                     for m in media:
                         if m.startswith(mtype):
                             if debug:
-                                cherrypy.log('Match due to %s' % element.value,
-                                             'TOOLS.ACCEPT')
+                                cherrypy.log(
+                                    'Match due to %s' % element.value,
+                                    'TOOLS.ACCEPT',
+                                )
                             return m
                 else:
                     # Matches exact value
                     if element.value in media:
                         if debug:
-                            cherrypy.log('Match due to %s' % element.value,
-                                         'TOOLS.ACCEPT')
+                            cherrypy.log(
+                                'Match due to %s' % element.value,
+                                'TOOLS.ACCEPT',
+                            )
                         return element.value
 
     # No suitable media-range found.
@@ -608,8 +670,9 @@ def accept(media=None, debug=False):
         msg = 'Your client did not send an Accept header.'
     else:
         msg = 'Your client sent this Accept header: %s.' % ah
-    msg += (' But this resource only emits these media types: %s.' %
-            ', '.join(media))
+    msg += ' But this resource only emits these media types: %s.' % ', '.join(
+        media,
+    )
     raise cherrypy.HTTPError(406, msg)
 
 
@@ -643,12 +706,14 @@ def autovary(ignore=None, debug=False):
         if debug:
             cherrypy.log(
                 'Accessed headers: %s' % request.headers.accessed_headers,
-                'TOOLS.AUTOVARY')
+                'TOOLS.AUTOVARY',
+            )
         v = v.union(request.headers.accessed_headers)
         v = v.difference(ignore)
         v = list(v)
         v.sort()
         resp_h['Vary'] = ', '.join(v)
+
     request.hooks.attach('before_finalize', set_response_header, 95)
 
 

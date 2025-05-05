@@ -52,8 +52,11 @@ def read_process(cmd, args=''):
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r'(not recognized|No such file|not found)', firstline,
-                      re.IGNORECASE)):
+        if re.search(
+            r'(not recognized|No such file|not found)',
+            firstline,
+            re.IGNORECASE,
+        ):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:
@@ -91,7 +94,7 @@ LoadModule env_module modules/mod_env.so
 
 WSGIScriptAlias / "%(curdir)s/modwsgi.py"
 SetEnv testmod %(testmod)s
-""" # noqa E501
+"""  # noqa E501
 
 
 class ModWSGISupervisor(helper.Supervisor):
@@ -112,9 +115,11 @@ class ModWSGISupervisor(helper.Supervisor):
             mpconf = os.path.join(curdir, mpconf)
 
         with open(mpconf, 'wb') as f:
-            output = (self.template %
-                      {'port': self.port, 'testmod': modulename,
-                       'curdir': curdir})
+            output = self.template % {
+                'port': self.port,
+                'testmod': modulename,
+                'curdir': curdir,
+            }
             f.write(output)
 
         result = read_process(APACHE_PATH, '-k start -f %s' % mpconf)
@@ -144,11 +149,13 @@ def application(environ, start_response):
         mod = __import__(modname, globals(), locals(), [''])
         mod.setup_server()
 
-        cherrypy.config.update({
-            'log.error_file': os.path.join(curdir, 'test.error.log'),
-            'log.access_file': os.path.join(curdir, 'test.access.log'),
-            'environment': 'test_suite',
-            'engine.SIGHUP': None,
-            'engine.SIGTERM': None,
-        })
+        cherrypy.config.update(
+            {
+                'log.error_file': os.path.join(curdir, 'test.error.log'),
+                'log.access_file': os.path.join(curdir, 'test.access.log'),
+                'environment': 'test_suite',
+                'engine.SIGHUP': None,
+                'engine.SIGTERM': None,
+            },
+        )
     return cherrypy.tree(environ, start_response)

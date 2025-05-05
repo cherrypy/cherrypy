@@ -1,4 +1,5 @@
 """Test helpers from ``cherrypy.lib.httputil`` module."""
+
 import pytest
 import http.client
 
@@ -24,7 +25,7 @@ from cherrypy.lib import httputil
         ('', '/pi', '/pi'),
         ('', '/', '/'),
         ('', '', '/'),
-    ]
+    ],
 )
 def test_urljoin(script_name, path_info, expected_url):
     """Test all slash+atom combinations for SCRIPT_NAME and PATH_INFO."""
@@ -51,7 +52,7 @@ EXPECTED_444 = (444, 'Non-existent reason', '')
         ('500', EXPECTED_500),
         (http.client.NOT_FOUND, EXPECTED_404),
         ('444 Non-existent reason', EXPECTED_444),
-    ]
+    ],
 )
 def test_valid_status(status, expected_status):
     """Check valid int, string and http.client-constants
@@ -64,7 +65,7 @@ def test_valid_status(status, expected_status):
     [
         (
             'hey',
-            r"Illegal response status from server \('hey' is non-numeric\)."
+            r"Illegal response status from server \('hey' is non-numeric\).",
         ),
         (
             {'hey': 'hi'},
@@ -73,7 +74,7 @@ def test_valid_status(status, expected_status):
         ),
         (1, r'Illegal response status from server \(1 is out of range\).'),
         (600, r'Illegal response status from server \(600 is out of range\).'),
-    ]
+    ],
 )
 def test_invalid_status(status_code, error_msg):
     """Check that invalid status cause certain errors."""

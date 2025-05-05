@@ -26,6 +26,7 @@ def bus():
 @pytest.fixture
 def log_tracker(bus):
     """Return an instance of bus log tracker."""
+
     class LogTracker:  # pylint: disable=too-few-public-methods
         """Bus log tracker."""
 
@@ -34,6 +35,7 @@ def log_tracker(bus):
         def __init__(self, bus):
             def logit(msg, level):  # pylint: disable=unused-argument
                 self.log_entries.append(msg)
+
             bus.subscribe('log', logit)
 
     return LogTracker(bus)
@@ -42,6 +44,7 @@ def log_tracker(bus):
 @pytest.fixture
 def listener():
     """Return an instance of bus response tracker."""
+
     class Listner:  # pylint: disable=too-few-public-methods
         """Bus handler return value tracker."""
 
@@ -49,8 +52,10 @@ def listener():
 
         def get_listener(self, channel, index):
             """Return an argument tracking listener."""
+
             def listener(arg=None):
                 self.responses.append(msg % (index, channel, arg))
+
             return listener
 
     return Listner()
@@ -126,9 +131,9 @@ def test_start(bus, listener, log_tracker):
     bus.start()
     try:
         # The start method MUST call all 'start' listeners.
-        assert (
-            set(listener.responses) ==
-            set(msg % (i, 'start', None) for i in range(num)))
+        assert set(listener.responses) == set(
+            msg % (i, 'start', None) for i in range(num)
+        )
         # The start method MUST move the state to STARTED
         # (or EXITING, if errors occur)
         assert bus.state == bus.states.STARTED
@@ -149,8 +154,9 @@ def test_stop(bus, listener, log_tracker):
     bus.stop()
 
     # The stop method MUST call all 'stop' listeners.
-    assert (set(listener.responses) ==
-            set(msg % (i, 'stop', None) for i in range(num)))
+    assert set(listener.responses) == set(
+        msg % (i, 'stop', None) for i in range(num)
+    )
 
     # The stop method MUST move the state to STOPPED
     assert bus.state == bus.states.STOPPED
@@ -169,9 +175,9 @@ def test_graceful(bus, listener, log_tracker):
     bus.graceful()
 
     # The graceful method MUST call all 'graceful' listeners.
-    assert (
-        set(listener.responses) ==
-        set(msg % (i, 'graceful', None) for i in range(num)))
+    assert set(listener.responses) == set(
+        msg % (i, 'graceful', None) for i in range(num)
+    )
 
     # The graceful method MUST log its states.
     assert log_tracker.log_entries == ['Bus graceful']
@@ -189,20 +195,26 @@ def test_exit(bus, listener, log_tracker):
 
     # The exit method MUST call all 'stop' listeners,
     # and then all 'exit' listeners.
-    assert (set(listener.responses) ==
-            set([msg % (i, 'stop', None) for i in range(num)] +
-                [msg % (i, 'exit', None) for i in range(num)]))
+    assert set(listener.responses) == set(
+        [msg % (i, 'stop', None) for i in range(num)]
+        + [msg % (i, 'exit', None) for i in range(num)],
+    )
 
     # The exit method MUST move the state to EXITING
     assert bus.state == bus.states.EXITING
 
     # The exit method MUST log its states.
-    assert (log_tracker.log_entries ==
-            ['Bus STOPPING', 'Bus STOPPED', 'Bus EXITING', 'Bus EXITED'])
+    assert log_tracker.log_entries == [
+        'Bus STOPPING',
+        'Bus STOPPED',
+        'Bus EXITING',
+        'Bus EXITED',
+    ]
 
 
 def test_wait(bus):
     """Test that bus wait awaits for states."""
+
     def f(method):  # pylint: disable=invalid-name
         time.sleep(0.2)
         getattr(bus, method)()
@@ -233,6 +245,7 @@ def test_wait_publishes_periodically(bus):
     def set_start():
         time.sleep(0.05)
         bus.start()
+
     threading.Thread(target=set_start).start()
     bus.wait(bus.states.STARTED, interval=0.01, channel='main')
     assert callback.call_count > 3
@@ -242,6 +255,7 @@ def test_wait_publishes_periodically(bus):
 @pytest.mark.flaky(reruns=3, reruns_delay=2, condition=IS_PYPY)
 def test_block(bus, log_tracker):
     """Test that bus block waits for exiting."""
+
     def f():  # pylint: disable=invalid-name
         time.sleep(0.2)
         bus.exit()
@@ -294,6 +308,7 @@ def test_start_with_callback(bus):
 
         def g():  # pylint: disable=invalid-name
             events.append('g')
+
         bus.subscribe('start', g)
         bus.start_with_callback(f, (1, 3, 5), {'foo': 'bar'})
 

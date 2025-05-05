@@ -14,8 +14,10 @@ class ParamsTest(helper.CPWebCase):
             @cherrypy.tools.params()
             def resource(self, limit=None, sort=None):
                 return type(limit).__name__
+
             # for testing on Py 2
             resource.__annotations__ = {'limit': int}
+
         conf = {'/': {'tools.params.on': True}}
         cherrypy.tree.mount(Root(), config=conf)
 

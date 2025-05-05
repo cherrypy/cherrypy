@@ -1,4 +1,5 @@
 """CherryPy'd cherryd daemon runner."""
+
 from cherrypy.daemon import run
 
 

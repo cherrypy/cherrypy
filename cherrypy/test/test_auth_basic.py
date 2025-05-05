@@ -11,35 +11,33 @@ from cherrypy.test import helper
 
 
 class BasicAuthTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'This is public.'
 
         class BasicProtected:
-
             @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
-                    cherrypy.request.login)
+                    cherrypy.request.login
+                )
 
         class BasicProtected2:
-
             @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
-                    cherrypy.request.login)
+                    cherrypy.request.login
+                )
 
         class BasicProtected2_u:
-
             @cherrypy.expose
             def index(self):
                 return "Hello %s, you've been authorized." % (
-                    cherrypy.request.login)
+                    cherrypy.request.login
+                )
 
         userpassdict = {'xuser': 'xpassword'}
         userhashdict = {'xuser': md5(b'xpassword').hexdigest()}
@@ -58,7 +56,7 @@ class BasicAuthTest(helper.CPWebCase):
             '/basic': {
                 'tools.auth_basic.on': True,
                 'tools.auth_basic.realm': 'wonderland',
-                'tools.auth_basic.checkpassword': basic_checkpassword_dict
+                'tools.auth_basic.checkpassword': basic_checkpassword_dict,
             },
             '/basic2': {
                 'tools.auth_basic.on': True,
@@ -91,15 +89,19 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertStatus(401)
         self.assertHeader(
             'WWW-Authenticate',
-            'Basic realm="wonderland", charset="UTF-8"'
+            'Basic realm="wonderland", charset="UTF-8"',
         )
 
-        self.getPage('/basic/',
-                     [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')])
+        self.getPage(
+            '/basic/',
+            [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')],
+        )
         self.assertStatus(401)
 
-        self.getPage('/basic/',
-                     [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3Jk')])
+        self.getPage(
+            '/basic/',
+            [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3Jk')],
+        )
         self.assertStatus('200 OK')
         self.assertBody("Hello xuser, you've been authorized.")
 
@@ -108,12 +110,16 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertStatus(401)
         self.assertHeader('WWW-Authenticate', 'Basic realm="wonderland"')
 
-        self.getPage('/basic2/',
-                     [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')])
+        self.getPage(
+            '/basic2/',
+            [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3JX')],
+        )
         self.assertStatus(401)
 
-        self.getPage('/basic2/',
-                     [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3Jk')])
+        self.getPage(
+            '/basic2/',
+            [('Authorization', 'Basic eHVzZXI6eHBhc3N3b3Jk')],
+        )
         self.assertStatus('200 OK')
         self.assertBody("Hello xuser, you've been authorized.")
 
@@ -122,14 +128,18 @@ class BasicAuthTest(helper.CPWebCase):
         self.assertStatus(401)
         self.assertHeader(
             'WWW-Authenticate',
-            'Basic realm="wonderland", charset="UTF-8"'
+            'Basic realm="wonderland", charset="UTF-8"',
         )
 
-        self.getPage('/basic2_u/',
-                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbRgw==')])
+        self.getPage(
+            '/basic2_u/',
+            [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbRgw==')],
+        )
         self.assertStatus(401)
 
-        self.getPage('/basic2_u/',
-                     [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbQsA==')])
+        self.getPage(
+            '/basic2_u/',
+            [('Authorization', 'Basic eNGO0LfQtdGAOtGX0LbQsA==')],
+        )
         self.assertStatus('200 OK')
         self.assertBody("Hello xюзер, you've been authorized.")

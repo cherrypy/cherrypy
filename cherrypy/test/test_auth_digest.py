@@ -18,28 +18,30 @@ get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(_fetch_users())
 
 
 class DigestAuthTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'This is public.'
 
         class DigestProtected:
-
             @cherrypy.expose
             def index(self, *args, **kwargs):
                 return "Hello %s, you've been authorized." % (
-                    cherrypy.request.login)
+                    cherrypy.request.login
+                )
 
-        conf = {'/digest': {'tools.auth_digest.on': True,
-                            'tools.auth_digest.realm': 'localhost',
-                            'tools.auth_digest.get_ha1': get_ha1,
-                            'tools.auth_digest.key': 'a565c27146791cfb',
-                            'tools.auth_digest.debug': True,
-                            'tools.auth_digest.accept_charset': 'UTF-8'}}
+        conf = {
+            '/digest': {
+                'tools.auth_digest.on': True,
+                'tools.auth_digest.realm': 'localhost',
+                'tools.auth_digest.get_ha1': get_ha1,
+                'tools.auth_digest.key': 'a565c27146791cfb',
+                'tools.auth_digest.debug': True,
+                'tools.auth_digest.accept_charset': 'UTF-8',
+            },
+        }
 
         root = Root()
         root.digest = DigestProtected()
@@ -58,11 +60,13 @@ class DigestAuthTest(helper.CPWebCase):
         assert self.status_code == 401
 
         msg = 'Digest authentification scheme was not found'
-        www_auth_digest = tuple(filter(
-            lambda kv: kv[0].lower() == 'www-authenticate'
-            and kv[1].startswith('Digest '),
-            self.headers,
-        ))
+        www_auth_digest = tuple(
+            filter(
+                lambda kv: kv[0].lower() == 'www-authenticate'
+                and kv[1].startswith('Digest '),
+                self.headers,
+            ),
+        )
         assert len(www_auth_digest) == 1, msg
 
         items = www_auth_digest[0][-1][7:].split(', ')
@@ -79,30 +83,40 @@ class DigestAuthTest(helper.CPWebCase):
         nonce = tokens['nonce'].strip('"')
 
         # Test user agent response with a wrong value for 'realm'
-        base_auth = ('Digest username="%s", '
-                     'realm="%s", '
-                     'nonce="%s", '
-                     'uri="%s", '
-                     'algorithm=MD5, '
-                     'response="%s", '
-                     'qop=auth, '
-                     'nc=%s, '
-                     'cnonce="1522e61005789929"')
+        base_auth = (
+            'Digest username="%s", '
+            'realm="%s", '
+            'nonce="%s", '
+            'uri="%s", '
+            'algorithm=MD5, '
+            'response="%s", '
+            'qop=auth, '
+            'nc=%s, '
+            'cnonce="1522e61005789929"'
+        )
 
         encoded_user = username
         encoded_user = encoded_user.encode('utf-8')
         encoded_user = encoded_user.decode('latin1')
         auth_header = base_auth % (
-            encoded_user, realm, nonce, test_uri,
-            '11111111111111111111111111111111', '00000001',
+            encoded_user,
+            realm,
+            nonce,
+            test_uri,
+            '11111111111111111111111111111111',
+            '00000001',
         )
         auth = auth_digest.HttpDigestAuthorization(auth_header, 'GET')
         # calculate the response digest
         ha1 = get_ha1(auth.realm, auth.username)
         response = auth.request_digest(ha1)
         auth_header = base_auth % (
-            encoded_user, realm, nonce, test_uri,
-            response, '00000001',
+            encoded_user,
+            realm,
+            nonce,
+            test_uri,
+            response,
+            '00000001',
         )
         self.getPage(test_uri, [('Authorization', auth_header)])
 
@@ -120,7 +134,8 @@ class DigestAuthTest(helper.CPWebCase):
         self._test_parametric_digest(username='☃йюзер', realm='localhost')
         assert self.status == '200 OK'
         assert self.body == ntob(
-            "Hello ☃йюзер, you've been authorized.", 'utf-8',
+            "Hello ☃йюзер, you've been authorized.",
+            'utf-8',
         )
 
     def test_wrong_scheme(self):

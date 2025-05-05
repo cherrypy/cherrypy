@@ -140,6 +140,7 @@ def unquote_plus(bs):
 
 # ------------------------------- Processors -------------------------------- #
 
+
 def process_urlencoded(entity):
     """Read application/x-www-form-urlencoded data into entity.params."""
     qs = entity.fp.read()
@@ -171,8 +172,10 @@ def process_urlencoded(entity):
             break
     else:
         raise cherrypy.HTTPError(
-            400, 'The request entity could not be decoded. The following '
-            'charsets were attempted: %s' % repr(entity.attempt_charsets))
+            400,
+            'The request entity could not be decoded. The following '
+            'charsets were attempted: %s' % repr(entity.attempt_charsets),
+        )
 
     # Now that all values have been successfully parsed and decoded,
     # apply them to the entity.params dict.
@@ -395,10 +398,11 @@ class Entity(object):
     the 'before_request_body' and 'before_handler' hooks (assuming that
     process_request_body is True)."""
 
-    processors = {'application/x-www-form-urlencoded': process_urlencoded,
-                  'multipart/form-data': process_multipart_form_data,
-                  'multipart': process_multipart,
-                  }
+    processors = {
+        'application/x-www-form-urlencoded': process_urlencoded,
+        'multipart/form-data': process_multipart_form_data,
+        'multipart': process_multipart,
+    }
     """A dict of Content-Type names to processor methods."""
 
     parts = None
@@ -435,14 +439,16 @@ class Entity(object):
             self.content_type = self.content_type[0]
         else:
             self.content_type = httputil.HeaderElement.from_str(
-                self.default_content_type)
+                self.default_content_type,
+            )
 
         # Copy the class 'attempt_charsets', prepending any Content-Type
         # charset
         dec = self.content_type.params.get('charset', None)
         if dec:
-            self.attempt_charsets = [dec] + [c for c in self.attempt_charsets
-                                             if c != dec]
+            self.attempt_charsets = [dec] + [
+                c for c in self.attempt_charsets if c != dec
+            ]
         else:
             self.attempt_charsets = self.attempt_charsets[:]
 
@@ -450,9 +456,9 @@ class Entity(object):
         self.length = None
         clen = headers.get('Content-Length', None)
         # If Transfer-Encoding is 'chunked', ignore any Content-Length.
-        if (
-            clen is not None and
-            'chunked' not in headers.get('Transfer-Encoding', '')
+        if clen is not None and 'chunked' not in headers.get(
+            'Transfer-Encoding',
+            '',
         ):
             try:
                 self.length = int(clen)
@@ -471,9 +477,8 @@ class Entity(object):
                     self.name = self.name[1:-1]
             if 'filename' in disp.params:
                 self.filename = disp.params['filename']
-                if (
-                    self.filename.startswith('"') and
-                    self.filename.endswith('"')
+                if self.filename.startswith('"') and self.filename.endswith(
+                    '"',
                 ):
                     self.filename = self.filename[1:-1]
             if 'filename*' in disp.params:
@@ -552,7 +557,7 @@ class Entity(object):
             raise cherrypy.HTTPError(
                 400,
                 'The request entity could not be decoded. The following '
-                'charsets were attempted: %s' % repr(self.attempt_charsets)
+                'charsets were attempted: %s' % repr(self.attempt_charsets),
             )
 
     def process(self):
@@ -761,8 +766,14 @@ inf = float('inf')
 class SizedReader:
     """A buffered/sized reader."""
 
-    def __init__(self, fp, length, maxbytes, bufsize=DEFAULT_BUFFER_SIZE,
-                 has_trailers=False):
+    def __init__(
+        self,
+        fp,
+        length,
+        maxbytes,
+        bufsize=DEFAULT_BUFFER_SIZE,
+        has_trailers=False,
+    ):
         """Initialize buffered file handle reader."""
         # Wrap our fp in a buffer so peek() works
         self.fp = fp
@@ -841,7 +852,9 @@ class SizedReader:
                 if e.__class__.__name__ == 'MaxSizeExceeded':
                     # Post data is too big
                     raise cherrypy.HTTPError(
-                        413, 'Maximum request length: %r' % e.args[1])
+                        413,
+                        'Maximum request length: %r' % e.args[1],
+                    )
                 else:
                     raise
             if not data:
@@ -934,7 +947,9 @@ class SizedReader:
                 if e.__class__.__name__ == 'MaxSizeExceeded':
                     # Post data is too big
                     raise cherrypy.HTTPError(
-                        413, 'Maximum request length: %r' % e.args[1])
+                        413,
+                        'Maximum request length: %r' % e.args[1],
+                    )
                 else:
                     raise
 
@@ -998,9 +1013,13 @@ class RequestBody(Entity):
         if 'Content-Length' not in h and 'Transfer-Encoding' not in h:
             raise cherrypy.HTTPError(411)
 
-        self.fp = SizedReader(self.fp, self.length,
-                              self.maxbytes, bufsize=self.bufsize,
-                              has_trailers='Trailer' in h)
+        self.fp = SizedReader(
+            self.fp,
+            self.length,
+            self.maxbytes,
+            bufsize=self.bufsize,
+            has_trailers='Trailer' in h,
+        )
         super(RequestBody, self).process()
 
         # Body params should also be a part of the request_params

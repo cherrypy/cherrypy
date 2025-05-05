@@ -51,13 +51,15 @@ params = dict(
         'Docs: RTD': 'https://docs.cherrypy.dev',
         'GitHub: issues': '{}/issues'.format(repo_url),
         'GitHub: repo': repo_url,
-        'Tidelift: funding':
-        'https://tidelift.com/subscription/pkg/pypi-cherrypy'
+        'Tidelift: funding': 'https://tidelift.com/subscription/pkg/pypi-'
+        'cherrypy'
         '?utm_source=pypi-cherrypy&utm_medium=referral&utm_campaign=pypi',
     },
     packages=[
-        'cherrypy', 'cherrypy.lib',
-        'cherrypy.tutorial', 'cherrypy.test',
+        'cherrypy',
+        'cherrypy.lib',
+        'cherrypy.tutorial',
+        'cherrypy.test',
         'cherrypy.process',
         'cherrypy.scaffold',
     ],
@@ -85,7 +87,6 @@ params = dict(
         'testing': [
             # cherrypy.lib.gctools
             'objgraph',
-
             'pytest>=5.3.5',
             'pytest-cov',
             'pytest-forked',
@@ -99,7 +100,6 @@ params = dict(
         # Enables memcached session support via `cherrypy[memcached_session]`:
         'memcached_session': ['python-memcached>=1.58'],
         'xcgi': ['flup'],
-
         # https://docs.cherrypy.dev/en/latest/advanced.html?highlight=windows#windows-console-events
         ':sys_platform == "win32" and implementation_name == "cpython"'
         # pywin32 disabled while a build is unavailable. Ref #1920.

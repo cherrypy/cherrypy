@@ -33,11 +33,13 @@ def encode_filename(filename):
     if is_ascii(filename):
         return 'filename', '"{filename}"'.format(**locals())
     encoded = urllib.parse.quote(filename, encoding='utf-8')
-    return 'filename*', "'".join((
-        'UTF-8',
-        '',  # lang
-        encoded,
-    ))
+    return 'filename*', "'".join(
+        (
+            'UTF-8',
+            '',  # lang
+            encoded,
+        ),
+    )
 
 
 def encode_multipart_formdata(files):
@@ -52,8 +54,9 @@ def encode_multipart_formdata(files):
         L.append('--' + BOUNDARY)
 
         fn_key, encoded = encode_filename(filename)
-        tmpl = \
+        tmpl = (
             'Content-Disposition: form-data; name="{key}"; {fn_key}={encoded}'
+        )
         L.append(tmpl.format(**locals()))
         ct = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
         L.append('Content-Type: %s' % ct)
@@ -67,7 +70,6 @@ def encode_multipart_formdata(files):
 
 
 class HTTPTests(helper.CPWebCase):
-
     def make_connection(self):
         if self.scheme == 'https':
             return HTTPSConnection('%s:%s' % (self.interface(), self.PORT))
@@ -77,7 +79,6 @@ class HTTPTests(helper.CPWebCase):
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def index(self, *args, **kwargs):
                 return 'Hello world!'
@@ -146,10 +147,11 @@ class HTTPTests(helper.CPWebCase):
             c = HTTPConnection('%s:%s' % (self.interface(), self.PORT))
 
         with mock.patch.object(
-                c,
-                '_get_content_length',
-                lambda body, method: None,
-                create=True):
+            c,
+            '_get_content_length',
+            lambda body, method: None,
+            create=True,
+        ):
             c.request('POST', '/')
 
         response = c.getresponse()
@@ -199,8 +201,13 @@ class HTTPTests(helper.CPWebCase):
         """
         # We'll upload a bunch of files with differing names.
         fnames = [
-            'boop.csv', 'foo, bar.csv', 'bar, xxxx.csv', 'file"name.csv',
-            'file;name.csv', 'file; name.csv', u'test_łóąä.txt',
+            'boop.csv',
+            'foo, bar.csv',
+            'bar, xxxx.csv',
+            'file"name.csv',
+            'file;name.csv',
+            'file; name.csv',
+            'test_łóąä.txt',
         ]
         for fname in fnames:
             files = [('myfile', fname, 'yunyeenyunyue')]
@@ -240,8 +247,8 @@ class HTTPTests(helper.CPWebCase):
 
     def test_request_line_split_issue_1220(self):
         params = {
-            'intervenant-entreprise-evenement_classaction':
-                'evenement-mailremerciements',
+            'intervenant-entreprise-evenement_classaction': 'evenement-'
+            'mailremerciements',
             '_path': 'intervenant-entreprise-evenement',
             'intervenant-entreprise-evenement_action-id': 19404,
             'intervenant-entreprise-evenement_id': 19404,
@@ -283,8 +290,10 @@ class HTTPTests(helper.CPWebCase):
             response.begin()
             self.assertEqual(response.status, 400)
             self.body = response.read()
-            self.assertBody('The client sent a plain HTTP request, but this '
-                            'server only speaks HTTPS on this port.')
+            self.assertBody(
+                'The client sent a plain HTTP request, but this '
+                'server only speaks HTTPS on this port.',
+            )
         except socket.error:
             e = sys.exc_info()[1]
             # "Connection reset by peer" is also acceptable.
@@ -300,8 +309,7 @@ class HTTPTests(helper.CPWebCase):
         try:
             response.begin()
             self.assertEqual(response.status, 400)
-            self.assertEqual(response.fp.read(22),
-                             b'Malformed Request-Line')
+            self.assertEqual(response.fp.read(22), b'Malformed Request-Line')
             c.close()
         except socket.error:
             e = sys.exc_info()[1]

@@ -15,6 +15,7 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture
 def cp_native_server(request):
     """A native server."""
+
     class Root(object):
         @cherrypy.expose
         def index(self):

@@ -4,11 +4,9 @@ from cherrypy.test import helper
 
 
 class ETagTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
         class Root:
-
             @cherrypy.expose
             def resource(self):
                 return 'Oh wah ta goo Siam.'
@@ -27,9 +25,12 @@ class ETagTest(helper.CPWebCase):
             def unicoded(self):
                 return ntou('I am a \u1ee4nicode string.', 'escape')
 
-        conf = {'/': {'tools.etags.on': True,
-                      'tools.etags.autotags': True,
-                      }}
+        conf = {
+            '/': {
+                'tools.etags.on': True,
+                'tools.etags.autotags': True,
+            },
+        }
         cherrypy.tree.mount(Root(), config=conf)
 
     def test_etags(self):
@@ -52,8 +53,11 @@ class ETagTest(helper.CPWebCase):
         # Test If-None-Match (both valid and invalid)
         self.getPage('/resource', headers=[('If-None-Match', etag)])
         self.assertStatus(304)
-        self.getPage('/resource', method='POST',
-                     headers=[('If-None-Match', etag)])
+        self.getPage(
+            '/resource',
+            method='POST',
+            headers=[('If-None-Match', etag)],
+        )
         self.assertStatus('412 Precondition Failed')
         self.getPage('/resource', headers=[('If-None-Match', '*')])
         self.assertStatus(304)

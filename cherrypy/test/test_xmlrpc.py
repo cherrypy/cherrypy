@@ -1,10 +1,7 @@
 import sys
 import socket
 
-from xmlrpc.client import (
-    DateTime, Fault,
-    ServerProxy, SafeTransport
-)
+from xmlrpc.client import DateTime, Fault, ServerProxy, SafeTransport
 
 import cherrypy
 from cherrypy import _cptools
@@ -18,15 +15,12 @@ if not hasattr(socket, 'ssl'):
 
 
 def setup_server():
-
     class Root:
-
         @cherrypy.expose
         def index(self):
             return "I'm a standard index!"
 
     class XmlRpc(_cptools.XMLRPCController):
-
         @cherrypy.expose
         def foo(self):
             return 'Hello world!'
@@ -77,17 +71,21 @@ def setup_server():
 
     root = Root()
     root.xmlrpc = XmlRpc()
-    cherrypy.tree.mount(root, config={'/': {
-        'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
-        'tools.xmlrpc.allow_none': 0,
-    }})
+    cherrypy.tree.mount(
+        root,
+        config={
+            '/': {
+                'request.dispatch': cherrypy.dispatch.XMLRPCDispatcher(),
+                'tools.xmlrpc.allow_none': 0,
+            },
+        },
+    )
 
 
 class XmlRpcTest(helper.CPWebCase):
     setup_server = staticmethod(setup_server)
 
     def testXmlRpc(self):
-
         scheme = self.scheme
         if scheme == 'https':
             url = 'https://%s:%s/xmlrpc/' % (self.interface(), self.PORT)
@@ -103,15 +101,21 @@ class XmlRpcTest(helper.CPWebCase):
         self.assertEqual(proxy.return_single_item_list(), [42])
         self.assertNotEqual(proxy.return_single_item_list(), 'one bazillion')
         self.assertEqual(proxy.return_string(), 'here is a string')
-        self.assertEqual(proxy.return_tuple(),
-                         list(('here', 'is', 1, 'tuple')))
+        self.assertEqual(
+            proxy.return_tuple(),
+            list(('here', 'is', 1, 'tuple')),
+        )
         self.assertEqual(proxy.return_dict(), {'a': 1, 'c': 3, 'b': 2})
-        self.assertEqual(proxy.return_composite(),
-                         [{'a': 1, 'z': 26}, 'hi', ['welcome', 'friend']])
+        self.assertEqual(
+            proxy.return_composite(),
+            [{'a': 1, 'z': 26}, 'hi', ['welcome', 'friend']],
+        )
         self.assertEqual(proxy.return_int(), 42)
         self.assertEqual(proxy.return_float(), 3.14)
-        self.assertEqual(proxy.return_datetime(),
-                         DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1)))
+        self.assertEqual(
+            proxy.return_datetime(),
+            DateTime((2003, 10, 7, 8, 1, 0, 1, 280, -1)),
+        )
         self.assertEqual(proxy.return_boolean(), True)
         self.assertEqual(proxy.test_argument_passing(22), 22 * 2)
 
@@ -121,8 +125,10 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString, ('unsupported operand type(s) '
-                                             "for *: 'dict' and 'int'"))
+            self.assertEqual(
+                x.faultString,
+                ("unsupported operand type(s) for *: 'dict' and 'int'"),
+            )
         else:
             self.fail('Expected xmlrpclib.Fault')
 
@@ -133,8 +139,10 @@ class XmlRpcTest(helper.CPWebCase):
         except Exception:
             x = sys.exc_info()[1]
             self.assertEqual(x.__class__, Fault)
-            self.assertEqual(x.faultString,
-                             'method "non_method" is not supported')
+            self.assertEqual(
+                x.faultString,
+                'method "non_method" is not supported',
+            )
         else:
             self.fail('Expected xmlrpclib.Fault')
 

@@ -23,13 +23,10 @@ gif_bytes = (
 
 
 class CacheTest(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
-
         @cherrypy.config(**{'tools.caching.on': True})
         class Root:
-
             def __init__(self):
                 self.counter = 0
                 self.control_counter = 0
@@ -48,8 +45,9 @@ class CacheTest(helper.CPWebCase):
 
             @cherrypy.expose
             def a_gif(self):
-                cherrypy.response.headers[
-                    'Last-Modified'] = httputil.HTTPDate()
+                cherrypy.response.headers['Last-Modified'] = (
+                    httputil.HTTPDate()
+                )
                 return gif_bytes
 
             @cherrypy.expose
@@ -65,15 +63,16 @@ class CacheTest(helper.CPWebCase):
             def clear_cache(self, path):
                 cherrypy._cache.store[cherrypy.request.base + path].clear()
 
-        @cherrypy.config(**{
-            'tools.caching.on': True,
-            'tools.response_headers.on': True,
-            'tools.response_headers.headers': [
-                ('Vary', 'Our-Varying-Header')
-            ],
-        })
+        @cherrypy.config(
+            **{
+                'tools.caching.on': True,
+                'tools.response_headers.on': True,
+                'tools.response_headers.headers': [
+                    ('Vary', 'Our-Varying-Header'),
+                ],
+            },
+        )
         class VaryHeaderCachingServer(object):
-
             def __init__(self):
                 self.counter = count(1)
 
@@ -81,15 +80,16 @@ class CacheTest(helper.CPWebCase):
             def index(self):
                 return 'visit #%s' % next(self.counter)
 
-        @cherrypy.config(**{
-            'tools.expires.on': True,
-            'tools.expires.secs': 60,
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'static',
-            'tools.staticdir.root': curdir,
-        })
+        @cherrypy.config(
+            **{
+                'tools.expires.on': True,
+                'tools.expires.secs': 60,
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.root': curdir,
+            },
+        )
         class UnCached(object):
-
             @cherrypy.expose
             @cherrypy.config(**{'tools.expires.secs': 0})
             def force(self):
@@ -112,8 +112,9 @@ class CacheTest(helper.CPWebCase):
             @cherrypy.expose
             @cherrypy.config(**{'tools.expires.secs': 86400})
             def specific(self):
-                cherrypy.response.headers[
-                    'Etag'] = 'need_this_to_make_me_cacheable'
+                cherrypy.response.headers['Etag'] = (
+                    'need_this_to_make_me_cacheable'
+                )
                 return 'I am being specific'
 
             class Foo(object):
@@ -122,17 +123,20 @@ class CacheTest(helper.CPWebCase):
             @cherrypy.expose
             @cherrypy.config(**{'tools.expires.secs': Foo()})
             def wrongtype(self):
-                cherrypy.response.headers[
-                    'Etag'] = 'need_this_to_make_me_cacheable'
+                cherrypy.response.headers['Etag'] = (
+                    'need_this_to_make_me_cacheable'
+                )
                 return 'Woops'
 
-        @cherrypy.config(**{
-            'tools.gzip.mime_types': ['text/*', 'image/*'],
-            'tools.caching.on': True,
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'static',
-            'tools.staticdir.root': curdir
-        })
+        @cherrypy.config(
+            **{
+                'tools.gzip.mime_types': ['text/*', 'image/*'],
+                'tools.caching.on': True,
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': 'static',
+                'tools.staticdir.root': curdir,
+            },
+        )
         class GzipStaticCache(object):
             pass
 
@@ -176,7 +180,9 @@ class CacheTest(helper.CPWebCase):
         self.assertHeader('Content-Encoding', 'gzip')
         self.assertHeader('Vary')
         self.assertEqual(
-            cherrypy.lib.encoding.decompress(self.body), b'visit #5')
+            cherrypy.lib.encoding.decompress(self.body),
+            b'visit #5',
+        )
 
         # Now check that a second request gets the gzip header and gzipped body
         # This also tests a bug in 3.0 to 3.0.2 whereby the cached, gzipped
@@ -184,7 +190,9 @@ class CacheTest(helper.CPWebCase):
         self.getPage('/', method='GET', headers=[('Accept-Encoding', 'gzip')])
         self.assertHeader('Content-Encoding', 'gzip')
         self.assertEqual(
-            cherrypy.lib.encoding.decompress(self.body), b'visit #5')
+            cherrypy.lib.encoding.decompress(self.body),
+            b'visit #5',
+        )
 
         # Now check that a third request that doesn't accept gzip
         # skips the cache (because the 'Vary' header denies it).
@@ -201,13 +209,17 @@ class CacheTest(helper.CPWebCase):
         # Now check that different 'Vary'-fields don't evict each other.
         # This test creates 2 requests with different 'Our-Varying-Header'
         # and then tests if the first one still exists.
-        self.getPage('/varying_headers/',
-                     headers=[('Our-Varying-Header', 'request 2')])
+        self.getPage(
+            '/varying_headers/',
+            headers=[('Our-Varying-Header', 'request 2')],
+        )
         self.assertStatus('200 OK')
         self.assertBody('visit #2')
 
-        self.getPage('/varying_headers/',
-                     headers=[('Our-Varying-Header', 'request 2')])
+        self.getPage(
+            '/varying_headers/',
+            headers=[('Our-Varying-Header', 'request 2')],
+        )
         self.assertStatus('200 OK')
         self.assertBody('visit #2')
 
@@ -357,6 +369,7 @@ class CacheTest(helper.CPWebCase):
             self.getPage(slow_url)
             # The response should be the same every time
             self.assertBody('success!')
+
         ts = [threading.Thread(target=run) for i in range(100)]
         for t in ts:
             t.start()

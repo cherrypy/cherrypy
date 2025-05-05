@@ -52,12 +52,12 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
 
     It exercises the config option `server.socket_file`.
     """
+
     HTTP_CONN = USocketHTTPConnection(USOCKET_PATH)
 
     @staticmethod
     def setup_server():
         class Root(object):
-
             @cherrypy.expose
             def index(self):
                 return 'Test OK'
@@ -66,9 +66,7 @@ class WSGI_UnixSocket_Test(helper.CPWebCase):
             def error(self):
                 raise Exception('Invalid page')
 
-        config = {
-            'server.socket_file': USOCKET_PATH
-        }
+        config = {'server.socket_file': USOCKET_PATH}
         cherrypy.config.update(config)
         cherrypy.tree.mount(Root())
 

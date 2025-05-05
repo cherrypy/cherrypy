@@ -106,11 +106,13 @@ class Root(object):
         if cherrypy.session.id != cherrypy.session.originalid:
             if cherrypy.session.originalid is None:
                 changemsg.append(
-                    'Created new session because no session id was given.')
+                    'Created new session because no session id was given.',
+                )
             if cherrypy.session.missing:
                 changemsg.append(
                     'Created new session due to missing '
-                    '(expired or malicious) session.')
+                    '(expired or malicious) session.',
+                )
             if cherrypy.session.regenerated:
                 changemsg.append('Application generated a new session.')
 
@@ -128,8 +130,7 @@ class Root(object):
             'servertime': (
                 datetime.now(_timezone.utc).strftime('%Y/%m/%d %H:%M UTC')
             ),
-            'serverunixtime':
-            calendar.timegm(
+            'serverunixtime': calendar.timegm(
                 datetime.utcnow(_timezone.utc).timetuple(),
             ),
             'cpversion': cherrypy.__version__,
@@ -160,9 +161,11 @@ class Root(object):
 
 
 if __name__ == '__main__':
-    cherrypy.config.update({
-        # 'environment': 'production',
-        'log.screen': True,
-        'tools.sessions.on': True,
-    })
+    cherrypy.config.update(
+        {
+            # 'environment': 'production',
+            'log.screen': True,
+            'tools.sessions.on': True,
+        },
+    )
     cherrypy.quickstart(Root())

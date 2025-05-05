@@ -12,6 +12,7 @@ def expose(func=None, alias=None):
 
     Optionally provide an alias or set of aliases.
     """
+
     def expose_(func):
         func.exposed = True
         if alias is not None:
@@ -24,7 +25,12 @@ def expose(func=None, alias=None):
 
     import sys
     import types
-    decoratable_types = types.FunctionType, types.MethodType, type,
+
+    decoratable_types = (
+        types.FunctionType,
+        types.MethodType,
+        type,
+    )
     if isinstance(func, decoratable_types):
         if alias is None:
             # @expose
@@ -152,8 +158,9 @@ def popargs(*args, **kwargs):
 
     import inspect
 
-    if handler is not None \
-            and (hasattr(handler, '__call__') or inspect.isclass(handler)):
+    if handler is not None and (
+        hasattr(handler, '__call__') or inspect.isclass(handler)
+    ):
         handler_call = True
 
     def decorated(cls_or_self=None, vpath=None):
@@ -345,4 +352,6 @@ def classproperty(func):  # noqa: D401; irrelevant for properties
         func = classmethod(func)
 
     return _ClassPropertyDescriptor(func)
+
+
 ####

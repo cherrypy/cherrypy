@@ -218,34 +218,37 @@ def extrapolate_statistics(scope):
 # -------------------- CherryPy Applications Statistics --------------------- #
 
 appstats = logging.statistics.setdefault('CherryPy Applications', {})
-appstats.update({
-    'Enabled': True,
-    'Bytes Read/Request': lambda s: (
-        s['Total Requests'] and
-        (s['Total Bytes Read'] / float(s['Total Requests'])) or
-        0.0
-    ),
-    'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
-    'Bytes Written/Request': lambda s: (
-        s['Total Requests'] and
-        (s['Total Bytes Written'] / float(s['Total Requests'])) or
-        0.0
-    ),
-    'Bytes Written/Second': lambda s: (
-        s['Total Bytes Written'] / s['Uptime'](s)
-    ),
-    'Current Time': lambda s: time.time(),
-    'Current Requests': 0,
-    'Requests/Second': lambda s: float(s['Total Requests']) / s['Uptime'](s),
-    'Server Version': cherrypy.__version__,
-    'Start Time': time.time(),
-    'Total Bytes Read': 0,
-    'Total Bytes Written': 0,
-    'Total Requests': 0,
-    'Total Time': 0,
-    'Uptime': lambda s: time.time() - s['Start Time'],
-    'Requests': {},
-})
+appstats.update(
+    {
+        'Enabled': True,
+        'Bytes Read/Request': lambda s: (
+            s['Total Requests']
+            and (s['Total Bytes Read'] / float(s['Total Requests']))
+            or 0.0
+        ),
+        'Bytes Read/Second': lambda s: s['Total Bytes Read'] / s['Uptime'](s),
+        'Bytes Written/Request': lambda s: (
+            s['Total Requests']
+            and (s['Total Bytes Written'] / float(s['Total Requests']))
+            or 0.0
+        ),
+        'Bytes Written/Second': lambda s: (
+            s['Total Bytes Written'] / s['Uptime'](s)
+        ),
+        'Current Time': lambda s: time.time(),
+        'Current Requests': 0,
+        'Requests/Second': lambda s: float(s['Total Requests'])
+        / s['Uptime'](s),
+        'Server Version': cherrypy.__version__,
+        'Start Time': time.time(),
+        'Total Bytes Read': 0,
+        'Total Bytes Written': 0,
+        'Total Requests': 0,
+        'Total Time': 0,
+        'Uptime': lambda s: time.time() - s['Start Time'],
+        'Requests': {},
+    },
+)
 
 
 def proc_time(s):
@@ -355,8 +358,13 @@ class StatsTool(cherrypy.Tool):
         }
 
     def record_stop(
-            self, uriset=None, slow_queries=1.0, slow_queries_count=100,
-            debug=False, **kwargs):
+        self,
+        uriset=None,
+        slow_queries=1.0,
+        slow_queries_count=100,
+        debug=False,
+        **kwargs,
+    ):
         """Record the end of a request."""
         resp = cherrypy.serving.response
         w = appstats['Requests'][_get_threading_ident()]
@@ -372,8 +380,11 @@ class StatsTool(cherrypy.Tool):
             w['Bytes Written'] = cl
             appstats['Total Bytes Written'] += cl
 
-        w['Response Status'] = \
-            getattr(resp, 'output_status', resp.status).decode()
+        w['Response Status'] = getattr(
+            resp,
+            'output_status',
+            resp.status,
+        ).decode()
 
         w['End Time'] = time.time()
         p = w['End Time'] - w['Start Time']
@@ -387,9 +398,16 @@ class StatsTool(cherrypy.Tool):
 
         if uriset:
             rs = appstats.setdefault('URI Set Tracking', {})
-            r = rs.setdefault(uriset, {
-                'Min': None, 'Max': None, 'Count': 0, 'Sum': 0,
-                'Avg': average_uriset_time})
+            r = rs.setdefault(
+                uriset,
+                {
+                    'Min': None,
+                    'Max': None,
+                    'Count': 0,
+                    'Sum': 0,
+                    'Avg': average_uriset_time,
+                },
+            )
             if r['Min'] is None or p < r['Min']:
                 r['Min'] = p
             if r['Max'] is None or p > r['Max']:
@@ -426,6 +444,7 @@ def iso_format(v):
 
 def pause_resume(ns):
     """Produce pause or resume HTML form maker."""
+
     def _pause_resume(enabled):
         pause_disabled = ''
         resume_disabled = ''
@@ -443,6 +462,7 @@ def pause_resume(ns):
             <input type="submit" value="Resume" %s/>
             </form>
             """ % (ns, pause_disabled, ns, resume_disabled)
+
     return _pause_resume
 
 
@@ -531,12 +551,15 @@ table.stats2 th {
 <body>
 """
         for title, scalars, collections in self.get_namespaces():
-            yield """
+            yield (
+                """
 <h1>%s</h1>
 
 <table class='stats1'>
     <tbody>
-""" % title
+"""
+                % title
+            )
             for i, (key, value) in enumerate(scalars):
                 colnum = i % 3
                 if colnum == 0:
@@ -544,8 +567,8 @@ table.stats2 th {
         <tr>"""
                 yield (
                     """
-            <th>%(key)s</th><td id='%(title)s-%(key)s'>%(value)s</td>""" %
-                    vars()
+            <th>%(key)s</th><td id='%(title)s-%(key)s'>%(value)s</td>"""
+                    % vars()
                 )
                 if colnum == 2:
                     yield """
@@ -565,14 +588,20 @@ table.stats2 th {
 </table>"""
 
             for subtitle, headers, subrows in collections:
-                yield """
+                yield (
+                    """
 <h2>%s</h2>
 <table class='stats2'>
     <thead>
-        <tr>""" % subtitle
+        <tr>"""
+                    % subtitle
+                )
                 for key in headers:
-                    yield """
-            <th>%s</th>""" % key
+                    yield (
+                        """
+            <th>%s</th>"""
+                        % key
+                    )
                 yield """
         </tr>
     </thead>
@@ -581,8 +610,11 @@ table.stats2 th {
                     yield """
         <tr>"""
                     for value in subrow:
-                        yield """
-            <td>%s</td>""" % value
+                        yield (
+                            """
+            <td>%s</td>"""
+                            % value
+                        )
                     yield """
         </tr>"""
                 yield """
@@ -686,6 +718,7 @@ table.stats2 th {
         return headers, subrows
 
     if json is not None:
+
         @cherrypy.expose
         def data(self):
             """Render statistics as JSON."""
@@ -698,13 +731,16 @@ table.stats2 th {
         """Pause gathering the statistics."""
         logging.statistics.get(namespace, {})['Enabled'] = False
         raise cherrypy.HTTPRedirect('./')
-    pause.cp_config = {'tools.allow.on': True,
-                       'tools.allow.methods': ['POST']}
+
+    pause.cp_config = {'tools.allow.on': True, 'tools.allow.methods': ['POST']}
 
     @cherrypy.expose
     def resume(self, namespace):
         """Resume gathering the statistics."""
         logging.statistics.get(namespace, {})['Enabled'] = True
         raise cherrypy.HTTPRedirect('./')
-    resume.cp_config = {'tools.allow.on': True,
-                        'tools.allow.methods': ['POST']}
+
+    resume.cp_config = {
+        'tools.allow.on': True,
+        'tools.allow.methods': ['POST'],
+    }

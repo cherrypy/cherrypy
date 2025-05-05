@@ -120,13 +120,14 @@ class ChannelFailures(Exception):
     def __bool__(self):
         """Determine whether any error happened in channel."""
         return bool(self._exceptions)
+
     __nonzero__ = __bool__
+
 
 # Use a flag to indicate the state of the bus.
 
 
 class _StateEnum(object):
-
     class State(object):
         name = None
 
@@ -178,10 +179,7 @@ class Bus(object):
         self.execv = False
         self.state = states.STOPPED
         channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
-        self.listeners = dict(
-            (channel, set())
-            for channel in channels
-        )
+        self.listeners = dict((channel, set()) for channel in channels)
         self._priorities = {}
 
     def subscribe(self, channel, callback=None, priority=None):
@@ -241,8 +239,11 @@ class Bus(object):
                     # Assume any further messages to 'log' will fail.
                     pass
                 else:
-                    self.log('Error in %r listener %r' % (channel, listener),
-                             level=40, traceback=True)
+                    self.log(
+                        'Error in %r listener %r' % (channel, listener),
+                        level=40,
+                        traceback=True,
+                    )
         if exc:
             raise exc
         return output
@@ -254,7 +255,9 @@ class Bus(object):
                 'The main thread is exiting, but the Bus is in the %r state; '
                 'shutting it down automatically now. You must either call '
                 'bus.block() after start(), or call bus.exit() before the '
-                'main thread exits.' % self.state, RuntimeWarning)
+                'main thread exits.' % self.state,
+                RuntimeWarning,
+            )
             self.exit()
 
     def start(self):
@@ -270,8 +273,11 @@ class Bus(object):
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
-            self.log('Shutting down due to error in start listener:',
-                     level=40, traceback=True)
+            self.log(
+                'Shutting down due to error in start listener:',
+                level=40,
+                traceback=True,
+            )
             e_info = sys.exc_info()[1]
             try:
                 self.exit()
@@ -357,11 +363,12 @@ class Bus(object):
             # implemented as a windows service and in any other case
             # that another thread executes cherrypy.engine.exit()
             if (
-                    t != threading.current_thread() and
-                    not isinstance(t, threading._MainThread) and
-                    # Note that any dummy (external) threads are
-                    # always daemonic.
-                    not t.daemon
+                t != threading.current_thread()
+                and not isinstance(t, threading._MainThread)
+                and
+                # Note that any dummy (external) threads are
+                # always daemonic.
+                not t.daemon
             ):
                 self.log('Waiting for thread %s.' % t.name)
                 t.join()
@@ -396,6 +403,7 @@ class Bus(object):
 
         if sys.platform[:4] == 'java':
             from _systemrestart import SystemRestart
+
             raise SystemRestart
         else:
             if sys.platform == 'win32':
@@ -420,9 +428,11 @@ class Bus(object):
         :seealso: https://github.com/cherrypy/cherrypy/issues/1526
         Ref: https://pythonhosted.org/PyInstaller/runtime-information.html
         """
-        return ([]
-                if getattr(sys, 'frozen', False)
-                else subprocess._args_from_interpreter_flags())
+        return (
+            []
+            if getattr(sys, 'frozen', False)
+            else subprocess._args_from_interpreter_flags()
+        )
 
     @staticmethod
     def _get_true_argv():
@@ -445,7 +455,7 @@ class Bus(object):
                 ctypes.byref(argv),
             )
 
-            _argv = argv[:argc.value]
+            _argv = argv[: argc.value]
 
             # The code below is trying to correctly handle special cases.
             # `-c`'s argument interpreted by Python itself becomes `-c` as
@@ -479,22 +489,25 @@ class Bus(object):
                     """There's `-c -c` before `-m`"""
                     raise RuntimeError(
                         "Cannot reconstruct command from '-c'. Ref: "
-                        'https://github.com/cherrypy/cherrypy/issues/1545')
+                        'https://github.com/cherrypy/cherrypy/issues/1545',
+                    )
                 # Survive module argument here
                 original_module = sys.argv[0]
                 if not os.access(original_module, os.R_OK):
                     """There's no such module exist."""
                     raise AttributeError(
                         "{} doesn't seem to be a module "
-                        'accessible by current user'.format(original_module))
-                del _argv[m_ind:m_ind + 2]  # remove `-m -m`
+                        'accessible by current user'.format(original_module),
+                    )
+                del _argv[m_ind : m_ind + 2]  # remove `-m -m`
                 # ... and substitute it with the original module path:
                 _argv.insert(m_ind, original_module)
             elif is_command:
                 """It's containing just `-c -c` sequence of arguments."""
                 raise RuntimeError(
                     "Cannot reconstruct command from '-c'. "
-                    'Ref: https://github.com/cherrypy/cherrypy/issues/1545')
+                    'Ref: https://github.com/cherrypy/cherrypy/issues/1545',
+                )
         except AttributeError:
             """It looks Py_GetArgcArgv's completely absent in some environments
 
@@ -526,9 +539,8 @@ class Bus(object):
         """
         path_prefix = '.' + os.pathsep
         existing_path = env.get('PYTHONPATH', '')
-        needs_patch = (
-            sys.path[0] == '' and
-            not existing_path.startswith(path_prefix)
+        needs_patch = sys.path[0] == '' and not existing_path.startswith(
+            path_prefix,
         )
 
         if needs_patch:
@@ -571,6 +583,7 @@ class Bus(object):
         def _callback(func, *a, **kw):
             self.wait(states.STARTED)
             func(*a, **kw)
+
         t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
         t.name = 'Bus Callback ' + t.name
         t.start()

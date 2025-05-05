@@ -172,12 +172,11 @@ class ExceptionTrapper(object):
             self.nextapp,
             environ,
             start_response,
-            self.throws
+            self.throws,
         )
 
 
 class _TrappedResponse(object):
-
     response = iter([])
 
     def __init__(self, nextapp, environ, start_response, throws):
@@ -187,7 +186,9 @@ class _TrappedResponse(object):
         self.throws = throws
         self.started_response = False
         self.response = self.trap(
-            self.nextapp, self.environ, self.start_response,
+            self.nextapp,
+            self.environ,
+            self.start_response,
         )
         self.iter_response = iter(self.response)
 
@@ -378,7 +379,8 @@ class AppResponse(object):
         old_enc = self.environ.get('wsgi.url_encoding', 'ISO-8859-1')
         new_enc = self.cpapp.find_config(
             self.environ.get('PATH_INFO', ''),
-            'request.uri_encoding', 'utf-8',
+            'request.uri_encoding',
+            'utf-8',
         )
         if new_enc.lower() == old_enc.lower():
             return

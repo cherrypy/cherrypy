@@ -89,10 +89,13 @@ def setup(req):
                 func = getattr(mod, fname)
                 func()
 
-    cherrypy.config.update({'log.screen': False,
-                            'tools.ignore_headers.on': True,
-                            'tools.ignore_headers.headers': ['Range'],
-                            })
+    cherrypy.config.update(
+        {
+            'log.screen': False,
+            'tools.ignore_headers.on': True,
+            'tools.ignore_headers.headers': ['Range'],
+        },
+    )
 
     engine = cherrypy.engine
     if hasattr(engine, 'signal_handler'):
@@ -120,6 +123,7 @@ def setup(req):
 
     def cherrypy_cleanup(data):
         engine.exit()
+
     try:
         # apache.register_cleanup wasn't available until 3.1.4.
         apache.register_cleanup(cherrypy_cleanup)
@@ -143,6 +147,7 @@ _isSetUp = False
 def handler(req):
     """Invoke the HTTP handler."""
     from mod_python import apache
+
     try:
         global _isSetUp
         if not _isSetUp:
@@ -152,10 +157,16 @@ def handler(req):
         # Obtain a Request object from CherryPy
         local = req.connection.local_addr
         local = httputil.Host(
-            local[0], local[1], req.connection.local_host or '')
+            local[0],
+            local[1],
+            req.connection.local_host or '',
+        )
         remote = req.connection.remote_addr
         remote = httputil.Host(
-            remote[0], remote[1], req.connection.remote_host or '')
+            remote[0],
+            remote[1],
+            req.connection.remote_host or '',
+        )
 
         scheme = req.parsed_uri[0] or 'http'
         req.get_basic_auth_pw()
@@ -166,9 +177,11 @@ def handler(req):
             threaded = q(apache.AP_MPMQ_IS_THREADED)
             forked = q(apache.AP_MPMQ_IS_FORKED)
         except AttributeError:
-            bad_value = ("You must provide a PythonOption '%s', "
-                         "either 'on' or 'off', when running a version "
-                         'of mod_python < 3.1')
+            bad_value = (
+                "You must provide a PythonOption '%s', "
+                "either 'on' or 'off', when running a version "
+                'of mod_python < 3.1'
+            )
 
             options = req.get_options()
 
@@ -204,8 +217,12 @@ def handler(req):
             try:
                 redirections = []
                 while True:
-                    request, response = app.get_serving(local, remote, scheme,
-                                                        'HTTP/1.1')
+                    request, response = app.get_serving(
+                        local,
+                        remote,
+                        scheme,
+                        'HTTP/1.1',
+                    )
                     request.login = req.user
                     request.multithread = bool(threaded)
                     request.multiprocess = bool(forked)
@@ -225,7 +242,8 @@ def handler(req):
                             if ir.path in redirections:
                                 raise RuntimeError(
                                     'InternalRedirector visited the same URL '
-                                    'twice: %r' % ir.path)
+                                    'twice: %r' % ir.path,
+                                )
                             else:
                                 # Add the *previous* path_info + qs to
                                 # redirections.
@@ -240,8 +258,12 @@ def handler(req):
                         rfile = io.BytesIO()
 
                 send_response(
-                    req, response.output_status, response.header_list,
-                    response.body, response.stream)
+                    req,
+                    response.output_status,
+                    response.header_list,
+                    response.body,
+                    response.stream,
+                )
             finally:
                 app.release_serving()
     except Exception:
@@ -280,11 +302,16 @@ try:
 
     def popen(fullcmd):
         """Invoke a subprocess via :mod:`subprocess`."""
-        p = subprocess.Popen(fullcmd, shell=True,
-                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             close_fds=True)
+        p = subprocess.Popen(
+            fullcmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+        )
         return p.stdout
 except ImportError:
+
     def popen(fullcmd):
         """Invoke a subprocess via :mod:`os`."""
         pipein, pipeout = os.popen4(fullcmd)
@@ -300,7 +327,7 @@ def read_process(cmd, args=''):
         cmd_not_found = re.search(
             b'(not recognized|No such file|not found)',
             firstline,
-            re.IGNORECASE
+            re.IGNORECASE,
         )
         if cmd_not_found:
             raise IOError('%s must be on your system path.' % cmd)
@@ -328,8 +355,14 @@ LoadModule python_module modules/mod_python.so
 </Location>
 """
 
-    def __init__(self, loc='/', port=80, opts=None, apache_path='apache',
-                 handler='cherrypy._cpmodpy::handler'):
+    def __init__(
+        self,
+        loc='/',
+        port=80,
+        opts=None,
+        apache_path='apache',
+        handler='cherrypy._cpmodpy::handler',
+    ):
         """Initialize a ``mod_python`` server."""
         self.loc = loc
         self.port = port
@@ -339,13 +372,15 @@ LoadModule python_module modules/mod_python.so
 
     def start(self):
         """Start an Apache2/httpd server."""
-        opts = ''.join(['    PythonOption %s %s\n' % (k, v)
-                        for k, v in self.opts])
-        conf_data = self.template % {'port': self.port,
-                                     'loc': self.loc,
-                                     'opts': opts,
-                                     'handler': self.handler,
-                                     }
+        opts = ''.join(
+            ['    PythonOption %s %s\n' % (k, v) for k, v in self.opts],
+        )
+        conf_data = self.template % {
+            'port': self.port,
+            'loc': self.loc,
+            'opts': opts,
+            'handler': self.handler,
+        }
 
         mpconf = os.path.join(os.path.dirname(__file__), 'cpmodpy.conf')
         with open(mpconf, 'wb') as f:

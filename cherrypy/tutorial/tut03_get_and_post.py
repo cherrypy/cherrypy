@@ -16,12 +16,12 @@ class WelcomePage:
     def index(self):
         """Produce HTTP response body of welcome app index URI."""
         # Ask for the user's name.
-        return '''
+        return """
             <form action="greetUser" method="GET">
             What is your name?
             <input type="text" name="name" />
             <input type="submit" />
-            </form>'''
+            </form>"""
 
     @cherrypy.expose
     def greetUser(self, name=None):

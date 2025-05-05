@@ -22,18 +22,19 @@ europoundUnicode = ntou('\x80\xa3')
 
 
 class ToolTests(helper.CPWebCase):
-
     @staticmethod
     def setup_server():
-
         # Put check_access in a custom toolbox with its own namespace
         myauthtools = cherrypy._cptools.Toolbox('myauth')
 
         def check_access(default=False):
             if not getattr(cherrypy.request, 'userid', default):
                 raise cherrypy.HTTPError(401)
+
         myauthtools.check_access = cherrypy.Tool(
-            'before_request_body', check_access)
+            'before_request_body',
+            check_access,
+        )
 
         def numerify():
             def number_it(body):
@@ -41,19 +42,22 @@ class ToolTests(helper.CPWebCase):
                     for k, v in cherrypy.request.numerify_map:
                         chunk = chunk.replace(k, v)
                     yield chunk
+
             cherrypy.response.body = number_it(cherrypy.response.body)
 
         class NumTool(cherrypy.Tool):
-
             def _setup(self):
                 def makemap():
                     m = self._merged_args().get('map', {})
                     cherrypy.request.numerify_map = list(m.items())
+
                 cherrypy.request.hooks.attach('on_start_resource', makemap)
 
                 def critical():
                     cherrypy.request.error_response = cherrypy.HTTPError(
-                        502).set_response
+                        502,
+                    ).set_response
+
                 critical.failsafe = True
 
                 cherrypy.request.hooks.attach('on_start_resource', critical)
@@ -63,7 +67,6 @@ class ToolTests(helper.CPWebCase):
 
         # It's not mandatory to inherit from cherrypy.Tool.
         class NadsatTool:
-
             def __init__(self):
                 self.ended = {}
                 self._name = 'nadsat'
@@ -74,7 +77,9 @@ class ToolTests(helper.CPWebCase):
                         chunk = chunk.replace(b'good', b'horrorshow')
                         chunk = chunk.replace(b'piece', b'lomtick')
                         yield chunk
+
                 cherrypy.response.body = nadsat_it_up(cherrypy.response.body)
+
             nadsat.priority = 0
 
             def cleanup(self):
@@ -83,11 +88,13 @@ class ToolTests(helper.CPWebCase):
                 id = cherrypy.request.params.get('id')
                 if id:
                     self.ended[id] = True
+
             cleanup.failsafe = True
 
             def _setup(self):
                 cherrypy.request.hooks.attach('before_finalize', self.nadsat)
                 cherrypy.request.hooks.attach('on_end_request', self.cleanup)
+
         tools.nadsat = NadsatTool()
 
         def pipe_body():
@@ -97,11 +104,11 @@ class ToolTests(helper.CPWebCase):
 
         # Assert that we can use a callable object instead of a function.
         class Rotator(object):
-
             def __call__(self, scale):
                 r = cherrypy.response
                 r.collapse_body()
                 r.body = [bytes([(x + scale) % 256 for x in r.body[0]])]
+
         cherrypy.tools.rotator = cherrypy.Tool('before_finalize', Rotator())
 
         def stream_handler(next_handler, *args, **kwargs):
@@ -115,20 +122,23 @@ class ToolTests(helper.CPWebCase):
                 return o.getvalue()
             finally:
                 o.close()
+
         cherrypy.tools.streamer = cherrypy._cptools.HandlerWrapperTool(
-            stream_handler)
+            stream_handler,
+        )
 
         class Root:
-
             @cherrypy.expose
             def index(self):
                 return 'Howdy earth!'
 
             @cherrypy.expose
-            @cherrypy.config(**{
-                'tools.streamer.on': True,
-                'tools.streamer.arg': 'arg value',
-            })
+            @cherrypy.config(
+                **{
+                    'tools.streamer.on': True,
+                    'tools.streamer.arg': 'arg value',
+                },
+            )
             def tarfile(self):
                 actual = cherrypy.request.config.get('tools.streamer.arg')
                 assert actual == 'arg value'
@@ -160,6 +170,7 @@ class ToolTests(helper.CPWebCase):
                 yield ntou('Hello,')
                 yield ntou('world')
                 yield europoundUnicode
+
             decorated_euro = tools.gzip(compress_level=6)(decorated_euro)
             decorated_euro = tools.rotator(scale=3)(decorated_euro)
 
@@ -170,19 +181,20 @@ class ToolTests(helper.CPWebCase):
             subclass, and adds an instance of the subclass as an attribute
             of root.
             """
+
             def __init__(cls, name, bases, dct):
                 type.__init__(cls, name, bases, dct)
                 for value in dct.values():
                     if isinstance(value, types.FunctionType):
                         cherrypy.expose(value)
                 setattr(root, name.lower(), cls())
+
         Test = TestType('Test', (object,), {})
 
         # METHOD ONE:
         # Declare Tools in _cp_config
         @cherrypy.config(**{'tools.nadsat.on': True})
         class Demo(Test):
-
             def index(self, id=None):
                 return 'A good piece of cherry pie'
 
@@ -203,6 +215,7 @@ class ToolTests(helper.CPWebCase):
             # @tools.check_access()
             def restricted(self):
                 return 'Welcome!'
+
             restricted = myauthtools.check_access()(restricted)
             userid = restricted
 
@@ -233,7 +246,7 @@ class ToolTests(helper.CPWebCase):
             },
             '/demo/err_in_onstart': {
                 # Because this isn't a dict, on_start_resource will error.
-                'tools.numerify.map': 'pie->3.14159'
+                'tools.numerify.map': 'pie->3.14159',
             },
             # Combined tools
             '/euro': {
@@ -245,7 +258,7 @@ class ToolTests(helper.CPWebCase):
                 'tools.gzip.priority': 10,
             },
             # Handler wrappers
-            '/tarfile': {'tools.streamer.on': True}
+            '/tarfile': {'tools.streamer.on': True},
         }
         app = cherrypy.tree.mount(root, config=conf)
         app.request_class.namespaces['myauth'] = myauthtools
@@ -271,8 +284,11 @@ class ToolTests(helper.CPWebCase):
         self.assertBody('True')
 
         # If body is "razdrez", then on_end_request is being called too early.
-        if (cherrypy.server.protocol_version == 'HTTP/1.0' or
-                getattr(cherrypy.server, 'using_apache', False)):
+        if cherrypy.server.protocol_version == 'HTTP/1.0' or getattr(
+            cherrypy.server,
+            'using_apache',
+            False,
+        ):
             self.getPage('/demo/errinstream?id=5')
             # Because this error is raised after the response body has
             # started, the status should not change to an error status.
@@ -282,8 +298,11 @@ class ToolTests(helper.CPWebCase):
             # Because this error is raised after the response body has
             # started, and because it's chunked output, an error is raised by
             # the HTTP client when it encounters incomplete output.
-            self.assertRaises((ValueError, IncompleteRead), self.getPage,
-                              '/demo/errinstream?id=5')
+            self.assertRaises(
+                (ValueError, IncompleteRead),
+                self.getPage,
+                '/demo/errinstream?id=5',
+            )
         # If this fails, then on_end_request isn't being called at all.
         time.sleep(0.1)
         self.getPage('/demo/ended/5')
@@ -343,17 +362,21 @@ class ToolTests(helper.CPWebCase):
         self.assertInBody(expected_msg)
 
     def testCombinedTools(self):
-        expectedResult = (ntou('Hello,world') +
-                          europoundUnicode).encode('utf-8')
+        expectedResult = (ntou('Hello,world') + europoundUnicode).encode(
+            'utf-8',
+        )
         zbuf = io.BytesIO()
         zfile = gzip.GzipFile(mode='wb', fileobj=zbuf, compresslevel=9)
         zfile.write(expectedResult)
         zfile.close()
 
-        self.getPage('/euro',
-                     headers=[
-                         ('Accept-Encoding', 'gzip'),
-                         ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')])
+        self.getPage(
+            '/euro',
+            headers=[
+                ('Accept-Encoding', 'gzip'),
+                ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'),
+            ],
+        )
         self.assertInBody(zbuf.getvalue()[:3])
 
         zbuf = io.BytesIO()
@@ -368,16 +391,23 @@ class ToolTests(helper.CPWebCase):
         # lowered in conf, allowing the rotator to run after gzip.
         # Of course, we don't want breakage in production apps,
         # but it proves the priority was changed.
-        self.getPage('/decorated_euro/subpath',
-                     headers=[('Accept-Encoding', 'gzip')])
+        self.getPage(
+            '/decorated_euro/subpath',
+            headers=[('Accept-Encoding', 'gzip')],
+        )
         self.assertInBody(bytes([(x + 3) % 256 for x in zbuf.getvalue()]))
 
     def testBareHooks(self):
         content = 'bit of a pain in me gulliver'
-        self.getPage('/pipe',
-                     headers=[('Content-Length', str(len(content))),
-                              ('Content-Type', 'text/plain')],
-                     method='POST', body=content)
+        self.getPage(
+            '/pipe',
+            headers=[
+                ('Content-Length', str(len(content))),
+                ('Content-Type', 'text/plain'),
+            ],
+            method='POST',
+            body=content,
+        )
         self.assertBody(content)
 
     def testHandlerWrapperTool(self):
@@ -409,14 +439,18 @@ class ToolTests(helper.CPWebCase):
         @cherrypy.tools.register('on_start_resource')
         def example():
             pass
+
         self.assertTrue(isinstance(cherrypy.tools.example, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.example._point, 'on_start_resource')
 
         @cherrypy.tools.register(  # noqa: F811
-            'before_finalize', name='renamed', priority=60,
+            'before_finalize',
+            name='renamed',
+            priority=60,
         )
         def example():  # noqa: F811
             pass
+
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
         self.assertEqual(cherrypy.tools.renamed._point, 'before_finalize')
         self.assertEqual(cherrypy.tools.renamed._name, 'renamed')
@@ -424,7 +458,6 @@ class ToolTests(helper.CPWebCase):
 
 
 class SessionAuthTest(unittest.TestCase):
-
     def test_login_screen_returns_bytes(self):
         """
         login_screen must return bytes even if unicode parameters are passed.
@@ -432,8 +465,11 @@ class SessionAuthTest(unittest.TestCase):
         username and password were unicode.
         """
         sa = cherrypy.lib.cptools.SessionAuth()
-        res = sa.login_screen(None, username=str('nobody'),
-                              password=str('anypass'))
+        res = sa.login_screen(
+            None,
+            username=str('nobody'),
+            password=str('anypass'),
+        )
         self.assertTrue(isinstance(res, bytes))
 
 

@@ -95,8 +95,11 @@ class Profiler(object):
         :returns: A list of available profiles.
         :rtype: list[str]
         """
-        return [f for f in os.listdir(self.path)
-                if f.startswith('cp_') and f.endswith('.prof')]
+        return [
+            f
+            for f in os.listdir(self.path)
+            if f.startswith('cp_') and f.endswith('.prof')
+        ]
 
     def stats(self, filename, sortby='cumulative'):
         """Generate statistics from given profile.
@@ -134,7 +137,9 @@ class Profiler(object):
         runs.sort()
         for i in runs:
             yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (
-                i, i)
+                i,
+                i,
+            )
 
     @cherrypy.expose
     def report(self, filename):
@@ -181,11 +186,13 @@ class make_app:
 
         """
         if profile is None or pstats is None:
-            msg = ('Your installation of Python does not have a profile '
-                   "module. If you're on Debian, try "
-                   '`sudo apt-get install python-profiler`. '
-                   'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
-                   'for details.')
+            msg = (
+                'Your installation of Python does not have a profile '
+                "module. If you're on Debian, try "
+                '`sudo apt-get install python-profiler`. '
+                'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
+                'for details.'
+            )
             warnings.warn(msg)
 
         self.nextapp = nextapp
@@ -197,28 +204,35 @@ class make_app:
 
     def __call__(self, environ, start_response):
         """Process a WSGI request."""
+
         def gather():
             result = []
             for line in self.nextapp(environ, start_response):
                 result.append(line)
             return result
+
         return self.profiler.run(gather)
 
 
 def serve(path=None, port=8080):
     """Serve the web app with profiler activated."""
     if profile is None or pstats is None:
-        msg = ('Your installation of Python does not have a profile module. '
-               "If you're on Debian, try "
-               '`sudo apt-get install python-profiler`. '
-               'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
-               'for details.')
+        msg = (
+            'Your installation of Python does not have a profile module. '
+            "If you're on Debian, try "
+            '`sudo apt-get install python-profiler`. '
+            'See http://www.cherrypy.org/wiki/ProfilingOnDebian '
+            'for details.'
+        )
         warnings.warn(msg)
 
-    cherrypy.config.update({'server.socket_port': int(port),
-                            'server.thread_pool': 10,
-                            'environment': 'production',
-                            })
+    cherrypy.config.update(
+        {
+            'server.socket_port': int(port),
+            'server.thread_pool': 10,
+            'environment': 'production',
+        },
+    )
     cherrypy.quickstart(Profiler(path))
 
 

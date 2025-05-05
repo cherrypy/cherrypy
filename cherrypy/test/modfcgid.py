@@ -49,8 +49,11 @@ def read_process(cmd, args=''):
     pipein, pipeout = os.popen4('%s %s' % (cmd, args))
     try:
         firstline = pipeout.readline()
-        if (re.search(r'(not recognized|No such file|not found)', firstline,
-                      re.IGNORECASE)):
+        if re.search(
+            r'(not recognized|No such file|not found)',
+            firstline,
+            re.IGNORECASE,
+        ):
             raise IOError('%s must be on your system path.' % cmd)
         output = firstline + pipeout.read()
     finally:
@@ -92,7 +95,9 @@ class ModFCGISupervisor(helper.LocalSupervisor):
     def start(self, modulename):
         """Spawn an Apache ``mod_fcgid`` supervisor process."""
         cherrypy.server.httpserver = servers.FlupFCGIServer(
-            application=cherrypy.tree, bindAddress=('127.0.0.1', 4000))
+            application=cherrypy.tree,
+            bindAddress=('127.0.0.1', 4000),
+        )
         cherrypy.server.httpserver.bind_addr = ('127.0.0.1', 4000)
         # For FCGI, we both start apache...
         self.start_apache()
@@ -108,8 +113,11 @@ class ModFCGISupervisor(helper.LocalSupervisor):
         # Write the Apache conf file.
         with open(fcgiconf, 'wb') as f:
             server = repr(os.path.join(curdir, 'fastcgi.pyc'))[1:-1]
-            output = self.template % {'port': self.port, 'root': curdir,
-                                      'server': server}
+            output = self.template % {
+                'port': self.port,
+                'root': curdir,
+                'server': server,
+            }
             output = ntob(output.replace('\r\n', '\n'))
             f.write(output)
 

@@ -180,9 +180,11 @@ class LogManager(object):
             self.access_log = logging.getLogger('%s.access' % logger_root)
         else:
             self.error_log = logging.getLogger(
-                '%s.error.%s' % (logger_root, appid))
+                '%s.error.%s' % (logger_root, appid),
+            )
             self.access_log = logging.getLogger(
-                '%s.access.%s' % (logger_root, appid))
+                '%s.access.%s' % (logger_root, appid),
+            )
         self.error_log.setLevel(logging.INFO)
         self.access_log.setLevel(logging.INFO)
 
@@ -202,8 +204,13 @@ class LogManager(object):
                     h.stream = open(h.baseFilename, h.mode)
                     h.release()
 
-    def error(self, msg='', context='', severity=logging.INFO,
-              traceback=False):
+    def error(
+        self,
+        msg='',
+        context='',
+        severity=logging.INFO,
+        traceback=False,
+    ):
         """Write the given ``msg`` to the error log.
 
         This is not just for errors! Applications may call this at any time
@@ -256,19 +263,20 @@ class LogManager(object):
             status = response.output_status.split(b' ', 1)[0]
             status = status.decode('ISO-8859-1')
 
-        atoms = {'h': remote.name or remote.ip,
-                 'l': '-',
-                 'u': getattr(request, 'login', None) or '-',
-                 't': self.time(),
-                 'r': request.request_line,
-                 's': status,
-                 'b': dict.get(outheaders, 'Content-Length', '') or '-',
-                 'f': dict.get(inheaders, 'Referer', ''),
-                 'a': dict.get(inheaders, 'User-Agent', ''),
-                 'o': dict.get(inheaders, 'Host', '-'),
-                 'i': request.unique_id,
-                 'z': LazyRfc3339UtcTime(),
-                 }
+        atoms = {
+            'h': remote.name or remote.ip,
+            'l': '-',
+            'u': getattr(request, 'login', None) or '-',
+            't': self.time(),
+            'r': request.request_line,
+            's': status,
+            'b': dict.get(outheaders, 'Content-Length', '') or '-',
+            'f': dict.get(inheaders, 'Referer', ''),
+            'a': dict.get(inheaders, 'User-Agent', ''),
+            'o': dict.get(inheaders, 'Host', '-'),
+            'i': request.unique_id,
+            'z': LazyRfc3339UtcTime(),
+        }
         for k, v in atoms.items():
             if not isinstance(v, str):
                 v = str(v)
@@ -287,18 +295,38 @@ class LogManager(object):
 
         try:
             self.access_log.log(
-                logging.INFO, self.access_log_format.format(**atoms))
+                logging.INFO,
+                self.access_log_format.format(**atoms),
+            )
         except Exception:
             self(traceback=True)
 
     def time(self):
         """Return now() in Apache Common Log Format (no timezone)."""
         now = datetime.datetime.now()
-        monthnames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
-                      'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        monthnames = [
+            'jan',
+            'feb',
+            'mar',
+            'apr',
+            'may',
+            'jun',
+            'jul',
+            'aug',
+            'sep',
+            'oct',
+            'nov',
+            'dec',
+        ]
         month = monthnames[now.month - 1].capitalize()
-        return ('[%02d/%s/%04d:%02d:%02d:%02d]' %
-                (now.day, month, now.year, now.hour, now.minute, now.second))
+        return '[%02d/%s/%04d:%02d:%02d:%02d]' % (
+            now.day,
+            month,
+            now.year,
+            now.hour,
+            now.minute,
+            now.second,
+        )
 
     def _get_builtin_handler(self, log, key):
         for h in log.handlers:
@@ -445,6 +473,7 @@ class WSGIErrorHandler(logging.Handler):
                 msg = self.format(record)
                 fs = '%s\n'
                 import types
+
                 # if no unicode support...
                 if not hasattr(types, 'UnicodeType'):
                     stream.write(fs % msg)

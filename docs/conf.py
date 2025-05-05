@@ -28,7 +28,7 @@ def get_supported_pythons(classifiers):
     """Return min and max supported Python version from meta as tuples."""
     PY_VER_CLASSIFIER = 'Programming Language :: Python :: '
     vers = filter(lambda c: c.startswith(PY_VER_CLASSIFIER), classifiers)
-    vers = map(lambda c: c[len(PY_VER_CLASSIFIER):], vers)
+    vers = map(lambda c: c[len(PY_VER_CLASSIFIER) :], vers)
     vers = filter(lambda c: c[0].isdigit() and '.' in c, vers)
     vers = map(lambda c: tuple(map(int, c.split('.'))), vers)
     vers = sorted(vers)
@@ -44,7 +44,8 @@ prj_license = prj_meta['License']
 prj_description = prj_meta['Description']
 prj_py_ver_range = get_supported_pythons(prj_meta.get_all('Classifier'))
 prj_py_min_supported, prj_py_max_supported = map(
-    lambda v: '.'.join(map(str, v)), prj_py_ver_range
+    lambda v: '.'.join(map(str, v)),
+    prj_py_ver_range,
 )
 
 project = prj_meta['Name']
@@ -80,7 +81,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-
     # Third-party extensions:
     'sphinxcontrib.apidoc',
     'rst.linker',
@@ -166,10 +166,16 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
     'index': [
-        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+        'about.html',
+        'searchbox.html',
+        'navigation.html',
+        'python_2_eol.html',
     ],
     '**': [
-        'about.html', 'searchbox.html', 'navigation.html', 'python_2_eol.html',
+        'about.html',
+        'searchbox.html',
+        'navigation.html',
+        'python_2_eol.html',
     ],
 }
 

@@ -216,11 +216,7 @@ class HTTPRedirect(CherryPyException):
             for url in always_iterable(urls)
         ]
 
-        status = (
-            int(status)
-            if status is not None
-            else self.default_status
-        )
+        status = int(status) if status is not None else self.default_status
         if not 300 <= status <= 399:
             raise ValueError('status must be between 300 and 399.')
 
@@ -289,10 +285,18 @@ class HTTPRedirect(CherryPyException):
             # The "Date" header should have been set in Response.__init__
 
             # "...the response SHOULD NOT include other entity-headers."
-            for key in ('Allow', 'Content-Encoding', 'Content-Language',
-                        'Content-Length', 'Content-Location', 'Content-MD5',
-                        'Content-Range', 'Content-Type', 'Expires',
-                        'Last-Modified'):
+            for key in (
+                'Allow',
+                'Content-Encoding',
+                'Content-Language',
+                'Content-Length',
+                'Content-Location',
+                'Content-MD5',
+                'Content-Range',
+                'Content-Type',
+                'Expires',
+                'Last-Modified',
+            ):
                 if key in response.headers:
                     del response.headers[key]
 
@@ -322,9 +326,20 @@ def clean_headers(status):
     # Remove headers which applied to the original content,
     # but do not apply to the error page.
     respheaders = response.headers
-    for key in ['Accept-Ranges', 'Age', 'ETag', 'Location', 'Retry-After',
-                'Vary', 'Content-Encoding', 'Content-Length', 'Expires',
-                'Content-Location', 'Content-MD5', 'Last-Modified']:
+    for key in [
+        'Accept-Ranges',
+        'Age',
+        'ETag',
+        'Location',
+        'Retry-After',
+        'Vary',
+        'Content-Encoding',
+        'Content-Length',
+        'Expires',
+        'Content-Location',
+        'Content-MD5',
+        'Last-Modified',
+    ]:
         if key in respheaders:
             del respheaders[key]
 
@@ -407,8 +422,11 @@ class HTTPError(CherryPyException):
 
         response.headers.pop('Content-Length', None)
 
-        content = self.get_error_page(self.status, traceback=tb,
-                                      message=self._message)
+        content = self.get_error_page(
+            self.status,
+            traceback=tb,
+            message=self._message,
+        )
         response.body = content
 
         _be_ie_unfriendly(self.code)
@@ -447,7 +465,7 @@ class NotFound(HTTPError):
         HTTPError.__init__(self, 404, "The path '%s' was not found." % path)
 
 
-_HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC
+_HTTPErrorTemplate = """<!DOCTYPE html PUBLIC
 "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -477,7 +495,7 @@ _HTTPErrorTemplate = '''<!DOCTYPE html PUBLIC
     </div>
     </body>
 </html>
-'''
+"""
 
 
 def get_error_page(status, **kwargs):
@@ -525,6 +543,7 @@ def get_error_page(status, **kwargs):
                 result = error_page(**kwargs)
                 if cherrypy.lib.is_iterator(result):
                     from cherrypy.lib.encoding import UTF8StreamEncoder
+
                     return UTF8StreamEncoder(result)
                 elif isinstance(result, str):
                     return result.encode('utf-8')
@@ -534,7 +553,8 @@ def get_error_page(status, **kwargs):
                             'error page function did not '
                             'return a bytestring, str or an '
                             'iterator - returned object of type %s.'
-                            % (type(result).__name__))
+                            % (type(result).__name__),
+                        )
                     return result
             else:
                 # Load the template from this path.
@@ -555,9 +575,17 @@ def get_error_page(status, **kwargs):
 
 
 _ie_friendly_error_sizes = {
-    400: 512, 403: 256, 404: 512, 405: 256,
-    406: 512, 408: 512, 409: 512, 410: 256,
-    500: 512, 501: 512, 505: 512,
+    400: 512,
+    403: 256,
+    404: 512,
+    405: 256,
+    406: 512,
+    408: 512,
+    409: 512,
+    410: 256,
+    500: 512,
+    501: 512,
+    505: 512,
 }
 
 
@@ -592,6 +620,7 @@ def format_exc(exc=None):
         if exc == (None, None, None):
             return ''
         import traceback
+
         return ''.join(traceback.format_exception(*exc))
     finally:
         del exc
@@ -619,7 +648,11 @@ def bare_error(extrabody=None):
             extrabody = extrabody.encode('utf-8')
         body += b'\n' + extrabody
 
-    return (b'500 Internal Server Error',
-            [(b'Content-Type', b'text/plain'),
-             (b'Content-Length', ntob(str(len(body)), 'ISO-8859-1'))],
-            [body])
+    return (
+        b'500 Internal Server Error',
+        [
+            (b'Content-Type', b'text/plain'),
+            (b'Content-Length', ntob(str(len(body)), 'ISO-8859-1')),
+        ],
+        [body],
+    )
