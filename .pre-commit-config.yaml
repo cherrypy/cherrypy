@@ -21,6 +21,25 @@ repos:
     # Ref: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
     - --fix  # NOTE: When `--fix` is used, linting should be before ruff-format
 
+- repo: https://github.com/astral-sh/ruff-pre-commit.git
+  rev: v0.11.7
+  hooks:
+  - id: ruff-format
+    alias: ruff-format-first-pass
+    name: ruff-format (first pass)
+
+- repo: https://github.com/asottile/add-trailing-comma.git
+  rev: v3.1.0
+  hooks:
+  - id: add-trailing-comma
+
+- repo: https://github.com/astral-sh/ruff-pre-commit.git
+  rev: v0.11.7
+  hooks:
+  - id: ruff-format
+    alias: ruff-format-second-pass
+    name: ruff-format (second pass)
+
 - repo: https://github.com/python-jsonschema/check-jsonschema.git
   rev: 0.33.0
   hooks:
@@ -44,7 +63,6 @@ repos:
   - id: trailing-whitespace
     exclude: cherrypy/test/static/index.html
   - id: check-merge-conflict
-  - id: double-quote-string-fixer
   - id: end-of-file-fixer
   - id: name-tests-test
     include: cherrypy/test/
