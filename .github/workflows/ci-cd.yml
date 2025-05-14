@@ -474,16 +474,16 @@ jobs:
         # NOTE: of the build deps to compile cryptography.
         # NOTE: They should be re-added once it's fixed.
         - runner-vm-os: windows-2022
-          python-version: pypy-3.9
+          python-version: pypy-3.11
         - runner-vm-os: windows-2019
-          python-version: pypy-3.9
+          python-version: pypy-3.11
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - runner-vm-os: macos-11
-          python-version: pypy-3.9
-        - runner-vm-os: macos-12
-          python-version: pypy-3.9
+        - runner-vm-os: macos-15
+          python-version: pypy-3.11
+        - runner-vm-os: macos-13
+          python-version: pypy-3.11
         # yamllint disable rule:comments-indentation
         # include: []  # TODO: include TOXENV=cheroot-master
         # yamllint enable rule:comments-indentation
