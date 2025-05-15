@@ -1,5 +1,3 @@
-import sys
-
 import cherrypy
 from cherrypy._cpcompat import ntob
 from cherrypy.test import helper
@@ -42,14 +40,8 @@ class WSGIGraftTests(helper.CPWebCase):
             def __iter__(self):
                 return self
 
-            if sys.version_info >= (3, 0):
-
-                def __next__(self):
-                    return next(self.iter)
-            else:
-
-                def next(self):
-                    return self.iter.next()
+            def __next__(self):
+                return next(self.iter)
 
             def close(self):
                 if hasattr(self.appresults, 'close'):
@@ -63,18 +55,10 @@ class WSGIGraftTests(helper.CPWebCase):
                 results = app(environ, start_response)
 
                 class Reverser(WSGIResponse):
-                    if sys.version_info >= (3, 0):
-
-                        def __next__(this):
-                            line = list(next(this.iter))
-                            line.reverse()
-                            return bytes(line)
-                    else:
-
-                        def next(this):
-                            line = list(this.iter.next())
-                            line.reverse()
-                            return ''.join(line)
+                    def __next__(this):
+                        line = list(next(this.iter))
+                        line.reverse()
+                        return bytes(line)
 
                 return Reverser(results)
 

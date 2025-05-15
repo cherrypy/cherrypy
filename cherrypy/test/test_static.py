@@ -264,16 +264,10 @@ class StaticTest(helper.CPWebCase):
         # Check that we get an error if no .file or .dir
         self.getPage('/error/thing.html')
         self.assertErrorPage(500)
-        if sys.version_info >= (3, 3):
-            errmsg = (
-                r'TypeError: staticdir\(\) missing 2 '
-                'required positional arguments'
-            )
-        else:
-            errmsg = (
-                r'TypeError: staticdir\(\) takes at least 2 '
-                r'(positional )?arguments \(0 given\)'
-            )
+        errmsg = (
+            r'TypeError: staticdir\(\) missing 2 '
+            'required positional arguments'
+        )
         self.assertMatchesBody(errmsg.encode('ascii'))
 
     def test_security(self):
