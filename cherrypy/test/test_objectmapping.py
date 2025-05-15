@@ -1,4 +1,3 @@
-import sys
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy._cptree import Application

@@ -4,8 +4,6 @@ This adds some CP-specific bits to the framework-agnostic cheroot
 package.
 """
 
-import sys
-
 import cheroot.wsgi
 import cheroot.server
 
