@@ -312,9 +312,7 @@ def average_uriset_time(s):
 
 def _get_threading_ident():
     """Discover the current thread identifier."""
-    if sys.version_info >= (3, 3):
-        return threading.get_ident()
-    return threading._get_ident()
+    return threading.get_ident()
 
 
 class StatsTool(cherrypy.Tool):

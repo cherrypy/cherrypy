@@ -85,10 +85,7 @@ class CPWSGIServer(cheroot.wsgi.Server):
         self.protocol = self.server_adapter.protocol_version
         self.nodelay = self.server_adapter.nodelay
 
-        if sys.version_info >= (3, 0):
-            ssl_module = self.server_adapter.ssl_module or 'builtin'
-        else:
-            ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
+        ssl_module = self.server_adapter.ssl_module or 'builtin'
         if self.server_adapter.ssl_context:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
