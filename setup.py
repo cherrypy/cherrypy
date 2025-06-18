@@ -19,7 +19,6 @@ params = dict(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: Freely Distributable',
         'Operating System :: OS Independent',
         'Framework :: CherryPy',
         'License :: OSI Approved :: BSD License',
