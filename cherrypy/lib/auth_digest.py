@@ -7,7 +7,7 @@ An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
 Digest algorithms, described in :rfc:7616, are ´valid_algorithms`
-but could be limited to a `server_supported_algorithms` 
+but could be limited to a `server_supported_algorithms`
 
 Example usage, using the built-in get_ha1_dict_plain function which uses a dict
 of plaintext passwords as the credentials store::
@@ -53,7 +53,7 @@ def sha512_hex(s):
 def choose_hexdigest_method(algorithm):
     if algorithm.endwith("-sess"):
         algorithm = algorithm.split('-')[0]
-    return algorithm.lower() + '_hex'            
+    return algorithm.lower() + '_hex'
 
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'
@@ -65,7 +65,7 @@ valid_qops = (qop_auth, qop_auth_int)
 valid_algorithms = {'MD5', 'MD5-sess', 'SHA256', 'SHA256-sess', 'SHA512', 'SHA512-sess'}
 
 def updte_valid_algoritms(algorithms):
-    global valid_algorithms 
+    global valid_algorithms
     valid_algorithms = valid_algorithms.intersection(algorithms)
 
 FALLBACK_CHARSET = 'ISO-8859-1'
@@ -160,10 +160,10 @@ def synthesize_nonce(s, key, algorithm, timestamp=None):
 
     key
         A secret string known only to the server.
-        
+
     algorithm
         A string indicating an algorithm used to produce the digest
-        
+
     timestamp
         An integer seconds-since-the-epoch timestamp
 
@@ -480,12 +480,12 @@ def digest_auth(realm, get_ha1, key, algoitms=valid_algorithms, debug=False, acc
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
-    
+
     updte_valid_algoritms(algorithms)
-    
+
     request = cherrypy.serving.request
 
-    auth_header = request.headers.get('authorization')     
+    auth_header = request.headers.get('authorization')
 
     respond_401 = functools.partial(
         _respond_401,
@@ -549,7 +549,7 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
         #
         #        H(data) = SHA-256(data)
         #
-        # i.e., the digest is the "<algorithm>" of the secret concatenated with a 
+        # i.e., the digest is the "<algorithm>" of the secret concatenated with a
         # colon concatenated with the data. The  "<algorithm>-sess" is intended to
         # allow efficient third-party authentication servers; for the difference in
         # usage, see the description in Section 3.4.2.
@@ -563,8 +563,8 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
             )
             if debug:
                 TRACE(header)
-            # TODO: with that solution 'WWW-Authenticate' header will be overwritten with 
-            # last one fromm loop iteration. Need a solution for sending a list of 
+            # TODO: with that solution 'WWW-Authenticate' header will be overwritten with
+            # last one fromm loop iteration. Need a solution for sending a list of
             # 'WWW-Authenticate' headers with single 401 response
             cherrypy.serving.response.headers['WWW-Authenticate'] = header
     raise cherrypy.HTTPError(
