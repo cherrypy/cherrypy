@@ -54,7 +54,7 @@ def sha512_hex(s):
 
 
 def choose_hexdigest_method(algorithm):
-    if algorithm.endwith("-sess"):
+    if algorithm.endwith('-sess'):
         algorithm = algorithm.split('-')[0]
     return algorithm.lower() + '_hex'
 
@@ -67,7 +67,14 @@ valid_qops = (qop_auth, qop_auth_int)
 # TODO: validate HTTP response algorithm syntax
 # according rfc7616 it could be 'SHA-256' instead of 'SHA256'
 # if so additional handilng of '-' required
-valid_algorithms = {'MD5', 'MD5-sess', 'SHA256', 'SHA256-sess', 'SHA512', 'SHA512-sess'}
+valid_algorithms = {
+    'MD5',
+    'MD5-sess',
+    'SHA256',
+    'SHA256-sess',
+    'SHA512',
+    'SHA512-sess',
+}
 
 
 def updte_valid_algoritms(algorithms):
@@ -410,7 +417,7 @@ class HttpDigestAuthorization(object):
         # receipt of a WWW-Authenticate challenge from the server.
         # A1 = H( unq(username-value) ":" unq(realm-value) ":" passwd )
         #         ":" unq(nonce-value) ":" unq(cnonce-value)
-        if self.algorithm.endwith("-sess"):
+        if self.algorithm.endwith('-sess'):
             ha1 = H('%s:%s:%s' % (ha1, self.nonce, self.cnonce))
 
         digest = H('%s:%s' % (ha1, req))
@@ -459,7 +466,14 @@ def www_authenticate(
     )
 
 
-def digest_auth(realm, get_ha1, key, algoitms=valid_algorithms, debug=False, accept_charset='utf-8'):
+def digest_auth(
+    realm,
+    get_ha1,
+    key,
+    algoitms=valid_algorithms,
+    debug=False,
+    accept_charset='utf-8',
+):
     """Perform HTTP Digest Access Authentication.
 
     A CherryPy tool that hooks at ``before_handler`` to perform
@@ -487,7 +501,6 @@ def digest_auth(realm, get_ha1, key, algoitms=valid_algorithms, debug=False, acc
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
-
     updte_valid_algoritms(algorithms)
 
     request = cherrypy.serving.request
@@ -560,7 +573,7 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
         # colon concatenated with the data. The  "<algorithm>-sess" is intended to
         # allow efficient third-party authentication servers; for the difference in
         # usage, see the description in Section 3.4.2.
-        if not algorithm.endwith("-sess"):
+        if not algorithm.endwith('-sess'):
             header = www_authenticate(
                 realm,
                 key,
