@@ -42,31 +42,38 @@ def md5_hex(s):
     """Return hexdigest of md5sum."""
     return md5(ntob(s, 'utf-8')).hexdigest()
 
+
 def sha256_hex(s):
     """Return hexdigest of sha256sum."""
     return sha256(ntob(s, 'utf-8')).hexdigest()
 
+
 def sha512_hex(s):
     """Return hexdigest of sha512sum."""
     return sha512(ntob(s, 'utf-8')).hexdigest()
+
 
 def choose_hexdigest_method(algorithm):
     if algorithm.endwith("-sess"):
         algorithm = algorithm.split('-')[0]
     return algorithm.lower() + '_hex'
 
+
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
+
 
 # TODO: validate HTTP response algorithm syntax
 # according rfc7616 it could be 'SHA-256' instead of 'SHA256'
 # if so additional handilng of '-' required
 valid_algorithms = {'MD5', 'MD5-sess', 'SHA256', 'SHA256-sess', 'SHA512', 'SHA512-sess'}
 
+
 def updte_valid_algoritms(algorithms):
     global valid_algorithms
     valid_algorithms = valid_algorithms.intersection(algorithms)
+
 
 FALLBACK_CHARSET = 'ISO-8859-1'
 DEFAULT_CHARSET = 'UTF-8'
@@ -315,7 +322,7 @@ class HttpDigestAuthorization(object):
             s_timestamp, s_hashpart = synthesize_nonce(
                 s,
                 key,
-                self.algorithm
+                self.algorithm,
                 timestamp,
             ).split(':', 1)
             is_valid = s_hashpart == hashpart
