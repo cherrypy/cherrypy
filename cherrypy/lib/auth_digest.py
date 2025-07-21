@@ -560,7 +560,7 @@ def digest_auth(
 
 def _respond_401(realm, key, accept_charset, debug, **kwargs):
     """Respond with 401 status and a WWW-Authenticate header."""
-    for algorithm in vaild_algorithms:
+    for algorithm in valid_algorithms:
         # for more details please refer to rfc7616 documentation
         # https://httpwg.org/specs/rfc7616.html#www-authenticate.response.header
         # For example:
