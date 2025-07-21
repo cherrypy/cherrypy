@@ -531,7 +531,7 @@ def digest_auth(realm, get_ha1, key, algorithms=valid_algorithms, debug=False, a
 
     if not auth.validate_nonce(realm, key):
         respond_401()
-    
+
     if get_ha1.__name__ == "get_ha1_dict_plain":
         ha1 = get_ha1(realm, auth.username, auth.algorithm)
     else:
