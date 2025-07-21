@@ -403,12 +403,12 @@ class HttpDigestAuthorization(object):
 
         # RFC 2617 3.2.2.2
         #
-        # If the "algorithm" directive's value is "<algorithm>" or 
+        # If the "algorithm" directive's value is "<algorithm>" or
         # is unspecified, then A1 is:
         #    A1 = unq(username-value) ":" unq(realm-value) ":" passwd
         #
-        # If the "algorithm" directive's value is "<algorithm>-sess", 
-        # then A1 is calculated only once - 
+        # If the "algorithm" directive's value is "<algorithm>-sess",
+        # then A1 is calculated only once -
         # on the first request by the client following
         # receipt of a WWW-Authenticate challenge from the server.
         # A1 = H( unq(username-value) ":" unq(realm-value) ":" passwd )
@@ -569,8 +569,8 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
         #        H(data) = SHA-256(data)
         #
         # i.e., the digest is the "<algorithm>" of the secret concatenated with
-        # a colon concatenated with the data. The  "<algorithm>-sess" is 
-        # intended to allow efficient third-party authentication servers; 
+        # a colon concatenated with the data. The  "<algorithm>-sess" is
+        # intended to allow efficient third-party authentication servers;
         # for the difference in usage, see the description in Section 3.4.2.
         if not algorithm.endwith('-sess'):
             header = www_authenticate(
@@ -583,7 +583,7 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
             if debug:
                 TRACE(header)
             # TODO: with that solution 'WWW-Authenticate' header will be
-            # overwritten with last one fromm loop iteration. 
+            # overwritten with last one fromm loop iteration.
             # Need a solution for sending a list
             # of 'WWW-Authenticate' headers with single 401 response
             cherrypy.serving.response.headers['WWW-Authenticate'] = header
