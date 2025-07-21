@@ -6,7 +6,7 @@
 An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
-Digest algorithms, described in :rfc:7616, are ´valid_algorithms`
+Digest algorithms, described in :rfc:7616, are `valid_algorithms`
 but could be limited to a `server_supported_algorithms`
 
 Example usage, using the built-in get_ha1_dict_plain function which uses a dict
@@ -54,8 +54,10 @@ def sha512_hex(s):
 
 
 def choose_hexdigest_method(algorithm):
-    if algorithm.endwith('-sess'):
-        algorithm = algorithm.split('-')[0]
+    """Return Python hexdigest method for given algorithm name"""
+    if algorithm.endwith("-sess"):
+        algorithm = algorithm.rsplit('-', 1)[0]
+    algorithm = algorithm.replace('-','')
     return algorithm.lower() + '_hex'
 
 
@@ -64,16 +66,13 @@ qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
 
 
-# TODO: validate HTTP response algorithm syntax
-# according rfc7616 it could be 'SHA-256' instead of 'SHA256'
-# if so additional handilng of '-' required
 valid_algorithms = {
     'MD5',
     'MD5-sess',
-    'SHA256',
-    'SHA256-sess',
-    'SHA512',
-    'SHA512-sess',
+    'SHA-256',
+    'SHA-256-sess',
+    'SHA-512',
+    'SHA-512-sess',
 }
 
 
@@ -105,12 +104,10 @@ def get_ha1_dict_plain(user_password_dict):
     get_ha1 argument to digest_auth().
     """
 
-    def get_ha1(realm, username):
+    def get_ha1(realm, username, algorithm):
         password = user_password_dict.get(username)
         if password:
-            hex_method = choose_hexdigest_method(algorithm)
-            func_to_call = eval(hex_method)
-            return func_to_call('%s:%s:%s' % (username, realm, password))
+            return H('%s:%s:%s' % (username, realm, password), algorithm)
         return None
 
     return get_ha1
@@ -184,9 +181,7 @@ def synthesize_nonce(s, key, algorithm, timestamp=None):
     """
     if timestamp is None:
         timestamp = int(time.time())
-    hex_method = choose_hexdigest_method(algorithm)
-    func_to_call = eval(hex_method)
-    h = func_to_call('%s:%s:%s' % (timestamp, s, key))
+    h = H('%s:%s:%s' % (timestamp, s, key), algorithm)
     # h = md5_hex('%s:%s:%s' % (timestamp, s, key))
     nonce = '%s:%s' % (timestamp, h)
     return nonce
@@ -466,6 +461,7 @@ def www_authenticate(
     )
 
 
+<<<<<<< HEAD
 def digest_auth(
     realm,
     get_ha1,
@@ -474,6 +470,9 @@ def digest_auth(
     debug=False,
     accept_charset='utf-8',
 ):
+=======
+def digest_auth(realm, get_ha1, key, algorithms=valid_algorithms, debug=False, accept_charset='utf-8'):
+>>>>>>> 818074fa (change_agorithm_str_format)
     """Perform HTTP Digest Access Authentication.
 
     A CherryPy tool that hooks at ``before_handler`` to perform
@@ -532,8 +531,11 @@ def digest_auth(
 
     if not auth.validate_nonce(realm, key):
         respond_401()
-
-    ha1 = get_ha1(realm, auth.username)
+    
+    if get_ha1.__name__ == "get_ha1_dict_plain":
+        ha1 = get_ha1(realm, auth.username, auth.algorithm)
+    else:
+        ha1 = get_ha1(realm, auth.username)
 
     if ha1 is None:
         respond_401()
@@ -583,9 +585,9 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
             )
             if debug:
                 TRACE(header)
-            # TODO: with that solution 'WWW-Authenticate' header will be overwritten with
-            # last one fromm loop iteration. Need a solution for sending a list of
-            # 'WWW-Authenticate' headers with single 401 response
+            # TODO: with that solution 'WWW-Authenticate' header will be overwritten
+            # with last one fromm loop iteration. Need a solution for sending a list
+            # of 'WWW-Authenticate' headers with single 401 response
             cherrypy.serving.response.headers['WWW-Authenticate'] = header
     raise cherrypy.HTTPError(
         401,
