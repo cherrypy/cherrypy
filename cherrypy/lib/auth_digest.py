@@ -55,7 +55,7 @@ def sha512_hex(s):
 
 def choose_hexdigest_method(algorithm):
     """Return Python hexdigest method for given algorithm name"""
-    if algorithm.endwith("-sess"):
+    if algorithm.endwith('-sess'):
         algorithm = algorithm.rsplit('-', 1)[0]
     algorithm = algorithm.replace('-', '')
     return algorithm.lower() + '_hex'
@@ -528,7 +528,7 @@ def digest_auth(
     if not auth.validate_nonce(realm, key):
         respond_401()
 
-    if get_ha1.__name__ == "get_ha1_dict_plain":
+    if get_ha1.__name__ == 'get_ha1_dict_plain':
         ha1 = get_ha1(realm, auth.username, auth.algorithm)
     else:
         ha1 = get_ha1(realm, auth.username)
