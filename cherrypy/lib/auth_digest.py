@@ -18,7 +18,7 @@ of plaintext passwords as the credentials store::
     digest_auth = {'tools.auth_digest.on': True,
                    'tools.auth_digest.realm': 'wonderland',
                    'tools.auth_digest.get_ha1': get_ha1,
-                   'tools.auth_digest.algoritms': server_supported_algorithms,
+                   'tools.auth_digest.algorithms': server_supported_algorithms,
                    'tools.auth_digest.key': 'a565c27146791cfb',
                    'tools.auth_digest.accept_charset': 'UTF-8',
     }
@@ -54,7 +54,7 @@ def sha512_hex(s):
 
 
 def choose_hexdigest_method(algorithm):
-    """Return Python hexdigest method for given algorithm name"""
+    """Return Python hexdigest method for given algorithm name."""
     if algorithm.endwith('-sess'):
         algorithm = algorithm.rsplit('-', 1)[0]
     algorithm = algorithm.replace('-', '')
@@ -76,7 +76,7 @@ valid_algorithms = {
 }
 
 
-def updte_valid_algoritms(algorithms):
+def updte_valid_algorithms(algorithms):
     global valid_algorithms
     valid_algorithms = valid_algorithms.intersection(algorithms)
 
@@ -403,12 +403,13 @@ class HttpDigestAuthorization(object):
 
         # RFC 2617 3.2.2.2
         #
-        # If the "algorithm" directive's value is "<algorithm>" or is unspecified,
-        # then A1 is:
+        # If the "algorithm" directive's value is "<algorithm>" or 
+        # is unspecified, then A1 is:
         #    A1 = unq(username-value) ":" unq(realm-value) ":" passwd
         #
-        # If the "algorithm" directive's value is "<algorithm>-sess", then A1 is
-        # calculated only once - on the first request by the client following
+        # If the "algorithm" directive's value is "<algorithm>-sess", 
+        # then A1 is calculated only once - 
+        # on the first request by the client following
         # receipt of a WWW-Authenticate challenge from the server.
         # A1 = H( unq(username-value) ":" unq(realm-value) ":" passwd )
         #         ":" unq(nonce-value) ":" unq(cnonce-value)
@@ -496,7 +497,7 @@ def digest_auth(
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
-    updte_valid_algoritms(algorithms)
+    updte_valid_algorithms(algorithms)
 
     request = cherrypy.serving.request
 
@@ -559,7 +560,7 @@ def digest_auth(
 
 def _respond_401(realm, key, accept_charset, debug, **kwargs):
     """Respond with 401 status and a WWW-Authenticate header."""
-    for algorithm in vaild_algoritms:
+    for algorithm in vaild_algorithms:
         # for more details please refer to rfc7616 documentation
         # https://httpwg.org/specs/rfc7616.html#www-authenticate.response.header
         # For example:
@@ -567,10 +568,10 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
         #
         #        H(data) = SHA-256(data)
         #
-        # i.e., the digest is the "<algorithm>" of the secret concatenated with a
-        # colon concatenated with the data. The  "<algorithm>-sess" is intended to
-        # allow efficient third-party authentication servers; for the difference in
-        # usage, see the description in Section 3.4.2.
+        # i.e., the digest is the "<algorithm>" of the secret concatenated with
+        # a colon concatenated with the data. The  "<algorithm>-sess" is 
+        # intended to allow efficient third-party authentication servers; 
+        # for the difference in usage, see the description in Section 3.4.2.
         if not algorithm.endwith('-sess'):
             header = www_authenticate(
                 realm,
@@ -581,8 +582,9 @@ def _respond_401(realm, key, accept_charset, debug, **kwargs):
             )
             if debug:
                 TRACE(header)
-            # TODO: with that solution 'WWW-Authenticate' header will be overwritten
-            # with last one fromm loop iteration. Need a solution for sending a list
+            # TODO: with that solution 'WWW-Authenticate' header will be
+            # overwritten with last one fromm loop iteration. 
+            # Need a solution for sending a list
             # of 'WWW-Authenticate' headers with single 401 response
             cherrypy.serving.response.headers['WWW-Authenticate'] = header
     raise cherrypy.HTTPError(
