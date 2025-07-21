@@ -13,7 +13,7 @@ Example usage, using the built-in get_ha1_dict_plain function which uses a dict
 of plaintext passwords as the credentials store::
 
     userpassdict = {'alice' : '4x5istwelve'}
-    server_supported_algorithms = {'SHA256', 'SHA512'}
+    server_supported_algorithms = {'SHA-256', 'SHA-512'}
     get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(userpassdict)
     digest_auth = {'tools.auth_digest.on': True,
                    'tools.auth_digest.realm': 'wonderland',
@@ -182,7 +182,6 @@ def synthesize_nonce(s, key, algorithm, timestamp=None):
     if timestamp is None:
         timestamp = int(time.time())
     h = H('%s:%s:%s' % (timestamp, s, key), algorithm)
-    # h = md5_hex('%s:%s:%s' % (timestamp, s, key))
     nonce = '%s:%s' % (timestamp, h)
     return nonce
 
