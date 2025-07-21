@@ -57,7 +57,7 @@ def choose_hexdigest_method(algorithm):
     """Return Python hexdigest method for given algorithm name"""
     if algorithm.endwith("-sess"):
         algorithm = algorithm.rsplit('-', 1)[0]
-    algorithm = algorithm.replace('-','')
+    algorithm = algorithm.replace('-', '')
     return algorithm.lower() + '_hex'
 
 
@@ -461,18 +461,14 @@ def www_authenticate(
     )
 
 
-<<<<<<< HEAD
 def digest_auth(
     realm,
     get_ha1,
     key,
-    algoitms=valid_algorithms,
+    algorithms=valid_algorithms,
     debug=False,
     accept_charset='utf-8',
 ):
-=======
-def digest_auth(realm, get_ha1, key, algorithms=valid_algorithms, debug=False, accept_charset='utf-8'):
->>>>>>> 818074fa (change_agorithm_str_format)
     """Perform HTTP Digest Access Authentication.
 
     A CherryPy tool that hooks at ``before_handler`` to perform
