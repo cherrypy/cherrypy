@@ -7,7 +7,7 @@ An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
 Digest algorithms, described in :rfc:`7616`, are ``valid_algorithms``
-but could be limited to a `server_supported_algorithms`
+but could be limited to a smaller subset.
 
 Example usage, using the built-in get_ha1_dict_plain function which uses a dict
 of plaintext passwords as the credentials store::
