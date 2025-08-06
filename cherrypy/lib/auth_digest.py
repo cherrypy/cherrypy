@@ -76,11 +76,6 @@ valid_algorithms = {
 }
 
 
-def updte_valid_algorithms(algorithms):
-    global valid_algorithms
-    valid_algorithms = valid_algorithms.intersection(algorithms)
-
-
 FALLBACK_CHARSET = 'ISO-8859-1'
 DEFAULT_CHARSET = 'UTF-8'
 
@@ -104,10 +99,15 @@ def get_ha1_dict_plain(user_password_dict):
     get_ha1 argument to digest_auth().
     """
 
-    def get_ha1(realm, username, algorithm):
-        password = user_password_dict.get(username)
-        if password:
-            return H('%s:%s:%s' % (username, realm, password), algorithm)
+    def get_ha1(**kwargs):
+        if (
+            realm in kwargs
+            and username in kwargs 
+            and algorithm in kwargs
+        ):
+            password = user_password_dict.get(username)
+            if password:
+                return H('%s:%s:%s' % (username, realm, password), algorithm)
         return None
 
     return get_ha1
@@ -124,8 +124,13 @@ def get_ha1_dict(user_ha1_dict):
     argument to digest_auth().
     """
 
-    def get_ha1(realm, username):
-        return user_ha1_dict.get(username)
+    def get_ha1(**kwargs):
+        if (
+            realm in kwargs 
+            and username in kwargs
+        ):
+            return user_ha1_dict.get(username)
+        return None
 
     return get_ha1
 
@@ -146,14 +151,17 @@ def get_ha1_file_htdigest(filename):
     argument be an absolute path, to avoid problems.
     """
 
-    def get_ha1(realm, username):
+    def get_ha1(**kwargs):
         result = None
-        with open(filename, 'r') as f:
-            for line in f:
-                u, r, ha1 = line.rstrip().split(':')
-                if u == username and r == realm:
-                    result = ha1
-                    break
+        if (realm in kwargs 
+            and username in kwargs
+        ):
+            with open(filename, 'r') as f:
+                for line in f:
+                    u, r, ha1 = line.rstrip().split(':')
+                    if u == username and r == realm:
+                        result = ha1
+                        break
         return result
 
     return get_ha1
@@ -189,8 +197,9 @@ def synthesize_nonce(s, key, algorithm, timestamp=None):
 def H(s, algorithm):
     """Return an "<algorithm>" HEX hash."""
     hex_method = choose_hexdigest_method(algorithm)
-    func_to_call = eval(hex_method)
-    return func_to_call(s)
+    func = globals()[hex_method]
+    h = functools.partial(func, s)
+    return h()
 
 
 def _try_decode_header(header, charset):
@@ -465,9 +474,9 @@ def digest_auth(
     realm,
     get_ha1,
     key,
-    algorithms=valid_algorithms,
     debug=False,
     accept_charset='utf-8',
+    algorithms=valid_algorithms,
 ):
     """Perform HTTP Digest Access Authentication.
 
@@ -496,7 +505,7 @@ def digest_auth(
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
-    updte_valid_algorithms(algorithms)
+    server_algorithms = valid_algorithms.intersection(algorithms)
 
     request = cherrypy.serving.request
 
@@ -508,6 +517,7 @@ def digest_auth(
         key,
         accept_charset,
         debug,
+        server_algorithms,
     )
 
     if not HttpDigestAuthorization.matches(auth_header or ''):
@@ -522,16 +532,25 @@ def digest_auth(
             accept_charset=accept_charset,
         )
 
+    # perform some correctness checks
+    if auth.algorithm not in server_algorithms:
+        raise ValueError(
+                self.errmsg(
+                    "Algorithm not supported by server: '%s'" % auth.algorithm,
+                ),
+            )
+
     if debug:
         TRACE(str(auth))
 
     if not auth.validate_nonce(realm, key):
         respond_401()
 
-    if get_ha1.__name__ == 'get_ha1_dict_plain':
-        ha1 = get_ha1(realm, auth.username, auth.algorithm)
-    else:
-        ha1 = get_ha1(realm, auth.username)
+    ha1 = get_ha1(
+        realm=realm,
+        username=auth.username,
+        algorithm=auth.algorithm
+    )
 
     if ha1 is None:
         respond_401()
@@ -557,9 +576,9 @@ def digest_auth(
         TRACE('authentication of %s successful' % auth.username)
 
 
-def _respond_401(realm, key, accept_charset, debug, **kwargs):
+def _respond_401(realm, key, accept_charset, debug, algorithms, **kwargs):
     """Respond with 401 status and a WWW-Authenticate header."""
-    for algorithm in valid_algorithms:
+    for algorithm in algorithms:
         # for more details please refer to rfc7616 documentation
         # https://httpwg.org/specs/rfc7616.html#www-authenticate.response.header
         # For example:
