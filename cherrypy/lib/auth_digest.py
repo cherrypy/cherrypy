@@ -100,7 +100,11 @@ def get_ha1_dict_plain(user_password_dict):
     """
 
     def get_ha1(**kwargs):
-        if 'realm' in kwargs and 'username' in kwargs and 'algorithm' in kwargs:
+        if (
+            'realm' in kwargs
+            and 'username' in kwargs
+            and 'algorithm' in kwargs
+        ):
             realm = kwargs['realm']
             username = kwargs['username']
             algorithm = kwargs['algorithm']
@@ -532,7 +536,7 @@ def digest_auth(
     # perform some correctness checks
     if auth.algorithm not in server_algorithms:
         raise ValueError(
-            "Algorithm not supported by server: '%s'" % auth.algorithm
+            "Algorithm not supported by server: '%s'" % auth.algorithm,
         )
 
     if debug:
