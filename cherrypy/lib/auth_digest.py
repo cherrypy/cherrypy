@@ -100,7 +100,10 @@ def get_ha1_dict_plain(user_password_dict):
     """
 
     def get_ha1(**kwargs):
-        if realm in kwargs and username in kwargs and algorithm in kwargs:
+        if 'realm' in kwargs and 'username' in kwargs and 'algorithm' in kwargs:
+            realm = kwargs['realm']
+            username = kwargs['username']
+            algorithm = kwargs['algorithm']
             password = user_password_dict.get(username)
             if password:
                 return H('%s:%s:%s' % (username, realm, password), algorithm)
@@ -121,7 +124,8 @@ def get_ha1_dict(user_ha1_dict):
     """
 
     def get_ha1(**kwargs):
-        if realm in kwargs and username in kwargs:
+        if 'realm' in kwargs and 'username' in kwargs:
+            username = kwargs['username']
             return user_ha1_dict.get(username)
         return None
 
@@ -146,7 +150,9 @@ def get_ha1_file_htdigest(filename):
 
     def get_ha1(**kwargs):
         result = None
-        if realm in kwargs and username in kwargs:
+        if 'realm' in kwargs and 'username' in kwargs:
+            realm = kwargs['realm']
+            username = kwargs['username']
             with open(filename, 'r') as f:
                 for line in f:
                     u, r, ha1 = line.rstrip().split(':')
@@ -526,9 +532,7 @@ def digest_auth(
     # perform some correctness checks
     if auth.algorithm not in server_algorithms:
         raise ValueError(
-            self.errmsg(
-                "Algorithm not supported by server: '%s'" % auth.algorithm,
-            ),
+            "Algorithm not supported by server: '%s'" % auth.algorithm
         )
 
     if debug:
