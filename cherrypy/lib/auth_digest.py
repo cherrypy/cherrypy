@@ -100,14 +100,10 @@ def get_ha1_dict_plain(user_password_dict):
     """
 
     def get_ha1(**kwargs):
-        if (
-            'realm' in kwargs
-            and 'username' in kwargs
-            and 'algorithm' in kwargs
-        ):
-            realm = kwargs['realm']
-            username = kwargs['username']
-            algorithm = kwargs['algorithm']
+        realm = kwargs.get('realm')
+        username = kwargs.get('username')
+        algorithm = kwargs.get('algorithm')
+        if realm and username and algorithm:
             password = user_password_dict.get(username)
             if password:
                 return H('%s:%s:%s' % (username, realm, password), algorithm)
@@ -128,8 +124,8 @@ def get_ha1_dict(user_ha1_dict):
     """
 
     def get_ha1(**kwargs):
-        if 'realm' in kwargs and 'username' in kwargs:
-            username = kwargs['username']
+        username = kwargs.get('username')
+        if username:
             return user_ha1_dict.get(username)
         return None
 
@@ -154,9 +150,9 @@ def get_ha1_file_htdigest(filename):
 
     def get_ha1(**kwargs):
         result = None
-        if 'realm' in kwargs and 'username' in kwargs:
-            realm = kwargs['realm']
-            username = kwargs['username']
+        realm = kwargs.get('realm')
+        username = kwargs.get('username')
+        if realm and username:
             with open(filename, 'r') as f:
                 for line in f:
                     u, r, ha1 = line.rstrip().split(':')
