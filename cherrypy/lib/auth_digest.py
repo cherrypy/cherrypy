@@ -65,14 +65,14 @@ qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
 
 
-valid_algorithms = {
+valid_algorithms = frozenset({
     'MD5',
     'MD5-sess',
     'SHA-256',
     'SHA-256-sess',
     'SHA-512',
     'SHA-512-sess',
-}
+})
 
 
 FALLBACK_CHARSET = 'ISO-8859-1'
