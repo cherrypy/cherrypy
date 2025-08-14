@@ -55,8 +55,7 @@ def sha512_hex(s):
 
 def choose_hexdigest_method(algorithm):
     """Return Python hexdigest method for given algorithm name."""
-    if algorithm.endwith('-sess'):
-        algorithm = algorithm.rsplit('-', 1)[0]
+    algorithm = algorithm.removesuffix('-sess')
     algorithm = algorithm.replace('-', '')
     return algorithm.lower() + '_hex'
 
