@@ -502,7 +502,7 @@ def digest_auth(
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
-    server_algorithms = valid_algorithms.intersection(algorithms)
+    server_algorithms = valid_algorithms & algorithms
 
     request = cherrypy.serving.request
 
