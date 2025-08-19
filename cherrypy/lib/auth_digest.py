@@ -533,9 +533,8 @@ def digest_auth(
 
     # perform some correctness checks
     if auth.algorithm not in server_algorithms:
-        raise ValueError(
-            "Algorithm not supported by server: '%s'" % auth.algorithm,
-        )
+        msg = "Algorithm not supported by server: '%s'" % auth.algorithm
+        raise cherrypy.HTTPError(400, msg)
 
     if debug:
         TRACE(str(auth))
