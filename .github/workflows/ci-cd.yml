@@ -235,6 +235,7 @@ jobs:
         pip install
         --user
         setuptools-scm
+        --constraint=dependencies/lock-files/dist-build-constraints.txt
       shell: bash
     - name: Set the current dist version from Git
       if: steps.request-check.outputs.release-requested != 'true'
