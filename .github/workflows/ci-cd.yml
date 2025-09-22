@@ -748,6 +748,9 @@ jobs:
     - build
     - post-release-repo-update
     - pre-setup  # transitive, for accessing settings
+    if: >-
+      always()
+      && needs.post-release-repo-update.result == 'success'
 
     permissions:
       actions: read
