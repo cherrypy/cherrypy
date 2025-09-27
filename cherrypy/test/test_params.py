@@ -1,4 +1,3 @@
-import sys
 import textwrap
 
 import cherrypy
@@ -45,8 +44,6 @@ class ParamsTest(helper.CPWebCase):
         self.assertStatus(500)
 
     def test_syntax(self):
-        if sys.version_info < (3,):
-            return self.skip('skipped (Python 3 only)')
         code = textwrap.dedent("""
             class Root:
                 @cherrypy.expose
