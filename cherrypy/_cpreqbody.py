@@ -747,6 +747,77 @@ class Part(Entity):
             else:
                 self.file = result
 
+    def read_to_boundary(self, fp_out=None):
+        """Read bytes from self.fp and return or write them to a file.
+
+        If the 'fp_out' argument is None (the default), all bytes read
+        are returned in a single byte string.
+
+        If the 'fp_out' argument is not None, it must be a file-like
+        object that supports the 'write' method; all bytes read will be
+        written to the fp, and that fp is returned.
+        """
+        endmarker = self.boundary + b'--'
+        delim = b''
+        prev_lf = True
+        lines = []
+        seen = 0
+        boundary_buffer = b''
+        while True:
+            line = boundary_buffer + self.fp.read((1 << 16) - len(boundary_buffer))
+            if len(boundary_buffer):
+                boundary_buffer = b''
+            if not line:
+                raise EOFError('Illegal end of multipart body.')
+            
+            # Check if there is a newline within our read
+            # and process text up to the newline and
+            # store the rest in a buffer for the next pass
+            boundary_idx = line.find(b'\n') + 1
+            if boundary_idx:
+                boundary_buffer = line[boundary_idx:]
+                line = line[:boundary_idx]
+
+            # Check if current line is a multipart boundary
+            if line.startswith(b'--') and prev_lf:
+                strippedline = line.strip()
+                if strippedline == self.boundary:
+                    break
+                if strippedline == endmarker:
+                    self.fp.finish()
+                    break
+
+            line = delim + line
+
+            if line.endswith(b'\r\n'):
+                delim = b'\r\n'
+                line = line[:-2]
+                prev_lf = True
+            elif line.endswith(b'\n'):
+                delim = b'\n'
+                line = line[:-1]
+                prev_lf = True
+            else:
+                delim = b''
+                prev_lf = False
+
+            if fp_out is None:
+                lines.append(line)
+                seen += len(line)
+                if seen > self.maxrambytes:
+                    fp_out = self.make_file()
+                for line in lines:
+                    fp_out.write(line)
+            else:
+                fp_out.write(line)
+
+        if fp_out is None:
+            result = b''.join(lines)
+            return result
+        else:
+            fp_out.seek(0)
+        return fp_out
+
     def read_into_file(self, fp_out=None):
         """Read the request body into fp_out (or make_file() if None).
 
@@ -754,7 +825,7 @@ class Part(Entity):
         """
         if fp_out is None:
             fp_out = self.make_file()
-        self.read_lines_to_boundary(fp_out=fp_out)
+        self.read_to_boundary(fp_out=fp_out)
         return fp_out
 
 
