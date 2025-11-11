@@ -764,12 +764,14 @@ class Part(Entity):
         seen = 0
         boundary_buffer = b''
         while True:
-            line = boundary_buffer + self.fp.read((1 << 16) - len(boundary_buffer))
-            if len(boundary_buffer):
+            line = boundary_buffer + self.fp.read(
+                (1 << 16) - len(boundary_buffer),
+            )
+            if boundary_buffer:
                 boundary_buffer = b''
             if not line:
                 raise EOFError('Illegal end of multipart body.')
-            
+
             # Check if there is a newline within our read
             # and process text up to the newline and
             # store the rest in a buffer for the next pass
