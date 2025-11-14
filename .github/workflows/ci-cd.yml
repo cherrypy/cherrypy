@@ -395,7 +395,10 @@ jobs:
       post-toxenv-preparation-command: >-
         ${{
           matrix.toxenv == 'pre-commit'
-          && 'python -Im pre_commit install-hooks'
+          && format(
+            '$(pwd)/.tox/{0}/bin/python -Im pre_commit install-hooks',
+            matrix.toxenv
+          )
           || ''
         }}
       python-version: >-
