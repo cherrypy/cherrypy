@@ -13,7 +13,7 @@ on:
     - patchback/backports/**  # Patchback always creates PRs
     - pre-commit-ci-update-config  # pre-commit.ci always creates a PR
   pull_request:
-    ignore-paths:  # changes to the cron workflow are triggered through it
+    paths-ignore:  # changes to the cron workflow are triggered through it
     - .github/workflows/scheduled-runs.yml
   workflow_call:  # a way to embed the main tests
   workflow_dispatch:
