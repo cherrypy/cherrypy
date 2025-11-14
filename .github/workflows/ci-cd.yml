@@ -461,6 +461,7 @@ jobs:
         - 3.11
         - >-
           3.10
+        - ~3.14.0-0
         runner-vm-os:
         - ubuntu-24.04-arm
         - ubuntu-24.04
