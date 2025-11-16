@@ -63,7 +63,6 @@ env:
   PIP_NO_PYTHON_VERSION_WARNING: 1  # Hide "this Python is deprecated" message
   PIP_NO_WARN_SCRIPT_LOCATION: 1  # Hide "script dir is not in $PATH" message
   PRE_COMMIT_COLOR: always
-  PROJECT_NAME: CherryPy
   PUBLISHING_TO_TESTPYPI_ENABLED: true
   PY_COLORS: 1  # Recognized by the `py` package, dependency of `pytest`
   PYTHONIOENCODING: utf-8
@@ -133,6 +132,7 @@ jobs:
             && github.event.inputs.release-version
             || steps.scm-version.outputs.dist-version
         }}
+      project-name: ${{ steps.metadata.outputs.project-name }}
       is-untagged-devel: >-
         ${{ steps.untagged-check.outputs.is-untagged-devel || false }}
       release-requested: >-
@@ -194,8 +194,6 @@ jobs:
         ) as outputs_file:
             print('release-requested=true', file=outputs_file)
     - name: Check out src from Git
-      if: >-
-        steps.request-check.outputs.release-requested != 'true'
       uses: actions/checkout@v4
       with:
         fetch-depth: >-
@@ -204,6 +202,23 @@ jobs:
             && 1 || 0
           }}
         ref: ${{ github.event.inputs.release-committish }}
+    - name: Scan static PEP 621 core packaging metadata
+      id: metadata
+      run: |
+        from os import environ
+        from pathlib import Path
+        from tomllib import loads as parse_toml_from_string
+
+        FILE_APPEND_MODE = 'a'
+
+        pyproject_toml_txt = Path('pyproject.toml').read_text()
+        metadata = parse_toml_from_string(pyproject_toml_txt)['project']
+        project_name = metadata["name"]
+
+        with Path(environ['GITHUB_OUTPUT']).open(
+                mode=FILE_APPEND_MODE,
+        ) as outputs_file:
+            print(f'project-name={project_name}', file=outputs_file)
     - name: >-
         Calculate dependency files' combined hash value
         for use in the cache key
@@ -278,13 +293,15 @@ jobs:
             )
     - name: Set the expected dist artifact names
       id: artifact-name
+      env:
+        PROJECT_NAME: ${{ steps.metadata.outputs.project-name }}
       run: |
         from os import environ
         from pathlib import Path
 
         FILE_APPEND_MODE = 'a'
 
-        whl_file_prj_base_name = '${{ env.PROJECT_NAME }}'.replace('-', '_')
+        whl_file_prj_base_name = environ['PROJECT_NAME'].replace('-', '_')
         sdist_file_prj_base_name = (
             whl_file_prj_base_name.
             replace('.', '_').
@@ -596,7 +613,9 @@ jobs:
     environment:
       name: pypi
       url: >-
-        https://pypi.org/project/${{ env.PROJECT_NAME }}/${{
+        https://pypi.org/project/${{
+          needs.pre-setup.outputs.project-name
+        }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -641,7 +660,9 @@ jobs:
     environment:
       name: testpypi
       url: >-
-        https://test.pypi.org/project/${{ env.PROJECT_NAME }}/${{
+        https://test.pypi.org/project/${{
+          needs.pre-setup.outputs.project-name
+        }}/${{
           needs.pre-setup.outputs.dist-version
         }}
 
@@ -726,7 +747,7 @@ jobs:
         git tag
         -m '${{ needs.pre-setup.outputs.git-tag }}'
         -m 'Published at https://pypi.org/project/${{
-          env.PROJECT_NAME
+          needs.pre-setup.outputs.project-name
         }}/${{
           needs.pre-setup.outputs.dist-version
         }}'
@@ -882,7 +903,7 @@ jobs:
         echo | tee -a release-notes.md
         echo | tee -a release-notes.md
         echo '📦 PyPI page: https://pypi.org/project/${{
-          env.PROJECT_NAME
+          needs.pre-setup.outputs.project-name
         }}/${{
           needs.pre-setup.outputs.dist-version
         }}' | tee -a release-notes.md
