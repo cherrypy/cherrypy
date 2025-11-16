@@ -287,8 +287,8 @@ jobs:
         whl_file_prj_base_name = '${{ env.PROJECT_NAME }}'.replace('-', '_')
         sdist_file_prj_base_name = (
             whl_file_prj_base_name.
-            replace('.', '_')
-            .lower()
+            replace('.', '_').
+            lower()
         )
 
         with Path(environ['GITHUB_OUTPUT']).open(
