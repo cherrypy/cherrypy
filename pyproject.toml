@@ -39,7 +39,7 @@ classifiers = [
 ]
 requires-python = ">= 3.9"
 dependencies = [
-  "cheroot >= 8.2.1",
+  "cheroot >= 11.1.0",
   "portend >= 2.1.1",
   "more_itertools",
   "filelock",
