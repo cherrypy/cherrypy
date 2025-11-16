@@ -121,6 +121,9 @@ class Server(ServerAdapter):
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
 
+    ssl_private_key_password = None
+    """Optional password for private key."""
+
     ssl_ciphers = None
     """The ciphers list of SSL."""
 
