@@ -1,10 +1,10 @@
 [build-system]
 requires = [
-    # Essentials
-    "setuptools >= 45",
+  # Essentials
+  "setuptools >= 45",
 
-    # Plugins
-    "setuptools_scm[toml] >= 7",
+  # Plugins
+  "setuptools_scm[toml] >= 7",
 ]
 build-backend = "setuptools.build_meta"
 
