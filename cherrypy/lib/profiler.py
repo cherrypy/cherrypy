@@ -190,8 +190,8 @@ class make_app:
                 'Your installation of Python does not have a profile '
                 "module. If you're on Debian, try "
                 '`sudo apt-get install python-profiler`. '
-                'See https://web.archive.org/web/20111016122921/http://www.cherrypy.org/wiki/ProfilingOnDebian '
-                'for details.'
+                'See https://web.archive.org/web/20111016122921/'
+                'http://www.cherrypy.org/wiki/ProfilingOnDebian for details.'
             )
             warnings.warn(msg)
 
@@ -221,8 +221,8 @@ def serve(path=None, port=8080):
             'Your installation of Python does not have a profile module. '
             "If you're on Debian, try "
             '`sudo apt-get install python-profiler`. '
-            'See https://web.archive.org/web/20111016122921/http://www.cherrypy.org/wiki/ProfilingOnDebian '
-            'for details.'
+            'See https://web.archive.org/web/20111016122921/'
+            'http://www.cherrypy.org/wiki/ProfilingOnDebian for details.'
         )
         warnings.warn(msg)
 
