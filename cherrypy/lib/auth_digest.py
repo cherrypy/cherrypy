@@ -6,14 +6,20 @@
 An implementation of the server-side of HTTP Digest Access
 Authentication, which is described in :rfc:`2617`.
 
+All digest algorithms described in :rfc:`7616`, are acceptable.
+Howeever, they may be limited to a smaller subset supported by
+a particular server.
+
 Example usage, using the built-in get_ha1_dict_plain function which uses a dict
 of plaintext passwords as the credentials store::
 
     userpassdict = {'alice' : '4x5istwelve'}
+    server_supported_algorithms = {'SHA-256', 'SHA-512'}
     get_ha1 = cherrypy.lib.auth_digest.get_ha1_dict_plain(userpassdict)
     digest_auth = {'tools.auth_digest.on': True,
                    'tools.auth_digest.realm': 'wonderland',
                    'tools.auth_digest.get_ha1': get_ha1,
+                   'tools.auth_digest.algorithms': server_supported_algorithms,
                    'tools.auth_digest.key': 'a565c27146791cfb',
                    'tools.auth_digest.accept_charset': 'UTF-8',
     }
@@ -22,7 +28,7 @@ of plaintext passwords as the credentials store::
 
 import time
 import functools
-from hashlib import md5
+from hashlib import md5, sha256, sha512
 from urllib.request import parse_http_list, parse_keqv_list
 
 import cherrypy
@@ -38,11 +44,39 @@ def md5_hex(s):
     return md5(ntob(s, 'utf-8')).hexdigest()
 
 
+def sha256_hex(s):
+    """Return hexdigest of sha256sum."""
+    return sha256(ntob(s, 'utf-8')).hexdigest()
+
+
+def sha512_hex(s):
+    """Return hexdigest of sha512sum."""
+    return sha512(ntob(s, 'utf-8')).hexdigest()
+
+
+def choose_hexdigest_method(algorithm):
+    """Return Python hexdigest method for given algorithm name."""
+    algorithm = algorithm.removesuffix('-sess')
+    algorithm = algorithm.replace('-', '')
+    return algorithm.lower() + '_hex'
+
+
 qop_auth = 'auth'
 qop_auth_int = 'auth-int'
 valid_qops = (qop_auth, qop_auth_int)
 
-valid_algorithms = ('MD5', 'MD5-sess')
+
+valid_algorithms = frozenset(
+    {
+        'MD5',
+        'MD5-sess',
+        'SHA-256',
+        'SHA-256-sess',
+        'SHA-512',
+        'SHA-512-sess',
+    },
+)
+
 
 FALLBACK_CHARSET = 'ISO-8859-1'
 DEFAULT_CHARSET = 'UTF-8'
@@ -67,10 +101,14 @@ def get_ha1_dict_plain(user_password_dict):
     get_ha1 argument to digest_auth().
     """
 
-    def get_ha1(realm, username):
-        password = user_password_dict.get(username)
-        if password:
-            return md5_hex('%s:%s:%s' % (username, realm, password))
+    def get_ha1(**kwargs):
+        realm = kwargs.get('realm')
+        username = kwargs.get('username')
+        algorithm = kwargs.get('algorithm')
+        if realm and username and algorithm:
+            password = user_password_dict.get(username)
+            if password:
+                return H('%s:%s:%s' % (username, realm, password), algorithm)
         return None
 
     return get_ha1
@@ -87,8 +125,11 @@ def get_ha1_dict(user_ha1_dict):
     argument to digest_auth().
     """
 
-    def get_ha1(realm, username):
-        return user_ha1_dict.get(username)
+    def get_ha1(**kwargs):
+        username = kwargs.get('username')
+        if username:
+            return user_ha1_dict.get(username)
+        return None
 
     return get_ha1
 
@@ -109,20 +150,23 @@ def get_ha1_file_htdigest(filename):
     argument be an absolute path, to avoid problems.
     """
 
-    def get_ha1(realm, username):
+    def get_ha1(**kwargs):
         result = None
-        with open(filename, 'r') as f:
-            for line in f:
-                u, r, ha1 = line.rstrip().split(':')
-                if u == username and r == realm:
-                    result = ha1
-                    break
+        realm = kwargs.get('realm')
+        username = kwargs.get('username')
+        if realm and username:
+            with open(filename, 'r') as f:
+                for line in f:
+                    u, r, ha1 = line.rstrip().split(':')
+                    if u == username and r == realm:
+                        result = ha1
+                        break
         return result
 
     return get_ha1
 
 
-def synthesize_nonce(s, key, timestamp=None):
+def synthesize_nonce(s, key, algorithm, timestamp=None):
     """Synthesize a nonce value.
 
     A nonce value resists spoofing and can be checked
@@ -135,20 +179,26 @@ def synthesize_nonce(s, key, timestamp=None):
     key
         A secret string known only to the server.
 
+    algorithm
+        A string indicating an algorithm used to produce the digest
+
     timestamp
         An integer seconds-since-the-epoch timestamp
 
     """
     if timestamp is None:
         timestamp = int(time.time())
-    h = md5_hex('%s:%s:%s' % (timestamp, s, key))
+    h = H('%s:%s:%s' % (timestamp, s, key), algorithm)
     nonce = '%s:%s' % (timestamp, h)
     return nonce
 
 
-def H(s):
-    """Return an ``md5`` HEX hash."""
-    return md5_hex(s)
+def H(s, algorithm):
+    """Return an "<algorithm>" HEX hash."""
+    hex_method = choose_hexdigest_method(algorithm)
+    func = globals()[hex_method]
+    h = functools.partial(func, s)
+    return h()
 
 
 def _try_decode_header(header, charset):
@@ -281,6 +331,7 @@ class HttpDigestAuthorization(object):
             s_timestamp, s_hashpart = synthesize_nonce(
                 s,
                 key,
+                self.algorithm,
                 timestamp,
             ).split(':', 1)
             is_valid = s_hashpart == hashpart
@@ -328,7 +379,7 @@ class HttpDigestAuthorization(object):
             # in theory, this should never happen, since I validate qop in
             # __init__()
             raise ValueError(self.errmsg('Unrecognized value for qop!'))
-        return H(a2)
+        return H(a2, self.algorithm)
 
     def request_digest(self, ha1, entity_body=''):
         """Calculate the Request-Digest. See :rfc:`2617` section 3.2.2.1.
@@ -359,16 +410,17 @@ class HttpDigestAuthorization(object):
 
         # RFC 2617 3.2.2.2
         #
-        # If the "algorithm" directive's value is "MD5" or is unspecified,
-        # then A1 is:
+        # If the "algorithm" directive's value is "<algorithm>" or
+        # is unspecified, then A1 is:
         #    A1 = unq(username-value) ":" unq(realm-value) ":" passwd
         #
-        # If the "algorithm" directive's value is "MD5-sess", then A1 is
-        # calculated only once - on the first request by the client following
+        # If the "algorithm" directive's value is "<algorithm>-sess",
+        # then A1 is calculated only once -
+        # on the first request by the client following
         # receipt of a WWW-Authenticate challenge from the server.
         # A1 = H( unq(username-value) ":" unq(realm-value) ":" passwd )
         #         ":" unq(nonce-value) ":" unq(cnonce-value)
-        if self.algorithm == 'MD5-sess':
+        if self.algorithm.endwith('-sess'):
             ha1 = H('%s:%s:%s' % (ha1, self.nonce, self.cnonce))
 
         digest = H('%s:%s' % (ha1, req))
@@ -401,7 +453,7 @@ def www_authenticate(
     )
 
     if nonce is None:
-        nonce = synthesize_nonce(realm, key)
+        nonce = synthesize_nonce(realm, key, algorithm)
 
     stale_param = ', stale="true"' if stale else ''
 
@@ -417,7 +469,14 @@ def www_authenticate(
     )
 
 
-def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
+def digest_auth(
+    realm,
+    get_ha1,
+    key,
+    debug=False,
+    accept_charset='utf-8',
+    algorithms=valid_algorithms,
+):
     """Perform HTTP Digest Access Authentication.
 
     A CherryPy tool that hooks at ``before_handler`` to perform
@@ -445,6 +504,8 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         A secret string known only to the server, used in the synthesis
         of nonces.
     """
+    server_algorithms = valid_algorithms & algorithms
+
     request = cherrypy.serving.request
 
     auth_header = request.headers.get('authorization')
@@ -455,6 +516,7 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         key,
         accept_charset,
         debug,
+        server_algorithms,
     )
 
     if not HttpDigestAuthorization.matches(auth_header or ''):
@@ -469,13 +531,22 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
             accept_charset=accept_charset,
         )
 
+    # perform some correctness checks
+    if auth.algorithm not in server_algorithms:
+        msg = "Algorithm not supported by server: '%s'" % auth.algorithm
+        raise cherrypy.HTTPError(400, msg)
+
     if debug:
         TRACE(str(auth))
 
     if not auth.validate_nonce(realm, key):
         respond_401()
 
-    ha1 = get_ha1(realm, auth.username)
+    ha1 = get_ha1(
+        realm=realm,
+        username=auth.username,
+        algorithm=auth.algorithm,
+    )
 
     if ha1 is None:
         respond_401()
@@ -501,17 +572,35 @@ def digest_auth(realm, get_ha1, key, debug=False, accept_charset='utf-8'):
         TRACE('authentication of %s successful' % auth.username)
 
 
-def _respond_401(realm, key, accept_charset, debug, **kwargs):
+def _respond_401(realm, key, accept_charset, debug, algorithms, **kwargs):
     """Respond with 401 status and a WWW-Authenticate header."""
-    header = www_authenticate(
-        realm,
-        key,
-        accept_charset=accept_charset,
-        **kwargs,
-    )
-    if debug:
-        TRACE(header)
-    cherrypy.serving.response.headers['WWW-Authenticate'] = header
+    for algorithm in algorithms:
+        # for more details please refer to rfc7616 documentation
+        # https://httpwg.org/specs/rfc7616.html#www-authenticate.response.header
+        # For example:
+        #    For the "SHA-256" and "SHA-256-sess" algorithms
+        #
+        #        H(data) = SHA-256(data)
+        #
+        # i.e., the digest is the "<algorithm>" of the secret concatenated with
+        # a colon concatenated with the data. The  "<algorithm>-sess" is
+        # intended to allow efficient third-party authentication servers;
+        # for the difference in usage, see the description in Section 3.4.2.
+        if not algorithm.endwith('-sess'):
+            header = www_authenticate(
+                realm,
+                key,
+                algorithm,
+                accept_charset=accept_charset,
+                **kwargs,
+            )
+            if debug:
+                TRACE(header)
+            # TODO: with that solution 'WWW-Authenticate' header will be
+            # overwritten with last one fromm loop iteration.
+            # Need a solution for sending a list
+            # of 'WWW-Authenticate' headers with single 401 response
+            cherrypy.serving.response.headers['WWW-Authenticate'] = header
     raise cherrypy.HTTPError(
         401,
         'You are not authorized to access that resource',
