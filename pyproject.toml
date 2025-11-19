@@ -1,11 +1,125 @@
 [build-system]
 requires = [
   # Essentials
-  "setuptools >= 45",
+  "setuptools >= 61.2",
 
   # Plugins
   "setuptools-scm >= 7.0.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "CherryPy"
+description = "Object-Oriented HTTP framework"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Framework :: CherryPy",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: Jython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+  "Topic :: Internet :: WWW/HTTP :: WSGI",
+  "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+  "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+requires-python = ">= 3.9"
+dependencies = [
+  "cheroot >= 8.2.1",
+  "portend >= 2.1.1",
+  "more_itertools",
+  "filelock",
+  "jaraco.collections",
+  # pywin32 disabled while a build is unavailable. Ref #1920.
+  'pywin32 >= 227; sys_platform == "win32" and implementation_name == "cpython" and python_version < "3.10"',
+]
+dynamic = [
+  "version",
+]
+
+[[project.authors]]
+name = "CherryPy Team"
+email = "team@cherrypy.dev"
+
+[project.urls]
+Homepage = "https://cherrypy.dev"
+"Chat: Matrix" = "https://matrix.to/#/#cherrypy-space:matrix.org"
+"CI: GitHub" = "https://github.com/cherrypy/cherrypy/actions"
+"Docs: RTD" = "https://docs.cherrypy.dev"
+"GitHub: issues" = "https://github.com/cherrypy/cherrypy/issues"
+"GitHub: repo" = "https://github.com/cherrypy/cherrypy"
+"Tidelift: funding" = "https://tidelift.com/subscription/pkg/pypi-cherrypy?utm_source=pypi-cherrypy&utm_medium=referral&utm_campaign=pypi"
+
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
+
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "docutils",
+  "alabaster",
+  "sphinxcontrib-apidoc >= 0.3.0",
+  "rst.linker >= 1.11",
+  "jaraco.packaging >= 3.2",
+]
+json = [
+  "simplejson",
+]
+routes_dispatcher = [
+  "routes >= 2.3.1",
+]
+ssl = [
+  "pyOpenSSL",
+]
+testing = [
+  "objgraph",  # cherrypy.lib.gctools
+  "pytest >= 5.3.5",
+  "pytest-cov",
+  "pytest-forked",
+  "pytest-rerunfailures",
+  "pytest-sugar",
+  "path",
+  "requests_toolbelt",
+  "pytest-services >= 2",
+  "setuptools",
+]
+memcached_session = [
+  # Enables memcached session support via `cherrypy[memcached_session]`
+  "python-memcached >= 1.58",
+]
+xcgi = [
+  "flup",
+]
+
+[project.scripts]
+cherryd = "cherrypy.__main__:run"
+
+[tool.setuptools]
+license-files = [
+  "LICENSE.md",
+]
+packages = [
+  "cherrypy",
+  "cherrypy.lib",
+  "cherrypy.tutorial",
+  "cherrypy.test",
+  "cherrypy.process",
+  "cherrypy.scaffold",
+]
 
 [tool.setuptools_scm]
