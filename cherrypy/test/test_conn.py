@@ -13,6 +13,8 @@ import cherrypy
 from cherrypy._cpcompat import HTTPSConnection, ntob, tonative
 from cherrypy.test import helper
 
+import pytest
+
 
 timeout = 1
 pov = 'pPeErRsSiIsStTeEnNcCeE oOfF vViIsSiIoOnN'
@@ -797,6 +799,10 @@ socket_reset_errors += [
 class LimitedRequestQueueTests(helper.CPWebCase):
     setup_server = staticmethod(setup_upload_server)
 
+    @pytest.mark.xfail(
+        reason='Cheroot 11 returns HTTP 503 Service Unavailable on overflows: '
+        'https://github.com/cherrypy/cherrypy/issues/2073',
+    )
     def test_queue_full(self):
         conns = []
         overflow_conn = None
