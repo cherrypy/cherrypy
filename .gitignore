@@ -33,6 +33,7 @@ sphinx/source/_build
 
 # coverage results
 /.coverage
+/.coverage.*
 /coverage.xml
 
 # test artifacts
