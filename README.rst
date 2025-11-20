@@ -29,15 +29,6 @@
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
    :target: https://gitter.im/cherrypy/cherrypy
 
-.. image:: https://img.shields.io/travis/cherrypy/cherrypy/master.svg?label=Linux%20build%20%40%20Travis%20CI
-   :target: https://travis-ci.org/cherrypy/cherrypy
-
-.. image:: https://circleci.com/gh/cherrypy/cherrypy/tree/master.svg?style=svg
-   :target: https://circleci.com/gh/cherrypy/cherrypy/tree/master
-
-.. image:: https://img.shields.io/appveyor/ci/CherryPy/cherrypy/master.svg?label=Windows%20build%20%40%20Appveyor
-   :target: https://ci.appveyor.com/project/CherryPy/cherrypy/branch/master
-
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
 

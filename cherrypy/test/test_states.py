@@ -222,12 +222,6 @@ class ServerStateTests(helper.CPWebCase):
         self.assertEqual(db_connection.running, False)
         self.assertEqual(len(db_connection.threads), 0)
 
-    @pytest.mark.xfail(
-        'sys.platform == "Darwin" '
-        'and sys.version_info > (3, 7) '
-        'and os.environ["TRAVIS"]',
-        reason='https://github.com/cherrypy/cherrypy/issues/1693',
-    )
     def test_4_Autoreload(self):
         # If test_3 has not been executed, the server won't be stopped,
         # so we'll have to do it.
