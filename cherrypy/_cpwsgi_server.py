@@ -89,23 +89,24 @@ class CPWSGIServer(cheroot.wsgi.Server):
             ssl_module = self.server_adapter.ssl_module or 'builtin'
         else:
             ssl_module = self.server_adapter.ssl_module or 'pyopenssl'
-        if self.server_adapter.ssl_context:
+
+        setup_tls = (
+            self.server_adapter.ssl_context
+            or self.server_adapter.ssl_certificate
+        )
+
+        if setup_tls:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
-                self.server_adapter.ssl_certificate,
-                self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers,
+                certificate=self.server_adapter.ssl_certificate,
+                private_key=self.server_adapter.ssl_private_key,
+                certificate_chain=self.server_adapter.ssl_certificate_chain,
+                ciphers=self.server_adapter.ssl_ciphers,
+                private_key_password=self.server_adapter.ssl_private_key_password,
             )
-            self.ssl_adapter.context = self.server_adapter.ssl_context
-        elif self.server_adapter.ssl_certificate:
-            adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
-            self.ssl_adapter = adapter_class(
-                self.server_adapter.ssl_certificate,
-                self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers,
-            )
+
+            if self.server_adapter.ssl_context:
+                self.ssl_adapter.context = self.server_adapter.ssl_context
 
         self.stats['Enabled'] = getattr(
             self.server_adapter,
