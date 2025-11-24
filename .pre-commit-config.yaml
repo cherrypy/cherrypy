@@ -14,7 +14,7 @@ repos:
   - id: no_optional
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.14.6
   hooks:
   - id: ruff
     args:
@@ -22,26 +22,26 @@ repos:
     - --fix  # NOTE: When `--fix` is used, linting should be before ruff-format
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.14.6
   hooks:
   - id: ruff-format
     alias: ruff-format-first-pass
     name: ruff-format (first pass)
 
 - repo: https://github.com/asottile/add-trailing-comma.git
-  rev: v3.1.0
+  rev: v4.0.0
   hooks:
   - id: add-trailing-comma
 
 - repo: https://github.com/astral-sh/ruff-pre-commit.git
-  rev: v0.11.7
+  rev: v0.14.6
   hooks:
   - id: ruff-format
     alias: ruff-format-second-pass
     name: ruff-format (second pass)
 
 - repo: https://github.com/python-jsonschema/check-jsonschema.git
-  rev: 0.33.0
+  rev: 0.35.0
   hooks:
   - id: check-github-workflows
     files: ^\.github/workflows/[^/]+$
@@ -58,7 +58,7 @@ repos:
   - id: check-readthedocs
 
 - repo: https://github.com/pre-commit/pre-commit-hooks.git
-  rev: v1.1.1
+  rev: v6.0.0
   hooks:
   - id: trailing-whitespace
     exclude: cherrypy/test/static/index.html
@@ -83,7 +83,7 @@ repos:
   - id: requirements-txt-fixer
 
 - repo: https://github.com/PyCQA/flake8.git
-  rev: 7.1.0
+  rev: 7.3.0
   hooks:
   - id: flake8
     additional_dependencies:
@@ -93,7 +93,7 @@ repos:
     # - flake8-pytest-style ~= 1.7.2
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-  rev: v1.5.4
+  rev: v1.5.5
   hooks:
   - id: remove-tabs
 
@@ -103,7 +103,7 @@ repos:
   - id: forbid-html-img-without-alt-text
 
 - repo: https://github.com/adrienverge/yamllint.git
-  rev: v1.34.0
+  rev: v1.37.1
   hooks:
   - id: yamllint
     files: \.(yaml|yml)$
