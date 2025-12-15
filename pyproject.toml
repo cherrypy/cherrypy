@@ -39,7 +39,7 @@ classifiers = [
 ]
 requires-python = ">= 3.9"
 dependencies = [
-  "cheroot >= 8.2.1",
+  "cheroot >= 11.1.0",
   "portend >= 2.1.1",
   "more_itertools",
   "filelock",
@@ -97,6 +97,7 @@ testing = [
   "requests_toolbelt",
   "pytest-services >= 2",
   "setuptools",
+  "trustme",
 ]
 memcached_session = [
   # Enables memcached session support via `cherrypy[memcached_session]`
