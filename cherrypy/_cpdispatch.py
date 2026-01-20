@@ -261,28 +261,16 @@ class LateParamPageHandler(PageHandler):
         self._kwargs = kwargs
 
 
-if sys.version_info < (3, 0):
-    punctuation_to_underscores = string.maketrans(
-        string.punctuation,
-        '_' * len(string.punctuation),
-    )
+punctuation_to_underscores = str.maketrans(
+    string.punctuation,
+    '_' * len(string.punctuation),
+)
 
-    def validate_translator(t):
-        """Ensure the translator is of the correct length and size."""
-        if not isinstance(t, str) or len(t) != 256:
-            raise ValueError(
-                'The translate argument must be a str of len 256.',
-            )
-else:
-    punctuation_to_underscores = str.maketrans(
-        string.punctuation,
-        '_' * len(string.punctuation),
-    )
 
-    def validate_translator(t):
-        """Ensure the translator is of the correct length and size."""
-        if not isinstance(t, dict):
-            raise ValueError('The translate argument must be a dict.')
+def validate_translator(t):
+    """Ensure the translator is of the correct length and size."""
+    if not isinstance(t, dict):
+        raise ValueError('The translate argument must be a dict.')
 
 
 class Dispatcher(object):
