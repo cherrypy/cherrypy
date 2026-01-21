@@ -100,7 +100,7 @@ testing = [
 ]
 memcached_session = [
   # Enables memcached session support via `cherrypy[memcached_session]`
-  "python-memcached >= 1.58",
+  "pymemcache",
 ]
 xcgi = [
   "flup",
