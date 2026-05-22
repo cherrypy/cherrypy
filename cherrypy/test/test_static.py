@@ -260,6 +260,30 @@ class StaticTest(helper.CPWebCase):
             '%s/docroot/</a>.' % (self.base(), self.base()),
         )
 
+    def test_subdir_index_redirect(self):
+        """Regression test for #895.
+
+        When ``tools.staticdir.index`` serves an index file from a
+        sub-directory addressed without a trailing slash, the
+        ``trailing_slash`` tool must still issue a 301 to the canonical
+        ``/path/`` form (so relative links in the index resolve against
+        the directory rather than against its parent).
+        """
+        # Sanity: the canonical URL serves the sub-directory index.
+        self.getPage('/docroot/sub/')
+        self.assertStatus('200 OK')
+        self.assertHeader('Content-Type', 'text/html')
+        self.assertBody('Hello from sub\r\n')
+
+        # The buggy line in cherrypy/lib/static.py:413 evaluates
+        # ``filename[-1] in (r'\/')`` on the directory path; that test
+        # is False for ``…/sub`` so ``request.is_index`` was wrongly
+        # set to False and the trailing_slash tool stayed silent.
+        # After the fix, the un-slashed URL must redirect (301).
+        self.getPage('/docroot/sub')
+        self.assertStatus(301)
+        self.assertHeader('Location', '%s/docroot/sub/' % self.base())
+
     def test_config_errors(self):
         # Check that we get an error if no .file or .dir
         self.getPage('/error/thing.html')

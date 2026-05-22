@@ -410,7 +410,16 @@ def staticdir(
         if index:
             handled = _attempt(os.path.join(filename, index), content_types)
             if handled:
-                request.is_index = filename[-1] in (r'\/')
+                # ``filename`` is the directory we just served an index
+                # for; mark the request as an index hit so the
+                # trailing_slash tool (issues/895) can redirect
+                # ``/dir`` to ``/dir/``. The previous expression
+                # ``filename[-1] in (r'\/')`` was structurally False —
+                # ``filename`` here is the resolved directory path and
+                # almost never ends in a separator — so the redirect
+                # never fired and relative links in the index resolved
+                # against the parent URL instead of the directory.
+                request.is_index = True
     return handled
 
 
