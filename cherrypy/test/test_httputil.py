@@ -115,9 +115,7 @@ def test_get_ranges_excessive_range_count_rejected():
     assert len(result) == httputil.MAX_RANGES
 
     # One over the limit: rejected.
-    over_limit = 'bytes=' + ','.join(
-        ['1-2929'] * (httputil.MAX_RANGES + 1)
-    )
+    over_limit = 'bytes=' + ','.join(['1-2929'] * (httputil.MAX_RANGES + 1))
     assert httputil.get_ranges(over_limit, content_length) is None
 
     # A large attack-sized header is also rejected.
@@ -125,7 +123,11 @@ def test_get_ranges_excessive_range_count_rejected():
     assert httputil.get_ranges(many_ranges, content_length) is None
 
     # Legitimate, small multi-range requests remain unaffected.
-    assert httputil.get_ranges('bytes=0-99,200-299,400-499', content_length) == [
-        (0, 100), (200, 300), (400, 500),
+    assert httputil.get_ranges(
+        'bytes=0-99,200-299,400-499',
+        content_length,
+    ) == [
+        (0, 100),
+        (200, 300),
+        (400, 500),
     ]
-
