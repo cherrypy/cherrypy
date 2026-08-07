@@ -125,6 +125,21 @@ class ResponseEncoder:
         if encoding in self.attempted_charsets:
             return False
         self.attempted_charsets.add(encoding)
+        # self.body may still be a one-shot generator/file-object
+        # wrapper (see prepare_iter()) rather than a list. Iterating
+        # it here to attempt an encoding would consume it, and if
+        # this encoding attempt fails partway through (a later
+        # encode() call raises), self.body was never reassigned --
+        # leaving it pointing at the now partially-or-fully-exhausted
+        # original iterator, so any subsequent encoding attempt (e.g.
+        # for the next charset in the client's Accept-Charset list)
+        # would incorrectly see an empty body. Materialize it into a
+        # list once, up front: this is always safe to do here, since
+        # encode_string() is only used for the non-streaming case,
+        # where the entire body needs to be fully buffered in memory
+        # regardless. See GH #1215.
+        if not isinstance(self.body, list):
+            self.body = list(self.body)
         body = []
         for chunk in self.body:
             if isinstance(chunk, str):

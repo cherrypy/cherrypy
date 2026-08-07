@@ -18,6 +18,11 @@ sing = ntou('毛泽东: Sing, Little Birdie?', encoding='utf-8')
 sing8 = sing.encode('utf-8')
 sing16 = sing.encode('utf-16')
 
+# U+2026 HORIZONTAL ELLIPSIS: encodable as UTF-8, but has no
+# representation in ISO-8859-1 -- the exact character from GH #1215's
+# reproduction.
+ellipsis_char = 'Hello\u2026World'
+
 
 class EncodingTests(helper.CPWebCase):
     @staticmethod
@@ -39,6 +44,17 @@ class EncodingTests(helper.CPWebCase):
             @cherrypy.config(**{'tools.encode.encoding': 'utf-8'})
             def utf8(self):
                 return sing8
+
+            @cherrypy.expose
+            def file_like_body(self):
+                # A genuine file-like (non-list) body, as opposed to
+                # the plain-string bodies used by mao_zedong/utf8
+                # above: prepare_iter() wraps this via file_generator()
+                # rather than a plain list, exercising the exact
+                # generator-exhaustion scenario from GH #1215 (the
+                # issue's own reproduction used `return open(...)`,
+                # a text-mode file yielding str chunks).
+                return io.StringIO(ellipsis_char)
 
             @cherrypy.expose
             def cookies_and_headers(self):
@@ -459,6 +475,27 @@ class EncodingTests(helper.CPWebCase):
             [('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7)')],
         )
         self.assertStatus('400 Bad Request')
+
+    def test_multiple_encodings_file_like_body(self):
+        """
+        Regression test for
+        https://github.com/cherrypy/cherrypy/issues/1215
+
+        When multiple encodings must be attempted (e.g. the client's
+        Accept-Charset lists ISO-8859-1 before UTF-8, and the content
+        can't be represented in ISO-8859-1), a *file-like* response
+        body (as opposed to a plain string) must not end up empty by
+        the time a later, successful encoding is attempted. The
+        original bug's own reproduction returned an open() file
+        object directly; this uses io.StringIO for the same effect
+        without needing an actual file on disk.
+        """
+        self.getPage(
+            '/file_like_body',
+            [('Accept-Charset', 'iso-8859-1;q=1, utf-8;q=0.5')],
+        )
+        self.assertHeader('Content-Type', 'text/html;charset=utf-8')
+        self.assertBody(ellipsis_char.encode('utf-8'))
 
     def testGzip(self):
         zbuf = io.BytesIO()
