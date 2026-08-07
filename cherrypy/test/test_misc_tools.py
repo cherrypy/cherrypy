@@ -24,9 +24,7 @@ def setup_server():
         # general REST-app scenario from GH #976, as opposed to static
         # file serving where the file's own mtime always matches the
         # client's cached value exactly.
-        conditional_last_modified = cherrypy.lib.httputil.HTTPDate(
-            1500000000
-        )
+        conditional_last_modified = cherrypy.lib.httputil.HTTPDate(1500000000)
 
         @cherrypy.expose
         def conditional(self):
