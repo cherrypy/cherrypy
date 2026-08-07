@@ -1,5 +1,6 @@
 """Functions for builtin CherryPy tools."""
 
+import email.utils
 import logging
 import re
 from hashlib import md5
@@ -117,18 +118,62 @@ def validate_since():
 
         request = cherrypy.serving.request
 
+        lastmod_dt = _parse_http_date(lastmod)
+
         since = request.headers.get('If-Unmodified-Since')
-        if since and since != lastmod:
-            if (status >= 200 and status <= 299) or status == 412:
-                raise cherrypy.HTTPError(412)
+        if since:
+            # RFC 7232 sec 3.4: the precondition fails (412) if the
+            # selected representation's last modification date is
+            # more recent than the date in If-Unmodified-Since. A
+            # bare string-equality check incorrectly also failed the
+            # precondition whenever the client's date merely didn't
+            # match exactly, even if it was safely after the actual
+            # last-modified time (e.g. any REST resource whose
+            # Last-Modified isn't pinned to a single fixed value, as
+            # opposed to static file serving, where the served file's
+            # own mtime naturally always matches exactly). See GH #976.
+            since_dt = _parse_http_date(since)
+            unmodified = (
+                since_dt is not None
+                and lastmod_dt is not None
+                and lastmod_dt <= since_dt
+            ) or (since_dt is None and since == lastmod)
+            if not unmodified:
+                if (status >= 200 and status <= 299) or status == 412:
+                    raise cherrypy.HTTPError(412)
 
         since = request.headers.get('If-Modified-Since')
-        if since and since == lastmod:
-            if (status >= 200 and status <= 299) or status == 304:
-                if request.method in ('GET', 'HEAD'):
-                    raise cherrypy.HTTPRedirect([], 304)
-                else:
-                    raise cherrypy.HTTPError(412)
+        if since:
+            # RFC 7232 sec 3.3: a 304 is returned if the selected
+            # representation's last modification date is earlier than
+            # or equal to the date in If-Modified-Since -- not only
+            # when it matches exactly. See GH #976.
+            since_dt = _parse_http_date(since)
+            not_modified = (
+                since_dt is not None
+                and lastmod_dt is not None
+                and lastmod_dt <= since_dt
+            ) or (since_dt is None and since == lastmod)
+            if not_modified:
+                if (status >= 200 and status <= 299) or status == 304:
+                    if request.method in ('GET', 'HEAD'):
+                        raise cherrypy.HTTPRedirect([], 304)
+                    else:
+                        raise cherrypy.HTTPError(412)
+
+
+def _parse_http_date(value):
+    """Parse an HTTP-date header value into an aware datetime, or None.
+
+    Returns None (rather than raising) for a value that isn't a valid
+    HTTP-date, so callers can fall back to treating the header as
+    absent/unusable instead of erroring out on a malformed date from
+    a client.
+    """
+    try:
+        return email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
 
 
 #                                Tool code                                #

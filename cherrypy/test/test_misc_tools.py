@@ -18,6 +18,24 @@ def setup_server():
         h = [('Content-Language', 'en-GB'), ('Content-Type', 'text/plain')]
         tools.response_headers(headers=h)(index)
 
+        # A fixed, known Last-Modified value that's independent of any
+        # file's own mtime, so If-Modified-Since/If-Unmodified-Since
+        # can be tested with dates before/after/equal to it -- the
+        # general REST-app scenario from GH #976, as opposed to static
+        # file serving where the file's own mtime always matches the
+        # client's cached value exactly.
+        conditional_last_modified = cherrypy.lib.httputil.HTTPDate(
+            1500000000
+        )
+
+        @cherrypy.expose
+        def conditional(self):
+            cherrypy.response.headers['Last-Modified'] = (
+                self.conditional_last_modified
+            )
+            cherrypy.lib.cptools.validate_since()
+            return 'resource content'
+
         @cherrypy.expose
         @cherrypy.config(
             **{
@@ -104,6 +122,85 @@ class ResponseHeadersTest(helper.CPWebCase):
         self.getPage('/')
         self.assertHeader('Content-Language', 'en-GB')
         self.assertHeader('Content-Type', 'text/plain;charset=utf-8')
+
+
+class ValidateSinceTest(helper.CPWebCase):
+    """Regression tests for GH #976.
+
+    validate_since() previously required an exact string match
+    between If-Modified-Since/If-Unmodified-Since and Last-Modified,
+    rather than an actual date comparison as RFC 7232 requires --
+    this only happened to work for static file serving, where the
+    served file's own mtime naturally matches exactly, but broke for
+    general REST-style resources whose Last-Modified doesn't
+    necessarily match a client's date byte-for-byte.
+    """
+
+    setup_server = staticmethod(setup_server)
+
+    def test_if_modified_since_future_date(self):
+        # A date strictly after Last-Modified must still trigger 304,
+        # not just an exact match.
+        self.getPage(
+            '/conditional',
+            headers=[
+                ('If-Modified-Since', 'Fri, 18 Jul 2017 07:20:00 GMT'),
+            ],
+        )
+        self.assertStatus(304)
+
+    def test_if_modified_since_exact_match(self):
+        # The existing exact-match case must still work.
+        self.getPage(
+            '/conditional',
+            headers=[
+                ('If-Modified-Since', 'Fri, 14 Jul 2017 02:40:00 GMT'),
+            ],
+        )
+        self.assertStatus(304)
+
+    def test_if_modified_since_past_date(self):
+        # A date before Last-Modified must NOT trigger 304 -- the
+        # resource has changed since then.
+        self.getPage(
+            '/conditional',
+            headers=[
+                ('If-Modified-Since', 'Mon, 10 Jul 2017 00:00:00 GMT'),
+            ],
+        )
+        self.assertStatus('200 OK')
+        self.assertBody('resource content')
+
+    def test_if_unmodified_since_future_date(self):
+        # The resource is (trivially) unmodified as of any date after
+        # its own Last-Modified, so the request must succeed.
+        self.getPage(
+            '/conditional',
+            headers=[
+                ('If-Unmodified-Since', 'Fri, 18 Jul 2017 07:20:00 GMT'),
+            ],
+        )
+        self.assertStatus('200 OK')
+
+    def test_if_unmodified_since_past_date(self):
+        # The resource HAS been modified since a date before its
+        # Last-Modified, so the precondition must fail with 412.
+        self.getPage(
+            '/conditional',
+            headers=[
+                ('If-Unmodified-Since', 'Mon, 10 Jul 2017 00:00:00 GMT'),
+            ],
+        )
+        self.assertStatus(412)
+
+    def test_if_modified_since_malformed_date(self):
+        # A malformed date must not crash the request; it's simply
+        # treated as not matching/not applicable.
+        self.getPage(
+            '/conditional',
+            headers=[('If-Modified-Since', 'not a valid http-date')],
+        )
+        self.assertStatus('200 OK')
 
     def testResponseHeaders(self):
         self.getPage('/other')
