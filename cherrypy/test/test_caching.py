@@ -61,7 +61,8 @@ class CacheTest(helper.CPWebCase):
 
             @cherrypy.expose
             def clear_cache(self, path):
-                cherrypy._cache.store[cherrypy.request.base + path].clear()
+                key = ('GET', cherrypy.request.base + path)
+                cherrypy._cache.store[key].clear()
 
         @cherrypy.config(
             **{
@@ -73,6 +74,15 @@ class CacheTest(helper.CPWebCase):
             },
         )
         class VaryHeaderCachingServer(object):
+            def __init__(self):
+                self.counter = count(1)
+
+            @cherrypy.expose
+            def index(self):
+                return 'visit #%s' % next(self.counter)
+
+        @cherrypy.config(**{'tools.caching.on': True})
+        class MethodVaryingCachingServer(object):
             def __init__(self):
                 self.counter = count(1)
 
@@ -143,6 +153,9 @@ class CacheTest(helper.CPWebCase):
         cherrypy.tree.mount(Root())
         cherrypy.tree.mount(UnCached(), '/expires')
         cherrypy.tree.mount(VaryHeaderCachingServer(), '/varying_headers')
+        cherrypy.tree.mount(
+            MethodVaryingCachingServer(), '/method_varying_cache',
+        )
         cherrypy.tree.mount(GzipStaticCache(), '/gzip_static_cache')
         cherrypy.config.update({'tools.gzip.on': True})
 
@@ -199,6 +212,25 @@ class CacheTest(helper.CPWebCase):
         self.getPage('/', method='GET')
         self.assertNoHeader('Content-Encoding')
         self.assertBody('visit #6')
+
+    def testCachingKeyedByMethod(self):
+        # Warm the GET cache for this resource.
+        self.getPage('/method_varying_cache/')
+        self.assertBody('visit #1')
+        self.getPage('/method_varying_cache/')
+        # Served from the GET cache.
+        self.assertBody('visit #1')
+
+        # A different method against the same URI (e.g. a REST resource
+        # dispatched by MethodDispatcher that implements both GET and
+        # OPTIONS) must not be handed the GET's cached response.
+        self.getPage('/method_varying_cache/', method='OPTIONS')
+        self.assertBody('visit #2')
+
+        # The GET cache entry must still be intact and unaffected by the
+        # OPTIONS request above.
+        self.getPage('/method_varying_cache/')
+        self.assertBody('visit #1')
 
     def testVaryHeader(self):
         self.getPage('/varying_headers/')

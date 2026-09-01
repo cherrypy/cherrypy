@@ -131,14 +131,17 @@ class AntiStampedeCache(dict):
 class MemoryCache(Cache):
     """An in-memory cache for varying response content.
 
-    Each key in self.store is a URI, and each value is an AntiStampedeCache.
+    Each key in self.store is a (request method, URI) pair, and each value
+    is an AntiStampedeCache. Keying on the method too keeps different verbs
+    against the same URI (for example GET and OPTIONS on a resource dispatched
+    by MethodDispatcher) from being served each other's cached responses.
     The response for any given URI may vary based on the values of
     "selecting request headers"; that is, those named in the Vary
     response header. We assume the list of header names to be constant
     for each URI throughout the lifetime of the application, and store
-    that list in ``self.store[uri].selecting_headers``.
+    that list in ``self.store[key].selecting_headers``.
 
-    The items contained in ``self.store[uri]`` have keys which are tuples of
+    The items contained in ``self.store[key]`` have keys which are tuples of
     request header values (in the same order as the names in its
     selecting_headers), and values which are the actual responses.
     """
@@ -200,9 +203,9 @@ class MemoryCache(Cache):
             # during iteration
             for expiration_time, objects in self.expirations.copy().items():
                 if expiration_time <= now:
-                    for obj_size, uri, sel_header_values in objects:
+                    for obj_size, key, sel_header_values in objects:
                         try:
-                            del self.store[uri][tuple(sel_header_values)]
+                            del self.store[key][tuple(sel_header_values)]
                             self.tot_expires += 1
                             self.cursize -= obj_size
                         except KeyError:
@@ -217,7 +220,8 @@ class MemoryCache(Cache):
         self.tot_gets += 1
 
         uri = cherrypy.url(qs=request.query_string)
-        uricache = self.store.get(uri)
+        key = (request.method, uri)
+        uricache = self.store.get(key)
         if uricache is None:
             return None
 
@@ -239,13 +243,14 @@ class MemoryCache(Cache):
         response = cherrypy.serving.response
 
         uri = cherrypy.url(qs=request.query_string)
-        uricache = self.store.get(uri)
+        key = (request.method, uri)
+        uricache = self.store.get(key)
         if uricache is None:
             uricache = AntiStampedeCache()
             uricache.selecting_headers = [
                 e.value for e in response.headers.elements('Vary')
             ]
-            self.store[uri] = uricache
+            self.store[key] = uricache
 
         if len(self.store) < self.maxobjects:
             total_size = self.cursize + size
@@ -255,7 +260,7 @@ class MemoryCache(Cache):
                 # add to the expirations list
                 expiration_time = response.time + self.delay
                 bucket = self.expirations.setdefault(expiration_time, [])
-                bucket.append((size, uri, uricache.selecting_headers))
+                bucket.append((size, key, uricache.selecting_headers))
 
                 # add to the cache
                 header_values = [
@@ -269,7 +274,8 @@ class MemoryCache(Cache):
     def delete(self):
         """Remove ALL cached variants of the current resource."""
         uri = cherrypy.url(qs=cherrypy.serving.request.query_string)
-        self.store.pop(uri, None)
+        for key in [k for k in self.store if k[1] == uri]:
+            self.store.pop(key, None)
 
 
 def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
