@@ -154,7 +154,8 @@ class CacheTest(helper.CPWebCase):
         cherrypy.tree.mount(UnCached(), '/expires')
         cherrypy.tree.mount(VaryHeaderCachingServer(), '/varying_headers')
         cherrypy.tree.mount(
-            MethodVaryingCachingServer(), '/method_varying_cache',
+            MethodVaryingCachingServer(),
+            '/method_varying_cache',
         )
         cherrypy.tree.mount(GzipStaticCache(), '/gzip_static_cache')
         cherrypy.config.update({'tools.gzip.on': True})
