@@ -1,6 +1,10 @@
 v(next)
 -------
 
+* :issue:`2076`: Match Pytest 9's unraisable ``FileIO`` warning text so the
+  existing filter still applies.
+  -- by :user:`gyanu2507`.
+
 * Dropped support for Python 3.6, 3.7 and 3.8
   -- by :user:`webknjaz`.
 
