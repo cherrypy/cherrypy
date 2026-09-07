@@ -3,7 +3,7 @@
 # for compatibility, expose accidentally here
 import warnings
 
-from .._private_api.compat.headers import _parse_param, parse_header  # noqa
+from .._private_api.compat.headers import _parse_param, parse_header  # ruff: ignore[unused-import]
 
 
 warnings.warn(

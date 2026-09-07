@@ -25,7 +25,7 @@ logger = getLogger(__name__)
 
 def _log_debug_before_run_commands(msg: str) -> None:
     logger.debug(
-        '%s%s> %s',  # noqa: WPS323
+        '%s%s> %s',  # ruff: ignore[WPS323]
         'toxfile',
         ':tox_before_run_commands',
         msg,
@@ -34,7 +34,7 @@ def _log_debug_before_run_commands(msg: str) -> None:
 
 def _log_info_before_run_commands(msg: str) -> None:
     logger.info(
-        '%s%s> %s',  # noqa: WPS323
+        '%s%s> %s',  # ruff: ignore[WPS323]
         'toxfile',
         ':tox_before_run_commands',
         msg,
@@ -43,7 +43,7 @@ def _log_info_before_run_commands(msg: str) -> None:
 
 def _log_warning_before_run_commands(msg: str) -> None:
     logger.warning(
-        '%s%s> %s',  # noqa: WPS323
+        '%s%s> %s',  # ruff: ignore[WPS323]
         'toxfile',
         ':tox_before_run_commands',
         msg,
@@ -51,7 +51,7 @@ def _log_warning_before_run_commands(msg: str) -> None:
 
 
 @impl
-def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
+def tox_before_run_commands(tox_env: ToxEnv) -> None:  # ruff: ignore[WPS210, WPS213]
     """Display test runtime info when in GitHub Actions CI/CD.
 
     This also injects ``SOURCE_DATE_EPOCH`` env var into build-dists.
@@ -63,13 +63,13 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
             'Setting the Git HEAD-based epoch for reproducibility in GHA...',
         )
         git_executable = 'git'
-        git_log_cmd = (  # noqa: WPS317
+        git_log_cmd = (  # ruff: ignore[WPS317]
             git_executable,
             '-c',
             'core.pager=',  # prevents ANSI escape sequences
             'log',
             '-1',
-            '--pretty=%ct',  # noqa: WPS323
+            '--pretty=%ct',  # ruff: ignore[WPS323]
         )
         tox_env.conf['allowlist_externals'].append(git_executable)
         git_log_outcome = tox_env.execute(git_log_cmd, StdinSource.OFF)
@@ -130,7 +130,7 @@ def tox_before_run_commands(tox_env: ToxEnv) -> None:  # noqa: WPS210, WPS213
 
 def _log_debug_after_run_commands(msg: str) -> None:
     logger.debug(
-        '%s%s> %s',  # noqa: WPS323
+        '%s%s> %s',  # ruff: ignore[WPS323]
         'toxfile',
         ':tox_after_run_commands',
         msg,
