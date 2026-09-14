@@ -3,7 +3,7 @@
 # for compatibility, expose cheroot webtest here
 import warnings
 
-from cheroot.test.webtest import (  # noqa
+from cheroot.test.webtest import (  # ruff: ignore[unused-import]
     interface,
     WebCase,
     cleanHeaders,
