@@ -560,3 +560,63 @@ class MemcachedSessionTest(helper.CPWebCase):
         # code has to survive calling save/close without init.
         self.getPage('/restricted', self.cookies, method='POST')
         self.assertErrorPage(405, response_codes[405][1])
+
+
+class _RecordingLock:
+    """A stand-in for :class:`filelock.FileLock`.
+
+    Raises :class:`filelock.Timeout` (via ``sessions.Timeout``) on the
+    first ``attempts_before_success`` calls to :meth:`acquire`, then
+    succeeds. Every ``timeout`` value it receives is recorded on the
+    class so a test can assert what ``FileSession`` passed in.
+    """
+
+    attempts_before_success = 1
+    acquire_timeouts = []
+
+    def __init__(self, path):
+        self.path = path
+
+    def acquire(self, timeout=None):
+        self.acquire_timeouts.append(timeout)
+        if len(self.acquire_timeouts) <= self.attempts_before_success:
+            raise sessions.Timeout(self.path)
+
+    def release(self):
+        pass
+
+
+def test_file_session_lock_retry_delay_default(tmp_path):
+    """By default, ``lock_retry_delay`` preserves the historical 0.1s."""
+    sess = sessions.FileSession(id=None, storage_path=str(tmp_path))
+    assert sess.lock_retry_delay == 0.1
+
+
+def test_file_session_lock_retry_delay_is_configurable(tmp_path, monkeypatch):
+    """A custom ``lock_retry_delay`` is used for both the lock's own
+    acquire timeout and the sleep-and-retry backoff in
+    ``FileSession.acquire_lock()``.
+    """
+    _RecordingLock.acquire_timeouts = []
+    monkeypatch.setattr(sessions, 'FileLock', _RecordingLock)
+
+    sleep_calls = []
+    monkeypatch.setattr(sessions.time, 'sleep', sleep_calls.append)
+
+    custom_delay = 0.005
+    sess = sessions.FileSession(
+        id=None,
+        storage_path=str(tmp_path),
+        lock_retry_delay=custom_delay,
+    )
+    assert sess.lock_retry_delay == custom_delay
+
+    sess.acquire_lock()
+
+    # One failed attempt followed by one successful attempt, both made
+    # with the configured delay as their own timeout...
+    assert _RecordingLock.acquire_timeouts == [custom_delay, custom_delay]
+    # ...and the retry backoff between them also used the configured
+    # delay rather than the old hardcoded 0.1.
+    assert sleep_calls == [custom_delay]
+    assert sess.locked
