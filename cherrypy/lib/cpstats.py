@@ -237,8 +237,9 @@ appstats.update(
         ),
         'Current Time': lambda s: time.time(),
         'Current Requests': 0,
-        'Requests/Second': lambda s: float(s['Total Requests'])
-        / s['Uptime'](s),
+        'Requests/Second': lambda s: (
+            float(s['Total Requests']) / s['Uptime'](s)
+        ),
         'Server Version': cherrypy.__version__,
         'Start Time': time.time(),
         'Total Bytes Read': 0,
