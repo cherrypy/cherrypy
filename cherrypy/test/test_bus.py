@@ -347,3 +347,39 @@ def test_log(bus, log_tracker):
         )
     else:
         pytest.fail('NameError was not raised as expected.')
+
+
+def test_import_with_nonexistent_cwd(monkeypatch):
+    """Test that importing wspbus with nonexistent cwd does not crash."""
+    import importlib
+    monkeypatch.setattr(
+        os,
+        'getcwd',
+        unittest.mock.Mock(
+            side_effect=FileNotFoundError(2, 'No such file or directory'),
+        ),
+    )
+    importlib.reload(wspbus)
+    assert wspbus._startup_cwd is None
+
+
+def test_do_execv_with_none_or_missing_cwd(bus, monkeypatch):
+    """Test that _do_execv handles None or missing _startup_cwd gracefully."""
+    mock_execv = unittest.mock.Mock()
+    mock_chdir = unittest.mock.Mock(
+        side_effect=FileNotFoundError(2, 'No such file or directory'),
+    )
+    monkeypatch.setattr(os, 'execv', mock_execv)
+    monkeypatch.setattr(os, 'chdir', mock_chdir)
+
+    # When _startup_cwd is None, os.chdir should not be called
+    monkeypatch.setattr(wspbus, '_startup_cwd', None)
+    bus._do_execv()
+    mock_chdir.assert_not_called()
+    assert mock_execv.call_count == 1
+
+    # When _startup_cwd fails os.chdir, it should not raise and still execv
+    monkeypatch.setattr(wspbus, '_startup_cwd', '/nonexistent/path')
+    bus._do_execv()
+    assert mock_chdir.call_count == 1
+    assert mock_execv.call_count == 2
