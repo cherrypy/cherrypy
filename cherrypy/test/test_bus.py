@@ -352,6 +352,7 @@ def test_log(bus, log_tracker):
 def test_import_with_nonexistent_cwd(monkeypatch):
     """Test that importing wspbus with nonexistent cwd does not crash."""
     import importlib
+
     monkeypatch.setattr(
         os,
         'getcwd',
