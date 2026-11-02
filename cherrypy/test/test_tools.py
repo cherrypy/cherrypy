@@ -448,7 +448,7 @@ class ToolTests(helper.CPWebCase):
             name='renamed',
             priority=60,
         )
-        def example():  # noqa: F811
+        def example():  # ruff: ignore[redefined-while-unused]
             pass
 
         self.assertTrue(isinstance(cherrypy.tools.renamed, cherrypy.Tool))
