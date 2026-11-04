@@ -488,10 +488,10 @@ jobs:
         runner-vm-os:
         - ubuntu-24.04-arm
         - ubuntu-24.04
-        - macos-15
+        - macos-26
         - windows-2025
         - ubuntu-22.04
-        - macos-13
+        - macos-26-intel
         - windows-2022
         toxenv:
         - py
@@ -508,9 +508,9 @@ jobs:
         # NOTE: macOS PyPy jobs are excluded because installing cryptography
         # NOTE: needs openssl headers that aren't present at the moment.
         # TODO: Remove the exclusions once this is addressed.
-        - runner-vm-os: macos-15
+        - runner-vm-os: macos-26
           python-version: pypy-3.11
-        - runner-vm-os: macos-13
+        - runner-vm-os: macos-26-intel
           python-version: pypy-3.11
         # yamllint disable rule:comments-indentation
         # include: []  # TODO: include TOXENV=cheroot-master
