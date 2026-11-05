@@ -205,7 +205,23 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
     request = cherrypy.serving.request
     if request.protocol >= (1, 1):
         response.headers['Accept-Ranges'] = 'bytes'
-        r = httputil.get_ranges(request.headers.get('Range'), content_length)
+        range_header = request.headers.get('Range')
+        if range_header:
+            # If-Range makes a Range request conditional: if the
+            # validator doesn't match the resource's current state
+            # (e.g. the client's cached copy is stale), the full
+            # resource must be sent with status 200, ignoring Range
+            # entirely, rather than honoring it and sending back
+            # (possibly now-incorrect) partial content. Compare via
+            # simple string equality against the Last-Modified value,
+            # matching the same approach validate_since() already
+            # uses for If-Modified-Since/If-Unmodified-Since, which
+            # works correctly because HTTPDate formatting is
+            # deterministic. See GH #1699.
+            if_range = request.headers.get('If-Range')
+            if if_range and if_range != response.headers.get('Last-Modified'):
+                range_header = None
+        r = httputil.get_ranges(range_header, content_length)
         if r == []:
             response.headers['Content-Range'] = 'bytes */%s' % content_length
             message = (
