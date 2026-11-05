@@ -62,8 +62,10 @@ class DigestAuthTest(helper.CPWebCase):
         msg = 'Digest authentification scheme was not found'
         www_auth_digest = tuple(
             filter(
-                lambda kv: kv[0].lower() == 'www-authenticate'
-                and kv[1].startswith('Digest '),
+                lambda kv: (
+                    kv[0].lower() == 'www-authenticate'
+                    and kv[1].startswith('Digest ')
+                ),
                 self.headers,
             ),
         )
