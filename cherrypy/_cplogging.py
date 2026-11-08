@@ -178,6 +178,8 @@ class LogManager(object):
         if appid is None:
             self.error_log = logging.getLogger('%s.error' % logger_root)
             self.access_log = logging.getLogger('%s.access' % logger_root)
+            self.error_log.setLevel(logging.INFO)
+            self.access_log.setLevel(logging.INFO)
         else:
             self.error_log = logging.getLogger(
                 '%s.error.%s' % (logger_root, appid),
@@ -185,8 +187,6 @@ class LogManager(object):
             self.access_log = logging.getLogger(
                 '%s.access.%s' % (logger_root, appid),
             )
-        self.error_log.setLevel(logging.INFO)
-        self.access_log.setLevel(logging.INFO)
 
         # Silence the no-handlers "warning" (stderr write!) in stdlib logging
         self.error_log.addHandler(NullHandler())
