@@ -312,3 +312,33 @@ def test_tracebacks(server, caplog):
     assert 'raise ValueError()' in resp.text
     assert 'HTTP' in exc_msg
     assert exc_cls is ValueError
+
+
+@pytest.mark.parametrize('log_name', ('error_log', 'access_log'))
+@pytest.mark.parametrize('configure_before', (False, True))
+def test_application_log_levels(log_name, configure_before, caplog, request):
+    logger_root = 'test_logging.' + request.node.name
+    site = cherrypy._cplogging.LogManager(logger_root=logger_root)
+    site_logger = getattr(site, log_name)
+    assert site_logger.level == logging.INFO
+    if configure_before:
+        caplog.set_level(logging.DEBUG, logger=site_logger.name)
+
+    app = cherrypy._cplogging.LogManager(appid='app', logger_root=logger_root)
+    app_logger = getattr(app, log_name)
+    try:
+        if not configure_before:
+            assert app_logger.getEffectiveLevel() == logging.INFO
+            caplog.set_level(logging.DEBUG, logger=site_logger.name)
+        assert app_logger.getEffectiveLevel() == logging.DEBUG
+        app_logger.debug('application debug message')
+        assert caplog.records[-1].message == 'application debug message'
+
+        app_logger.setLevel(logging.WARNING)
+        caplog.set_level(logging.ERROR, logger=site_logger.name)
+        assert app_logger.getEffectiveLevel() == logging.WARNING
+        app_logger.setLevel(logging.NOTSET)
+        assert app_logger.getEffectiveLevel() == logging.ERROR
+    finally:
+        cherrypy.engine.unsubscribe('graceful', app.reopen_files)
+        cherrypy.engine.unsubscribe('graceful', site.reopen_files)
