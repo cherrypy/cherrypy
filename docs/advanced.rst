@@ -569,7 +569,8 @@ to integrate common database interfaces such as the DB-API specified in
 <https://pypi.python.org/pypi/SQLObject/>`_.
 
 You will find a recipe at `cherrypy-recipes
-<https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
+<https://web.archive.org/web/20161105074215/https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/database/sql_alchemy/>`_
+(archived copy, as the original Bitbucket repository is no longer available)
 that explains how to integrate SQLAlchemy using a mix of
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
 
@@ -580,7 +581,8 @@ CherryPy does not provide any HTML template but its architecture
 makes it easy to integrate one. Popular ones are `Mako <http://www.makotemplates.org>`_
 or `Jinja2 <http://jinja.pocoo.org/docs/>`_.
 
-You will find `here <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
+You will find `here <https://web.archive.org/web/20161105074518/https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/web/templating/>`_
+(archived copy, as the original Bitbucket repository is no longer available)
 a recipe on how to integrate them using a mix
 :ref:`plugins <busplugins>` and :ref:`tools <tools>`.
 
@@ -670,7 +672,8 @@ your test classes from your custom class:
    Indeed, a whole CherryPy stack is started for you and runs your application.
    If you want to really unit test your CherryPy application, meaning without
    having to start a server, you may want to have a look at
-   this `recipe <https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_.
+   this `recipe <https://web.archive.org/web/20161105074007/https://bitbucket.org/Lawouach/cherrypy-recipes/src/tip/testing/unit/serverless/>`_
+   (archived copy, as the original Bitbucket repository is no longer available).
 
 .. note::
 
