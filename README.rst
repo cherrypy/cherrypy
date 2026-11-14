@@ -27,7 +27,6 @@
    :target: https://groups.google.com/group/cherrypy-users
 
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
-   :target: https://gitter.im/cherrypy/cherrypy
 
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
@@ -39,8 +38,6 @@
    :target: https://github.com/badges/stability-badges
    :alt: stable
 
-.. image:: https://api.codacy.com/project/badge/Grade/48b11060b5d249dc86e52dac2be2c715
-   :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade
 
 .. image:: https://codecov.io/gh/cherrypy/cherrypy/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cherrypy/cherrypy
