@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:truthy
 
 codecov:
   bot: codecov
@@ -11,7 +12,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: 70...100
 
   status:
     # Only consider coverage of the code snippet changed in PR
@@ -28,7 +29,7 @@ parsers:
       macro: no
 
 comment:
-  layout: "header, diff"
+  layout: header, diff
   behavior: default
   require_changes: no
 
