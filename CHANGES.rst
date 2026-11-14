@@ -7,6 +7,13 @@ v(next)
 * Deprecated the accidentally exposed ``cherrypy.lib.headers``
   -- by :user:`webknjaz`.
 
+* :issue:`2065`: Added a ``lock_retry_delay`` constructor argument to
+  ``cherrypy.lib.sessions.FileSession`` to make the sleep-and-retry
+  interval used while waiting for a session lock configurable. It
+  defaults to the previous hardcoded ``0.1`` seconds, so behavior is
+  unchanged unless a caller opts in
+  -- by :user:`akashchamp`.
+
 v18.10.0
 --------
 

@@ -510,6 +510,12 @@ class FileSession(Session):
         A timedelta or numeric seconds indicating how long
         to block acquiring a lock. If None (default), acquiring a lock
         will block indefinitely.
+
+    lock_retry_delay
+        Numeric seconds to wait between retries when a lock is
+        currently held by someone else. Defaults to ``0.1`` (the
+        long-standing hardcoded value). Lower this to reduce latency
+        under contention, or raise it to reduce polling overhead.
     """
 
     SESSION_PREFIX = 'session-'
@@ -521,6 +527,7 @@ class FileSession(Session):
         # The 'storage_path' arg is required for file-based sessions.
         kwargs['storage_path'] = os.path.abspath(kwargs['storage_path'])
         kwargs.setdefault('lock_timeout', None)
+        kwargs.setdefault('lock_retry_delay', 0.1)
 
         Session.__init__(self, id=id, **kwargs)
 
@@ -602,7 +609,7 @@ class FileSession(Session):
         checker = locking.LockChecker(self.id, self.lock_timeout)
         while not checker.expired():
             lock = FileLock(path)
-            timeout = 0.1
+            timeout = self.lock_retry_delay
             try:
                 lock.acquire(timeout=timeout)
                 self.lock = lock
