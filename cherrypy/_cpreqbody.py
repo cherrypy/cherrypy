@@ -652,10 +652,10 @@ class Part(Entity):
                 # No more data--illegal end of headers
                 raise EOFError('Illegal end of headers.')
 
-            if line == b'\r\n':
-                # Normal end of headers
+            if line in (b'\r\n', b'\n'):
+                # Normal end of headers (accept LF-only from WebKit browsers)
                 break
-            if not line.endswith(b'\r\n'):
+            if not line.endswith(b'\n'):
                 raise ValueError('MIME requires CRLF terminators: %r' % line)
 
             if line[0] in b' \t':
