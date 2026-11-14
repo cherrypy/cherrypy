@@ -10,8 +10,9 @@ Route contributors to the project's contributing guidelines and
 code of conduct for the canonical contribution process, rather
 than improvising or restating it secondhand.
 
-Here: <https://ansible-pylibssh.rtfd.io/en/latest/contributing/guidelines>
-and `.github/CODE_OF_CONDUCT.rst`.
+Here: `.github/CONTRIBUTING.rst` and
+<https://docs.cherrypy.dev/en/latest/contribute.html>, which it
+links to.
 
 ## Keep PRs and commits atomic and scoped
 
@@ -92,7 +93,9 @@ token generator using an LLM to sound convincing." (see
 [DONT_GHOST_THE_REVIEWER.md](DONT_GHOST_THE_REVIEWER.md)).
 
 Here: the template is `.github/PULL_REQUEST_TEMPLATE.md`, with
-SUMMARY, ISSUE TYPE, and ADDITIONAL INFORMATION sections.
+"What kind of change does this PR introduce?", "What is the
+related issue number", "What is the current behavior?", "What is
+the new behavior", "Other information", and "Checklist" sections.
 
 ## Brushing up a branch before merge
 
@@ -145,13 +148,10 @@ Recurring, specific review feedback:
   work gets none -- crediting a probabilistic machine in a loop is
   silly. Disclose agent involvement in the PR instead.
 
-Here: fragments are Towncrier-managed RST files in
-`docs/changelog-fragments/`, named `<issue/PR#>.<type>.rst` --
-or after the commit hash for changes committed straight to the
-default branch -- with `<issue/PR#>.<type>.<n>.rst` for several of
-one type. `docs/changelog-fragments/README.rst` lists the types and
-the full rationale. References use the `sphinx-issues` roles
-(`:pr:`, `:user:`, `:file:`); bylines name people through `:user:`.
+Here: there's no Towncrier yet -- entries go straight into the
+`v(next)` section at the top of `CHANGES.rst`, as RST bullets.
+Bylines name people through `:user:`, e.g.
+``-- by :user:`<login>`.``
 
 ## Credit the people whose work you use
 
@@ -210,12 +210,11 @@ effort, not something to bundle into whatever else a PR is
 doing.
 
 Here: this is a real, acknowledged gap. `.ruff.toml` disables
-`ANN001`/`ANN201`/`ANN202`/`ANN401` with an explicit `# FIXME:
-These flake8-annotations errors need fixing and removal`
-comment, and none of the current test functions in `tests/` are
-annotated. Don't read the absence of annotations in existing
-code as license to skip them in new code -- it's tracked debt,
-not the house style.
+the `ANN*` codes under an explicit `# FIXME: These
+flake8-annotations errors need fixing and removal` comment, and
+most of the existing code isn't annotated. Don't read that as
+license to skip annotations in new code -- it's tracked debt, not
+the house style.
 
 ## Common micro-conventions flagged in review
 

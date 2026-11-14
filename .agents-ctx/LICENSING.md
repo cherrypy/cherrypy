@@ -16,12 +16,10 @@
   from and under which license, and let them decide whether it
   can come in.
 
-Here: ansible-pylibssh is `LGPL-2.1-or-later` (`LICENSE.rst`,
-`pyproject.toml`). Source files carry the LGPL boilerplate header,
-not SPDX tags. `build-scripts/manylinux-container-image/` is
-derived from PyCA/infra and stays under Apache-2.0 / BSD-3-Clause,
-with its license files next to it. The wheels bundle libssh, which
-is LGPL-2.1 itself.
+Here: CherryPy is under a BSD-style license, with the full text in
+`LICENSE.md` and declared through `pyproject.toml`'s
+`License :: OSI Approved :: BSD License` classifier. Source files
+carry no license headers.
 
 ## Claude Code guard hook
 
