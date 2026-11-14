@@ -38,7 +38,6 @@
    :target: https://github.com/badges/stability-badges
    :alt: stable
 
-   :target: https://www.codacy.com/app/webknjaz/cherrypy-upstream?utm_source=github.com&utm_medium=referral&utm_content=cherrypy/cherrypy&utm_campaign=Badge_Grade
 
 .. image:: https://codecov.io/gh/cherrypy/cherrypy/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/cherrypy/cherrypy
