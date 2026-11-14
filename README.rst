@@ -27,7 +27,6 @@
    :target: https://groups.google.com/group/cherrypy-users
 
 .. image:: https://img.shields.io/gitter/room/cherrypy/cherrypy.svg
-   :target: https://gitter.im/cherrypy/cherrypy
 
 .. image:: https://img.shields.io/badge/license-BSD-blue.svg?maxAge=3600
    :target: https://pypi.org/project/cheroot
