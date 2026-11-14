@@ -7,6 +7,12 @@ v(next)
 * Deprecated the accidentally exposed ``cherrypy.lib.headers``
   -- by :user:`webknjaz`.
 
+* :pr:`2099`: The repository now carries instructions for coding
+  agents -- :file:`AGENTS.md`, pointing at the house rules in
+  :file:`.agents-ctx/`, shared with other projects -- and Claude
+  Code hooks that make the agent ask before silencing checks or
+  changing license terms.
+
 v18.10.0
 --------
 
