@@ -87,9 +87,10 @@ from more_itertools import always_iterable
 # will be the directory from which the startup script was run.  This is needed
 # by _do_execv(), to change back to the original directory before execv()ing a
 # new process.  This is a defense against the application having changed the
-# current working directory (which could make sys.executable "not found" if
-# sys.executable is a relative-path, and/or cause other problems).
-_startup_cwd = os.getcwd()
+try:
+    _startup_cwd = os.getcwd()
+except (FileNotFoundError, OSError):
+    _startup_cwd = None
 
 
 class ChannelFailures(Exception):
@@ -409,7 +410,11 @@ class Bus(object):
             if sys.platform == 'win32':
                 args = ['"%s"' % arg for arg in args]
 
-            os.chdir(_startup_cwd)
+            if _startup_cwd:
+                try:
+                    os.chdir(_startup_cwd)
+                except (FileNotFoundError, OSError):
+                    pass
             if self.max_cloexec_files:
                 self._set_cloexec()
             os.execv(sys.executable, args)
