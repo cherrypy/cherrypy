@@ -1,4 +1,3 @@
-import sys
 import cherrypy
 from cherrypy._cpcompat import ntou
 from cherrypy._cptree import Application
@@ -420,8 +419,6 @@ class ObjectMappingTest(helper.CPWebCase):
         self.assertRaises(TypeError, cherrypy.tree.mount, a, None)
 
     def testKeywords(self):
-        if sys.version_info < (3,):
-            return self.skip('skipped (Python 3 only)')
         exec("""class Root(object):
     @cherrypy.expose
     def hello(self, *, name='world'):
