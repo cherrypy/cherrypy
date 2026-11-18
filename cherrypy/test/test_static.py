@@ -297,6 +297,45 @@ class StaticTest(helper.CPWebCase):
         self.assertNoHeader('Content-Disposition')
         self.assertBody('')
 
+    def test_if_range(self):
+        # Regression test for GH #1699: a Range request whose If-Range
+        # validator doesn't match the resource's current Last-Modified
+        # value must return the full resource with status 200, per
+        # RFC 7233 section 3.2, rather than honoring the Range request.
+        self.getPage('/static/dirback.jpg')
+        self.assertStatus('200 OK')
+        full_body = self.body
+        lastmod = ''
+        for k, v in self.headers:
+            if k == 'Last-Modified':
+                lastmod = v
+        assert lastmod
+
+        # Stale If-Range (doesn't match current Last-Modified): the
+        # full resource must be returned with status 200, Range ignored.
+        stale_if_range = ('If-Range', 'Tue, 21 Nov 2017 14:43:11 GMT')
+        self.getPage(
+            '/static/dirback.jpg',
+            headers=[('Range', 'bytes=0-9'), stale_if_range],
+        )
+        self.assertStatus('200 OK')
+        self.assertBody(full_body)
+
+        # If-Range matching the current Last-Modified: Range must
+        # still be correctly honored, status 206.
+        matching_if_range = ('If-Range', lastmod)
+        self.getPage(
+            '/static/dirback.jpg',
+            headers=[('Range', 'bytes=0-9'), matching_if_range],
+        )
+        self.assertStatus('206 Partial Content')
+        self.assertBody(full_body[:10])
+
+        # No If-Range at all: normal Range behavior is unaffected.
+        self.getPage('/static/dirback.jpg', headers=[('Range', 'bytes=0-9')])
+        self.assertStatus('206 Partial Content')
+        self.assertBody(full_body[:10])
+
     def test_755_vhost(self):
         self.getPage('/test/', [('Host', 'virt.net')])
         self.assertStatus(200)
