@@ -1,6 +1,14 @@
 v(next)
 -------
 
+* Fixed a denial-of-service issue where a ``Range`` header specifying
+  an excessive number of byte-ranges could force disproportionate
+  server-side work when serving a file (similar in spirit to the
+  well-known Apache "Range header" DoS, e.g. CVE-2011-3192). Requests
+  specifying more than :data:`~cherrypy.lib.httputil.MAX_RANGES`
+  (100) ranges now have their ``Range`` header treated as invalid,
+  falling back to serving the full response.
+
 * Dropped support for Python 3.6, 3.7 and 3.8
   -- by :user:`webknjaz`.
 

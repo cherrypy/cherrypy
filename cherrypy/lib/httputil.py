@@ -26,6 +26,18 @@ from .._private_api.compat.headers import parse_header
 
 response_codes = BaseHTTPRequestHandler.responses.copy()
 
+# A Range header requesting more than this many byte-ranges is treated
+# as invalid (the Range header is ignored and the full entity is
+# served instead). Without a cap, a request specifying a very large
+# number of ranges -- especially many small, overlapping, or
+# duplicate ranges over a large resource -- can force the server to
+# seek/read/emit the resource once per range, giving a small request
+# disproportionate server-side CPU, memory, and I/O cost. This is the
+# same class of issue as the well-known "Range header" DoS (e.g. CVE-
+# 2011-3192) that other servers such as Apache httpd mitigated by
+# similarly bounding the number of ranges they will honor.
+MAX_RANGES = 100
+
 # From https://github.com/cherrypy/cherrypy/issues/361
 response_codes[500] = (
     'Internal Server Error',
@@ -89,7 +101,15 @@ def get_ranges(headervalue, content_length):
 
     result = []
     bytesunit, byteranges = headervalue.split('=', 1)
-    for brange in byteranges.split(','):
+    range_specs = byteranges.split(',')
+    if len(range_specs) > MAX_RANGES:
+        # Too many ranges requested. Treating the header as invalid
+        # (rather than honoring it) matches the RFC 2616 sec 14.16
+        # guidance already followed elsewhere in this function for
+        # other malformed Range headers: fall back to serving the
+        # full, unranged response. See MAX_RANGES above for why.
+        return None
+    for brange in range_specs:
         start, stop = [x.strip() for x in brange.split('-', 1)]
         if start:
             if not stop:
