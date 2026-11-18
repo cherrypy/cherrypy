@@ -87,6 +87,9 @@ def get_ranges(headervalue, content_length):
     if not headervalue:
         return None
 
+    if content_length is None:
+        return None
+
     result = []
     bytesunit, byteranges = headervalue.split('=', 1)
     for brange in byteranges.split(','):

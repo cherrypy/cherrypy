@@ -80,3 +80,18 @@ def test_invalid_status(status_code, error_msg):
     """Check that invalid status cause certain errors."""
     with pytest.raises(ValueError, match=error_msg):
         httputil.valid_status(status_code)
+
+
+def test_get_ranges_with_none_content_length():
+    """get_ranges should return None when content_length is None."""
+    assert httputil.get_ranges('bytes=0-10', None) is None
+
+
+def test_get_ranges_with_valid_content_length():
+    """get_ranges should work normally with a valid content_length."""
+    assert httputil.get_ranges('bytes=3-6', 8) == [(3, 7)]
+
+
+def test_get_ranges_with_no_header():
+    """get_ranges should return None when headervalue is empty."""
+    assert httputil.get_ranges(None, 100) is None
