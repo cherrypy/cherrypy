@@ -109,14 +109,16 @@ class Server(ServerAdapter):
     configuration options."""
 
     ssl_context = None
-    """When using PyOpenSSL, an instance of SSL.Context."""
+    """An instance of SSL context.
+
+    Depending on the `ssl_module`, this can be either
+    `ssl.SSLContext` or `OpenSSL.SSL.Context`."""
 
     ssl_certificate = None
     """The filename of the SSL certificate to use."""
 
     ssl_certificate_chain = None
-    """When using PyOpenSSL, the certificate chain to pass to
-    Context.load_verify_locations."""
+    """The certificate chain to pass to Context.load_verify_locations."""
 
     ssl_private_key = None
     """The filename of the private key to use with SSL."""
@@ -127,8 +129,8 @@ class Server(ServerAdapter):
     ssl_module = 'builtin'
     """The name of a registered SSL adaptation module to use with
     the builtin WSGI server. Builtin options are: 'builtin' (to
-    use the SSL library built into recent versions of Python).
-    You may also register your own classes in the
+    use the SSL library built into Python) or 'pyopenssl' (to use
+    PyOpenSSL). You may also register your own classes in the
     cheroot.server.ssl_adapters dict.
     """
 
