@@ -5,12 +5,12 @@
 #    pip-compile --all-build-deps --allow-unsafe --only-build-deps --output-file=dependencies/lock-files/dist-build-constraints.txt pyproject.toml
 #
 packaging==26.3
-    # via setuptools-scm
-setuptools-scm==8.1.0
     # via CherryPy (pyproject.toml::build-system.requires)
 
 # The following packages are considered to be unsafe in a requirements file:
 setuptools==84.2.1
+    # via setuptools-scm
+setuptools-scm==8.1.0
     # via
     #   CherryPy (pyproject.toml::build-system.requires)
     #   setuptools-scm
